@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+﻿import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Send, Sparkles, BrainCircuit } from "lucide-react";
@@ -45,14 +45,13 @@ const WELCOME: Message = {
   text: "Hey! Ask me anything about the platform or your coursework — I'll keep it brief.",
 };
 
-// Platform primary — Claude Bamboo Teal accent
-const BLUE = "#4e7d7a";
-const BLUE_DARK = "#3d6361";
+const BLUE = "#1e9df1";
+const BLUE_DARK = "#1677cc";
 
 const TypingIndicator = ({ dk }: { dk: boolean }) => (
   <div className={cls(
     "flex items-center gap-1.5 px-4 py-3 rounded-2xl rounded-bl-sm w-fit border",
-    dk ? "bg-[#212d2b] border-[#2c3b3a]" : "bg-slate-100 border-slate-200"
+    dk ? "bg-[#16181c] border-[#2f3336]" : "bg-slate-100 border-slate-200"
   )}>
     {[0, 1, 2].map((d) => (
       <motion.span
@@ -190,10 +189,10 @@ export function AIAssistant({ isDarkMode: dk, userId }: Props) {
                 display: "flex",
                 flexDirection: "column",
                 overflow: "hidden",
-                backgroundColor: dk ? "#151b1a" : "#ffffff",
-                border: `1px solid ${dk ? "#2c3b3a" : "#e2e8f0"}`,
+                backgroundColor: dk ? "#17181c" : "#ffffff",
+                border: `1px solid ${dk ? "#2f3336" : "#e2e8f0"}`,
                 boxShadow: dk
-                  ? "0 24px 48px rgba(0,0,0,0.5), 0 0 0 1px #2c3b3a"
+                  ? "0 24px 48px rgba(0,0,0,0.5), 0 0 0 1px #2f3336"
                   : "0 24px 48px rgba(0,0,0,0.12), 0 0 0 1px #e2e8f0",
               }}
             >
@@ -203,8 +202,8 @@ export function AIAssistant({ isDarkMode: dk, userId }: Props) {
                 alignItems: "center",
                 justifyContent: "space-between",
                 padding: "12px 16px",
-                borderBottom: `1px solid ${dk ? "#2c3b3a" : "#f1f5f9"}`,
-                backgroundColor: dk ? "#212d2b" : "#f8fafc",
+                borderBottom: `1px solid ${dk ? "#2f3336" : "#f1f5f9"}`,
+                backgroundColor: dk ? "#16181c" : "#f8fafc",
                 flexShrink: 0,
               }}>
                 <div className="flex items-center gap-2.5">
@@ -217,14 +216,14 @@ export function AIAssistant({ isDarkMode: dk, userId }: Props) {
                     </div>
                     <span
                       className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400 rounded-full border-2"
-                      style={{ borderColor: dk ? "#212d2b" : "#f8fafc" }}
+                      style={{ borderColor: dk ? "#16181c" : "#f8fafc" }}
                     />
                   </div>
                   <div>
-                    <p style={{ fontSize: 13, fontWeight: 600, color: dk ? "#e9ecec" : "#0f172a", lineHeight: 1.2 }}>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: dk ? "#e7e9ea" : "#0f172a", lineHeight: 1.2 }}>
                       Edu51Portal Assistant
                     </p>
-                    <p style={{ fontSize: 10.5, color: dk ? "#93a5a4" : "#94a3b8" }}>
+                    <p style={{ fontSize: 10.5, color: dk ? "#71767b" : "#94a3b8" }}>
                       Powered by Gemini
                     </p>
                   </div>
@@ -232,14 +231,14 @@ export function AIAssistant({ isDarkMode: dk, userId }: Props) {
                 <button
                   onClick={() => setOpen(false)}
                   className="flex items-center justify-center w-7 h-7 rounded-lg transition-colors"
-                  style={{ color: dk ? "#93a5a4" : "#94a3b8" }}
+                  style={{ color: dk ? "#71767b" : "#94a3b8" }}
                   onMouseEnter={e => {
-                    (e.currentTarget as HTMLButtonElement).style.backgroundColor = dk ? "#2c3b3a" : "#f1f5f9";
-                    (e.currentTarget as HTMLButtonElement).style.color = dk ? "#e9ecec" : "#334155";
+                    (e.currentTarget as HTMLButtonElement).style.backgroundColor = dk ? "#2f3336" : "#f1f5f9";
+                    (e.currentTarget as HTMLButtonElement).style.color = dk ? "#e7e9ea" : "#334155";
                   }}
                   onMouseLeave={e => {
                     (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent";
-                    (e.currentTarget as HTMLButtonElement).style.color = dk ? "#93a5a4" : "#94a3b8";
+                    (e.currentTarget as HTMLButtonElement).style.color = dk ? "#71767b" : "#94a3b8";
                   }}
                 >
                   <X className="w-3.5 h-3.5" />
@@ -256,10 +255,10 @@ export function AIAssistant({ isDarkMode: dk, userId }: Props) {
                     >
                       <Sparkles className="w-6 h-6 text-white" />
                     </div>
-                    <p style={{ fontSize: 12, fontWeight: 500, color: dk ? "#e9ecec" : "#334155", marginBottom: 4 }}>
+                    <p style={{ fontSize: 12, fontWeight: 500, color: dk ? "#e7e9ea" : "#334155", marginBottom: 4 }}>
                       Ask me anything
                     </p>
-                    <p style={{ fontSize: 11, color: dk ? "#93a5a4" : "#94a3b8", maxWidth: 180, lineHeight: 1.5 }}>
+                    <p style={{ fontSize: 11, color: dk ? "#71767b" : "#94a3b8", maxWidth: 180, lineHeight: 1.5 }}>
                       Platform navigation or coursework — I've got you.
                     </p>
                   </div>
@@ -278,14 +277,14 @@ export function AIAssistant({ isDarkMode: dk, userId }: Props) {
                         maxWidth: "82%",
                         padding: "9px 13px",
                         borderRadius: m.role === "user" ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
-                        fontSize: 12.5,
+                        fontSize: 14,
                         lineHeight: 1.55,
                         whiteSpace: "pre-wrap",
                         wordBreak: "break-word",
                         ...(m.role === "user"
                           ? { background: `linear-gradient(135deg,${BLUE},${BLUE_DARK})`, color: "#ffffff" }
                           : dk
-                          ? { background: "#212d2b", color: "#e9ecec", border: "1px solid #2c3b3a" }
+                          ? { background: "#16181c", color: "#e7e9ea", border: "1px solid #2f3336" }
                           : { background: "#f1f5f9", color: "#1e293b", border: "1px solid #e2e8f0" }),
                       }}
                     >
@@ -307,8 +306,8 @@ export function AIAssistant({ isDarkMode: dk, userId }: Props) {
                 alignItems: "flex-end",
                 gap: 8,
                 padding: "10px 12px",
-                borderTop: `1px solid ${dk ? "#2c3b3a" : "#f1f5f9"}`,
-                backgroundColor: dk ? "#151b1a" : "#ffffff",
+                borderTop: `1px solid ${dk ? "#2f3336" : "#f1f5f9"}`,
+                backgroundColor: dk ? "#17181c" : "#ffffff",
                 flexShrink: 0,
               }}>
                 <textarea
@@ -327,12 +326,12 @@ export function AIAssistant({ isDarkMode: dk, userId }: Props) {
                     maxHeight: 96,
                     padding: "9px 13px",
                     fontSize: 12.5,
-                    backgroundColor: dk ? "#212d2b" : "#f8fafc",
-                    border: `1px solid ${dk ? "#2c3b3a" : "#e2e8f0"}`,
-                    color: dk ? "#e9ecec" : "#0f172a",
+                    backgroundColor: dk ? "#16181c" : "#f8fafc",
+                    border: `1px solid ${dk ? "#2f3336" : "#e2e8f0"}`,
+                    color: dk ? "#e7e9ea" : "#0f172a",
                   }}
                   onFocus={e => { e.target.style.borderColor = BLUE; }}
-                  onBlur={e => { e.target.style.borderColor = dk ? "#2c3b3a" : "#e2e8f0"; }}
+                  onBlur={e => { e.target.style.borderColor = dk ? "#2f3336" : "#e2e8f0"; }}
                 />
                 <button
                   onClick={handleSend}
@@ -379,10 +378,10 @@ export function AIAssistant({ isDarkMode: dk, userId }: Props) {
           className="relative w-full h-full rounded-full flex items-center justify-center shadow-lg transition-opacity hover:opacity-90"
           style={{
             background: dk
-              ? `linear-gradient(145deg,#151b1a,#212d2b)`
+              ? `linear-gradient(145deg,#17181c,#16181c)`
               : "#ffffff",
-            border: `2px solid ${dk ? "#2c3b3a" : "#4e7d7a"}`,
-            boxShadow: `0 4px 20px rgba(78,125,122,0.3)`,
+            border: `2px solid ${dk ? "#2f3336" : "#1e9df1"}`,
+            boxShadow: `0 4px 20px rgba(30,157,241,0.25)`,
           }}
         >
           <AnimatePresence mode="wait" initial={false}>
@@ -391,7 +390,7 @@ export function AIAssistant({ isDarkMode: dk, userId }: Props) {
                 initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }}
                 exit={{ rotate: 90, opacity: 0 }} transition={{ duration: 0.16 }}
               >
-                <X className={cls("w-5 h-5", dk ? "text-[#e9ecec]" : "text-slate-600")} />
+                <X className={cls("w-5 h-5", dk ? "text-[#e7e9ea]" : "text-slate-600")} />
               </motion.span>
             ) : (
               <motion.span key="msg"

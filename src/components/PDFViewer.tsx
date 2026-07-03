@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import { X, Maximize2, Minimize2, ExternalLink, FileText, AlertTriangle, RotateCcw, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
@@ -237,7 +237,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
                 className={`pdf-btn pdf-btn--icon ${dk ? 'pdf-btn--icon-dark' : 'pdf-btn--icon-light'} disabled:opacity-40`}>
                 <ChevronLeft size={16} />
               </button>
-              <span className={`text-xs font-semibold ${dk ? 'text-slate-300' : 'text-slate-600'}`}>
+              <span className={`text-xs font-semibold ${dk ? 'text-[#8b98a5]' : 'text-slate-600'}`}>
                 {pageNumber} / {numPages}
               </span>
               <button onClick={() => setPageNumber(p => Math.min(numPages, p + 1))} disabled={pageNumber >= numPages}

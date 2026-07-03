@@ -188,7 +188,8 @@ Per-team file sharing with public/private visibility. Members upload; owner/admi
 
 **Database:** `wc26_matches` table — home/away team TLA codes, scores, status, stage, group  
 **Scoring:** win = 3 pts, draw = 1 pt, +1 per goal scored by picked team  
-**Throttle:** 5 min normal · 60 s during live matches (IN_PLAY / PAUSED / HALFTIME)
+**Sync:** server-side `pg_cron` job (`sync-wc26-matches-every-minute`, migration `20260704040331_wc26_cron_and_realtime`) invokes the edge function every 60s via `pg_net`, independent of any client being open. Frontend no longer polls the edge function — it subscribes to Supabase Realtime (`postgres_changes` on `wc26_matches`) and refetches from the DB the instant a row changes. Manual refresh button still force-syncs via `syncWC26Matches(true)`.  
+**Stages:** `GROUP_STAGE` → `LAST_32` → `LAST_16` → `QUARTER_FINALS` → `SEMI_FINALS` → `THIRD_PLACE` → `FINAL` (must match football-data.org's stage enum exactly — `STAGE_ORDER`/`STAGE_LABEL` in `WorldCupPage.tsx`)
 
 ---
 
@@ -319,6 +320,8 @@ All migrations in chronological order under `supabase/migrations/`. Key ones:
 | `team_tasks_priority` | Add `priority` column (`low`/`medium`/`high`) to `team_tasks` |
 | `20260630000000_lock_down_public_write_rls` | Lock `materials`/`courses`/`users` writes to `is_app_admin()` — previously any anon/authenticated client could insert/update/delete these tables directly via the REST API |
 | `20260701000000_ai_chat_usage` | `ai_chat_usage` table — per-user daily message counter for AI Assistant rate-limiting |
+| `20260702000000_user_routines` | `user_routines` table (auth-scoped, replaces anonymous device-UUID `custom_routines`) |
+| `20260704040331_wc26_cron_and_realtime` | Enables `pg_cron`/`pg_net`; schedules `sync-wc26-matches` every 60s server-side; adds `wc26_matches` to `supabase_realtime` publication (`REPLICA IDENTITY FULL`) |
 
 ---
 

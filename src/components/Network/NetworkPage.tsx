@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { Loader2, Search, UserCheck, UserPlus, UserX, X, Users, Inbox, SearchX } from "lucide-react";
 import { motion } from "framer-motion";
 import { Connection, SocialProfile } from "../../types/social";
@@ -77,13 +77,13 @@ export default function NetworkPage({ currentUserId, onClose, onViewProfile, isD
     setBusy(null);
   };
 
-  const pageBg = isDarkMode ? "bg-slate-950" : "bg-slate-100";
+  const pageBg = isDarkMode ? "bg-[#000000]" : "bg-slate-100";
   const title = isDarkMode ? "text-white" : "text-slate-900";
   const sub = isDarkMode ? "text-slate-400" : "text-slate-500";
-  const inputCls = `px-3 py-2 rounded-lg text-sm border outline-none ${
+  const inputCls = `px-3 py-2 rounded-lg text-sm border outline-none transition-colors ${
     isDarkMode
-      ? "bg-slate-800 border-slate-600 text-white placeholder-slate-500 focus:border-blue-500"
-      : "bg-white border-slate-300 text-slate-900 placeholder-slate-400 focus:border-blue-500"
+      ? "bg-[#16181c] border-[#2f3336] text-white placeholder-[#71767b] focus:border-[#1e9df1]"
+      : "bg-white border-slate-300 text-slate-900 placeholder-slate-400 focus:border-[#1e9df1]"
   }`;
 
   const tabBtn = (t: Tab, label: string, count?: number) => (
@@ -91,14 +91,14 @@ export default function NetworkPage({ currentUserId, onClose, onViewProfile, isD
       onClick={() => setTab(t)}
       className={`relative px-5 py-2 rounded-full text-sm transition-colors duration-150 flex items-center gap-2 ${
         tab === t
-          ? isDarkMode ? "bg-white text-slate-900 font-bold shadow-md shadow-white/10" : "bg-slate-900 text-white font-bold shadow-md shadow-black/20"
-          : isDarkMode ? "font-medium text-slate-500 hover:text-slate-300" : "font-medium text-slate-500 hover:text-slate-800"
+          ? "bg-[#1e9df1] text-white font-bold shadow-md shadow-[#1e9df1]/20"
+          : isDarkMode ? "font-medium text-[#71767b] hover:text-[#e7e9ea]" : "font-medium text-slate-500 hover:text-slate-800"
       }`}
     >
       {label}
       {count !== undefined && count > 0 && (
         <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
-          tab === t ? (isDarkMode ? "bg-slate-900/20 text-slate-700" : "bg-white/20 text-white") : "bg-blue-500 text-white"
+          tab === t ? "bg-white/20 text-white" : "bg-[#1e9df1] text-white"
         }`}>
           {count}
         </span>
@@ -117,7 +117,7 @@ export default function NetworkPage({ currentUserId, onClose, onViewProfile, isD
         {/* Pill tab row — matches navbar style */}
         <div className={`inline-flex items-center rounded-full p-1.5 gap-0.5 border mb-6 ${
           isDarkMode
-            ? "bg-slate-800 border-slate-700 shadow-lg shadow-black/20"
+            ? "bg-[#16181c] border-[#2f3336] shadow-lg shadow-black/20"
             : "bg-white border-slate-300 shadow-md shadow-black/8"
         }`}>
           {tabBtn("connections", "Connections", accepted.length)}
@@ -134,7 +134,7 @@ export default function NetworkPage({ currentUserId, onClose, onViewProfile, isD
 
         {loading ? (
           <div className="flex justify-center py-16">
-            <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+            <Loader2 className="w-8 h-8 animate-spin text-[#1e9df1]" />
           </div>
         ) : tab === "connections" ? (
           <div className="space-y-3">
@@ -144,16 +144,16 @@ export default function NetworkPage({ currentUserId, onClose, onViewProfile, isD
                 animate={{ opacity: 1, y: 0 }}
                 className="flex flex-col items-center justify-center py-16 text-center gap-4"
               >
-                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${isDarkMode ? "bg-slate-800" : "bg-slate-100"}`}>
-                  <Users size={28} className={isDarkMode ? "text-slate-600" : "text-slate-300"} />
+                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${isDarkMode ? "bg-[#16181c]" : "bg-slate-100"}`}>
+                  <Users size={28} className={isDarkMode ? "text-slate-500" : "text-[#8b98a5]"} />
                 </div>
                 <div>
-                  <p className={`text-sm font-bold ${isDarkMode ? "text-slate-300" : "text-slate-700"}`}>No connections yet</p>
+                  <p className={`text-sm font-bold ${isDarkMode ? "text-[#8b98a5]" : "text-slate-700"}`}>No connections yet</p>
                   <p className={`text-xs mt-1 ${sub}`}>Find and connect with classmates</p>
                 </div>
                 <button
                   onClick={() => setTab("discover")}
-                  className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-colors"
+                  className="px-4 py-2 rounded-xl bg-[#1e9df1] hover:bg-[#1677cc] text-white text-xs font-bold transition-colors"
                 >
                   Discover People
                 </button>
@@ -171,7 +171,7 @@ export default function NetworkPage({ currentUserId, onClose, onViewProfile, isD
                       onClick={() => handleAction(() => removeConnection(c.id), c.id)}
                       disabled={busy === c.id}
                       className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1 ${
-                        isDarkMode ? "bg-slate-800 text-slate-400 hover:text-red-400" : "bg-slate-100 text-slate-500 hover:text-red-500"
+                        isDarkMode ? "bg-[#16181c] text-slate-400 hover:text-red-400" : "bg-slate-100 text-slate-500 hover:text-red-500"
                       }`}
                     >
                       {busy === c.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <UserX className="w-3 h-3" />}
@@ -188,8 +188,8 @@ export default function NetworkPage({ currentUserId, onClose, onViewProfile, isD
               <h3 className={`text-sm font-semibold mb-2 ${title}`}>Incoming ({incoming.length})</h3>
               <div className="space-y-3">
                 {incoming.length === 0 && (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className={`flex items-center gap-3 px-4 py-3.5 rounded-xl border ${isDarkMode ? "border-slate-800 bg-slate-900/50" : "border-slate-100 bg-slate-50"}`}>
-                    <Inbox size={16} className={isDarkMode ? "text-slate-600" : "text-slate-300"} />
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className={`flex items-center gap-3 px-4 py-3.5 rounded-xl border ${isDarkMode ? "border-[#2f3336] bg-[#17181c]/50" : "border-slate-100 bg-slate-50"}`}>
+                    <Inbox size={16} className={isDarkMode ? "text-slate-500" : "text-[#8b98a5]"} />
                     <p className={`text-sm ${sub}`}>No incoming requests</p>
                   </motion.div>
                 )}
@@ -205,7 +205,7 @@ export default function NetworkPage({ currentUserId, onClose, onViewProfile, isD
                           <button
                             onClick={() => handleAction(() => respondToRequest(c.id, true), c.id)}
                             disabled={busy === c.id}
-                            className="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-medium hover:bg-blue-700 flex items-center gap-1"
+                            className="px-3 py-1.5 rounded-lg bg-[#1e9df1] text-white text-xs font-medium hover:bg-[#1677cc] flex items-center gap-1"
                           >
                             {busy === c.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <UserCheck className="w-3 h-3" />}
                             Accept
@@ -214,7 +214,7 @@ export default function NetworkPage({ currentUserId, onClose, onViewProfile, isD
                             onClick={() => handleAction(() => respondToRequest(c.id, false), `r-${c.id}`)}
                             disabled={busy === `r-${c.id}`}
                             className={`px-3 py-1.5 rounded-lg text-xs font-medium ${
-                              isDarkMode ? "bg-slate-800 text-slate-400" : "bg-slate-100 text-slate-500"
+                              isDarkMode ? "bg-[#16181c] text-slate-400" : "bg-slate-100 text-slate-500"
                             }`}
                           >
                             <X className="w-3 h-3" />
@@ -230,8 +230,8 @@ export default function NetworkPage({ currentUserId, onClose, onViewProfile, isD
               <h3 className={`text-sm font-semibold mb-2 ${title}`}>Sent ({outgoing.length})</h3>
               <div className="space-y-3">
                 {outgoing.length === 0 && (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className={`flex items-center gap-3 px-4 py-3.5 rounded-xl border ${isDarkMode ? "border-slate-800 bg-slate-900/50" : "border-slate-100 bg-slate-50"}`}>
-                    <UserPlus size={16} className={isDarkMode ? "text-slate-600" : "text-slate-300"} />
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className={`flex items-center gap-3 px-4 py-3.5 rounded-xl border ${isDarkMode ? "border-[#2f3336] bg-[#17181c]/50" : "border-slate-100 bg-slate-50"}`}>
+                    <UserPlus size={16} className={isDarkMode ? "text-slate-500" : "text-[#8b98a5]"} />
                     <p className={`text-sm ${sub}`}>No sent requests</p>
                   </motion.div>
                 )}
@@ -247,7 +247,7 @@ export default function NetworkPage({ currentUserId, onClose, onViewProfile, isD
                           onClick={() => handleAction(() => removeConnection(c.id), c.id)}
                           disabled={busy === c.id}
                           className={`px-3 py-1.5 rounded-lg text-xs font-medium ${
-                            isDarkMode ? "bg-slate-800 text-slate-400 hover:text-red-400" : "bg-slate-100 text-slate-500 hover:text-red-500"
+                            isDarkMode ? "bg-[#16181c] text-slate-400 hover:text-red-400" : "bg-slate-100 text-slate-500 hover:text-red-500"
                           }`}
                         >
                           Cancel
@@ -279,7 +279,7 @@ export default function NetworkPage({ currentUserId, onClose, onViewProfile, isD
               />
               <button
                 onClick={runSearch}
-                className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 flex items-center gap-2 justify-center"
+                className="px-4 py-2 rounded-lg bg-[#1e9df1] text-white text-sm font-medium hover:bg-[#1677cc] flex items-center gap-2 justify-center transition-colors"
               >
                 <Search className="w-4 h-4" /> Search
               </button>
@@ -287,7 +287,7 @@ export default function NetworkPage({ currentUserId, onClose, onViewProfile, isD
 
             {searching ? (
               <div className="flex justify-center py-16">
-                <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+                <Loader2 className="w-8 h-8 animate-spin text-[#1e9df1]" />
               </div>
             ) : (
               <div className="space-y-3">
@@ -297,11 +297,11 @@ export default function NetworkPage({ currentUserId, onClose, onViewProfile, isD
                     animate={{ opacity: 1, y: 0 }}
                     className="flex flex-col items-center justify-center py-16 text-center gap-3"
                   >
-                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${isDarkMode ? "bg-slate-800" : "bg-slate-100"}`}>
-                      <SearchX size={24} className={isDarkMode ? "text-slate-600" : "text-slate-300"} />
+                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${isDarkMode ? "bg-[#16181c]" : "bg-slate-100"}`}>
+                      <SearchX size={24} className={isDarkMode ? "text-slate-500" : "text-[#8b98a5]"} />
                     </div>
                     <div>
-                      <p className={`text-sm font-bold ${isDarkMode ? "text-slate-300" : "text-slate-700"}`}>No users found</p>
+                      <p className={`text-sm font-bold ${isDarkMode ? "text-[#8b98a5]" : "text-slate-700"}`}>No users found</p>
                       <p className={`text-xs mt-1 ${sub}`}>Try a different name, username, or skill</p>
                     </div>
                   </motion.div>
@@ -319,7 +319,7 @@ export default function NetworkPage({ currentUserId, onClose, onViewProfile, isD
                           <span className={`px-3 py-1.5 rounded-lg text-xs font-medium ${
                             existing.status === "accepted"
                               ? isDarkMode ? "bg-emerald-900/30 text-emerald-400" : "bg-emerald-50 text-emerald-700"
-                              : isDarkMode ? "bg-slate-800 text-slate-400" : "bg-slate-100 text-slate-500"
+                              : isDarkMode ? "bg-[#16181c] text-slate-400" : "bg-slate-100 text-slate-500"
                           }`}>
                             {existing.status === "accepted" ? "Connected" : "Pending"}
                           </span>
@@ -327,7 +327,7 @@ export default function NetworkPage({ currentUserId, onClose, onViewProfile, isD
                           <button
                             onClick={() => handleAction(() => sendConnectionRequest(currentUserId, p.id), p.id)}
                             disabled={busy === p.id}
-                            className="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-medium hover:bg-blue-700 flex items-center gap-1"
+                            className="px-3 py-1.5 rounded-lg bg-[#1e9df1] text-white text-xs font-medium hover:bg-[#1677cc] flex items-center gap-1 transition-colors"
                           >
                             {busy === p.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <UserPlus className="w-3 h-3" />}
                             Connect

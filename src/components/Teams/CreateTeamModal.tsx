@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { X, Loader2, Upload } from "lucide-react";
 import { Team, TeamCategory, TEAM_CATEGORY_LABELS } from "../../types/social";
 import { createTeam, updateTeam } from "../../lib/api/teamsApi";
@@ -26,10 +26,10 @@ export default function CreateTeamModal({ currentUserId, onClose, onCreated, isD
 
   const inputCls = `w-full px-3 py-2 rounded-lg text-sm border outline-none ${
     isDarkMode
-      ? "bg-slate-800 border-slate-600 text-white placeholder-slate-500 focus:border-blue-500"
-      : "bg-white border-slate-300 text-slate-900 placeholder-slate-400 focus:border-blue-500"
+      ? "bg-[#16181c] border-[#38444d] text-[#e7e9ea] placeholder-[#71767b] focus:border-blue-500"
+      : "bg-white border-slate-300 text-slate-900 placeholder-[#71767b] focus:border-blue-500"
   }`;
-  const labelCls = `block text-xs font-medium mb-1 ${isDarkMode ? "text-slate-300" : "text-slate-600"}`;
+  const labelCls = `block text-xs font-medium mb-1 ${isDarkMode ? "text-[#8b98a5]" : "text-slate-600"}`;
 
   const save = async () => {
     if (name.trim().length < 3) {
@@ -74,10 +74,10 @@ export default function CreateTeamModal({ currentUserId, onClose, onCreated, isD
 
   return (
     <div className="fixed inset-0 z-[130] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className={`w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl ${isDarkMode ? "bg-slate-900 border border-slate-700" : "bg-white"}`}>
-        <div className={`sticky top-0 px-5 py-4 border-b flex items-center justify-between ${isDarkMode ? "bg-slate-900 border-slate-700" : "bg-white border-slate-200"}`}>
-          <h2 className={`text-lg font-bold ${isDarkMode ? "text-white" : "text-slate-900"}`}>Create Team</h2>
-          <button onClick={onClose} className={isDarkMode ? "text-slate-400 hover:text-white" : "text-slate-500"}>
+      <div className={`w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl ${isDarkMode ? "bg-[#17181c] border border-[#2f3336]" : "bg-white"}`}>
+        <div className={`sticky top-0 px-5 py-4 border-b flex items-center justify-between ${isDarkMode ? "bg-[#17181c] border-[#2f3336]" : "bg-white border-slate-200"}`}>
+          <h2 className={`text-lg font-bold ${isDarkMode ? "text-[#e7e9ea]" : "text-slate-900"}`}>Create Team</h2>
+          <button onClick={onClose} className={isDarkMode ? "text-[#71767b] hover:text-[#e7e9ea]" : "text-slate-500"}>
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -140,14 +140,14 @@ export default function CreateTeamModal({ currentUserId, onClose, onCreated, isD
           </div>
         </div>
 
-        <div className={`px-5 py-4 border-t flex justify-end gap-2 ${isDarkMode ? "border-slate-700" : "border-slate-200"}`}>
-          <button onClick={onClose} className={`px-4 py-2 rounded-lg text-sm font-medium ${isDarkMode ? "bg-slate-800 text-slate-300" : "bg-slate-100 text-slate-700"}`}>
+        <div className={`px-5 py-4 border-t flex justify-end gap-2 ${isDarkMode ? "border-[#2f3336]" : "border-slate-200"}`}>
+          <button onClick={onClose} className={`px-4 py-2 rounded-lg text-sm font-medium ${isDarkMode ? "bg-[#16181c] text-[#8b98a5]" : "bg-slate-100 text-slate-700"}`}>
             Cancel
           </button>
           <button
             onClick={save}
             disabled={saving}
-            className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-60 flex items-center gap-2"
+            className="px-4 py-2 rounded-lg bg-blue-600 text-[#e7e9ea] text-sm font-medium hover:bg-blue-700 disabled:opacity-60 flex items-center gap-2"
           >
             {saving && <Loader2 className="w-4 h-4 animate-spin" />} Create Team
           </button>
@@ -185,15 +185,15 @@ function FilePick({
 
   return (
     <div>
-      <label className={`block text-xs font-medium mb-1 ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
-        {label} <span className={`font-normal ${isDarkMode ? "text-slate-500" : "text-slate-400"}`}>(max {maxSizeMB} MB)</span>
+      <label className={`block text-xs font-medium mb-1 ${isDarkMode ? "text-[#8b98a5]" : "text-slate-600"}`}>
+        {label} <span className={`font-normal ${isDarkMode ? "text-slate-500" : "text-[#71767b]"}`}>(max {maxSizeMB} MB)</span>
       </label>
       <label
         className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs border cursor-pointer transition-colors ${
           sizeError
             ? "border-red-500 bg-red-500/5"
             : isDarkMode
-            ? "bg-slate-800 border-slate-600 text-slate-400 hover:border-blue-500"
+            ? "bg-[#16181c] border-[#38444d] text-[#71767b] hover:border-blue-500"
             : "bg-white border-slate-300 text-slate-500 hover:border-blue-500"
         }`}
       >

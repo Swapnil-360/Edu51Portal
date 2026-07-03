@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useRef, useCallback } from 'react';
+﻿import React, { useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import { Plus, Trash2, AlertTriangle, Save, Clock, MapPin, Download, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase, supabaseConfigured } from '../../lib/supabase';
@@ -393,7 +393,7 @@ ${slots.map(s => `<tr>
   };
 
   // ── Styles ─────────────────────────────────────────────────────────────────
-  const inputCls = `w-full px-3 py-2 rounded-lg border text-xs transition-all focus:outline-none focus:ring-1 focus:ring-[#4e7d7a]/40 ${dk ? 'bg-slate-800 border-slate-700 text-white placeholder-slate-600' : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400'}`;
+  const inputCls = `w-full px-3 py-2 rounded-lg border text-xs transition-all focus:outline-none focus:ring-1 focus:ring-[#1e9df1]/40 ${dk ? 'bg-[#16181c] border-[#2f3336] text-white placeholder-[#71767b]' : 'bg-white border-slate-200 text-slate-900 placeholder-[#71767b]'}`;
   const labelCls = `text-[10px] font-bold uppercase tracking-wider block mb-1 ${dk ? 'text-slate-500' : 'text-slate-400'}`;
 
   // ── Selected entry detail ──────────────────────────────────────────────────
@@ -413,18 +413,18 @@ ${slots.map(s => `<tr>
     <div className={`h-full flex flex-col ${dk ? 'bg-[#0a0f0e] text-white' : 'bg-slate-100 text-slate-900'}`}>
 
       {/* ── Top bar ── */}
-      <div className={`print-hide flex-shrink-0 flex items-center justify-between px-5 py-3 border-b ${dk ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200 shadow-sm'}`}>
+      <div className={`print-hide flex-shrink-0 flex items-center justify-between px-5 py-3 border-b ${dk ? 'bg-[#17181c]/90 border-[#2f3336]' : 'bg-white border-slate-200 shadow-sm'}`}>
         <div className="flex items-center gap-2.5">
           <span className={`text-sm font-bold ${dk ? 'text-white' : 'text-slate-900'}`}>My Routine</span>
-          <span className={`text-[10px] font-medium ${dk ? 'text-slate-600' : 'text-slate-400'}`}>· Intake 51</span>
+          <span className={`text-[10px] font-medium ${dk ? 'text-slate-500' : 'text-slate-400'}`}>· Intake 51</span>
           {entries.length > 0 && (
-            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${dk ? 'bg-slate-800 text-slate-400' : 'bg-slate-100 text-slate-500'}`}>
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${dk ? 'bg-[#16181c] text-slate-400' : 'bg-slate-100 text-slate-500'}`}>
               {entries.length} {entries.length === 1 ? 'class' : 'classes'}
             </span>
           )}
           {(syncMessage || isSyncing) && (
             <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-              isSyncing ? dk ? 'text-slate-600' : 'text-slate-400'
+              isSyncing ? dk ? 'text-slate-500' : 'text-slate-400'
               : syncMessage?.startsWith('✓')
               ? dk ? 'bg-emerald-900/30 text-emerald-400' : 'bg-emerald-50 text-emerald-600'
               : dk ? 'bg-red-900/30 text-red-400' : 'bg-red-50 text-red-600'
@@ -435,13 +435,13 @@ ${slots.map(s => `<tr>
           <button
             onClick={handleDownload}
             disabled={entries.length === 0}
-            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg border text-xs font-semibold transition-all disabled:opacity-40 ${dk ? 'border-slate-700 text-slate-400 hover:border-slate-600 hover:text-white' : 'border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-800 bg-white'}`}
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg border text-xs font-semibold transition-all disabled:opacity-40 ${dk ? 'border-[#2f3336] text-slate-400 hover:border-[#38444d] hover:text-white' : 'border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-800 bg-white'}`}
           >
             <Download className="w-3.5 h-3.5" /> Download
           </button>
           <button
             onClick={handleSave}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#4e7d7a] hover:bg-[#3d6361] text-white text-xs font-bold transition-all shadow-sm"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#1e9df1] hover:bg-[#1677cc] text-white text-xs font-bold transition-all shadow-sm"
           >
             <Save className="w-3.5 h-3.5" /> Save
           </button>
@@ -452,10 +452,10 @@ ${slots.map(s => `<tr>
       <div className="flex-1 flex overflow-hidden">
 
         {/* ── Form sidebar ── */}
-        <div className={`print-hide flex-shrink-0 w-[280px] border-r overflow-y-auto ${dk ? 'border-slate-800 bg-slate-900' : 'border-slate-200 bg-white'}`}>
-          <div className={`px-4 py-3 border-b ${dk ? 'border-slate-800' : 'border-slate-100'}`}>
+        <div className={`print-hide flex-shrink-0 w-[280px] border-r overflow-y-auto ${dk ? 'border-[#2f3336] bg-[#17181c]' : 'border-slate-200 bg-white'}`}>
+          <div className={`px-4 py-3 border-b ${dk ? 'border-[#2f3336]' : 'border-slate-100'}`}>
             <span className={`text-sm font-bold ${dk ? 'text-white' : 'text-slate-800'}`}>Add Class</span>
-            <p className={`text-[10px] mt-0.5 ${dk ? 'text-slate-600' : 'text-slate-400'}`}>Break 12:45–1:15 · 3hr labs auto-split</p>
+            <p className={`text-[10px] mt-0.5 ${dk ? 'text-slate-500' : 'text-slate-400'}`}>Break 12:45–1:15 · 3hr labs auto-split</p>
           </div>
           <div className="p-4 space-y-3">
 
@@ -479,13 +479,13 @@ ${slots.map(s => `<tr>
 
             <div>
               <label className={labelCls}>Type</label>
-              <div className={`flex rounded-lg p-0.5 ${dk ? 'bg-slate-800' : 'bg-slate-100'}`}>
+              <div className={`flex rounded-lg p-0.5 ${dk ? 'bg-[#16181c]' : 'bg-slate-100'}`}>
                 {(['regular', 'improvement', 'retake'] as const).map((v, i) => {
                   const lbl = ['Reg', 'Imp', 'RT'][i];
                   const cls = ['bg-emerald-600', 'bg-blue-600', 'bg-rose-600'][i];
                   return (
                     <button key={v} type="button" onClick={() => setForm(f => ({ ...f, type: v }))}
-                      className={`flex-1 text-[10px] font-bold py-1 rounded-md transition-all ${form.type === v ? `${cls} text-white` : dk ? 'text-slate-500 hover:text-slate-300' : 'text-slate-400 hover:text-slate-700'}`}>
+                      className={`flex-1 text-[10px] font-bold py-1 rounded-md transition-all ${form.type === v ? `${cls} text-white` : dk ? 'text-slate-500 hover:text-[#8b98a5]' : 'text-slate-400 hover:text-slate-700'}`}>
                       {lbl}
                     </button>
                   );
@@ -495,10 +495,10 @@ ${slots.map(s => `<tr>
 
             <div>
               <label className={labelCls}>Mode</label>
-              <div className={`flex rounded-lg p-0.5 ${dk ? 'bg-slate-800' : 'bg-slate-100'}`}>
+              <div className={`flex rounded-lg p-0.5 ${dk ? 'bg-[#16181c]' : 'bg-slate-100'}`}>
                 {(['theory', 'lab'] as const).map(v => (
                   <button key={v} type="button" onClick={() => setForm(f => ({ ...f, mode: v }))}
-                    className={`flex-1 text-[10px] font-bold py-1 rounded-md capitalize transition-all ${form.mode === v ? 'bg-violet-600 text-white' : dk ? 'text-slate-500 hover:text-slate-300' : 'text-slate-400 hover:text-slate-700'}`}>
+                    className={`flex-1 text-[10px] font-bold py-1 rounded-md capitalize transition-all ${form.mode === v ? 'bg-violet-600 text-white' : dk ? 'text-slate-500 hover:text-[#8b98a5]' : 'text-slate-400 hover:text-slate-700'}`}>
                     {v}
                   </button>
                 ))}
@@ -520,7 +520,7 @@ ${slots.map(s => `<tr>
                     <option value={180}>3h (split)</option>
                   </select>
                 ) : (
-                  <div className={`px-2.5 py-1.5 rounded-lg border text-xs font-semibold ${dk ? 'bg-slate-800/40 border-slate-700 text-slate-500' : 'bg-slate-50 border-slate-200 text-slate-400'}`}>
+                  <div className={`px-2.5 py-1.5 rounded-lg border text-xs font-semibold ${dk ? 'bg-[#16181c]/40 border-[#2f3336] text-slate-500' : 'bg-slate-50 border-slate-200 text-slate-400'}`}>
                     {format12h(form.end || '')}
                   </div>
                 )}
@@ -551,10 +551,10 @@ ${slots.map(s => `<tr>
             )}
 
             <div className="flex gap-2 pt-1">
-              <button onClick={addEntry} className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-[#4e7d7a] hover:bg-[#3d6361] text-white text-xs font-bold transition-all shadow-sm">
+              <button onClick={addEntry} className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-[#1e9df1] hover:bg-[#1677cc] text-white text-xs font-bold transition-all shadow-sm">
                 <Plus className="w-3.5 h-3.5" /> Add Class
               </button>
-              <button onClick={() => persistEntries([])} title="Clear all" className={`px-3 py-2 rounded-lg border text-xs transition-all ${dk ? 'border-slate-700 text-slate-500 hover:text-rose-400 hover:border-rose-800/40 hover:bg-rose-900/10' : 'border-slate-200 text-slate-400 hover:text-rose-500 hover:border-rose-200 hover:bg-rose-50'}`}>
+              <button onClick={() => persistEntries([])} title="Clear all" className={`px-3 py-2 rounded-lg border text-xs transition-all ${dk ? 'border-[#2f3336] text-slate-500 hover:text-rose-400 hover:border-rose-800/40 hover:bg-rose-900/10' : 'border-slate-200 text-slate-400 hover:text-rose-500 hover:border-rose-200 hover:bg-rose-50'}`}>
                 <Trash2 className="w-3.5 h-3.5" />
               </button>
             </div>
@@ -566,12 +566,12 @@ ${slots.map(s => `<tr>
           <div className="min-w-[640px] flex flex-col flex-1">
 
             {/* Sticky header row: Time | Day pills × 5 | Notes */}
-            <div className={`flex-shrink-0 sticky top-0 z-10 grid border-b ${dk ? 'bg-slate-900/97 border-slate-800 backdrop-blur' : 'bg-white/97 border-slate-200 backdrop-blur shadow-sm'}`}
+            <div className={`flex-shrink-0 sticky top-0 z-10 grid border-b ${dk ? 'bg-[#17181c]/97 border-[#2f3336] backdrop-blur' : 'bg-white/97 border-slate-200 backdrop-blur shadow-sm'}`}
               style={{ gridTemplateColumns: '68px repeat(5, 1fr) minmax(140px, 190px)' }}>
 
               {/* Time header */}
-              <div className={`flex items-center justify-center py-2.5 border-r ${dk ? 'border-slate-800' : 'border-slate-100'}`}>
-                <span className={`text-[9px] font-bold uppercase tracking-widest ${dk ? 'text-slate-600' : 'text-slate-400'}`}>Time</span>
+              <div className={`flex items-center justify-center py-2.5 border-r ${dk ? 'border-[#2f3336]' : 'border-slate-100'}`}>
+                <span className={`text-[9px] font-bold uppercase tracking-widest ${dk ? 'text-slate-500' : 'text-slate-400'}`}>Time</span>
               </div>
 
               {/* Day headers */}
@@ -579,7 +579,7 @@ ${slots.map(s => `<tr>
                 const isToday = d === todayName;
                 const color = DAY_COLOR[d];
                 return (
-                  <div key={d} className={`flex flex-col items-center justify-center py-2 gap-0.5 border-r ${dk ? 'border-slate-800' : 'border-slate-100'}`}>
+                  <div key={d} className={`flex flex-col items-center justify-center py-2 gap-0.5 border-r ${dk ? 'border-[#2f3336]' : 'border-slate-100'}`}>
                     <span className="text-[11px] font-black text-white px-4 py-[5px] rounded-full"
                       style={{ background: color, boxShadow: isToday ? `0 2px 12px ${color}80` : undefined, opacity: isToday ? 1 : 0.68 }}>
                       {d}
@@ -591,7 +591,7 @@ ${slots.map(s => `<tr>
 
               {/* Notes header */}
               <div className={`flex items-center justify-center py-2.5 ${dk ? '' : ''}`}>
-                <span className={`text-[9px] font-bold uppercase tracking-widest ${dk ? 'text-slate-600' : 'text-slate-400'}`}>Notes</span>
+                <span className={`text-[9px] font-bold uppercase tracking-widest ${dk ? 'text-slate-500' : 'text-slate-400'}`}>Notes</span>
               </div>
             </div>
 
@@ -607,7 +607,7 @@ ${slots.map(s => `<tr>
                     const bTop = ((toMinutes(BREAK_START) - START_MINUTES) / totalMinutes) * 100;
                     const bH = ((toMinutes(BREAK_END) - toMinutes(BREAK_START)) / totalMinutes) * 100;
                     return (
-                      <div className={`absolute z-20 flex items-center justify-center pointer-events-none border-y ${dk ? 'bg-slate-900/95 border-slate-700/60' : 'bg-slate-100/95 border-slate-300/60'}`}
+                      <div className={`absolute z-20 flex items-center justify-center pointer-events-none border-y ${dk ? 'bg-[#17181c]/95 border-[#2f3336]/60' : 'bg-slate-100/95 border-slate-300/60'}`}
                         style={{ left: 68, right: 0, top: `${bTop}%`, height: `${bH}%` }}>
                         <span className={`text-[10px] font-black tracking-widest uppercase ${dk ? 'text-slate-500' : 'text-slate-400'}`}>
                           Break &nbsp;·&nbsp; 12:45 – 1:15
@@ -617,16 +617,16 @@ ${slots.map(s => `<tr>
                   })()}
 
                   {/* Time column — one cell per hour slot */}
-                  <div className={`relative border-r ${dk ? 'border-slate-800' : 'border-slate-100'}`}>
+                  <div className={`relative border-r ${dk ? 'border-[#2f3336]' : 'border-slate-100'}`}>
                     {hourMarks.slice(0, -1).map((m, idx) => {
                       const nextM = hourMarks[idx + 1];
                       const top = ((m - START_MINUTES) / totalMinutes) * 100;
                       const height = ((nextM - m) / totalMinutes) * 100;
                       return (
-                        <div key={idx} className={`absolute left-0 right-0 flex flex-col items-end justify-start pr-2 pt-1 select-none border-b ${dk ? 'border-slate-800' : 'border-slate-100'}`}
+                        <div key={idx} className={`absolute left-0 right-0 flex flex-col items-end justify-start pr-2 pt-1 select-none border-b ${dk ? 'border-[#2f3336]' : 'border-slate-100'}`}
                           style={{ top: `${top}%`, height: `${height}%` }}>
-                          <span className={`text-[9px] font-bold tabular-nums leading-tight ${dk ? 'text-slate-500' : 'text-slate-500'}`}>{fmtSlotRange(m, nextM)}</span>
-                          <span className={`text-[7px] font-medium leading-none ${dk ? 'text-slate-700' : 'text-slate-300'}`}>{m < 720 ? 'AM' : 'PM'}</span>
+                          <span className={`text-[9px] font-bold tabular-nums leading-tight ${dk ? 'text-slate-400' : 'text-slate-500'}`}>{fmtSlotRange(m, nextM)}</span>
+                          <span className={`text-[7px] font-medium leading-none ${dk ? 'text-slate-500' : 'text-[#8b98a5]'}`}>{m < 720 ? 'AM' : 'PM'}</span>
                         </div>
                       );
                     })}
@@ -640,7 +640,7 @@ ${slots.map(s => `<tr>
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: colIdx * 0.05, duration: 0.2 }}
-                        className={`relative border-r ${dk ? 'border-slate-800' : 'border-slate-100'}`}
+                        className={`relative border-r ${dk ? 'border-[#2f3336]' : 'border-slate-100'}`}
                         style={{ background: dk ? `${color}08` : `${color}09` }}>
 
                         {/* Hour lines */}
@@ -663,17 +663,17 @@ ${slots.map(s => `<tr>
                                 exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.12 } }}
                                 transition={{ type: 'spring', stiffness: 360, damping: 28 }}
                                 onClick={() => setSelectedEntryId(entry.id)}
-                                className={`absolute cursor-pointer group rounded-md overflow-hidden border-y border-r hover:z-30 hover:shadow-md transition-shadow ${dk ? 'bg-slate-800/90 border-slate-700/50' : 'bg-white border-slate-200/80'}`}
+                                className={`absolute cursor-pointer group rounded-md overflow-hidden border-y border-r hover:z-30 hover:shadow-md transition-shadow ${dk ? 'bg-[#16181c]/90 border-[#2f3336]/50' : 'bg-white border-slate-200/80'}`}
                                 style={{ left: 2, right: 2, top: `${top}%`, height: `${Math.max(height, 3.5)}%`, minHeight: 28, borderLeft: `3px solid ${typeColor}`, zIndex: isDeemphasized ? 0 : 1 }}>
 
                                 <div className="h-full px-1.5 pt-1 pb-0.5 flex flex-col overflow-hidden">
                                   <div className={`text-[10px] font-bold leading-tight line-clamp-1 ${dk ? 'text-white' : 'text-slate-800'}`}>{entry.title}</div>
                                   {entry.courseCode && (
-                                    <div className={`text-[8px] font-semibold mt-px leading-none ${dk ? 'text-slate-500' : 'text-slate-400'}`}>{entry.courseCode}</div>
+                                    <div className={`text-[9px] font-semibold mt-px leading-none ${dk ? 'text-slate-400' : 'text-slate-500'}`}>{entry.courseCode}</div>
                                   )}
-                                  <div className={`text-[8px] mt-px leading-none ${dk ? 'text-slate-600' : 'text-slate-400'}`}>{format12h(entry.start)}–{format12h(entry.end)}</div>
+                                  <div className={`text-[9px] mt-px leading-none ${dk ? 'text-slate-400' : 'text-slate-500'}`}>{format12h(entry.start)}–{format12h(entry.end)}</div>
                                   {(entry.room || entry.section) && (
-                                    <div className={`text-[7px] mt-px leading-none ${dk ? 'text-slate-700' : 'text-slate-400/80'}`}>{[entry.room, entry.section].filter(Boolean).join(' · ')}</div>
+                                    <div className={`text-[8px] mt-px leading-none ${dk ? 'text-slate-500' : 'text-slate-400'}`}>{[entry.room, entry.section].filter(Boolean).join(' · ')}</div>
                                   )}
                                   <div className="mt-auto flex items-center gap-0.5 pb-px">
                                     <span className="text-[7px] font-black px-1 py-px rounded-sm text-white leading-none" style={{ background: typeColor }}>
@@ -687,7 +687,7 @@ ${slots.map(s => `<tr>
 
                                 <button
                                   onClick={ev => { ev.stopPropagation(); removeEntry(entry.id); }}
-                                  className={`absolute top-0.5 right-0.5 p-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity ${dk ? 'text-slate-600 hover:text-rose-400' : 'text-slate-300 hover:text-rose-500'}`}>
+                                  className={`absolute top-0.5 right-0.5 p-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity ${dk ? 'text-slate-500 hover:text-rose-400' : 'text-[#8b98a5] hover:text-rose-500'}`}>
                                   <X className="w-2.5 h-2.5" />
                                 </button>
                               </motion.div>
@@ -699,20 +699,20 @@ ${slots.map(s => `<tr>
                   })}
 
                   {/* Notes column — editable textarea per hour slot */}
-                  <div className={`relative ${dk ? 'bg-slate-900/30' : 'bg-amber-50/30'}`}>
+                  <div className={`relative ${dk ? 'bg-[#17181c]/30' : 'bg-amber-50/30'}`}>
                     {hourMarks.slice(0, -1).map((m, idx) => {
                       const nextM = hourMarks[idx + 1];
                       const top = ((m - START_MINUTES) / totalMinutes) * 100;
                       const height = ((nextM - m) / totalMinutes) * 100;
                       const key = fmt2(m);
                       return (
-                        <div key={idx} className={`absolute left-0 right-0 border-b ${dk ? 'border-slate-800' : 'border-slate-100'}`}
+                        <div key={idx} className={`absolute left-0 right-0 border-b ${dk ? 'border-[#2f3336]' : 'border-slate-100'}`}
                           style={{ top: `${top}%`, height: `${height}%` }}>
                           <textarea
                             value={notes[key] || ''}
                             onChange={e => updateNote(key, e.target.value)}
                             placeholder="Add note…"
-                            className={`w-full h-full px-2 py-1 text-[8px] leading-relaxed resize-none bg-transparent border-0 focus:outline-none focus:bg-amber-50/50 transition-colors ${dk ? 'text-slate-400 placeholder-slate-800 focus:bg-slate-800/30' : 'text-slate-600 placeholder-slate-300'}`}
+                            className={`w-full h-full px-2 py-1 text-[10px] leading-relaxed resize-none bg-transparent border-0 focus:outline-none focus:bg-amber-50/50 transition-colors ${dk ? 'text-slate-300 placeholder-slate-600 focus:bg-[#16181c]/30' : 'text-slate-600 placeholder-slate-300'}`}
                           />
                         </div>
                       );
@@ -721,7 +721,7 @@ ${slots.map(s => `<tr>
                 </div>
 
                 {/* Legend */}
-                <div className={`print-hide flex items-center gap-3 flex-wrap mt-3 pt-3 border-t ${dk ? 'border-slate-800' : 'border-slate-200'}`}>
+                <div className={`print-hide flex items-center gap-3 flex-wrap mt-3 pt-3 border-t ${dk ? 'border-[#2f3336]' : 'border-slate-200'}`}>
                   {[{ c: '#10b981', l: 'Regular' }, { c: '#3b82f6', l: 'Improv.' }, { c: '#f43f5e', l: 'Retake' }].map(({ c, l }) => (
                     <span key={l} className={`inline-flex items-center gap-1 text-[10px] font-medium ${dk ? 'text-slate-500' : 'text-slate-400'}`}>
                       <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: c }} />{l}
@@ -733,7 +733,7 @@ ${slots.map(s => `<tr>
                   <span className={`inline-flex items-center gap-1 text-[10px] font-medium ${dk ? 'text-slate-500' : 'text-slate-400'}`}>
                     <span className="w-2 h-2 rounded-full flex-shrink-0 bg-slate-400" />Theory
                   </span>
-                  <span className={`ml-auto text-[9px] ${dk ? 'text-slate-700' : 'text-slate-300'}`}>Click a card to see details</span>
+                  <span className={`ml-auto text-[9px] ${dk ? 'text-slate-500' : 'text-[#8b98a5]'}`}>Click a card to see details</span>
                 </div>
               </div>
             </div>
@@ -754,13 +754,13 @@ ${slots.map(s => `<tr>
               exit={{ opacity: 0, scale: 0.95, y: 8 }}
               transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
               onClick={e => e.stopPropagation()}
-              className={`w-full max-w-sm rounded-2xl shadow-2xl border overflow-hidden ${dk ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'}`}
+              className={`w-full max-w-sm rounded-2xl shadow-2xl border overflow-hidden ${dk ? 'bg-[#17181c] border-[#2f3336]' : 'bg-white border-slate-200'}`}
             >
-              <div className={`flex items-center justify-between px-4 py-3 border-b ${dk ? 'border-slate-800' : 'border-slate-100'}`}>
+              <div className={`flex items-center justify-between px-4 py-3 border-b ${dk ? 'border-[#2f3336]' : 'border-slate-100'}`}>
                 <h3 className={`text-sm font-bold ${dk ? 'text-white' : 'text-slate-900'}`}>
                   {selConflicts.length > 0 ? 'Overlapping Courses' : 'Course Details'}
                 </h3>
-                <button onClick={() => setSelectedEntryId(null)} className={`p-1.5 rounded-lg ${dk ? 'hover:bg-slate-800 text-slate-500' : 'hover:bg-slate-100 text-slate-400'}`}>
+                <button onClick={() => setSelectedEntryId(null)} className={`p-1.5 rounded-lg ${dk ? 'hover:bg-[#16181c] text-slate-500' : 'hover:bg-slate-100 text-slate-400'}`}>
                   <X className="w-3.5 h-3.5" />
                 </button>
               </div>
@@ -769,7 +769,7 @@ ${slots.map(s => `<tr>
                   const accentBar = entry.type === 'regular' ? 'bg-emerald-500' : entry.type === 'improvement' ? 'bg-blue-500' : 'bg-rose-500';
                   const typePill = entry.type === 'regular' ? 'bg-emerald-600' : entry.type === 'improvement' ? 'bg-blue-600' : 'bg-rose-600';
                   return (
-                    <div key={entry.id} className={`rounded-xl border overflow-hidden ${dk ? 'border-slate-700 bg-slate-800' : 'border-slate-100 bg-slate-50'}`}>
+                    <div key={entry.id} className={`rounded-xl border overflow-hidden ${dk ? 'border-[#2f3336] bg-[#16181c]' : 'border-slate-100 bg-slate-50'}`}>
                       <div className={`h-[3px] ${accentBar}`} />
                       <div className="p-3">
                         <div className="flex items-start justify-between gap-2 mb-2">

@@ -1,4 +1,4 @@
-import { SocialProfile } from "../../types/social";
+﻿import { SocialProfile } from "../../types/social";
 
 interface Props {
   profile: SocialProfile;
@@ -15,12 +15,12 @@ export default function UserCard({ profile, isDarkMode, onView, action }: Props)
   return (
     <div
       className={`rounded-xl border p-4 flex items-center gap-3 transition-colors ${
-        isDarkMode ? "bg-slate-900 border-slate-700/50 hover:border-slate-600" : "bg-white border-slate-200 hover:border-slate-300"
+        isDarkMode ? "bg-[#17181c] border-[#2f3336]/50 hover:border-[#38444d]" : "bg-white border-slate-200 hover:border-slate-300"
       }`}
     >
       <button
         onClick={() => onView?.(profile)}
-        className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 bg-gradient-to-br from-blue-500 to-violet-600"
+        className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 bg-gradient-to-br from-[#1e9df1] to-[#1677cc]"
       >
         {profile.avatar_url || profile.profile_pic ? (
           <img src={profile.avatar_url || profile.profile_pic!} alt={profile.name} className="w-full h-full object-cover" loading="lazy" />
@@ -48,7 +48,7 @@ export default function UserCard({ profile, isDarkMode, onView, action }: Props)
               <span
                 key={s}
                 className={`px-1.5 py-0.5 rounded text-[10px] font-medium capitalize ${
-                  isDarkMode ? "bg-blue-900/40 text-blue-300" : "bg-blue-50 text-blue-700"
+                  isDarkMode ? "bg-[#061622] text-[#1e9df1]" : "bg-[#e8f4fd] text-[#1677cc]"
                 }`}
               >
                 {s}

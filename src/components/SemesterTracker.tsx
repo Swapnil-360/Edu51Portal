@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, BookOpen, Target, Users, TrendingUp, CreditCard, Sparkles, UserCheck, AlertCircle, ChevronDown, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { getCurrentSemesterStatus } from '../config/semester';
@@ -95,15 +95,15 @@ const SemesterTracker: React.FC<SemesterTrackerProps> = ({ onClose, isDarkMode =
   };
 
   const dm = isDarkMode;
-  const card = dm ? 'bg-slate-900 border border-slate-800' : 'bg-white border border-slate-200 shadow-sm';
-  const innerCard = dm ? 'bg-slate-800/60 border border-slate-700/60' : 'bg-slate-50 border border-slate-200';
-  const head = dm ? 'text-white' : 'text-slate-900';
-  const sub = dm ? 'text-slate-400' : 'text-slate-500';
-  const label = dm ? 'text-slate-300' : 'text-slate-700';
+  const card = dm ? 'bg-[#17181c] border border-[#2f3336]' : 'bg-white border border-slate-200 shadow-sm';
+  const innerCard = dm ? 'bg-[#16181c] border border-[#2f3336]/60' : 'bg-slate-50 border border-slate-200';
+  const head = dm ? 'text-[#e7e9ea]' : 'text-slate-900';
+  const sub = dm ? 'text-[#71767b]' : 'text-slate-500';
+  const label = dm ? 'text-[#8b98a5]' : 'text-slate-700';
 
   return (
     <div className={`h-full transition-colors duration-300 ${
-      dm ? 'bg-slate-950' : 'bg-slate-50'
+      dm ? 'bg-[#000000]' : 'bg-slate-50'
     }`}>
       <div className="h-full overflow-y-auto p-2 sm:p-4 pb-8">
         <div className="max-w-7xl mx-auto">
@@ -117,15 +117,15 @@ const SemesterTracker: React.FC<SemesterTrackerProps> = ({ onClose, isDarkMode =
         >
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-4">
-              <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${dm ? 'bg-blue-900/40' : 'bg-blue-50'}`}>
-                <Clock className="h-5 w-5 text-blue-500" />
+              <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${dm ? 'bg-[#061622]' : 'bg-[#1e9df1]/5'}`}>
+                <Clock className="h-5 w-5 text-[#1e9df1]" />
               </div>
               <div>
                 <div className={`text-2xl font-black tracking-tight ${head}`}>{formatTime(currentTime)} <span className={`text-sm font-semibold ${sub}`}>BST</span></div>
                 <div className={`text-xs ${sub}`}>{formatDate(currentTime)}</div>
               </div>
             </div>
-            <div className={`px-4 py-2 rounded-xl text-right ${dm ? 'bg-slate-800' : 'bg-slate-100'}`}>
+            <div className={`px-4 py-2 rounded-xl text-right ${dm ? 'bg-[#16181c]' : 'bg-slate-100'}`}>
               <div className={`text-base font-bold ${head}`}>Week {semesterStatus.semesterWeek}</div>
               <div className={`text-xs ${sub}`}>{semesterStatus.semesterName}</div>
             </div>
@@ -140,8 +140,8 @@ const SemesterTracker: React.FC<SemesterTrackerProps> = ({ onClose, isDarkMode =
           className={`rounded-2xl p-5 mb-6 ${card}`}
         >
           <div className="flex items-center gap-2.5 mb-5">
-            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${dm ? 'bg-blue-900/40' : 'bg-blue-50'}`}>
-              <Calendar className="h-4 w-4 text-blue-500" />
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${dm ? 'bg-[#061622]' : 'bg-[#1e9df1]/5'}`}>
+              <Calendar className="h-4 w-4 text-[#1e9df1]" />
             </div>
             <h2 className={`text-base font-bold ${head}`}>Semester Deadlines & Key Events</h2>
           </div>
@@ -150,23 +150,23 @@ const SemesterTracker: React.FC<SemesterTrackerProps> = ({ onClose, isDarkMode =
             {/* Payment Deadlines */}
             <div className={`p-4 rounded-xl ${innerCard}`}>
               <div className="flex items-center gap-2.5 mb-3">
-                <div className={`p-1.5 rounded-lg ${dm ? 'bg-blue-900/40 text-blue-400' : 'bg-blue-50 text-blue-600'}`}>
+                <div className={`p-1.5 rounded-lg ${dm ? 'bg-[#061622] text-[#1e9df1]' : 'bg-blue-50 text-[#1e9df1]'}`}>
                   <CreditCard className="h-4 w-4" />
                 </div>
                 <h3 className={`font-semibold text-sm ${head}`}>Payment Installments</h3>
               </div>
               <ul className={`text-xs space-y-2.5 ${label}`}>
-                <li className={`flex justify-between items-center pb-2 border-b ${dm ? 'border-slate-700/60' : 'border-slate-200'}`}>
+                <li className={`flex justify-between items-center pb-2 border-b ${dm ? 'border-[#2f3336]/60' : 'border-slate-200'}`}>
                   <span>1st Installment</span>
-                  <span className={`font-semibold px-2 py-0.5 rounded-md ${dm ? 'bg-slate-700 text-slate-300' : 'bg-slate-200 text-slate-700'}`}>May 6–22</span>
+                  <span className={`font-semibold px-2 py-0.5 rounded-md ${dm ? 'bg-[#2f3336] text-[#e7e9ea]' : 'bg-slate-200 text-slate-700'}`}>May 6–22</span>
                 </li>
-                <li className={`flex justify-between items-center pb-2 border-b ${dm ? 'border-slate-700/60' : 'border-slate-200'}`}>
+                <li className={`flex justify-between items-center pb-2 border-b ${dm ? 'border-[#2f3336]/60' : 'border-slate-200'}`}>
                   <span>2nd Installment</span>
-                  <span className={`font-semibold px-2 py-0.5 rounded-md ${dm ? 'bg-slate-700 text-slate-300' : 'bg-slate-200 text-slate-700'}`}>Jun 10–24</span>
+                  <span className={`font-semibold px-2 py-0.5 rounded-md ${dm ? 'bg-[#2f3336] text-[#e7e9ea]' : 'bg-slate-200 text-slate-700'}`}>Jun 10–24</span>
                 </li>
                 <li className="flex justify-between items-center">
                   <span>Final Installment</span>
-                  <span className={`font-semibold px-2 py-0.5 rounded-md ${dm ? 'bg-blue-900/40 text-blue-400' : 'bg-blue-100 text-blue-700'}`}>Aug 6–19</span>
+                  <span className={`font-semibold px-2 py-0.5 rounded-md ${dm ? 'bg-[#061622] text-[#1e9df1]' : 'bg-blue-100 text-[#1677cc]'}`}>Aug 6–19</span>
                 </li>
               </ul>
             </div>
@@ -174,19 +174,19 @@ const SemesterTracker: React.FC<SemesterTrackerProps> = ({ onClose, isDarkMode =
             {/* Special Events */}
             <div className={`p-4 rounded-xl ${innerCard}`}>
               <div className="flex items-center gap-2.5 mb-3">
-                <div className={`p-1.5 rounded-lg ${dm ? 'bg-blue-900/40 text-blue-400' : 'bg-blue-50 text-blue-600'}`}>
+                <div className={`p-1.5 rounded-lg ${dm ? 'bg-[#061622] text-[#1e9df1]' : 'bg-blue-50 text-[#1e9df1]'}`}>
                   <Sparkles className="h-4 w-4" />
                 </div>
                 <h3 className={`font-semibold text-sm ${head}`}>Special Events</h3>
               </div>
               <ul className={`text-xs space-y-2.5 ${label}`}>
-                <li className={`pb-2 border-b ${dm ? 'border-slate-700/60' : 'border-slate-200'}`}>
+                <li className={`pb-2 border-b ${dm ? 'border-[#2f3336]/60' : 'border-slate-200'}`}>
                   <span className="block mb-1">Club Member Collection</span>
-                  <span className={`font-semibold px-2 py-0.5 rounded-md ${dm ? 'bg-slate-700 text-slate-300' : 'bg-slate-200 text-slate-700'}`}>June 7–10</span>
+                  <span className={`font-semibold px-2 py-0.5 rounded-md ${dm ? 'bg-[#2f3336] text-[#e7e9ea]' : 'bg-slate-200 text-slate-700'}`}>June 7–10</span>
                 </li>
                 <li>
                   <span className="block mb-1">Research Showcase</span>
-                  <span className={`font-semibold px-2 py-0.5 rounded-md ${dm ? 'bg-slate-700 text-slate-300' : 'bg-slate-200 text-slate-700'}`}>Aug 16–20</span>
+                  <span className={`font-semibold px-2 py-0.5 rounded-md ${dm ? 'bg-[#2f3336] text-[#e7e9ea]' : 'bg-slate-200 text-slate-700'}`}>Aug 16–20</span>
                 </li>
               </ul>
             </div>
@@ -194,7 +194,7 @@ const SemesterTracker: React.FC<SemesterTrackerProps> = ({ onClose, isDarkMode =
             {/* Teacher Evaluation */}
             <div className={`p-4 rounded-xl ${innerCard}`}>
               <div className="flex items-center gap-2.5 mb-3">
-                <div className={`p-1.5 rounded-lg ${dm ? 'bg-blue-900/40 text-blue-400' : 'bg-blue-50 text-blue-600'}`}>
+                <div className={`p-1.5 rounded-lg ${dm ? 'bg-[#061622] text-[#1e9df1]' : 'bg-blue-50 text-[#1e9df1]'}`}>
                   <UserCheck className="h-4 w-4" />
                 </div>
                 <h3 className={`font-semibold text-sm ${head}`}>Teacher Evaluation</h3>
@@ -202,9 +202,9 @@ const SemesterTracker: React.FC<SemesterTrackerProps> = ({ onClose, isDarkMode =
               <p className={`text-xs leading-relaxed mb-3 ${label}`}>
                 Student feedback portal for BUBT faculty will be open.
               </p>
-              <div className={`flex justify-between items-center pt-2 border-t ${dm ? 'border-slate-700/60' : 'border-slate-200'}`}>
+              <div className={`flex justify-between items-center pt-2 border-t ${dm ? 'border-[#2f3336]/60' : 'border-slate-200'}`}>
                 <span className={`text-xs ${sub}`}>Period</span>
-                <span className={`font-semibold text-xs px-2 py-0.5 rounded-md ${dm ? 'bg-slate-700 text-slate-300' : 'bg-slate-200 text-slate-700'}`}>Aug 17–22</span>
+                <span className={`font-semibold text-xs px-2 py-0.5 rounded-md ${dm ? 'bg-[#2f3336] text-[#e7e9ea]' : 'bg-slate-200 text-slate-700'}`}>Aug 17–22</span>
               </div>
             </div>
 
@@ -218,11 +218,11 @@ const SemesterTracker: React.FC<SemesterTrackerProps> = ({ onClose, isDarkMode =
               </div>
               <div className={`text-xs space-y-2.5 ${label}`}>
                 <div className="flex gap-2 items-start">
-                  <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 flex-shrink-0" />
-                  <p className="leading-relaxed">Dates marked <span className="font-bold text-blue-500">*</span> are subject to moon appearance.</p>
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#1e9df1] mt-1.5 flex-shrink-0" />
+                  <p className="leading-relaxed">Dates marked <span className="font-bold text-[#1e9df1]">*</span> are subject to moon appearance.</p>
                 </div>
                 <div className="flex gap-2 items-start">
-                  <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 flex-shrink-0" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#1e9df1] mt-1.5 flex-shrink-0" />
                   <p className="leading-relaxed">All schedules subject to official BUBT administrative decisions.</p>
                 </div>
               </div>
@@ -240,8 +240,8 @@ const SemesterTracker: React.FC<SemesterTrackerProps> = ({ onClose, isDarkMode =
             className={`lg:col-span-2 rounded-2xl p-5 ${card}`}
           >
             <div className="flex items-center gap-2.5 mb-5">
-              <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${dm ? 'bg-blue-900/40' : 'bg-blue-50'}`}>
-                <TrendingUp className="h-4 w-4 text-blue-500" />
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${dm ? 'bg-[#061622]' : 'bg-[#1e9df1]/5'}`}>
+                <TrendingUp className="h-4 w-4 text-[#1e9df1]" />
               </div>
               <h2 className={`text-base font-bold ${head}`}>Semester Progress</h2>
             </div>
@@ -252,9 +252,9 @@ const SemesterTracker: React.FC<SemesterTrackerProps> = ({ onClose, isDarkMode =
                 <span className={`text-xs font-medium ${sub}`}>Overall Progress</span>
                 <span className={`text-sm font-black ${head}`}>{semesterStatus.progressPercentage}%</span>
               </div>
-              <div className={`w-full rounded-full h-3 overflow-hidden ${dm ? 'bg-slate-800' : 'bg-slate-100'}`}>
+              <div className={`w-full rounded-full h-3 overflow-hidden ${dm ? 'bg-[#16181c]' : 'bg-slate-100'}`}>
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-blue-500 to-blue-400 transition-all duration-1000 ease-out"
+                  className="h-full rounded-full bg-gradient-to-r from-[#1e9df1] to-[#1da1f2] transition-all duration-1000 ease-out"
                   style={{ width: `${semesterStatus.progressPercentage}%` }}
                 />
               </div>
@@ -265,10 +265,10 @@ const SemesterTracker: React.FC<SemesterTrackerProps> = ({ onClose, isDarkMode =
 
             {/* Current Phase + Next Milestone */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className={`rounded-xl p-4 ${dm ? 'bg-blue-900/20 border border-blue-800/40' : 'bg-blue-50 border border-blue-100'}`}>
+              <div className={`rounded-xl p-4 ${dm ? 'bg-[#061622] border border-[#1e9df1]/20' : 'bg-[#1e9df1]/5 border border-[#1e9df1]/20'}`}>
                 <div className="flex items-center gap-2 mb-2">
-                  <BookOpen className="h-4 w-4 text-blue-500" />
-                  <span className={`text-xs font-semibold ${dm ? 'text-blue-400' : 'text-blue-700'}`}>Current Phase</span>
+                  <BookOpen className="h-4 w-4 text-[#1e9df1]" />
+                  <span className={`text-xs font-semibold ${dm ? 'text-[#1e9df1]' : 'text-[#1677cc]'}`}>Current Phase</span>
                 </div>
                 <div className={`text-base font-bold ${head}`}>{semesterStatus.currentPhase}</div>
               </div>
@@ -293,8 +293,8 @@ const SemesterTracker: React.FC<SemesterTrackerProps> = ({ onClose, isDarkMode =
             className={`rounded-2xl p-5 ${card}`}
           >
             <div className="flex items-center gap-2.5 mb-5">
-              <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${dm ? 'bg-blue-900/40' : 'bg-blue-50'}`}>
-                <Calendar className="h-4 w-4 text-blue-500" />
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${dm ? 'bg-[#061622]' : 'bg-[#1e9df1]/5'}`}>
+                <Calendar className="h-4 w-4 text-[#1e9df1]" />
               </div>
               <h2 className={`text-base font-bold ${head}`}>Timeline</h2>
             </div>
@@ -313,20 +313,20 @@ const SemesterTracker: React.FC<SemesterTrackerProps> = ({ onClose, isDarkMode =
               <div className={`flex items-center justify-between p-3 rounded-xl border ${
                 semesterStatus.currentPhase === 'Mid-term Examinations'
                   ? dm ? 'bg-red-900/20 border-red-700/40' : 'bg-red-50 border-red-100'
-                  : dm ? 'bg-blue-900/20 border-blue-800/40' : 'bg-blue-50 border-blue-100'
+                  : dm ? 'bg-[#061622] border-[#1e9df1]/20' : 'bg-[#1e9df1]/5 border-[#1e9df1]/20'
               }`}>
                 <div>
                   <div className={`text-sm font-bold ${
                     semesterStatus.currentPhase === 'Mid-term Examinations'
                       ? dm ? 'text-red-400' : 'text-red-700'
-                      : dm ? 'text-blue-400' : 'text-blue-700'
+                      : dm ? 'text-[#1e9df1]' : 'text-[#1677cc]'
                   }`}>Mid-term Exams</div>
                   <div className={`text-xs ${dm ? 'text-slate-400' : 'text-slate-500'}`}>Jun 25–Jul 3</div>
                 </div>
                 <div className={`w-2.5 h-2.5 rounded-full ${
                   semesterStatus.currentPhase === 'Mid-term Examinations'
                     ? 'bg-red-500 animate-pulse'
-                    : 'bg-blue-500'
+                    : 'bg-[#1e9df1]'
                 }`} />
               </div>
 
@@ -421,14 +421,14 @@ const SemesterTracker: React.FC<SemesterTrackerProps> = ({ onClose, isDarkMode =
               {
                 emoji: '🏖️', title: 'Semester Break', date: 'September 4, 2026',
                 note: 'Fall 2026 starts: September 5',
-                badge: semesterStatus.isBreak ? 'ACTIVE' : null, badgeColor: 'bg-teal-500',
+                badge: semesterStatus.isBreak ? 'ACTIVE' : null, badgeColor: 'bg-[#1e9df1]',
                 active: !semesterStatus.isBreak && new Date() < new Date('2026-09-04'), past: false,
                 accentDark: 'border-l-teal-500', accentLight: 'border-l-teal-400',
               },
             ].map((ev, i) => (
               <div key={i} className={`flex items-start gap-3 px-4 py-3 rounded-xl border-l-4 ${
                 dm
-                  ? `${ev.accentDark} ${ev.past ? 'bg-slate-800/30 opacity-60' : 'bg-slate-800/60'}`
+                  ? `${ev.accentDark} ${ev.past ? 'bg-[#17181c]/30 opacity-60' : 'bg-[#16181c]'}`
                   : `${ev.accentLight} ${ev.past ? 'bg-slate-50 opacity-60' : 'bg-white border border-slate-100'}`
               }`}>
                 <span className={`text-base leading-none pt-0.5 flex-shrink-0 ${ev.past ? 'grayscale opacity-50' : ''}`}>{ev.emoji}</span>
@@ -436,7 +436,7 @@ const SemesterTracker: React.FC<SemesterTrackerProps> = ({ onClose, isDarkMode =
                   <div className={`text-sm font-semibold flex items-center gap-2 flex-wrap ${head}`}>
                     {ev.title}
                     {ev.badge && <span className={`text-[10px] px-2 py-0.5 rounded-full text-white font-bold ${ev.badgeColor}`}>{ev.badge}</span>}
-                    {ev.past && <span className={`text-[10px] px-2 py-0.5 rounded-full ${dm ? 'bg-slate-700 text-slate-400' : 'bg-slate-100 text-slate-400'}`}>Done</span>}
+                    {ev.past && <span className={`text-[10px] px-2 py-0.5 rounded-full ${dm ? 'bg-[#2f3336] text-[#71767b]' : 'bg-slate-100 text-slate-400'}`}>Done</span>}
                   </div>
                   <div className={`text-xs mt-0.5 ${sub}`}>{ev.date}</div>
                   {ev.note && <div className={`text-xs mt-0.5 ${sub} opacity-70`}>{ev.note}</div>}
@@ -466,7 +466,7 @@ const SemesterTracker: React.FC<SemesterTrackerProps> = ({ onClose, isDarkMode =
           <div className="overflow-x-auto rounded-xl">
             <table className="w-full min-w-[580px] text-sm">
               <thead>
-                <tr className={`text-xs font-semibold uppercase tracking-wide ${dm ? 'bg-slate-800 text-slate-400' : 'bg-slate-50 text-slate-500'}`}>
+                <tr className={`text-xs font-semibold uppercase tracking-wide ${dm ? 'bg-[#16181c] text-slate-400' : 'bg-slate-50 text-slate-500'}`}>
                   <th className="text-left py-2.5 px-4 rounded-l-lg">Course</th>
                   <th className="text-left py-2.5 px-4">Date & Day</th>
                   <th className="text-left py-2.5 px-4">Teacher</th>
@@ -474,7 +474,7 @@ const SemesterTracker: React.FC<SemesterTrackerProps> = ({ onClose, isDarkMode =
                   <th className="text-left py-2.5 px-4 rounded-r-lg">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/30">
+              <tbody className="divide-y divide-[#2f3336]/30">
                 {Object.entries(MID_TERM_SCHEDULE).map(([courseCode, exam]) => {
                   const examDate = new Date(exam.date);
                   const today = new Date();
@@ -483,7 +483,7 @@ const SemesterTracker: React.FC<SemesterTrackerProps> = ({ onClose, isDarkMode =
                   examDate.setHours(0, 0, 0, 0);
 
                   let status = 'Upcoming';
-                  let statusCls = dm ? 'text-blue-400' : 'text-blue-600';
+                  let statusCls = dm ? 'text-[#1e9df1]' : 'text-[#1e9df1]';
 
                   if (examDate < today) {
                     status = 'Done';

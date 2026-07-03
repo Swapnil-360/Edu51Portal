@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+﻿import React, { useEffect, useState, useMemo } from "react";
 import {
   Calendar,
   Clock,
@@ -53,7 +53,7 @@ const PRIORITY_CONFIG: Record<TaskPriority, { label: string; icon: React.ReactNo
   low: {
     label: "Low",
     icon: <ArrowDown className="w-3 h-3" />,
-    badge: "bg-slate-500/10 text-slate-400",
+    badge: "bg-slate-500/10 text-[#71767b]",
     dot: "bg-slate-400",
   },
 };
@@ -291,15 +291,15 @@ export default function TeamTasksBoard({
   const progressPct = totalCount ? Math.round((doneCount / totalCount) * 100) : 0;
   const filtersActive = searchQuery.trim() !== "" || assigneeFilter !== "all" || priorityFilter !== "all";
 
-  const bgCard = isDarkMode ? "bg-slate-900 border-slate-700/50" : "bg-white border-slate-200";
-  const textTitle = isDarkMode ? "text-white" : "text-slate-900";
-  const textSub = isDarkMode ? "text-slate-400" : "text-slate-500";
+  const bgCard = isDarkMode ? "bg-[#17181c] border-[#2f3336]/50" : "bg-white border-slate-200";
+  const textTitle = isDarkMode ? "text-[#e7e9ea]" : "text-slate-900";
+  const textSub = isDarkMode ? "text-[#71767b]" : "text-slate-500";
   const inputClass = `w-full px-3 py-2.5 rounded-xl text-sm border outline-none transition-all duration-200 ${
     isDarkMode
-      ? "bg-slate-800 border-slate-700 text-white placeholder-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-      : "bg-white border-slate-300 text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+      ? "bg-[#16181c] border-[#2f3336] text-[#e7e9ea] placeholder-[#71767b] focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+      : "bg-white border-slate-300 text-slate-900 placeholder-[#71767b] focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
   }`;
-  const labelClass = `block text-xs font-bold mb-1.5 ${isDarkMode ? "text-slate-300" : "text-slate-600"}`;
+  const labelClass = `block text-xs font-bold mb-1.5 ${isDarkMode ? "text-[#8b98a5]" : "text-slate-600"}`;
 
   return (
     <div className="space-y-6">
@@ -308,7 +308,7 @@ export default function TeamTasksBoard({
         <div className="flex items-start justify-between gap-3 mb-4">
           <div className="flex items-center gap-3 min-w-0">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center flex-shrink-0 shadow-sm">
-              <LayoutGrid className="w-5 h-5 text-white" />
+              <LayoutGrid className="w-5 h-5 text-[#e7e9ea]" />
             </div>
             <div className="min-w-0">
               <h2 className={`text-base font-bold ${textTitle}`}>Task Board</h2>
@@ -320,7 +320,7 @@ export default function TeamTasksBoard({
           </div>
           <button
             onClick={() => openCreate("todo")}
-            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-semibold hover:from-blue-700 hover:to-indigo-700 shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-1.5 active:scale-95 flex-shrink-0"
+            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-[#e7e9ea] text-sm font-semibold hover:from-blue-700 hover:to-indigo-700 shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-1.5 active:scale-95 flex-shrink-0"
           >
             <Plus className="w-4 h-4" /> <span className="hidden sm:inline">Add Task</span>
           </button>
@@ -328,7 +328,7 @@ export default function TeamTasksBoard({
 
         {/* Progress bar */}
         {totalCount > 0 && (
-          <div className={`h-1.5 rounded-full overflow-hidden mb-4 ${isDarkMode ? "bg-slate-800" : "bg-slate-100"}`}>
+          <div className={`h-1.5 rounded-full overflow-hidden mb-4 ${isDarkMode ? "bg-[#16181c]" : "bg-slate-100"}`}>
             <div
               className="h-full rounded-full bg-gradient-to-r from-blue-500 to-emerald-500 transition-all duration-500"
               style={{ width: `${progressPct}%` }}
@@ -339,7 +339,7 @@ export default function TeamTasksBoard({
         {/* Filters row */}
         <div className="flex flex-col sm:flex-row gap-2.5">
           <div className="relative flex-1">
-            <Search className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 ${isDarkMode ? "text-slate-500" : "text-slate-400"}`} />
+            <Search className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 ${isDarkMode ? "text-slate-500" : "text-[#71767b]"}`} />
             <input
               type="text"
               placeholder="Search tasks..."
@@ -519,10 +519,10 @@ function TaskModal({
 
   return (
     <div className="fixed inset-0 z-[140] flex items-center justify-center p-4 bg-black/65 backdrop-blur-sm">
-      <div className={`w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border transition-all duration-300 ${isDarkMode ? "bg-slate-900 border-slate-700" : "bg-white border-slate-200"}`}>
-        <div className={`px-5 py-4 border-b flex items-center justify-between ${isDarkMode ? "border-slate-800 bg-slate-900/60" : "border-slate-100 bg-slate-50"}`}>
+      <div className={`w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border transition-all duration-300 ${isDarkMode ? "bg-[#17181c] border-[#2f3336]" : "bg-white border-slate-200"}`}>
+        <div className={`px-5 py-4 border-b flex items-center justify-between ${isDarkMode ? "border-[#2f3336] bg-[#17181c]/60" : "border-slate-100 bg-slate-50"}`}>
           <h3 className={`font-bold text-lg ${textTitle}`}>{mode === "create" ? "Create Task" : "Edit Task"}</h3>
-          <button onClick={onClose} className={isDarkMode ? "text-slate-400 hover:text-white" : "text-slate-500 hover:text-slate-700"}>
+          <button onClick={onClose} className={isDarkMode ? "text-[#71767b] hover:text-[#e7e9ea]" : "text-slate-500 hover:text-slate-700"}>
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -573,7 +573,7 @@ function TaskModal({
             </div>
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className={`text-xs font-bold ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>Status</label>
+                <label className={`text-xs font-bold ${isDarkMode ? "text-[#8b98a5]" : "text-slate-600"}`}>Status</label>
                 {mode === "edit" && !canMove && (
                   <span className="inline-flex items-center gap-1 text-[9px] font-bold text-amber-500">
                     <Lock className="w-2.5 h-2.5" /> Locked
@@ -611,7 +611,7 @@ function TaskModal({
           {/* Assignee */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label className={`text-xs font-bold ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>Assignee</label>
+              <label className={`text-xs font-bold ${isDarkMode ? "text-[#8b98a5]" : "text-slate-600"}`}>Assignee</label>
               {!canManage && (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-500/10 text-amber-500">
                   <Shield className="w-2.5 h-2.5" /> Owner/Admin only
@@ -639,7 +639,7 @@ function TaskModal({
           </div>
 
           {/* Footer actions */}
-          <div className={`pt-4 border-t flex items-center justify-between ${isDarkMode ? "border-slate-800" : "border-slate-100"}`}>
+          <div className={`pt-4 border-t flex items-center justify-between ${isDarkMode ? "border-[#2f3336]" : "border-slate-100"}`}>
             {mode === "edit" && onDelete && canDelete ? (
               <button
                 type="button"
@@ -655,14 +655,14 @@ function TaskModal({
               <button
                 type="button"
                 onClick={onClose}
-                className={`px-4 py-2 rounded-xl text-sm font-medium ${isDarkMode ? "bg-slate-800 text-slate-300 hover:bg-slate-700" : "bg-slate-100 text-slate-700 hover:bg-slate-200"}`}
+                className={`px-4 py-2 rounded-xl text-sm font-medium ${isDarkMode ? "bg-[#16181c] text-[#8b98a5] hover:bg-[#2f3336]" : "bg-slate-100 text-slate-700 hover:bg-slate-200"}`}
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={busy}
-                className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold disabled:opacity-60 flex items-center gap-1.5 shadow-md"
+                className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-[#e7e9ea] text-sm font-semibold disabled:opacity-60 flex items-center gap-1.5 shadow-md"
               >
                 {busy && <Loader2 className="w-4 h-4 animate-spin" />}
                 {mode === "create" ? "Create Task" : "Save Changes"}
@@ -724,24 +724,24 @@ function TaskColumn({
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       className={`rounded-2xl flex flex-col min-h-[280px] max-h-[70vh] transition-all duration-200 ${
-        isDarkMode ? "bg-slate-900/50" : "bg-slate-50"
+        isDarkMode ? "bg-[#17181c]/50" : "bg-slate-50"
       } ${
         dragOver
           ? "ring-2 ring-blue-500/60 ring-dashed bg-blue-500/5"
-          : `border ${isDarkMode ? "border-slate-800/60" : "border-slate-200/80"}`
+          : `border ${isDarkMode ? "border-[#2f3336]/60" : "border-slate-200/80"}`
       }`}
     >
       <div className="px-3.5 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className={`w-2.5 h-2.5 rounded-full ${dotAccent}`} />
           <span className={`font-bold text-sm ${textTitle}`}>{title}</span>
-          <span className={`text-[11px] px-1.5 py-0.5 rounded-md font-bold ${isDarkMode ? "bg-slate-800 text-slate-400" : "bg-slate-200/70 text-slate-600"}`}>
+          <span className={`text-[11px] px-1.5 py-0.5 rounded-md font-bold ${isDarkMode ? "bg-[#16181c] text-[#71767b]" : "bg-slate-200/70 text-slate-600"}`}>
             {count}
           </span>
         </div>
         <button
           onClick={onAdd}
-          className={`p-1.5 rounded-lg transition-colors ${isDarkMode ? "hover:bg-slate-800 text-slate-400 hover:text-white" : "hover:bg-slate-200 text-slate-500 hover:text-slate-800"}`}
+          className={`p-1.5 rounded-lg transition-colors ${isDarkMode ? "hover:bg-[#16181c] text-[#71767b] hover:text-[#e7e9ea]" : "hover:bg-slate-200 text-slate-500 hover:text-slate-800"}`}
           title={`Add task to ${title}`}
         >
           <Plus className="w-4 h-4" />
@@ -751,7 +751,7 @@ function TaskColumn({
       <div className="flex-1 overflow-y-auto px-2.5 pb-2.5 space-y-2.5">
         {tasks.length === 0 ? (
           filtersActive ? (
-            <div className={`w-full flex flex-col items-center justify-center py-10 text-center ${isDarkMode ? "text-slate-600" : "text-slate-400"}`}>
+            <div className={`w-full flex flex-col items-center justify-center py-10 text-center ${isDarkMode ? "text-slate-500" : "text-[#71767b]"}`}>
               <Search className="w-5 h-5 mb-1.5 opacity-60" />
               <span className="text-xs font-semibold">No matching tasks</span>
             </div>
@@ -760,8 +760,8 @@ function TaskColumn({
               onClick={onAdd}
               className={`w-full flex flex-col items-center justify-center py-10 rounded-xl border-2 border-dashed transition-colors ${
                 isDarkMode
-                  ? "border-slate-800 text-slate-600 hover:border-slate-700 hover:text-slate-500"
-                  : "border-slate-200 text-slate-400 hover:border-slate-300 hover:text-slate-500"
+                  ? "border-[#2f3336] text-slate-500 hover:border-[#2f3336] hover:text-slate-400"
+                  : "border-slate-200 text-[#71767b] hover:border-slate-300 hover:text-slate-500"
               }`}
             >
               <Plus className="w-5 h-5 mb-1" />
@@ -851,7 +851,7 @@ function TaskCard({
       </span>
     );
     return (
-      <span className={`inline-flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg font-medium ${isDarkMode ? "bg-slate-800 text-slate-400" : "bg-slate-100 text-slate-500"}`}>
+      <span className={`inline-flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg font-medium ${isDarkMode ? "bg-[#16181c] text-[#71767b]" : "bg-slate-100 text-slate-500"}`}>
         <Calendar className="w-3 h-3" /> {dateFormatted}
       </span>
     );
@@ -862,7 +862,7 @@ function TaskCard({
       <div
         onDragEnd={handleDragEnd}
         className={`rounded-xl border-2 border-dashed h-24 flex items-center justify-center select-none ${
-          isDarkMode ? "border-slate-700 bg-slate-800/20 text-slate-600" : "border-slate-300 bg-slate-100/60 text-slate-400"
+          isDarkMode ? "border-[#2f3336] bg-[#16181c]/20 text-slate-600" : "border-slate-300 bg-slate-100/60 text-[#71767b]"
         }`}
       >
         <span className="text-xs font-semibold">Moving…</span>
@@ -889,7 +889,7 @@ function TaskCard({
         canMove ? "cursor-grab active:cursor-grabbing hover:-translate-y-0.5" : "cursor-pointer"
       } ${
         isDarkMode
-          ? "bg-slate-900 border-slate-800 hover:border-slate-700 hover:shadow-[0_8px_24px_rgba(0,0,0,0.35)]"
+          ? "bg-[#17181c] border-[#2f3336] hover:border-[#2f3336] hover:shadow-[0_8px_24px_rgba(0,0,0,0.35)]"
           : "bg-white border-slate-200 hover:border-slate-300 hover:shadow-[0_6px_16px_rgba(0,0,0,0.06)]"
       }`}
     >
@@ -911,13 +911,13 @@ function TaskCard({
             onClick={(e) => e.stopPropagation()}
           >
             {!canMove && (
-              <span title="Only the assignee or owner/admin can move this task" className={`p-1 ${isDarkMode ? "text-slate-600" : "text-slate-300"}`}>
+              <span title="Only the assignee or owner/admin can move this task" className={`p-1 ${isDarkMode ? "text-slate-600" : "text-[#8b98a5]"}`}>
                 <Lock className="w-3 h-3" />
               </span>
             )}
             <button
               onClick={() => onEdit(task)}
-              className={`p-1 rounded-md transition-colors ${isDarkMode ? "hover:bg-slate-800 text-slate-400 hover:text-white" : "hover:bg-slate-100 text-slate-500 hover:text-slate-800"}`}
+              className={`p-1 rounded-md transition-colors ${isDarkMode ? "hover:bg-[#16181c] text-[#71767b] hover:text-[#e7e9ea]" : "hover:bg-slate-100 text-slate-500 hover:text-slate-800"}`}
               title="Edit task"
             >
               <Edit2 className="w-3.5 h-3.5" />
@@ -925,7 +925,7 @@ function TaskCard({
             {(isCreator || canManage) && (
               <button
                 onClick={() => onDelete(task.id)}
-                className="p-1 rounded-md hover:bg-red-500/10 text-slate-400 hover:text-red-500 transition-colors"
+                className="p-1 rounded-md hover:bg-red-500/10 text-[#71767b] hover:text-red-500 transition-colors"
                 title="Delete task"
               >
                 <Trash2 className="w-3.5 h-3.5" />
@@ -941,7 +941,7 @@ function TaskCard({
 
         {/* Description */}
         {task.description && (
-          <p className={`text-xs mt-1 leading-relaxed line-clamp-2 ${isDarkMode ? "text-slate-400" : "text-slate-500"} ${isDone ? "opacity-50" : ""}`}>
+          <p className={`text-xs mt-1 leading-relaxed line-clamp-2 ${isDarkMode ? "text-[#71767b]" : "text-slate-500"} ${isDone ? "opacity-50" : ""}`}>
             {task.description}
           </p>
         )}
@@ -951,7 +951,7 @@ function TaskCard({
           <div className="min-w-0">{getDueDateBadge()}</div>
           {assignee ? (
             <div className="flex items-center gap-1.5 min-w-0" title={`Assigned to ${assignee.name}`}>
-              <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0 bg-blue-500 flex items-center justify-center text-[10px] font-bold text-white ring-2 ring-white dark:ring-slate-900">
+              <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0 bg-blue-500 flex items-center justify-center text-[10px] font-bold text-[#e7e9ea] ring-2 ring-white dark:ring-slate-900">
                 {assignee.avatar_url || assignee.profile_pic ? (
                   <img src={assignee.avatar_url || assignee.profile_pic!} alt="" className="w-full h-full object-cover" />
                 ) : (
@@ -963,7 +963,7 @@ function TaskCard({
               </span>
             </div>
           ) : (
-            <span className={`inline-flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg ${isDarkMode ? "bg-slate-800/60 text-slate-500" : "bg-slate-100 text-slate-400"}`}>
+            <span className={`inline-flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg ${isDarkMode ? "bg-[#16181c]/60 text-slate-500" : "bg-slate-100 text-[#71767b]"}`}>
               Unassigned
             </span>
           )}

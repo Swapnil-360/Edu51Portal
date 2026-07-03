@@ -322,7 +322,7 @@ export const ExamMaterialsDashboard: React.FC<ExamMaterialsDashboardProps> = ({ 
           <div className="text-center py-12">
             <div className="mb-4">
               <Filter className={`h-12 w-12 mx-auto ${
-                isDarkMode ? 'text-gray-600' : 'text-gray-400'
+                isDarkMode ? 'text-gray-500' : 'text-gray-400'
               }`} />
             </div>
             <h3 className={`text-lg font-medium mb-2 ${

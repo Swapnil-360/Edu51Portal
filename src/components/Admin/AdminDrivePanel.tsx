@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+﻿import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   FolderOpen, ChevronRight, Home, ArrowLeft, RefreshCw,
   Upload, Trash2, Plus, Loader2, AlertCircle, Eye, Download,
@@ -161,15 +161,15 @@ export default function AdminDrivePanel({ isDarkMode: dk, onPreviewFile }: Props
   }
 
   // Design tokens
-  const border = dk ? 'border-slate-700/60' : 'border-slate-200';
+  const border = dk ? 'border-[#2f3336]/60' : 'border-slate-200';
   const sub = dk ? 'text-slate-400' : 'text-slate-500';
   const card = dk
-    ? 'bg-slate-800/50 border-slate-700 hover:border-slate-500 hover:bg-slate-800'
+    ? 'bg-[#16181c]/50 border-[#2f3336] hover:border-slate-500 hover:bg-[#16181c]'
     : 'bg-white border-slate-200 hover:border-slate-300 hover:shadow-sm';
-  const surfaceAlt = dk ? 'bg-slate-800/30' : 'bg-slate-50';
+  const surfaceAlt = dk ? 'bg-[#16181c]/30' : 'bg-slate-50';
   const inputCls = cls(
     'flex-1 text-sm px-3 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-blue-500/30',
-    dk ? 'bg-slate-800 border-slate-600 text-white placeholder-slate-500' : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400',
+    dk ? 'bg-[#16181c] border-[#38444d] text-white placeholder-[#71767b]' : 'bg-white border-slate-200 text-slate-900 placeholder-[#71767b]',
   );
 
   if (configLoading) {
@@ -189,7 +189,7 @@ export default function AdminDrivePanel({ isDarkMode: dk, onPreviewFile }: Props
               'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all border flex-shrink-0',
               activeMajor === m.value
                 ? 'text-white border-transparent shadow-sm'
-                : dk ? 'border-slate-600 text-slate-400 hover:text-white' : 'border-slate-200 text-slate-500 hover:text-slate-700',
+                : dk ? 'border-[#38444d] text-slate-400 hover:text-white' : 'border-slate-200 text-slate-500 hover:text-slate-700',
             )}
             style={activeMajor === m.value ? { background: m.color } : {}}
           >
@@ -218,7 +218,7 @@ export default function AdminDrivePanel({ isDarkMode: dk, onPreviewFile }: Props
               </div>
             )}
             <div className="min-w-0">
-              <p className={cls('text-xs font-semibold truncate', dk ? 'text-slate-200' : 'text-slate-800')}>
+              <p className={cls('text-xs font-semibold truncate', dk ? 'text-[#d9d9d9]' : 'text-slate-800')}>
                 {profile?.name ?? profile?.email ?? 'Google Account'}
               </p>
               <p className={cls('text-xs truncate', sub)}>{profile?.email}</p>
@@ -249,7 +249,7 @@ export default function AdminDrivePanel({ isDarkMode: dk, onPreviewFile }: Props
           <button
             onClick={refresh}
             disabled={listLoading}
-            className={cls('p-1.5 rounded-lg border transition-colors', border, dk ? 'hover:bg-slate-700' : 'hover:bg-slate-100')}
+            className={cls('p-1.5 rounded-lg border transition-colors', border, dk ? 'hover:bg-[#2f3336]' : 'hover:bg-slate-100')}
             title="Refresh"
           >
             <RefreshCw size={13} className={cls(listLoading && 'animate-spin', sub)} />
@@ -307,7 +307,7 @@ export default function AdminDrivePanel({ isDarkMode: dk, onPreviewFile }: Props
                   className={cls(
                     'flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg border font-medium transition-colors',
                     border,
-                    dk ? 'hover:bg-slate-700 text-slate-300' : 'hover:bg-slate-100 text-slate-600',
+                    dk ? 'hover:bg-[#2f3336] text-[#8b98a5]' : 'hover:bg-slate-100 text-slate-600',
                   )}
                 >
                   <Plus size={12} /> Folder
@@ -396,7 +396,7 @@ export default function AdminDrivePanel({ isDarkMode: dk, onPreviewFile }: Props
                 {stack.length > 0 && (
                   <button
                     onClick={goBack}
-                    className={cls('flex items-center gap-1.5 text-xs font-medium mb-3 px-3 py-1.5 rounded-lg border', border, dk ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-slate-50 text-slate-500')}
+                    className={cls('flex items-center gap-1.5 text-xs font-medium mb-3 px-3 py-1.5 rounded-lg border', border, dk ? 'hover:bg-[#16181c] text-slate-400' : 'hover:bg-slate-50 text-slate-500')}
                   >
                     <ArrowLeft size={12} /> Back
                   </button>
@@ -450,7 +450,7 @@ export default function AdminDrivePanel({ isDarkMode: dk, onPreviewFile }: Props
                             {onPreviewFile && (
                               <button
                                 onClick={() => onPreviewFile(drivePreviewUrl(f), f.name)}
-                                className={cls('p-1.5 rounded-lg border transition-colors', border, dk ? 'hover:bg-slate-700 text-slate-400' : 'hover:bg-slate-50 text-slate-500')}
+                                className={cls('p-1.5 rounded-lg border transition-colors', border, dk ? 'hover:bg-[#2f3336] text-slate-400' : 'hover:bg-slate-50 text-slate-500')}
                                 title="Preview"
                               >
                                 <Eye size={13} />
@@ -459,7 +459,7 @@ export default function AdminDrivePanel({ isDarkMode: dk, onPreviewFile }: Props
                             <a
                               href={f.webContentLink ?? f.webViewLink ?? `https://drive.google.com/file/d/${f.id}/view`}
                               target="_blank" rel="noreferrer"
-                              className={cls('p-1.5 rounded-lg border transition-colors', border, dk ? 'hover:bg-slate-700 text-slate-400' : 'hover:bg-slate-50 text-slate-500')}
+                              className={cls('p-1.5 rounded-lg border transition-colors', border, dk ? 'hover:bg-[#2f3336] text-slate-400' : 'hover:bg-slate-50 text-slate-500')}
                               title="Download"
                             >
                               <Download size={13} />
@@ -501,7 +501,7 @@ export default function AdminDrivePanel({ isDarkMode: dk, onPreviewFile }: Props
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-4">
           <div className={cls(
             'w-full max-w-sm rounded-2xl border shadow-2xl p-5 space-y-4',
-            dk ? 'bg-slate-900 border-slate-700 text-slate-100' : 'bg-white border-slate-200 text-slate-900',
+            dk ? 'bg-[#17181c] border-[#2f3336] text-[#e7e9ea]' : 'bg-white border-slate-200 text-slate-900',
           )}>
             <div className="flex items-start gap-3">
               <div className="w-9 h-9 rounded-full bg-red-500/10 flex items-center justify-center flex-shrink-0">
@@ -519,7 +519,7 @@ export default function AdminDrivePanel({ isDarkMode: dk, onPreviewFile }: Props
             <div className="flex gap-2 justify-end">
               <button
                 onClick={() => setDeleteTarget(null)}
-                className={cls('px-4 py-2 rounded-xl text-sm border font-medium', dk ? 'border-slate-600 hover:bg-slate-800' : 'border-slate-200 hover:bg-slate-50')}
+                className={cls('px-4 py-2 rounded-xl text-sm border font-medium', dk ? 'border-[#38444d] hover:bg-[#16181c]' : 'border-slate-200 hover:bg-slate-50')}
               >
                 Cancel
               </button>

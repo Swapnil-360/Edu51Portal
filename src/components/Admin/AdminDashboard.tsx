@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Bell, Plus, ChevronDown, ChevronUp, AlertCircle, Link as LinkIcon, Trash2, Edit2, BarChart3, BookOpen, Files, Users, TrendingUp, HardDrive, UsersRound, ShieldCheck, MessageSquare, RefreshCw, Bug, Lightbulb, Sparkles } from 'lucide-react';
 import MaterialManager from './MaterialManager';
 
@@ -261,7 +261,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   return (
     <div className={`min-h-screen ${isDarkMode ? 'bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900' : 'bg-gradient-to-br from-slate-50 to-blue-50'}`}>
       {/* Header Section */}
-      <div className={`${isDarkMode ? 'bg-gradient-to-r from-slate-800/80 to-slate-900/80 border-slate-700/50 backdrop-blur-sm' : 'bg-white/80 border-gray-200 backdrop-blur-sm'} shadow-sm border-b`}>
+      <div className={`${isDarkMode ? 'bg-gradient-to-r from-slate-800/80 to-slate-900/80 border-[#2f3336]/50 backdrop-blur-sm' : 'bg-white/80 border-gray-200 backdrop-blur-sm'} shadow-sm border-b`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5 md:py-6">
           <h1 className={`text-2xl sm:text-3xl lg:text-4xl font-bold ${isDarkMode ? 'bg-gradient-to-r from-blue-400 to-cyan-300 bg-clip-text text-transparent' : 'bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent'}`}>
             Admin Dashboard
@@ -303,7 +303,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   <span className={`text-sm font-semibold ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}> / 1 GB</span>
                 </p>
                 {/* Gauge */}
-                <div className={`mt-2.5 h-2 rounded-full overflow-hidden ${isDarkMode ? 'bg-slate-700' : 'bg-slate-200'}`}>
+                <div className={`mt-2.5 h-2 rounded-full overflow-hidden ${isDarkMode ? 'bg-[#2f3336]' : 'bg-slate-200'}`}>
                   <div className={`h-full rounded-full transition-all duration-500 ${storageBarColor}`} style={{ width: `${Math.max(2, storagePct)}%` }} />
                 </div>
                 <p className={`mt-1.5 text-[10px] ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>
@@ -391,7 +391,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   return (
                     <div
                       key={u.id}
-                      className={`flex items-center justify-between gap-3 p-3 rounded-lg border ${isDarkMode ? 'bg-slate-800/50 border-slate-700/50' : 'bg-white/70 border-slate-200'}`}
+                      className={`flex items-center justify-between gap-3 p-3 rounded-lg border ${isDarkMode ? 'bg-[#16181c]/50 border-[#2f3336]/50' : 'bg-white/70 border-slate-200'}`}
                     >
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
@@ -405,13 +405,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-amber-500 text-white">ADMIN</span>
                           )}
                           {isSelf && (
-                            <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold ${isDarkMode ? 'bg-slate-700 text-slate-300' : 'bg-slate-200 text-slate-600'}`}>YOU</span>
+                            <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold ${isDarkMode ? 'bg-[#2f3336] text-[#8b98a5]' : 'bg-slate-200 text-slate-600'}`}>YOU</span>
                           )}
                         </div>
                         <p className={`text-xs truncate ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>{u.bubt_email || '—'}</p>
                       </div>
                       {isProtected ? (
-                        <span className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold opacity-40 cursor-not-allowed ${isDarkMode ? 'bg-slate-700 text-slate-400' : 'bg-slate-100 text-slate-500'}`}>
+                        <span className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold opacity-40 cursor-not-allowed ${isDarkMode ? 'bg-[#2f3336] text-slate-400' : 'bg-slate-100 text-slate-500'}`}>
                           {u.is_owner ? 'Protected' : 'You'}
                         </span>
                       ) : (
@@ -462,7 +462,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   <button
                     onClick={() => onRefreshFeedback?.()}
                     title="Refresh"
-                    className={`p-2 rounded-lg transition-all ${isDarkMode ? 'hover:bg-slate-700 text-slate-300' : 'hover:bg-slate-100 text-slate-500'}`}
+                    className={`p-2 rounded-lg transition-all ${isDarkMode ? 'hover:bg-[#2f3336] text-[#8b98a5]' : 'hover:bg-slate-100 text-slate-500'}`}
                   >
                     <RefreshCw className={`w-4 h-4 ${feedbackLoading ? 'animate-spin' : ''}`} />
                   </button>
@@ -477,7 +477,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       className={`px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all ${
                         feedbackFilter === f
                           ? 'bg-blue-600 text-white'
-                          : isDarkMode ? 'bg-slate-800 text-slate-300 hover:bg-slate-700' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+                          : isDarkMode ? 'bg-[#16181c] text-[#8b98a5] hover:bg-[#2f3336]' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
                       }`}
                     >
                       {f}{f === 'all' ? ` (${feedbackItems.length})` : ` (${feedbackItems.filter((x) => x.status === f).length})`}
@@ -495,7 +495,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       const meta = FEEDBACK_META[f.category] || FEEDBACK_META.custom;
                       const Icon = meta.icon;
                       return (
-                        <div key={f.id} className={`p-3 rounded-lg border ${isDarkMode ? 'bg-slate-800/50 border-slate-700/50' : 'bg-white/80 border-slate-200'} ${f.status === 'new' ? 'ring-1 ring-blue-400/40' : ''}`}>
+                        <div key={f.id} className={`p-3 rounded-lg border ${isDarkMode ? 'bg-[#16181c]/50 border-[#2f3336]/50' : 'bg-white/80 border-slate-200'} ${f.status === 'new' ? 'ring-1 ring-blue-400/40' : ''}`}>
                           <div className="flex items-start justify-between gap-3 mb-1.5">
                             <div className="flex items-center gap-2 flex-wrap min-w-0">
                               <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${meta.cls}`}>
@@ -505,12 +505,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                 <span className={`text-sm font-semibold truncate ${isDarkMode ? 'text-gray-100' : 'text-gray-900'}`}>{f.subject}</span>
                               )}
                               {f.status !== 'new' && (
-                                <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold capitalize ${f.status === 'closed' ? (isDarkMode ? 'bg-slate-700 text-slate-400' : 'bg-slate-200 text-slate-500') : (isDarkMode ? 'bg-green-500/20 text-green-300' : 'bg-green-100 text-green-700')}`}>{f.status}</span>
+                                <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold capitalize ${f.status === 'closed' ? (isDarkMode ? 'bg-[#2f3336] text-slate-400' : 'bg-slate-200 text-slate-500') : (isDarkMode ? 'bg-green-500/20 text-green-300' : 'bg-green-100 text-green-700')}`}>{f.status}</span>
                               )}
                             </div>
                             <span className={`text-[10px] flex-shrink-0 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>{timeAgo(f.created_at)}</span>
                           </div>
-                          <p className={`text-sm whitespace-pre-wrap break-words ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>{f.message}</p>
+                          <p className={`text-sm whitespace-pre-wrap break-words ${isDarkMode ? 'text-[#8b98a5]' : 'text-slate-700'}`}>{f.message}</p>
                           <div className="flex items-center justify-between gap-2 mt-2 flex-wrap">
                             <p className={`text-[11px] ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
                               {f.name || 'Anonymous'}{f.email ? ` · ${f.email}` : ''}{f.page_url ? ` · ${f.page_url}` : ''}
@@ -520,7 +520,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                 <button onClick={() => onUpdateFeedbackStatus?.(f.id, 'reviewed')} className={`px-2 py-1 rounded text-[11px] font-semibold ${isDarkMode ? 'bg-blue-500/20 text-blue-300 hover:bg-blue-500/30' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}`}>Mark Reviewed</button>
                               )}
                               {f.status !== 'closed' && (
-                                <button onClick={() => onUpdateFeedbackStatus?.(f.id, 'closed')} className={`px-2 py-1 rounded text-[11px] font-semibold ${isDarkMode ? 'bg-slate-700 text-slate-300 hover:bg-slate-600' : 'bg-slate-200 text-slate-600 hover:bg-slate-300'}`}>Close</button>
+                                <button onClick={() => onUpdateFeedbackStatus?.(f.id, 'closed')} className={`px-2 py-1 rounded text-[11px] font-semibold ${isDarkMode ? 'bg-[#2f3336] text-[#8b98a5] hover:bg-[#38444d]' : 'bg-slate-200 text-slate-600 hover:bg-slate-300'}`}>Close</button>
                               )}
                               {f.status !== 'new' && (
                                 <button onClick={() => onUpdateFeedbackStatus?.(f.id, 'new')} className={`px-2 py-1 rounded text-[11px] font-semibold ${isDarkMode ? 'bg-amber-500/20 text-amber-300 hover:bg-amber-500/30' : 'bg-amber-100 text-amber-700 hover:bg-amber-200'}`}>Reopen</button>
@@ -568,7 +568,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     placeholder="e.g., New Study Material Uploaded"
                     className={`w-full px-3 py-2.5 rounded-lg border-2 text-sm font-medium transition-all focus:outline-none focus:ring-2 focus:ring-indigo-400 ${
                       isDarkMode
-                        ? 'bg-slate-800/50 border-slate-600/50 text-gray-100 placeholder-gray-400 focus:bg-slate-800 focus:border-indigo-500/50'
+                        ? 'bg-[#16181c]/50 border-[#38444d]/50 text-gray-100 placeholder-gray-400 focus:bg-[#16181c] focus:border-indigo-500/50'
                         : 'bg-white/70 border-indigo-200 text-gray-900 placeholder-gray-500 focus:bg-white focus:border-indigo-400'
                     }`}
                   />
@@ -585,7 +585,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     placeholder="/course/CSE-319 or /"
                     className={`w-full px-3 py-2.5 rounded-lg border-2 text-sm font-medium transition-all focus:outline-none focus:ring-2 focus:ring-indigo-400 ${
                       isDarkMode
-                        ? 'bg-slate-800/50 border-slate-600/50 text-gray-100 placeholder-gray-400 focus:bg-slate-800 focus:border-indigo-500/50'
+                        ? 'bg-[#16181c]/50 border-[#38444d]/50 text-gray-100 placeholder-gray-400 focus:bg-[#16181c] focus:border-indigo-500/50'
                         : 'bg-white/70 border-indigo-200 text-gray-900 placeholder-gray-500 focus:bg-white focus:border-indigo-400'
                     }`}
                   />
@@ -603,7 +603,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   rows={3}
                   className={`w-full px-3 py-2.5 rounded-lg border-2 text-sm font-medium transition-all focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none ${
                     isDarkMode
-                      ? 'bg-slate-800/50 border-slate-600/50 text-gray-100 placeholder-gray-400 focus:bg-slate-800 focus:border-indigo-500/50'
+                      ? 'bg-[#16181c]/50 border-[#38444d]/50 text-gray-100 placeholder-gray-400 focus:bg-[#16181c] focus:border-indigo-500/50'
                       : 'bg-white/70 border-indigo-200 text-gray-900 placeholder-gray-500 focus:bg-white focus:border-indigo-400'
                   }`}
                 />
@@ -619,7 +619,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   className={`px-5 py-2.5 rounded-lg font-bold text-sm transition-all duration-300 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed ${
                     isSendingBroadcast || !broadcastPush.title || !broadcastPush.body
                       ? isDarkMode
-                        ? 'bg-slate-700 text-slate-400'
+                        ? 'bg-[#2f3336] text-slate-400'
                         : 'bg-gray-300 text-gray-500'
                       : isDarkMode
                       ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:from-indigo-600 hover:to-purple-700 hover:shadow-indigo-500/50 hover:scale-105'
@@ -717,7 +717,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           ? 'bg-cyan-500/15 border border-cyan-500/40 hover:bg-cyan-500/25 hover:border-cyan-500/60 hover:shadow-lg hover:shadow-cyan-500/20'
                           : 'bg-[#E6F5FF] border border-[#D1ECFF] hover:bg-[#D1ECFF] hover:border-[#B0D6F0] hover:shadow-lg hover:shadow-[#2B7CBF]/10'
                         : isDarkMode
-                        ? 'bg-slate-700/20 border border-slate-600/40 opacity-60 hover:opacity-80'
+                        ? 'bg-[#2f3336]/20 border border-[#38444d]/40 opacity-60 hover:opacity-80'
                         : 'bg-gray-200/30 border border-gray-300/40 opacity-60 hover:opacity-80'
                     }`}
                   >
@@ -731,7 +731,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           {notice.is_active ? 'LIVE' : 'INACTIVE'}
                         </span>
                       </div>
-                      <p className={`text-sm mt-1 line-clamp-2 ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
+                      <p className={`text-sm mt-1 line-clamp-2 ${isDarkMode ? 'text-[#8b98a5]' : 'text-slate-700'}`}>
                         {notice.content}
                       </p>
                     </div>
@@ -783,12 +783,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </div>
 
             {showAddAlert && (
-              <div className={`mb-4 p-4 rounded-lg transition-all duration-300 ${isDarkMode ? 'bg-slate-800/50 border border-red-500/30 backdrop-blur-sm' : 'bg-red-100/50 border border-red-200/80 backdrop-blur-sm'}`}>
+              <div className={`mb-4 p-4 rounded-lg transition-all duration-300 ${isDarkMode ? 'bg-[#16181c]/50 border border-red-500/30 backdrop-blur-sm' : 'bg-red-100/50 border border-red-200/80 backdrop-blur-sm'}`}>
                 <textarea
                   value={newAlertMessage}
                   onChange={(e) => setNewAlertMessage(e.target.value)}
                   placeholder="Emergency alert message..."
-                  className={`w-full px-4 py-3 rounded-lg text-sm font-medium transition-all ${isDarkMode ? 'bg-slate-700/60 text-white placeholder-slate-400 border border-slate-600/50 focus:border-red-500/50 focus:ring-2 focus:ring-red-500/30' : 'bg-white text-gray-900 placeholder-gray-400 border border-red-200 focus:border-red-400 focus:ring-2 focus:ring-red-300/50'} focus:outline-none`}
+                  className={`w-full px-4 py-3 rounded-lg text-sm font-medium transition-all ${isDarkMode ? 'bg-[#2f3336]/60 text-white placeholder-[#71767b] border border-[#38444d]/50 focus:border-red-500/50 focus:ring-2 focus:ring-red-500/30' : 'bg-white text-gray-900 placeholder-gray-400 border border-red-200 focus:border-red-400 focus:ring-2 focus:ring-red-300/50'} focus:outline-none`}
                   rows={3}
                 />
                 <div className="flex flex-col sm:flex-row gap-2 mt-4">
@@ -804,7 +804,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       setShowAddAlert(false);
                       setNewAlertMessage('');
                     }}
-                    className={`flex-1 px-4 py-2.5 text-sm font-semibold rounded-lg transition-all duration-300 ${isDarkMode ? 'bg-slate-700/50 hover:bg-slate-600/50 text-slate-200 hover:text-white border border-slate-600/50' : 'bg-gray-200/50 hover:bg-gray-300/50 text-gray-700 border border-gray-300/50'}`}
+                    className={`flex-1 px-4 py-2.5 text-sm font-semibold rounded-lg transition-all duration-300 ${isDarkMode ? 'bg-[#2f3336]/50 hover:bg-[#38444d]/50 text-[#d9d9d9] hover:text-white border border-[#38444d]/50' : 'bg-gray-200/50 hover:bg-gray-300/50 text-gray-700 border border-gray-300/50'}`}
                   >
                     Cancel
                   </button>
@@ -827,7 +827,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           ? 'bg-red-500/15 border border-red-500/40 hover:bg-red-500/25 hover:border-red-500/60 hover:shadow-lg hover:shadow-red-500/20'
                           : 'bg-red-200/30 border border-red-300/60 hover:bg-red-200/50 hover:border-red-400/80 hover:shadow-lg hover:shadow-red-200/30'
                         : isDarkMode
-                        ? 'bg-slate-700/20 border border-slate-600/40 opacity-60 hover:opacity-80'
+                        ? 'bg-[#2f3336]/20 border border-[#38444d]/40 opacity-60 hover:opacity-80'
                         : 'bg-gray-200/30 border border-gray-300/40 opacity-60 hover:opacity-80'
                     }`}
                   >
@@ -888,20 +888,20 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </div>
 
             {showAddLink && (
-              <div className={`mb-4 p-4 rounded-lg space-y-3 transition-all duration-300 ${isDarkMode ? 'bg-slate-800/50 border border-blue-500/30 backdrop-blur-sm' : 'bg-blue-100/50 border border-blue-200/80 backdrop-blur-sm'}`}>
+              <div className={`mb-4 p-4 rounded-lg space-y-3 transition-all duration-300 ${isDarkMode ? 'bg-[#16181c]/50 border border-blue-500/30 backdrop-blur-sm' : 'bg-blue-100/50 border border-blue-200/80 backdrop-blur-sm'}`}>
                 <input
                   type="text"
                   value={newLinkTitle}
                   onChange={(e) => setNewLinkTitle(e.target.value)}
                   placeholder="Link title..."
-                  className={`w-full px-4 py-3 rounded-lg text-sm font-medium transition-all ${isDarkMode ? 'bg-slate-700/60 text-white placeholder-slate-400 border border-slate-600/50 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/30' : 'bg-white text-gray-900 placeholder-gray-400 border border-blue-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-300/50'} focus:outline-none`}
+                  className={`w-full px-4 py-3 rounded-lg text-sm font-medium transition-all ${isDarkMode ? 'bg-[#2f3336]/60 text-white placeholder-[#71767b] border border-[#38444d]/50 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/30' : 'bg-white text-gray-900 placeholder-gray-400 border border-blue-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-300/50'} focus:outline-none`}
                 />
                 <input
                   type="url"
                   value={newLinkUrl}
                   onChange={(e) => setNewLinkUrl(e.target.value)}
                   placeholder="https://example.com"
-                  className={`w-full px-4 py-3 rounded-lg text-sm font-medium transition-all ${isDarkMode ? 'bg-slate-700/60 text-white placeholder-slate-400 border border-slate-600/50 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/30' : 'bg-white text-gray-900 placeholder-gray-400 border border-blue-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-300/50'} focus:outline-none`}
+                  className={`w-full px-4 py-3 rounded-lg text-sm font-medium transition-all ${isDarkMode ? 'bg-[#2f3336]/60 text-white placeholder-[#71767b] border border-[#38444d]/50 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/30' : 'bg-white text-gray-900 placeholder-gray-400 border border-blue-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-300/50'} focus:outline-none`}
                 />
                 <div className="flex flex-col sm:flex-row gap-2">
                   <button
@@ -917,7 +917,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       setNewLinkTitle('');
                       setNewLinkUrl('');
                     }}
-                    className={`flex-1 px-4 py-2.5 text-sm font-semibold rounded-lg transition-all duration-300 ${isDarkMode ? 'bg-slate-700/50 hover:bg-slate-600/50 text-slate-200 hover:text-white border border-slate-600/50' : 'bg-gray-200/50 hover:bg-gray-300/50 text-gray-700 border border-gray-300/50'}`}
+                    className={`flex-1 px-4 py-2.5 text-sm font-semibold rounded-lg transition-all duration-300 ${isDarkMode ? 'bg-[#2f3336]/50 hover:bg-[#38444d]/50 text-[#d9d9d9] hover:text-white border border-[#38444d]/50' : 'bg-gray-200/50 hover:bg-gray-300/50 text-gray-700 border border-gray-300/50'}`}
                   >
                     Cancel
                   </button>
@@ -940,7 +940,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           ? 'bg-blue-500/15 border border-blue-500/40 hover:bg-blue-500/25 hover:border-blue-500/60 hover:shadow-lg hover:shadow-blue-500/20'
                           : 'bg-blue-200/30 border border-blue-300/60 hover:bg-blue-200/50 hover:border-blue-400/80 hover:shadow-lg hover:shadow-blue-200/30'
                         : isDarkMode
-                        ? 'bg-slate-700/20 border border-slate-600/40 opacity-60 hover:opacity-80'
+                        ? 'bg-[#2f3336]/20 border border-[#38444d]/40 opacity-60 hover:opacity-80'
                         : 'bg-gray-200/30 border border-gray-300/40 opacity-60 hover:opacity-80'
                     }`}
                   >

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import {
   FileText, Play, Eye, Download, RefreshCw, AlertCircle,
   ChevronLeft, Folder, Loader2, BookOpen, Zap,
@@ -139,7 +139,7 @@ export const GDriveCourseView: React.FC<GDriveCourseViewProps> = ({
         onClick={onBack}
         className={cls(
           'inline-flex items-center gap-1.5 text-sm font-medium transition-colors',
-          dk ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-800',
+          dk ? 'text-slate-400 hover:text-[#d9d9d9]' : 'text-slate-500 hover:text-slate-800',
         )}
       >
         <ChevronLeft className="h-4 w-4" />
@@ -149,20 +149,20 @@ export const GDriveCourseView: React.FC<GDriveCourseViewProps> = ({
       {/* Course header card */}
       <div className={cls(
         'relative rounded-xl border overflow-hidden',
-        dk ? 'bg-slate-800/60 border-slate-700/70' : 'bg-white border-slate-200',
+        dk ? 'bg-[#16181c]/60 border-[#2f3336]/70' : 'bg-white border-slate-200',
       )}>
         {/* Top accent line */}
         <div className="h-0.5 w-full bg-gradient-to-r from-violet-500 via-purple-500 to-indigo-500" />
 
         <div className="p-5 sm:p-6 flex items-start gap-4">
-          <div className={cls('flex-shrink-0 p-2.5 rounded-lg mt-0.5', dk ? 'bg-slate-700' : 'bg-slate-100')}>
-            <BookOpen className={cls('h-5 w-5', dk ? 'text-slate-300' : 'text-slate-600')} />
+          <div className={cls('flex-shrink-0 p-2.5 rounded-lg mt-0.5', dk ? 'bg-[#2f3336]' : 'bg-slate-100')}>
+            <BookOpen className={cls('h-5 w-5', dk ? 'text-[#8b98a5]' : 'text-slate-600')} />
           </div>
           <div className="flex-1 min-w-0">
             <p className={cls('text-[11px] font-semibold tracking-widest uppercase mb-1', dk ? 'text-slate-500' : 'text-slate-400')}>
               {courseCode}
             </p>
-            <h1 className={cls('text-lg sm:text-xl font-bold leading-snug', dk ? 'text-slate-100' : 'text-slate-900')}>
+            <h1 className={cls('text-lg sm:text-xl font-bold leading-snug', dk ? 'text-[#e7e9ea]' : 'text-slate-900')}>
               {courseName}
             </h1>
             {isMidPeriod && (
@@ -180,7 +180,7 @@ export const GDriveCourseView: React.FC<GDriveCourseViewProps> = ({
 
       {/* Tab bar — clean underline style */}
       {hasTabs && (
-        <div className={cls('border-b', dk ? 'border-slate-700' : 'border-slate-200')}>
+        <div className={cls('border-b', dk ? 'border-[#2f3336]' : 'border-slate-200')}>
           <div className="flex gap-0">
             {(['mid', 'final'] as const).map(t => {
               const count  = t === 'mid' ? midCount : finalCount;
@@ -192,8 +192,8 @@ export const GDriveCourseView: React.FC<GDriveCourseViewProps> = ({
                   className={cls(
                     'relative flex items-center gap-2 px-4 sm:px-6 py-3 text-sm font-medium transition-colors duration-150 focus:outline-none',
                     active
-                      ? dk ? 'text-slate-100' : 'text-slate-900'
-                      : dk ? 'text-slate-500 hover:text-slate-300' : 'text-slate-400 hover:text-slate-600',
+                      ? dk ? 'text-[#e7e9ea]' : 'text-slate-900'
+                      : dk ? 'text-slate-500 hover:text-[#8b98a5]' : 'text-slate-400 hover:text-slate-600',
                   )}
                 >
                   {t === 'mid' ? 'Mid-term' : 'Final'}
@@ -202,7 +202,7 @@ export const GDriveCourseView: React.FC<GDriveCourseViewProps> = ({
                       'px-1.5 py-0.5 rounded text-[10px] font-bold leading-none tabular-nums',
                       active
                         ? dk ? 'bg-violet-500/25 text-violet-300' : 'bg-violet-100 text-violet-700'
-                        : dk ? 'bg-slate-700 text-slate-500' : 'bg-slate-100 text-slate-400',
+                        : dk ? 'bg-[#2f3336] text-slate-500' : 'bg-slate-100 text-slate-400',
                     )}>
                       {count}
                     </span>
@@ -238,25 +238,25 @@ export const GDriveCourseView: React.FC<GDriveCourseViewProps> = ({
       {!error && content.length > 0 && (
         <div className="space-y-4">
           {content.map(folder => (
-            <div key={folder.id} className={cls('rounded-xl border overflow-hidden', dk ? 'border-slate-700/60' : 'border-slate-200')}>
+            <div key={folder.id} className={cls('rounded-xl border overflow-hidden', dk ? 'border-[#2f3336]/60' : 'border-slate-200')}>
 
               {/* Folder header */}
               <div className={cls(
                 'flex items-center gap-2.5 px-4 py-3 border-b',
-                dk ? 'bg-slate-800/80 border-slate-700/60' : 'bg-slate-50 border-slate-200',
+                dk ? 'bg-[#16181c]/80 border-[#2f3336]/60' : 'bg-slate-50 border-slate-200',
               )}>
                 <Folder className={cls('h-3.5 w-3.5 flex-shrink-0', dk ? 'text-slate-500' : 'text-slate-400')} />
-                <span className={cls('text-sm font-semibold', dk ? 'text-slate-300' : 'text-slate-700')}>{folder.name}</span>
+                <span className={cls('text-sm font-semibold', dk ? 'text-[#8b98a5]' : 'text-slate-700')}>{folder.name}</span>
                 <span className={cls(
                   'ml-auto text-[10px] font-semibold tabular-nums px-2 py-0.5 rounded',
-                  dk ? 'bg-slate-700 text-slate-500' : 'bg-slate-200 text-slate-500',
+                  dk ? 'bg-[#2f3336] text-slate-500' : 'bg-slate-200 text-slate-500',
                 )}>
                   {folder.files.length}
                 </span>
               </div>
 
               {/* File list */}
-              <div className={cls('divide-y', dk ? 'divide-slate-700/60' : 'divide-slate-100')}>
+              <div className={cls('divide-y', dk ? 'divide-[#2f3336]/60' : 'divide-slate-100')}>
                 {folder.files.map(file => {
                   const accent = fileStyle(file.mimeType, dk);
                   return (
@@ -265,7 +265,7 @@ export const GDriveCourseView: React.FC<GDriveCourseViewProps> = ({
                       onClick={() => onFileClick?.(file)}
                       className={cls(
                         'group flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors duration-100',
-                        dk ? 'hover:bg-slate-700/40' : 'hover:bg-slate-50',
+                        dk ? 'hover:bg-[#2f3336]/40' : 'hover:bg-slate-50',
                       )}
                     >
                       {/* Type indicator */}
@@ -275,7 +275,7 @@ export const GDriveCourseView: React.FC<GDriveCourseViewProps> = ({
 
                       {/* File info */}
                       <div className="flex-1 min-w-0">
-                        <p className={cls('text-sm font-medium truncate', dk ? 'text-slate-200' : 'text-slate-800')}>
+                        <p className={cls('text-sm font-medium truncate', dk ? 'text-[#d9d9d9]' : 'text-slate-800')}>
                           {file.name}
                         </p>
                         {file.size && (
@@ -289,7 +289,7 @@ export const GDriveCourseView: React.FC<GDriveCourseViewProps> = ({
                           onClick={e => { e.stopPropagation(); onFileClick?.(file); }}
                           className={cls(
                             'p-1.5 rounded-md transition-colors',
-                            dk ? 'text-slate-500 hover:text-slate-200 hover:bg-slate-700' : 'text-slate-400 hover:text-slate-700 hover:bg-slate-200',
+                            dk ? 'text-slate-500 hover:text-[#d9d9d9] hover:bg-[#2f3336]' : 'text-slate-400 hover:text-slate-700 hover:bg-slate-200',
                           )}
                           title="Preview"
                         >
@@ -301,7 +301,7 @@ export const GDriveCourseView: React.FC<GDriveCourseViewProps> = ({
                           onClick={e => e.stopPropagation()}
                           className={cls(
                             'p-1.5 rounded-md transition-colors',
-                            dk ? 'text-slate-500 hover:text-slate-200 hover:bg-slate-700' : 'text-slate-400 hover:text-slate-700 hover:bg-slate-200',
+                            dk ? 'text-slate-500 hover:text-[#d9d9d9] hover:bg-[#2f3336]' : 'text-slate-400 hover:text-slate-700 hover:bg-slate-200',
                           )}
                           title="Open in Drive"
                         >
@@ -321,14 +321,14 @@ export const GDriveCourseView: React.FC<GDriveCourseViewProps> = ({
       {!error && totalFiles === 0 && (midFolderId || finalFolderId) && (
         <div className={cls(
           'rounded-xl border p-10 text-center',
-          dk ? 'bg-slate-800/40 border-slate-700' : 'bg-slate-50 border-slate-200',
+          dk ? 'bg-[#16181c]/40 border-[#2f3336]' : 'bg-slate-50 border-slate-200',
         )}>
           <Folder className={cls('h-10 w-10 mx-auto mb-3 opacity-25', dk ? 'text-slate-400' : 'text-slate-600')} />
           <p className={cls('text-sm font-medium mb-1', dk ? 'text-slate-400' : 'text-slate-600')}>
             No files in {activeTab === 'mid' ? 'Mid-term' : 'Final'} folder yet
           </p>
           <p className={cls('text-xs mb-4', dk ? 'text-slate-600' : 'text-slate-400')}>Materials will appear once uploaded to Drive</p>
-          <button onClick={load} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm font-medium transition-colors">
+          <button onClick={load} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#2f3336] hover:bg-[#38444d] text-[#d9d9d9] text-sm font-medium transition-colors">
             <RefreshCw className="h-3.5 w-3.5" /> Refresh
           </button>
         </div>

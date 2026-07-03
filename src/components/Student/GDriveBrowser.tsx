@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+﻿import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Folder, FolderOpen, ChevronRight, Search, Download, Eye,
   FileText, Loader2, ArrowLeft, Home, RefreshCw, AlertCircle,
@@ -86,11 +86,11 @@ export default function GDriveBrowser({ userMajor, isDarkMode: dk, onPreviewFile
   }, [items, search]);
 
   // UI tokens
-  const surface = dk ? 'bg-slate-900 text-slate-100' : 'bg-white text-slate-900';
-  const border = dk ? 'border-slate-700/60' : 'border-slate-200';
+  const surface = dk ? 'bg-[#17181c] text-[#e7e9ea]' : 'bg-white text-slate-900';
+  const border = dk ? 'border-[#2f3336]/60' : 'border-slate-200';
   const sub = dk ? 'text-slate-400' : 'text-slate-500';
   const cardBg = dk
-    ? 'bg-slate-800/60 border-slate-700 hover:border-slate-500'
+    ? 'bg-[#16181c]/60 border-[#2f3336] hover:border-slate-500'
     : 'bg-white border-slate-200 hover:border-slate-300';
   const majorMeta = MAJORS.find(m => m.value === activeMajor) ?? MAJORS[0];
 
@@ -99,7 +99,7 @@ export default function GDriveBrowser({ userMajor, isDarkMode: dk, onPreviewFile
   return (
     <div className={cls('rounded-2xl border overflow-hidden', surface, border)}>
       {/* Header */}
-      <div className={cls('flex items-center justify-between px-5 py-4 border-b', border, dk ? 'bg-slate-800/40' : 'bg-slate-50')}>
+      <div className={cls('flex items-center justify-between px-5 py-4 border-b', border, dk ? 'bg-[#16181c]/40' : 'bg-slate-50')}>
         <div>
           <h2 className="text-base font-bold">Study Materials</h2>
           <p className={cls('text-xs mt-0.5', sub)}>Synced from Google Drive · refreshes in real-time</p>
@@ -107,7 +107,7 @@ export default function GDriveBrowser({ userMajor, isDarkMode: dk, onPreviewFile
         <button
           onClick={refresh}
           disabled={loading}
-          className={cls('p-2 rounded-lg border transition-colors', border, dk ? 'hover:bg-slate-700' : 'hover:bg-slate-100', loading && 'opacity-50 cursor-not-allowed')}
+          className={cls('p-2 rounded-lg border transition-colors', border, dk ? 'hover:bg-[#2f3336]' : 'hover:bg-slate-100', loading && 'opacity-50 cursor-not-allowed')}
           title="Refresh from Drive"
         >
           <RefreshCw size={15} className={cls(loading && 'animate-spin')} />
@@ -115,7 +115,7 @@ export default function GDriveBrowser({ userMajor, isDarkMode: dk, onPreviewFile
       </div>
 
       {/* Major tabs */}
-      <div className={cls('flex gap-1 px-4 py-3 border-b overflow-x-auto', border, dk ? 'bg-slate-800/20' : 'bg-slate-50/50')}>
+      <div className={cls('flex gap-1 px-4 py-3 border-b overflow-x-auto', border, dk ? 'bg-[#16181c]/20' : 'bg-slate-50/50')}>
         {visibleMajors.map(m => (
           <button
             key={String(m.value)}
@@ -124,7 +124,7 @@ export default function GDriveBrowser({ userMajor, isDarkMode: dk, onPreviewFile
               'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all border',
               activeMajor === m.value
                 ? 'text-white border-transparent shadow-sm'
-                : dk ? 'border-slate-600 text-slate-400 hover:text-white' : 'border-slate-200 text-slate-500 hover:text-slate-700',
+                : dk ? 'border-[#38444d] text-slate-400 hover:text-white' : 'border-slate-200 text-slate-500 hover:text-slate-700',
             )}
             style={activeMajor === m.value ? { background: m.color } : {}}
           >
@@ -164,7 +164,7 @@ export default function GDriveBrowser({ userMajor, isDarkMode: dk, onPreviewFile
               placeholder="Search files…"
               className={cls(
                 'w-full pl-8 pr-3 py-1.5 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30',
-                dk ? 'bg-slate-800 border-slate-600 text-white placeholder-slate-500' : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400',
+                dk ? 'bg-[#16181c] border-[#38444d] text-white placeholder-[#71767b]' : 'bg-white border-slate-200 text-slate-900 placeholder-[#71767b]',
               )}
             />
           </div>
@@ -205,7 +205,7 @@ export default function GDriveBrowser({ userMajor, isDarkMode: dk, onPreviewFile
                   href={`https://drive.google.com/drive/folders/${rootFolderId}`}
                   target="_blank"
                   rel="noreferrer"
-                  className={cls('px-4 py-1.5 rounded-lg border text-xs font-semibold', border, dk ? 'text-slate-300 hover:bg-slate-700' : 'text-slate-600 hover:bg-slate-50')}
+                  className={cls('px-4 py-1.5 rounded-lg border text-xs font-semibold', border, dk ? 'text-[#8b98a5] hover:bg-[#2f3336]' : 'text-slate-600 hover:bg-slate-50')}
                 >
                   Open in Drive
                 </a>
@@ -222,7 +222,7 @@ export default function GDriveBrowser({ userMajor, isDarkMode: dk, onPreviewFile
             {stack.length > 0 && (
               <button
                 onClick={goBack}
-                className={cls('flex items-center gap-1.5 text-xs font-medium mb-4 px-3 py-1.5 rounded-lg border', border, dk ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-slate-50 text-slate-500')}
+                className={cls('flex items-center gap-1.5 text-xs font-medium mb-4 px-3 py-1.5 rounded-lg border', border, dk ? 'hover:bg-[#16181c] text-slate-400' : 'hover:bg-slate-50 text-slate-500')}
               >
                 <ArrowLeft size={13} /> Back
               </button>
@@ -280,7 +280,7 @@ export default function GDriveBrowser({ userMajor, isDarkMode: dk, onPreviewFile
                         <div className="flex gap-1.5 flex-shrink-0">
                           <button
                             onClick={() => onPreviewFile(drivePreviewUrl(file), file.name)}
-                            className={cls('p-2 rounded-lg border transition-colors', border, dk ? 'hover:bg-slate-700 text-slate-400' : 'hover:bg-slate-50 text-slate-500')}
+                            className={cls('p-2 rounded-lg border transition-colors', border, dk ? 'hover:bg-[#2f3336] text-slate-400' : 'hover:bg-slate-50 text-slate-500')}
                             title="Preview"
                           >
                             <Eye size={14} />

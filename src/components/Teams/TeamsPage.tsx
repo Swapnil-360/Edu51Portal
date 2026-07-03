@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+﻿import { useEffect, useState, useCallback } from "react";
 import { Loader2, Mail, Plus, Search, Users, CheckCircle2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -79,13 +79,13 @@ export default function TeamsPage({ currentUserId, onClose, onOpenTeam, isDarkMo
   const myTeamIds = new Set(myTeams.map((t) => t.id));
   const pendingReqByTeam = new Map(myRequests.map((r) => [r.team_id, r]));
 
-  const pageBg = isDarkMode ? "bg-slate-950" : "bg-slate-100";
-  const title = isDarkMode ? "text-white" : "text-slate-900";
-  const sub = isDarkMode ? "text-slate-400" : "text-slate-500";
+  const pageBg = isDarkMode ? "bg-[#000000]" : "bg-slate-100";
+  const title = isDarkMode ? "text-[#e7e9ea]" : "text-slate-900";
+  const sub = isDarkMode ? "text-[#71767b]" : "text-[#71767b]";
   const inputCls = `px-3 py-2 rounded-lg text-sm border outline-none ${
     isDarkMode
-      ? "bg-slate-800 border-slate-600 text-white placeholder-slate-500 focus:border-blue-500"
-      : "bg-white border-slate-300 text-slate-900 placeholder-slate-400 focus:border-blue-500"
+      ? "bg-[#16181c] border-[#38444d] text-[#e7e9ea] placeholder-[#71767b] focus:border-blue-500"
+      : "bg-white border-slate-300 text-slate-900 placeholder-[#71767b] focus:border-blue-500"
   }`;
 
   const handleJoinAction = async (team: Team) => {
@@ -121,7 +121,7 @@ export default function TeamsPage({ currentUserId, onClose, onOpenTeam, isDarkMo
               exit={{ opacity: 0, y: 8, scale: 0.95 }}
               transition={{ type: "spring", stiffness: 400, damping: 30 }}
               className={`pointer-events-auto flex items-center gap-2 px-3.5 py-2.5 rounded-xl shadow-lg text-xs font-semibold ${
-                isDarkMode ? "bg-slate-800 border border-slate-700 text-white" : "bg-white border border-slate-200 text-slate-900 shadow-black/10"
+                isDarkMode ? "bg-[#16181c] border border-[#2f3336] text-[#e7e9ea]" : "bg-white border border-slate-200 text-slate-900 shadow-black/10"
               }`}
             >
               <CheckCircle2 size={13} className="text-emerald-500 flex-shrink-0" />
@@ -152,7 +152,7 @@ export default function TeamsPage({ currentUserId, onClose, onOpenTeam, isDarkMo
             </h3>
             <div className="space-y-2">
               {invitations.map((inv) => (
-                <div key={inv.id} className={`flex items-center justify-between gap-3 px-3 py-2 rounded-lg ${isDarkMode ? "bg-slate-900/60" : "bg-white"}`}>
+                <div key={inv.id} className={`flex items-center justify-between gap-3 px-3 py-2 rounded-lg ${isDarkMode ? "bg-[#17181c]/60" : "bg-white"}`}>
                   <div className="min-w-0">
                     <p className={`text-sm font-medium truncate ${title}`}>{inv.team?.name ?? "Team"}</p>
                     <p className={`text-xs truncate ${sub}`}>
@@ -171,7 +171,7 @@ export default function TeamsPage({ currentUserId, onClose, onOpenTeam, isDarkMo
                     <button
                       onClick={() => handleInvitation(inv, false)}
                       disabled={busy === inv.id}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-medium ${isDarkMode ? "bg-slate-800 text-slate-400" : "bg-slate-100 text-slate-500"}`}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium ${isDarkMode ? "bg-[#16181c] text-[#71767b]" : "bg-slate-100 text-slate-500"}`}
                     >
                       Decline
                     </button>
@@ -185,7 +185,7 @@ export default function TeamsPage({ currentUserId, onClose, onOpenTeam, isDarkMo
         {/* Pill tab row */}
         <div className={`inline-flex items-center rounded-full p-1.5 gap-0.5 border mb-4 ${
           isDarkMode
-            ? "bg-slate-800 border-slate-700 shadow-lg shadow-black/20"
+            ? "bg-[#16181c] border-[#2f3336] shadow-lg shadow-black/40"
             : "bg-white border-slate-300 shadow-md shadow-black/8"
         }`}>
           {(["discover", "mine"] as Tab[]).map((t) => (
@@ -194,8 +194,8 @@ export default function TeamsPage({ currentUserId, onClose, onOpenTeam, isDarkMo
               onClick={() => setTab(t)}
               className={`px-5 py-2 rounded-full text-sm transition-colors duration-150 ${
                 tab === t
-                  ? isDarkMode ? "bg-white text-slate-900 font-bold shadow-md shadow-white/10" : "bg-slate-900 text-white font-bold shadow-md shadow-black/20"
-                  : isDarkMode ? "font-medium text-slate-500 hover:text-slate-300" : "font-medium text-slate-500 hover:text-slate-800"
+                  ? isDarkMode ? "bg-[#1e9df1] text-white font-bold shadow-md shadow-[#1e9df1]/20" : "bg-[#1e9df1] text-white font-bold shadow-md shadow-[#1e9df1]/20"
+                  : isDarkMode ? "font-medium text-slate-500 hover:text-[#8b98a5]" : "font-medium text-slate-500 hover:text-slate-800"
               }`}
             >
               {t === "discover" ? "Discover Teams" : `My Teams (${myTeams.length})`}
@@ -243,11 +243,11 @@ export default function TeamsPage({ currentUserId, onClose, onOpenTeam, isDarkMo
                 animate={{ opacity: 1, y: 0 }}
                 className="col-span-full flex flex-col items-center justify-center py-16 text-center gap-4"
               >
-                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${isDarkMode ? "bg-slate-800" : "bg-slate-100"}`}>
-                  <Users size={28} className={isDarkMode ? "text-slate-600" : "text-slate-300"} />
+                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${isDarkMode ? "bg-[#16181c]" : "bg-slate-100"}`}>
+                  <Users size={28} className={isDarkMode ? "text-slate-500" : "text-[#8b98a5]"} />
                 </div>
                 <div>
-                  <p className={`text-sm font-bold ${isDarkMode ? "text-slate-300" : "text-slate-700"}`}>
+                  <p className={`text-sm font-bold ${isDarkMode ? "text-[#8b98a5]" : "text-slate-700"}`}>
                     {tab === "discover" ? "No teams found" : "No teams yet"}
                   </p>
                   <p className={`text-xs mt-1 ${sub}`}>
@@ -288,7 +288,7 @@ export default function TeamsPage({ currentUserId, onClose, onOpenTeam, isDarkMo
                           disabled={busy === team.id || (isFull && !pendingReq)}
                           className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1 ${
                             pendingReq
-                              ? isDarkMode ? "bg-slate-800 text-slate-400" : "bg-slate-100 text-slate-500"
+                              ? isDarkMode ? "bg-[#16181c] text-[#71767b]" : "bg-slate-100 text-slate-500"
                               : "bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
                           }`}
                         >

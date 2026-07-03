@@ -1,4 +1,4 @@
-interface MarqueeTickerProps {
+﻿interface MarqueeTickerProps {
     isDarkMode: boolean;
 }
 
@@ -26,7 +26,7 @@ export default function MarqueeTicker({ isDarkMode }: MarqueeTickerProps) {
             <div
                 className={`relative overflow-hidden rounded-2xl border ${
                     isDarkMode
-                        ? 'bg-slate-800/60 border-slate-700/60 shadow-lg shadow-black/20'
+                        ? 'bg-[#16181c]/60 border-[#2f3336]/60 shadow-lg shadow-black/20'
                         : 'bg-white border-slate-200 shadow-md shadow-black/6'
                 }`}
             >
@@ -34,7 +34,7 @@ export default function MarqueeTicker({ isDarkMode }: MarqueeTickerProps) {
                 <div
                     className={`pointer-events-none absolute left-0 top-0 bottom-0 w-20 z-10 ${
                         isDarkMode
-                            ? 'bg-gradient-to-r from-slate-800 to-transparent'
+                            ? 'bg-gradient-to-r from-[#16181c] to-transparent'
                             : 'bg-gradient-to-r from-white to-transparent'
                     }`}
                 />
@@ -42,7 +42,7 @@ export default function MarqueeTicker({ isDarkMode }: MarqueeTickerProps) {
                 <div
                     className={`pointer-events-none absolute right-0 top-0 bottom-0 w-20 z-10 ${
                         isDarkMode
-                            ? 'bg-gradient-to-l from-slate-800 to-transparent'
+                            ? 'bg-gradient-to-l from-[#16181c] to-transparent'
                             : 'bg-gradient-to-l from-white to-transparent'
                     }`}
                 />
@@ -57,7 +57,7 @@ export default function MarqueeTicker({ isDarkMode }: MarqueeTickerProps) {
                             <span key={i} className="inline-flex items-center gap-4 px-6">
                                 <span className={`w-1 h-1 rounded-full flex-shrink-0 ${isDarkMode ? 'bg-slate-500' : 'bg-slate-300'}`} />
                                 <span className={`text-sm font-medium tracking-wide ${
-                                    isDarkMode ? 'text-slate-300' : 'text-slate-600'
+                                    isDarkMode ? 'text-[#8b98a5]' : 'text-slate-600'
                                 }`}>{f.label}</span>
                             </span>
                         ))}

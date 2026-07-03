@@ -10,18 +10,18 @@ const ROWS = 26; // 26 × 40 = 1040px — covers tall viewports
 
 export function Tiles({ isDarkMode }: TilesProps) {
   const borderColor = isDarkMode
-    ? "rgba(44,59,58,0.22)"
-    : "rgba(78,125,122,0.1)";
+    ? "rgba(47,51,54,0.35)"
+    : "rgba(30,157,241,0.08)";
   const hoverColor = isDarkMode
-    ? "rgba(78,125,122,0.07)"
-    : "rgba(78,125,122,0.04)";
+    ? "rgba(30,157,241,0.06)"
+    : "rgba(30,157,241,0.04)";
 
   return (
     <div
       className="absolute inset-0 z-0 overflow-hidden"
       style={{ pointerEvents: "none" }}
     >
-      <div className="flex w-full h-full">
+      <div className="flex w-full h-full grid-drift">
         {Array.from({ length: COLS }).map((_, i) => (
           <div
             key={i}

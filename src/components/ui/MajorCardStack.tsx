@@ -1,4 +1,4 @@
-import * as React from "react";
+﻿import * as React from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { ArrowRight, Lock } from "lucide-react";
 
@@ -81,7 +81,7 @@ function MajorCard({ item, active }: { item: MajorCardItem; active: boolean }) {
           <h3 className="text-[21px] font-black text-white leading-tight tracking-tight drop-shadow-md">
             {item.title}
           </h3>
-          <p className="text-[10.5px] text-white/48 font-semibold mt-0.5 tracking-widest uppercase">
+          <p className="text-[11px] text-white/70 font-semibold mt-0.5 tracking-widest uppercase drop-shadow">
             {item.subtitle}
           </p>
 
@@ -91,7 +91,7 @@ function MajorCard({ item, active }: { item: MajorCardItem; active: boolean }) {
               {item.tags.map((tag) => (
                 <span
                   key={tag.label}
-                  className="text-[10px] font-bold text-white/78 bg-white/10 backdrop-blur-sm border border-white/10 px-2.5 py-[3px] rounded-full tracking-wide whitespace-nowrap"
+                  className="text-[10px] font-bold text-white bg-black/35 backdrop-blur-sm border border-white/15 px-2.5 py-[3px] rounded-full tracking-wide whitespace-nowrap drop-shadow"
                 >
                   {tag.label}
                 </span>
@@ -280,7 +280,7 @@ export function MajorCardStack({
           onClick={prev}
           className={`w-8 h-8 rounded-full border flex items-center justify-center transition-colors ${
             isDarkMode
-              ? "border-slate-700 text-slate-400 hover:text-white hover:border-slate-500"
+              ? "border-[#2f3336] text-slate-400 hover:text-white hover:border-slate-500"
               : "border-slate-200 text-slate-500 hover:text-slate-900 hover:border-slate-400"
           }`}
           aria-label="Previous"
@@ -301,8 +301,8 @@ export function MajorCardStack({
                 <span
                   className={`block rounded-full transition-all duration-300 ${
                     on
-                      ? `h-2 w-6 ${isDarkMode ? "bg-white" : "bg-slate-900"}`
-                      : `h-2 w-2 ${isDarkMode ? "bg-slate-600 hover:bg-slate-400" : "bg-slate-300 hover:bg-slate-500"}`
+                      ? `h-2 w-6 ${isDarkMode ? "bg-white" : "bg-[#17181c]"}`
+                      : `h-2 w-2 ${isDarkMode ? "bg-[#38444d] hover:bg-slate-400" : "bg-slate-300 hover:bg-slate-500"}`
                   }`}
                 />
               </button>
@@ -314,7 +314,7 @@ export function MajorCardStack({
           onClick={next}
           className={`w-8 h-8 rounded-full border flex items-center justify-center transition-colors ${
             isDarkMode
-              ? "border-slate-700 text-slate-400 hover:text-white hover:border-slate-500"
+              ? "border-[#2f3336] text-slate-400 hover:text-white hover:border-slate-500"
               : "border-slate-200 text-slate-500 hover:text-slate-900 hover:border-slate-400"
           }`}
           aria-label="Next"

@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+﻿import React, { useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Home } from "lucide-react";
 
@@ -55,7 +55,7 @@ function SoonBadge({ isActive, isDarkMode }: { isActive: boolean; isDarkMode: bo
             ? "border-slate-500 text-slate-600"  // dark mode: white pill → dark border+text
             : "border-white/40 text-white/80"     // light mode: dark pill → white border+text
           : isDarkMode
-          ? "border-slate-400 text-slate-300"
+          ? "border-slate-400 text-[#8b98a5]"
           : "border-slate-400 text-slate-500"
       }`}
     >
@@ -71,8 +71,8 @@ function SlideNav({ tabs, isDarkMode }: SlideNavProps) {
     <ul
       className={`relative flex items-center rounded-full px-1.5 py-1.5 gap-0.5 border transition-colors duration-300 ${
         isDarkMode
-          ? "bg-slate-800 border-slate-700 shadow-lg shadow-black/30"
-          : "bg-white border-slate-300 shadow-md shadow-black/8"
+          ? "bg-[#16181c] border-[#2f3336] shadow-lg shadow-black/30"
+          : "bg-white border-slate-200 shadow-md shadow-black/8"
       }`}
       onMouseLeave={() => setPosition((pv) => ({ ...pv, opacity: 0 }))}
     >
@@ -115,7 +115,7 @@ const NavTab = ({
             ? "font-bold text-slate-900"
             : "font-bold text-white"
           : isDarkMode
-          ? "font-medium text-slate-500 hover:text-slate-300"
+          ? "font-medium text-[#71767b] hover:text-[#e7e9ea]"
           : "font-medium text-slate-500 hover:text-slate-800"
       }`}
     >
@@ -133,7 +133,7 @@ const NavTab = ({
         <motion.span
           layoutId="active-nav-pill"
           className={`absolute inset-0 rounded-full -z-10 shadow-md ${
-            isDarkMode ? "bg-white shadow-white/10" : "bg-slate-900 shadow-black/20"
+            isDarkMode ? "bg-white shadow-white/10" : "bg-[#17181c] shadow-black/20"
           }`}
           transition={{ type: "spring", stiffness: 400, damping: 32 }}
         />
@@ -153,7 +153,7 @@ const Cursor = ({
     animate={position}
     transition={{ type: "spring", stiffness: 350, damping: 30 }}
     className={`absolute z-0 h-8 rounded-full pointer-events-none ${
-      isDarkMode ? "bg-slate-700/70" : "bg-slate-100"
+      isDarkMode ? "bg-[#2f3336]/60" : "bg-slate-100"
     }`}
   />
 );

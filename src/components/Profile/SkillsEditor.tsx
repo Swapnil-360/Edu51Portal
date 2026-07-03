@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { X, Plus } from "lucide-react";
 
 export const CSE_SKILL_SUGGESTIONS = [
@@ -41,11 +41,11 @@ export default function SkillsEditor({
 
   const colors = {
     blue: isDarkMode
-      ? "bg-blue-900/40 text-blue-300 border-blue-700/50"
-      : "bg-blue-50 text-blue-700 border-blue-200",
+      ? "bg-[#061622] text-[#1e9df1] border-[#1e9df1]/30"
+      : "bg-[#e8f4fd] text-[#1677cc] border-[#1e9df1]/30",
     purple: isDarkMode
-      ? "bg-purple-900/40 text-purple-300 border-purple-700/50"
-      : "bg-purple-50 text-purple-700 border-purple-200",
+      ? "bg-[#061622] text-[#1e9df1] border-[#1e9df1]/30"
+      : "bg-[#e8f4fd] text-[#1677cc] border-[#1e9df1]/30",
     emerald: isDarkMode
       ? "bg-emerald-900/40 text-emerald-300 border-emerald-700/50"
       : "bg-emerald-50 text-emerald-700 border-emerald-200",
@@ -108,15 +108,15 @@ export default function SkillsEditor({
             placeholder={placeholder}
             className={`w-full px-3 py-1.5 rounded-lg text-sm border outline-none transition-colors ${
               isDarkMode
-                ? "bg-slate-800 border-slate-600 text-white placeholder-slate-500 focus:border-blue-500"
-                : "bg-white border-slate-300 text-slate-900 placeholder-slate-400 focus:border-blue-500"
+                ? "bg-[#16181c] border-[#2f3336] text-[#e7e9ea] placeholder-[#71767b] focus:border-[#1e9df1]"
+                : "bg-white border-slate-300 text-slate-900 placeholder-[#71767b] focus:border-[#1e9df1]"
             }`}
           />
           {isFocused && filteredSuggestions.length > 0 && (
             <div
               className={`absolute left-0 right-0 z-50 mt-1 max-h-60 overflow-y-auto rounded-lg border shadow-xl backdrop-blur-md ${
                 isDarkMode
-                  ? "bg-slate-800/95 border-slate-700 text-slate-200"
+                  ? "bg-[#16181c]/95 border-[#2f3336] text-[#d9d9d9]"
                   : "bg-white/95 border-slate-200 text-slate-700"
               }`}
             >
@@ -134,7 +134,7 @@ export default function SkillsEditor({
                   }}
                   className={`w-full text-left px-3 py-2 text-sm transition-colors ${
                     isDarkMode
-                      ? "hover:bg-slate-700/80 hover:text-white"
+                      ? "hover:bg-[#2f3336]/80 hover:text-[#e7e9ea]"
                       : "hover:bg-slate-100 hover:text-slate-900"
                   }`}
                 >
@@ -147,7 +147,7 @@ export default function SkillsEditor({
         <button
           type="button"
           onClick={add}
-          className="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors flex items-center gap-1 flex-shrink-0"
+          className="px-3 py-1.5 rounded-lg bg-[#1e9df1] text-white text-sm font-medium hover:bg-[#1677cc] transition-colors flex items-center gap-1 flex-shrink-0"
         >
           <Plus className="w-4 h-4" /> Add
         </button>
@@ -170,11 +170,11 @@ export function BadgeList({
 }) {
   const colors = {
     blue: isDarkMode
-      ? "bg-blue-900/40 text-blue-300 border-blue-700/50"
-      : "bg-blue-50 text-blue-700 border-blue-200",
+      ? "bg-[#061622] text-[#1e9df1] border-[#1e9df1]/30"
+      : "bg-[#e8f4fd] text-[#1677cc] border-[#1e9df1]/30",
     purple: isDarkMode
-      ? "bg-purple-900/40 text-purple-300 border-purple-700/50"
-      : "bg-purple-50 text-purple-700 border-purple-200",
+      ? "bg-[#061622] text-[#1e9df1] border-[#1e9df1]/30"
+      : "bg-[#e8f4fd] text-[#1677cc] border-[#1e9df1]/30",
     emerald: isDarkMode
       ? "bg-emerald-900/40 text-emerald-300 border-emerald-700/50"
       : "bg-emerald-50 text-emerald-700 border-emerald-200",
@@ -182,7 +182,7 @@ export function BadgeList({
 
   if (!items.length) {
     return (
-      <p className={`text-sm ${isDarkMode ? "text-slate-500" : "text-slate-400"}`}>{emptyText}</p>
+      <p className={`text-sm ${isDarkMode ? "text-slate-500" : "text-[#71767b]"}`}>{emptyText}</p>
     );
   }
   return (

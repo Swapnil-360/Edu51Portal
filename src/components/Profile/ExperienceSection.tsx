@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { Briefcase, Plus, Pencil, Trash2, X, Loader2 } from "lucide-react";
 import { Experience, EmploymentType, EMPLOYMENT_TYPE_LABELS } from "../../types/social";
 import { upsertExperience, deleteExperience } from "../../lib/api/profileApi";
@@ -22,9 +22,9 @@ function formatRange(exp: Experience): string {
 export default function ExperienceSection({ userId, experiences, isOwn, isDarkMode, onChanged }: Props) {
   const [editing, setEditing] = useState<Partial<Experience> | null>(null);
 
-  const card = isDarkMode ? "bg-slate-900 border-slate-700/50" : "bg-white border-slate-200";
-  const title = isDarkMode ? "text-white" : "text-slate-900";
-  const sub = isDarkMode ? "text-slate-400" : "text-slate-500";
+  const card = isDarkMode ? "bg-[#17181c] border-[#2f3336]/50" : "bg-white border-slate-200";
+  const title = isDarkMode ? "text-[#e7e9ea]" : "text-slate-900";
+  const sub = isDarkMode ? "text-[#71767b]" : "text-slate-500";
 
   if (!isOwn && experiences.length === 0) return null;
 
@@ -32,12 +32,12 @@ export default function ExperienceSection({ userId, experiences, isOwn, isDarkMo
     <section className={`rounded-2xl border p-5 ${card}`}>
       <div className="flex items-center justify-between mb-4">
         <h3 className={`text-base font-bold flex items-center gap-2 ${title}`}>
-          <Briefcase className="w-5 h-5 text-purple-500" /> Experience
+          <Briefcase className="w-5 h-5 text-[#1e9df1]" /> Experience
         </h3>
         {isOwn && (
           <button
             onClick={() => setEditing({ user_id: userId })}
-            className="p-1.5 rounded-lg text-blue-500 hover:bg-blue-500/10"
+            className="p-1.5 rounded-lg text-[#1e9df1] hover:bg-[#1e9df1]/10"
             title="Add experience"
           >
             <Plus className="w-5 h-5" />
@@ -51,7 +51,7 @@ export default function ExperienceSection({ userId, experiences, isOwn, isDarkMo
         <ul className="space-y-4">
           {experiences.map((exp) => (
             <li key={exp.id} className="flex items-start gap-3">
-              <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${isDarkMode ? "bg-slate-800" : "bg-slate-100"}`}>
+              <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${isDarkMode ? "bg-[#16181c]" : "bg-slate-100"}`}>
                 <Briefcase className={`w-5 h-5 ${sub}`} />
               </div>
               <div className="flex-1 min-w-0">
@@ -62,7 +62,7 @@ export default function ExperienceSection({ userId, experiences, isOwn, isDarkMo
                 </p>
                 <p className={`text-xs ${sub}`}>{formatRange(exp)}</p>
                 {exp.description && (
-                  <p className={`text-xs mt-1 whitespace-pre-wrap ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
+                  <p className={`text-xs mt-1 whitespace-pre-wrap ${isDarkMode ? "text-[#8b98a5]" : "text-slate-600"}`}>
                     {exp.description}
                   </p>
                 )}
@@ -126,10 +126,10 @@ function ExperienceFormModal({
 
   const inputCls = `w-full px-3 py-2 rounded-lg text-sm border outline-none ${
     isDarkMode
-      ? "bg-slate-800 border-slate-600 text-white placeholder-slate-500 focus:border-blue-500"
-      : "bg-white border-slate-300 text-slate-900 placeholder-slate-400 focus:border-blue-500"
+      ? "bg-[#16181c] border-[#2f3336] text-[#e7e9ea] placeholder-[#71767b] focus:border-[#1e9df1]"
+      : "bg-white border-slate-300 text-slate-900 placeholder-[#71767b] focus:border-[#1e9df1]"
   }`;
-  const labelCls = `block text-xs font-medium mb-1 ${isDarkMode ? "text-slate-300" : "text-slate-600"}`;
+  const labelCls = `block text-xs font-medium mb-1 ${isDarkMode ? "text-[#8b98a5]" : "text-slate-600"}`;
 
   const save = async () => {
     if (!title.trim() || !company.trim() || !startDate) {
@@ -158,12 +158,12 @@ function ExperienceFormModal({
 
   return (
     <div className="fixed inset-0 z-[140] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className={`w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl ${isDarkMode ? "bg-slate-900 border border-slate-700" : "bg-white"}`}>
-        <div className={`px-5 py-4 border-b flex items-center justify-between ${isDarkMode ? "border-slate-700" : "border-slate-200"}`}>
-          <h3 className={`font-bold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+      <div className={`w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl ${isDarkMode ? "bg-[#17181c] border border-[#2f3336]" : "bg-white"}`}>
+        <div className={`px-5 py-4 border-b flex items-center justify-between ${isDarkMode ? "border-[#2f3336]" : "border-slate-200"}`}>
+          <h3 className={`font-bold ${isDarkMode ? "text-[#e7e9ea]" : "text-slate-900"}`}>
             {initial.id ? "Edit Experience" : "Add Experience"}
           </h3>
-          <button onClick={onClose} className={isDarkMode ? "text-slate-400" : "text-slate-500"}>
+          <button onClick={onClose} className={isDarkMode ? "text-[#71767b]" : "text-slate-500"}>
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -198,7 +198,7 @@ function ExperienceFormModal({
               <input type="date" className={inputCls} value={endDate} onChange={(e) => setEndDate(e.target.value)} disabled={isCurrent} />
             </div>
           </div>
-          <label className={`flex items-center gap-2 text-sm ${isDarkMode ? "text-slate-300" : "text-slate-700"}`}>
+          <label className={`flex items-center gap-2 text-sm ${isDarkMode ? "text-[#8b98a5]" : "text-slate-700"}`}>
             <input type="checkbox" checked={isCurrent} onChange={(e) => setIsCurrent(e.target.checked)} className="checkbox checkbox-sm checkbox-primary" />
             I currently work here
           </label>
@@ -207,14 +207,14 @@ function ExperienceFormModal({
             <textarea className={`${inputCls} min-h-[80px] resize-y`} value={description} onChange={(e) => setDescription(e.target.value)} maxLength={1000} />
           </div>
         </div>
-        <div className={`px-5 py-4 border-t flex justify-end gap-2 ${isDarkMode ? "border-slate-700" : "border-slate-200"}`}>
-          <button onClick={onClose} className={`px-4 py-2 rounded-lg text-sm font-medium ${isDarkMode ? "bg-slate-800 text-slate-300" : "bg-slate-100 text-slate-700"}`}>
+        <div className={`px-5 py-4 border-t flex justify-end gap-2 ${isDarkMode ? "border-[#2f3336]" : "border-slate-200"}`}>
+          <button onClick={onClose} className={`px-4 py-2 rounded-lg text-sm font-medium ${isDarkMode ? "bg-[#16181c] text-[#8b98a5]" : "bg-slate-100 text-slate-700"}`}>
             Cancel
           </button>
           <button
             onClick={save}
             disabled={saving}
-            className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-60 flex items-center gap-2"
+            className="px-4 py-2 rounded-lg bg-[#1e9df1] text-white text-sm font-medium hover:bg-[#1677cc] disabled:opacity-60 flex items-center gap-2"
           >
             {saving && <Loader2 className="w-4 h-4 animate-spin" />} Save
           </button>
@@ -223,3 +223,4 @@ function ExperienceFormModal({
     </div>
   );
 }
+

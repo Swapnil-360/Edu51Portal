@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+﻿import React, { useEffect, useState, useMemo } from 'react';
 import { FileText, FileSpreadsheet, ImageIcon, Download, Globe, Search, Users, Eye } from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { TeamFile } from '../../types/social';
@@ -32,11 +32,11 @@ async function downloadFile(url: string, name: string) {
 }
 
 function FileIcon({ mime, size = 24 }: { mime: string; size?: number }) {
-  if (mime.startsWith('image/')) return <ImageIcon size={size} className="text-blue-500" />;
+  if (mime.startsWith('image/')) return <ImageIcon size={size} className="text-[#1e9df1]" />;
   if (mime === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     return <FileSpreadsheet size={size} className="text-emerald-500" />;
   if (mime === 'application/pdf') return <FileText size={size} className="text-red-500" />;
-  return <FileText size={size} className="text-indigo-500" />;
+  return <FileText size={size} className="text-[#1e9df1]" />;
 }
 
 function relativeDate(iso: string): string {
@@ -102,10 +102,10 @@ export default function PublicFilesPage({ isDarkMode, onViewTeam, onViewPreview 
     });
   }, [files, filter, search]);
 
-  const base = isDarkMode ? 'bg-slate-950 text-white' : 'bg-slate-50 text-slate-900';
-  const card = `rounded-2xl border ${isDarkMode ? 'border-slate-800 bg-slate-900' : 'border-slate-200 bg-white'}`;
-  const inputCls = `w-full pl-9 pr-3 py-2.5 rounded-xl border text-sm transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/30 ${
-    isDarkMode ? 'bg-slate-900 border-slate-800 text-white placeholder-slate-600' : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400'
+  const base = isDarkMode ? 'bg-[#000000] text-[#e7e9ea]' : 'bg-slate-50 text-slate-900';
+  const card = `rounded-2xl border ${isDarkMode ? 'border-[#2f3336] bg-[#17181c]' : 'border-slate-200 bg-white'}`;
+  const inputCls = `w-full pl-9 pr-3 py-2.5 rounded-xl border text-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#1e9df1]/20 ${
+    isDarkMode ? 'bg-[#17181c] border-[#2f3336] text-[#e7e9ea] placeholder-[#71767b]' : 'bg-white border-slate-200 text-slate-900 placeholder-[#71767b]'
   }`;
 
   const FILTERS: { key: FileFilter; label: string }[] = [
@@ -119,20 +119,20 @@ export default function PublicFilesPage({ isDarkMode, onViewTeam, onViewPreview 
   return (
     <div className={`min-h-screen w-full pb-12 ${base}`}>
       {/* Page header */}
-      <div className={`sticky top-0 z-10 px-4 sm:px-6 pt-5 pb-4 border-b ${isDarkMode ? 'bg-slate-950/90 backdrop-blur-md border-slate-800/80' : 'bg-slate-50/90 backdrop-blur-md border-slate-200'}`}>
+      <div className={`sticky top-0 z-10 px-4 sm:px-6 pt-5 pb-4 border-b ${isDarkMode ? 'bg-[#000000]/90 backdrop-blur-md border-[#2f3336]/80' : 'bg-slate-50/90 backdrop-blur-md border-slate-200'}`}>
         <div className="max-w-5xl mx-auto">
           <div className="flex items-center gap-2.5 mb-1">
-            <Globe size={18} className="text-blue-500 flex-shrink-0" />
-            <h1 className={`text-lg font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Shared Resources</h1>
+            <Globe size={18} className="text-[#1e9df1] flex-shrink-0" />
+            <h1 className={`text-lg font-black ${isDarkMode ? 'text-[#e7e9ea]' : 'text-slate-900'}`}>Shared Resources</h1>
           </div>
-          <p className={`text-xs mb-4 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+          <p className={`text-xs mb-4 ${isDarkMode ? 'text-slate-500' : 'text-[#71767b]'}`}>
             Public files shared by teams across the platform
           </p>
 
           {/* Search + filter row */}
           <div className="flex flex-col sm:flex-row gap-2">
             <div className="relative flex-1">
-              <Search size={14} className={`absolute left-3 top-1/2 -translate-y-1/2 ${isDarkMode ? 'text-slate-600' : 'text-slate-400'}`} />
+              <Search size={14} className={`absolute left-3 top-1/2 -translate-y-1/2 ${isDarkMode ? 'text-slate-600' : 'text-[#71767b]'}`} />
               <input
                 value={search}
                 onChange={e => setSearch(e.target.value)}
@@ -140,15 +140,15 @@ export default function PublicFilesPage({ isDarkMode, onViewTeam, onViewPreview 
                 className={inputCls}
               />
             </div>
-            <div className={`flex items-center gap-1 p-0.5 rounded-xl ${isDarkMode ? 'bg-slate-900 border border-slate-800' : 'bg-white border border-slate-200'}`}>
+            <div className={`flex items-center gap-1 p-0.5 rounded-xl ${isDarkMode ? 'bg-[#17181c] border border-[#2f3336]' : 'bg-white border border-slate-200'}`}>
               {FILTERS.map(({ key, label }) => (
                 <button
                   key={key}
                   onClick={() => setFilter(key)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                     filter === key
-                      ? 'bg-blue-600 text-white shadow-sm'
-                      : isDarkMode ? 'text-slate-500 hover:text-slate-300' : 'text-slate-400 hover:text-slate-700'
+                      ? 'bg-[#1e9df1] text-white shadow-sm'
+                      : isDarkMode ? 'text-slate-500 hover:text-[#8b98a5]' : 'text-[#71767b] hover:text-slate-700'
                   }`}
                 >
                   {label}
@@ -164,15 +164,15 @@ export default function PublicFilesPage({ isDarkMode, onViewTeam, onViewPreview 
         {loading && files.length === 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {[...Array(6)].map((_, i) => (
-              <div key={i} className={`h-48 rounded-2xl animate-pulse ${isDarkMode ? 'bg-slate-900' : 'bg-white border border-slate-200'}`} />
+              <div key={i} className={`h-48 rounded-2xl animate-pulse ${isDarkMode ? 'bg-[#17181c]' : 'bg-white border border-slate-200'}`} />
             ))}
           </div>
         ) : displayed.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-4 ${isDarkMode ? 'bg-slate-900' : 'bg-slate-100'}`}>
-              <Globe size={24} className={isDarkMode ? 'text-slate-600' : 'text-slate-300'} />
+            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-4 ${isDarkMode ? 'bg-[#17181c]' : 'bg-slate-100'}`}>
+              <Globe size={24} className={isDarkMode ? 'text-slate-500' : 'text-[#8b98a5]'} />
             </div>
-            <p className={`text-sm font-semibold ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+            <p className={`text-sm font-semibold ${isDarkMode ? 'text-slate-500' : 'text-[#71767b]'}`}>
               {search || filter !== 'all' ? 'No files match your search' : 'No public files yet'}
             </p>
           </div>
@@ -186,25 +186,25 @@ export default function PublicFilesPage({ isDarkMode, onViewTeam, onViewPreview 
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: Math.min(idx * 0.025, 0.15), duration: 0.2 }}
                     className={`group flex flex-col gap-3 p-4 rounded-2xl border transition-shadow hover:shadow-md ${
-                      isDarkMode ? 'border-slate-800 bg-slate-900 hover:border-slate-700' : 'border-slate-200 bg-white hover:border-slate-300'
+                      isDarkMode ? 'border-[#2f3336] bg-[#17181c] hover:border-[#2f3336]' : 'border-slate-200 bg-white hover:border-slate-300'
                     }`}
                   >
                     {/* Icon + type label */}
                     <div className="flex items-center justify-between">
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isDarkMode ? 'bg-slate-800' : 'bg-slate-50'}`}>
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isDarkMode ? 'bg-[#16181c]' : 'bg-slate-50'}`}>
                         <FileIcon mime={file.file_type} size={20} />
                       </div>
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${isDarkMode ? 'border-slate-700 text-slate-500' : 'border-slate-200 text-slate-400'}`}>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${isDarkMode ? 'border-[#2f3336] text-slate-500' : 'border-slate-200 text-[#71767b]'}`}>
                         {fileTypeLabel(file.file_type)}
                       </span>
                     </div>
 
                     {/* File name + size */}
                     <div className="flex-1 min-w-0">
-                      <p className={`text-sm font-bold leading-tight line-clamp-2 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                      <p className={`text-sm font-bold leading-tight line-clamp-2 ${isDarkMode ? 'text-[#e7e9ea]' : 'text-slate-900'}`}>
                         {file.name}
                       </p>
-                      <p className={`text-[11px] mt-0.5 ${isDarkMode ? 'text-slate-600' : 'text-slate-400'}`}>
+                      <p className={`text-xs mt-0.5 ${isDarkMode ? 'text-slate-500' : 'text-[#71767b]'}`}>
                         {formatFileSize(file.file_size)} · {relativeDate(file.created_at)}
                       </p>
                     </div>
@@ -215,18 +215,18 @@ export default function PublicFilesPage({ isDarkMode, onViewTeam, onViewPreview 
                         onClick={() => onViewTeam(file.team!.id)}
                         className={`flex items-center gap-2 px-2.5 py-1.5 rounded-xl border transition-colors w-full text-left ${
                           isDarkMode
-                            ? 'border-slate-800 hover:border-slate-700 hover:bg-slate-800'
+                            ? 'border-[#2f3336] hover:border-[#2f3336] hover:bg-[#16181c]'
                             : 'border-slate-100 hover:border-slate-200 hover:bg-slate-50'
                         }`}
                       >
                         {file.team.logo_url ? (
                           <img src={file.team.logo_url} className="w-5 h-5 rounded-md object-cover flex-shrink-0" alt="" />
                         ) : (
-                          <div className={`w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 ${isDarkMode ? 'bg-slate-700' : 'bg-slate-200'}`}>
-                            <Users size={10} className={isDarkMode ? 'text-slate-500' : 'text-slate-400'} />
+                          <div className={`w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 ${isDarkMode ? 'bg-[#2f3336]' : 'bg-slate-200'}`}>
+                            <Users size={10} className={isDarkMode ? 'text-slate-500' : 'text-[#71767b]'} />
                           </div>
                         )}
-                        <span className={`text-[11px] font-bold truncate ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                        <span className={`text-[11px] font-bold truncate ${isDarkMode ? 'text-[#71767b]' : 'text-slate-600'}`}>
                           {file.team.name}
                         </span>
                       </button>
@@ -237,9 +237,9 @@ export default function PublicFilesPage({ isDarkMode, onViewTeam, onViewPreview 
                       {(file.uploader?.avatar_url || file.uploader?.profile_pic) ? (
                         <img src={(file.uploader.avatar_url || file.uploader.profile_pic)!} className="w-5 h-5 rounded-full object-cover flex-shrink-0" alt="" />
                       ) : (
-                        <div className={`w-5 h-5 rounded-full flex-shrink-0 ${isDarkMode ? 'bg-slate-700' : 'bg-slate-200'}`} />
+                        <div className={`w-5 h-5 rounded-full flex-shrink-0 ${isDarkMode ? 'bg-[#2f3336]' : 'bg-slate-200'}`} />
                       )}
-                      <span className={`text-[11.5px] font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                      <span className={`text-[11.5px] font-medium ${isDarkMode ? 'text-[#71767b]' : 'text-slate-600'}`}>
                         Shared by: {file.uploader?.name ?? 'Unknown'}
                       </span>
                     </div>
@@ -250,7 +250,7 @@ export default function PublicFilesPage({ isDarkMode, onViewTeam, onViewPreview 
                         onClick={() => onViewPreview(file.file_url, file.name)}
                         className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold border transition-colors ${
                           isDarkMode
-                            ? 'bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border-slate-700'
+                            ? 'bg-[#16181c] hover:bg-[#2f3336] text-[#8b98a5] hover:text-[#e7e9ea] border-[#2f3336]'
                             : 'bg-slate-100 hover:bg-slate-200 text-slate-650 hover:text-slate-900 border-slate-200'
                         }`}
                         title="Preview File"
@@ -261,8 +261,8 @@ export default function PublicFilesPage({ isDarkMode, onViewTeam, onViewPreview 
                         onClick={() => downloadFile(file.file_url, file.name)}
                         className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold border transition-colors ${
                           isDarkMode
-                            ? 'bg-blue-600 hover:bg-blue-500 text-white border-blue-600 shadow-md shadow-blue-500/10'
-                            : 'bg-blue-600 hover:bg-blue-700 text-white border-blue-600 shadow-sm shadow-blue-600/10'
+                            ? 'bg-[#1e9df1] hover:bg-[#1677cc] text-white border-[#1e9df1] shadow-md shadow-[#1e9df1]/15'
+                            : 'bg-[#1e9df1] hover:bg-[#1677cc] text-white border-[#1e9df1] shadow-sm shadow-[#1e9df1]/20'
                         }`}
                         title="Download"
                       >
@@ -281,7 +281,7 @@ export default function PublicFilesPage({ isDarkMode, onViewTeam, onViewPreview 
                   disabled={loading}
                   className={`px-5 py-2.5 rounded-xl border text-sm font-bold transition-all disabled:opacity-50 ${
                     isDarkMode
-                      ? 'border-slate-800 text-slate-400 hover:border-slate-700 hover:text-white'
+                      ? 'border-[#2f3336] text-[#71767b] hover:border-[#2f3336] hover:text-[#e7e9ea]'
                       : 'border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-900'
                   }`}
                 >

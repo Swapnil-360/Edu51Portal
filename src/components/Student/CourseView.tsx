@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { FileText, Play, Download, Eye, Calendar, Lightbulb, Zap, Presentation, HelpCircle, ExternalLink, FolderOpen } from 'lucide-react';
 import { useMaterials } from '../../hooks/useMaterials';
 import { getGoogleDriveLink } from '../../config/googleDrive';
@@ -128,7 +128,7 @@ export function CourseView({ courseId, courseName, courseCode }: CourseViewProps
               onClick={() => setActiveTab(tab.id)}
               className={`flex-shrink-0 px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === tab.id
-                  ? 'border-teal-500 text-teal-600 bg-teal-50'
+                  ? 'border-[#1e9df1] text-[#1e9df1] bg-[#1e9df1]/5'
                   : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
               }`}
             >
@@ -214,7 +214,7 @@ export function CourseView({ courseId, courseName, courseCode }: CourseViewProps
                   <a
                     href={material.file_url}
                     download
-                    className="p-2 text-gray-500 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors"
+                    className="p-2 text-gray-500 hover:text-[#1e9df1] hover:bg-[#1e9df1]/5 rounded-lg transition-colors"
                     title="Download File"
                   >
                     <Download className="h-5 w-5" />

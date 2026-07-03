@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { X, Trophy, Zap, Users, ArrowRight } from "lucide-react";
 import { WC26_TEAMS, teamLogoUrl } from "../../lib/wc26Teams";
 
@@ -66,7 +66,7 @@ export function WC26IntroModal({ isOpen, onPickTeam, onDismiss, isDarkMode }: Pr
         <button
           onClick={onDismiss}
           className={`absolute top-4 right-4 z-10 p-1.5 rounded-full transition-colors ${
-            isDarkMode ? "text-slate-500 hover:text-white hover:bg-slate-700" : "text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+            isDarkMode ? "text-slate-500 hover:text-white hover:bg-[#2f3336]" : "text-slate-400 hover:text-slate-700 hover:bg-slate-100"
           }`}
         >
           <X className="w-4 h-4" />
@@ -104,7 +104,7 @@ export function WC26IntroModal({ isOpen, onPickTeam, onDismiss, isDarkMode }: Pr
                 <div
                   key={`${team.code}-${i}`}
                   className={`flex-shrink-0 flex flex-col items-center gap-1 p-2 rounded-xl border ${
-                    isDarkMode ? "bg-slate-800 border-slate-700" : "bg-white border-slate-200"
+                    isDarkMode ? "bg-[#16181c] border-[#2f3336]" : "bg-white border-slate-200"
                   }`}
                   style={{ animation: `teamFloat ${1.8 + (i % 4) * 0.3}s ease-in-out infinite` }}
                 >
@@ -119,7 +119,7 @@ export function WC26IntroModal({ isOpen, onPickTeam, onDismiss, isDarkMode }: Pr
 
           {/* Points system */}
           <div className={`flex items-center justify-center gap-4 mb-5 py-3 px-4 rounded-2xl ${
-            isDarkMode ? "bg-slate-800/60" : "bg-slate-100"
+            isDarkMode ? "bg-[#16181c]/60" : "bg-slate-100"
           }`}>
             <div className="flex items-center gap-1.5 text-center">
               <Trophy className="w-4 h-4 text-yellow-500" />
@@ -128,7 +128,7 @@ export function WC26IntroModal({ isOpen, onPickTeam, onDismiss, isDarkMode }: Pr
                 <p className={`text-[9px] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>Win</p>
               </div>
             </div>
-            <div className={`w-px h-8 ${isDarkMode ? "bg-slate-700" : "bg-slate-300"}`} />
+            <div className={`w-px h-8 ${isDarkMode ? "bg-[#2f3336]" : "bg-slate-300"}`} />
             <div className="flex items-center gap-1.5 text-center">
               <Zap className="w-4 h-4 text-blue-400" />
               <div>
@@ -136,7 +136,7 @@ export function WC26IntroModal({ isOpen, onPickTeam, onDismiss, isDarkMode }: Pr
                 <p className={`text-[9px] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>Draw</p>
               </div>
             </div>
-            <div className={`w-px h-8 ${isDarkMode ? "bg-slate-700" : "bg-slate-300"}`} />
+            <div className={`w-px h-8 ${isDarkMode ? "bg-[#2f3336]" : "bg-slate-300"}`} />
             <div className="flex items-center gap-1.5 text-center">
               <span className="text-lg">⚽</span>
               <div>
@@ -144,7 +144,7 @@ export function WC26IntroModal({ isOpen, onPickTeam, onDismiss, isDarkMode }: Pr
                 <p className={`text-[9px] ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>Per goal</p>
               </div>
             </div>
-            <div className={`w-px h-8 ${isDarkMode ? "bg-slate-700" : "bg-slate-300"}`} />
+            <div className={`w-px h-8 ${isDarkMode ? "bg-[#2f3336]" : "bg-slate-300"}`} />
             <div className="flex items-center gap-1.5 text-center">
               <Users className="w-4 h-4 text-purple-400" />
               <div>
@@ -166,7 +166,7 @@ export function WC26IntroModal({ isOpen, onPickTeam, onDismiss, isDarkMode }: Pr
           <button
             onClick={onDismiss}
             className={`w-full mt-2.5 py-2 text-xs font-medium transition-colors ${
-              isDarkMode ? "text-slate-500 hover:text-slate-300" : "text-slate-400 hover:text-slate-600"
+              isDarkMode ? "text-slate-500 hover:text-[#8b98a5]" : "text-slate-400 hover:text-slate-600"
             }`}
           >
             Maybe later

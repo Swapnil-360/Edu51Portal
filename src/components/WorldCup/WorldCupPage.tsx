@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+﻿import { useState, useEffect, useCallback } from "react";
 import { X, Trophy, Loader2, RefreshCw } from "lucide-react";
+import { supabase } from "../../lib/supabase";
 import { WC26_TEAMS, WC26Team, getTeamByCode, teamLogoUrl } from "../../lib/wc26Teams";
 import {
   WC26Match,
@@ -23,7 +24,8 @@ type Tab = "pick" | "leaderboard" | "matches";
 
 const STAGE_ORDER = [
   "GROUP_STAGE",
-  "ROUND_OF_16",
+  "LAST_32",
+  "LAST_16",
   "QUARTER_FINALS",
   "SEMI_FINALS",
   "THIRD_PLACE",
@@ -32,7 +34,8 @@ const STAGE_ORDER = [
 
 const STAGE_LABEL: Record<string, string> = {
   GROUP_STAGE: "Group Stage",
-  ROUND_OF_16: "Round of 16",
+  LAST_32: "Round of 32",
+  LAST_16: "Round of 16",
   QUARTER_FINALS: "Quarter Finals",
   SEMI_FINALS: "Semi Finals",
   THIRD_PLACE: "Third Place",
@@ -66,10 +69,9 @@ export function WorldCupPage({ currentUserId, onClose, isDarkMode }: Props) {
   const [picking, setPicking] = useState(false);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
-  const liveIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const bg   = isDarkMode ? "bg-slate-950" : "bg-gray-50";
-  const card = isDarkMode ? "bg-slate-900 border-slate-700" : "bg-white border-slate-200";
+  const bg   = isDarkMode ? "bg-[#000000]" : "bg-gray-50";
+  const card = isDarkMode ? "bg-[#17181c] border-[#2f3336]" : "bg-white border-slate-200";
   const text = isDarkMode ? "text-white" : "text-slate-900";
   const sub  = isDarkMode ? "text-slate-400" : "text-slate-500";
 
@@ -90,12 +92,24 @@ export function WorldCupPage({ currentUserId, onClose, isDarkMode }: Props) {
     (async () => { setLoading(true); await load(); setLoading(false); })();
   }, [load]);
 
+  // Live updates: a server-side cron job keeps wc26_matches fresh every minute;
+  // this just listens for that change and re-renders — no per-client API polling.
   useEffect(() => {
-    if (liveIntervalRef.current) clearInterval(liveIntervalRef.current);
-    if (!matches.some(isLiveMatch)) return;
-    liveIntervalRef.current = setInterval(() => load(true), 60_000);
-    return () => { if (liveIntervalRef.current) clearInterval(liveIntervalRef.current); };
-  }, [matches, load]);
+    const refresh = async () => {
+      const m = await getWC26Matches();
+      setMatches(m);
+      setLeaderboard(await getWC26Leaderboard(m));
+    };
+    const channel = supabase
+      .channel("wc26-matches-live")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "wc26_matches" },
+        refresh,
+      )
+      .subscribe();
+    return () => { channel.unsubscribe(); };
+  }, []);
 
   const liveMatches  = matches.filter(isLiveMatch);
   const liveCount    = liveMatches.length;
@@ -137,7 +151,7 @@ export function WorldCupPage({ currentUserId, onClose, isDarkMode }: Props) {
   return (
     <div className={`min-h-screen ${bg}`}>
       {/* ── Header ── */}
-      <div className={`sticky top-0 z-10 border-b ${isDarkMode ? "bg-slate-950 border-slate-800" : "bg-white border-slate-200"}`}>
+      <div className={`sticky top-0 z-10 border-b ${isDarkMode ? "bg-[#000000] border-[#2f3336]" : "bg-white border-slate-200"}`}>
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img src="/FIFA-World-Cup-Logo-2026.png" alt="FIFA World Cup 2026" className="w-10 h-10 object-contain" />
@@ -170,7 +184,7 @@ export function WorldCupPage({ currentUserId, onClose, isDarkMode }: Props) {
             ? <Loader2 className="w-4 h-4 animate-spin text-green-500" />
             : (
               <button onClick={() => load(true)} title="Refresh scores"
-                className={`p-1.5 rounded-full ${isDarkMode ? "hover:bg-slate-800 text-slate-500 hover:text-slate-300" : "hover:bg-slate-100 text-slate-400"}`}>
+                className={`p-1.5 rounded-full ${isDarkMode ? "hover:bg-[#16181c] text-slate-500 hover:text-[#8b98a5]" : "hover:bg-slate-100 text-slate-400"}`}>
                 <RefreshCw className="w-3.5 h-3.5" />
               </button>
             )
@@ -205,7 +219,7 @@ export function WorldCupPage({ currentUserId, onClose, isDarkMode }: Props) {
                 Live Now{liveCount > 1 ? ` · ${liveCount} matches` : ""}
               </span>
               <span className={`inline-flex items-center gap-1 text-[10px] ${sub}`}>
-                <RefreshCw className="w-3 h-3" /> Auto · 60s
+                <RefreshCw className="w-3 h-3" /> Live sync
               </span>
             </div>
 
@@ -225,7 +239,7 @@ export function WorldCupPage({ currentUserId, onClose, isDarkMode }: Props) {
                           ? "bg-green-900/40 border border-green-600/50 ring-1 ring-green-500/30"
                           : "bg-green-50 border border-green-300 ring-1 ring-green-300/50"
                         : isDarkMode
-                          ? "bg-slate-800/90 border border-slate-700"
+                          ? "bg-[#16181c]/90 border border-[#2f3336]"
                           : "bg-white border border-slate-200"
                     }`}
                   >
@@ -267,8 +281,8 @@ export function WorldCupPage({ currentUserId, onClose, isDarkMode }: Props) {
       <div className="max-w-4xl mx-auto px-4 py-6">
         {loading ? (
           (() => {
-            const sk = isDarkMode ? "bg-slate-800/70" : "bg-slate-200/60";
-            const skCard = isDarkMode ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200 shadow-sm";
+            const sk = isDarkMode ? "bg-[#16181c]/70" : "bg-slate-200/60";
+            const skCard = isDarkMode ? "bg-[#17181c] border-[#2f3336]" : "bg-white border-slate-200 shadow-sm";
             return (
               <div className="space-y-6">
                 {[8, 8].map((count, gi) => (
@@ -284,7 +298,7 @@ export function WorldCupPage({ currentUserId, onClose, isDarkMode }: Props) {
                     </div>
                   </div>
                 ))}
-                <div className={`rounded-2xl border divide-y ${skCard} ${isDarkMode ? "divide-slate-800" : "divide-slate-100"}`}>
+                <div className={`rounded-2xl border divide-y ${skCard} ${isDarkMode ? "divide-[#2f3336]" : "divide-slate-100"}`}>
                   {Array.from({ length: 5 }).map((_, i) => (
                     <div key={i} className="flex items-center gap-3 px-4 py-3 animate-pulse">
                       <div className={`w-6 h-6 rounded-full ${sk}`} />
@@ -329,7 +343,7 @@ export function WorldCupPage({ currentUserId, onClose, isDarkMode }: Props) {
                                 ? "border-yellow-400 bg-yellow-400/10 shadow-lg shadow-yellow-400/20"
                                 : isPlaying
                                 ? isDarkMode ? "border-red-600/60 bg-red-900/20" : "border-red-400/60 bg-red-50"
-                                : isDarkMode ? "border-slate-700 hover:border-green-500/50 bg-slate-800/60" : "border-slate-200 hover:border-green-400 bg-white"
+                                : isDarkMode ? "border-[#2f3336] hover:border-green-500/50 bg-[#16181c]/60" : "border-slate-200 hover:border-green-400 bg-white"
                             } ${picking ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`}
                           >
                             <TeamLogo team={team} className="w-14 h-10 drop-shadow-sm" />
@@ -361,7 +375,7 @@ export function WorldCupPage({ currentUserId, onClose, isDarkMode }: Props) {
                     <p className="text-sm">Be the first to pick a team!</p>
                   </div>
                 ) : (
-                  <div className={`rounded-2xl border divide-y ${card} ${isDarkMode ? "divide-slate-700" : "divide-slate-100"}`}>
+                  <div className={`rounded-2xl border divide-y ${card} ${isDarkMode ? "divide-[#2f3336]" : "divide-slate-100"}`}>
                     {leaderboard.map((entry, i) => {
                       const isMe = entry.id === currentUserId;
                       const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : null;
@@ -424,7 +438,7 @@ export function WorldCupPage({ currentUserId, onClose, isDarkMode }: Props) {
                       <h3 className={`text-xs font-bold uppercase tracking-widest mb-2 ${sub}`}>
                         {STAGE_LABEL[stage] ?? stage}
                       </h3>
-                      <div className={`rounded-2xl border divide-y ${card} ${isDarkMode ? "divide-slate-700" : "divide-slate-100"}`}>
+                      <div className={`rounded-2xl border divide-y ${card} ${isDarkMode ? "divide-[#2f3336]" : "divide-slate-100"}`}>
                         {byStage[stage].map((m) => {
                           const live = isLiveMatch(m);
                           const isDone = m.status === "FINISHED";
@@ -435,7 +449,7 @@ export function WorldCupPage({ currentUserId, onClose, isDarkMode }: Props) {
                             <div key={m.id}
                               className={`flex items-center gap-2 px-4 py-3 ${
                                 live ? isDarkMode ? "bg-red-950/30" : "bg-red-50"
-                                : myTeamPlaying ? isDarkMode ? "bg-slate-800/40" : "bg-slate-50"
+                                : myTeamPlaying ? isDarkMode ? "bg-[#16181c]/40" : "bg-slate-50"
                                 : ""
                               }`}
                             >

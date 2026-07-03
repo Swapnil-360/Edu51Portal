@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { AlertCircle, ChevronRight, Loader2, BookOpen } from 'lucide-react';
 import { COURSE_FOLDER_LINKS } from '../../config/courseFolders';
 
@@ -21,9 +21,9 @@ interface GDriveFolderBrowserProps {
 
 const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY || '';
 
-// Bamboo Teal — earthy, muted tones per major for left border stripe and icon
+// Per-major accent colors for left border stripe and icon
 const MAJOR_ACCENT: Record<string, { color: string; label: string }> = {
-  'AI':                   { color: '#4e7d7a', label: 'AI' },   // teal primary
+  'AI':                   { color: '#1e9df1', label: 'AI' },   // teal primary
   'Software Engineering': { color: '#5c7d8a', label: 'SE' },   // muted blue-slate
   'Networking':           { color: '#4a8c6e', label: 'NET' },  // muted forest green
   'Common':               { color: '#8a7040', label: 'CSE' },  // warm sand
@@ -93,8 +93,8 @@ export const GDriveFolderBrowser: React.FC<GDriveFolderBrowserProps> = ({
   );
 
   if (courses.length === 0) return (
-    <div className={cls('rounded-xl border p-10 text-center', dk ? 'bg-slate-800/40 border-slate-700' : 'bg-slate-50 border-slate-200')}>
-      <BookOpen className={cls('h-10 w-10 mx-auto mb-3 opacity-20', dk ? 'text-slate-300' : 'text-slate-700')} />
+    <div className={cls('rounded-xl border p-10 text-center', dk ? 'bg-[#16181c]/40 border-[#2f3336]' : 'bg-slate-50 border-slate-200')}>
+      <BookOpen className={cls('h-10 w-10 mx-auto mb-3 opacity-20', dk ? 'text-[#8b98a5]' : 'text-slate-700')} />
       <p className={cls('text-sm font-medium', dk ? 'text-slate-400' : 'text-slate-500')}>No courses available yet</p>
     </div>
   );
@@ -111,7 +111,7 @@ export const GDriveFolderBrowser: React.FC<GDriveFolderBrowserProps> = ({
               'group relative text-left rounded-xl border overflow-hidden transition-all duration-200',
               'focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1',
               dk
-                ? 'bg-slate-800/70 border-slate-700/80 hover:border-slate-600 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/30'
+                ? 'bg-[#16181c]/70 border-[#2f3336]/80 hover:border-[#38444d] hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/30'
                 : 'bg-white border-slate-200 hover:border-slate-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-slate-200/80',
             )}
           >
@@ -128,7 +128,7 @@ export const GDriveFolderBrowser: React.FC<GDriveFolderBrowserProps> = ({
                   <BookOpen className="h-4 w-4" style={{ color: accent.color }} />
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className={cls('px-2 py-0.5 rounded-md text-[10px] font-semibold tracking-wide', dk ? 'bg-slate-700 text-slate-400' : 'bg-slate-100 text-slate-500')}>CSE</span>
+                  <span className={cls('px-2 py-0.5 rounded-md text-[10px] font-semibold tracking-wide', dk ? 'bg-[#2f3336] text-slate-400' : 'bg-slate-100 text-slate-500')}>CSE</span>
                   {course.major !== 'Common' && (
                     <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold tracking-wide" style={{ background: `${accent.color}20`, color: accent.color }}>
                       {accent.label}
@@ -138,7 +138,7 @@ export const GDriveFolderBrowser: React.FC<GDriveFolderBrowserProps> = ({
               </div>
 
               {/* Course name — plain, no gradient */}
-              <h3 className={cls('font-semibold text-[15px] leading-snug mb-1.5 group-hover:text-[var(--accent)] transition-colors duration-150', dk ? 'text-slate-100' : 'text-slate-900')}
+              <h3 className={cls('font-semibold text-[15px] leading-snug mb-1.5 group-hover:text-[var(--accent)] transition-colors duration-150', dk ? 'text-[#e7e9ea]' : 'text-slate-900')}
                 style={{ '--accent': accent.color } as React.CSSProperties}
               >
                 {course.name}
@@ -147,7 +147,7 @@ export const GDriveFolderBrowser: React.FC<GDriveFolderBrowserProps> = ({
               <p className={cls('text-xs mb-4', dk ? 'text-slate-500' : 'text-slate-400')}>{course.description}</p>
 
               {/* Divider */}
-              <div className={cls('h-px mb-3', dk ? 'bg-slate-700/60' : 'bg-slate-100')} />
+              <div className={cls('h-px mb-3', dk ? 'bg-[#2f3336]/60' : 'bg-slate-100')} />
 
               {/* CTA */}
               <div className={cls('flex items-center justify-between text-xs font-medium', dk ? 'text-slate-400' : 'text-slate-500')}>

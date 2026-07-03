@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
+﻿import React, { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
 import {
   Folder, FolderOpen, ChevronRight, ChevronDown, Plus, Trash2,
   Edit2, Upload, X, Check, FileText, Loader2, AlertTriangle,
@@ -52,7 +52,7 @@ function TreeNode({ folder, depth, selectedId, onSelect, onAddChild, onRename, o
           'group flex items-center gap-1 rounded-lg px-2 py-1.5 cursor-pointer text-sm transition-colors select-none',
           isSelected
             ? isDarkMode ? 'bg-blue-600/30 text-blue-300' : 'bg-blue-100 text-blue-700'
-            : isDarkMode ? 'hover:bg-slate-700/50 text-slate-300' : 'hover:bg-slate-100 text-slate-700',
+            : isDarkMode ? 'hover:bg-[#2f3336]/50 text-[#8b98a5]' : 'hover:bg-slate-100 text-slate-700',
         )}
         style={{ paddingLeft: `${8 + depth * 16}px` }}
         onClick={() => { onSelect(folder); if (hasChildren) setOpen(o => !o); }}
@@ -74,12 +74,12 @@ function TreeNode({ folder, depth, selectedId, onSelect, onAddChild, onRename, o
         <span className="hidden group-hover:flex items-center gap-0.5 flex-shrink-0">
           <button
             onClick={e => { e.stopPropagation(); onAddChild(folder); }}
-            className={cls('p-0.5 rounded', isDarkMode ? 'hover:bg-slate-600' : 'hover:bg-slate-200')}
+            className={cls('p-0.5 rounded', isDarkMode ? 'hover:bg-[#38444d]' : 'hover:bg-slate-200')}
             title="Add subfolder"
           ><Plus size={11} /></button>
           <button
             onClick={e => { e.stopPropagation(); onRename(folder); }}
-            className={cls('p-0.5 rounded', isDarkMode ? 'hover:bg-slate-600' : 'hover:bg-slate-200')}
+            className={cls('p-0.5 rounded', isDarkMode ? 'hover:bg-[#38444d]' : 'hover:bg-slate-200')}
             title="Rename"
           ><Edit2 size={11} /></button>
           <button
@@ -284,26 +284,26 @@ export default function MaterialManager({ isDarkMode, currentUserId, onPreviewFi
   const pendingUploads = uploadItems.filter(u => u.status === 'pending');
   const hasUploads = uploadItems.length > 0;
 
-  const surface = dk ? 'bg-slate-900 text-slate-100' : 'bg-white text-slate-900';
-  const border = dk ? 'border-slate-700' : 'border-slate-200';
+  const surface = dk ? 'bg-[#17181c] text-[#e7e9ea]' : 'bg-white text-slate-900';
+  const border = dk ? 'border-[#2f3336]' : 'border-slate-200';
   const sub = dk ? 'text-slate-400' : 'text-slate-500';
-  const input = `w-full px-3 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40 ${dk ? 'bg-slate-800 border-slate-600 text-white placeholder-slate-500' : 'bg-white border-slate-300 text-slate-900 placeholder-slate-400'}`;
+  const input = `w-full px-3 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40 ${dk ? 'bg-[#16181c] border-[#38444d] text-white placeholder-[#71767b]' : 'bg-white border-slate-300 text-slate-900 placeholder-[#71767b]'}`;
 
   return (
     <div className={cls('rounded-2xl border overflow-hidden', surface, border)}>
       {/* Header */}
-      <div className={cls('flex items-center justify-between px-5 py-4 border-b', border, dk ? 'bg-slate-800/50' : 'bg-slate-50')}>
+      <div className={cls('flex items-center justify-between px-5 py-4 border-b', border, dk ? 'bg-[#16181c]/50' : 'bg-slate-50')}>
         <div>
           <h2 className="text-base font-bold">Study Materials</h2>
           <p className={cls('text-xs mt-0.5', sub)}>Full folder & file management for all majors</p>
         </div>
-        <button onClick={loadFolders} className={cls('p-2 rounded-lg border', border, dk ? 'hover:bg-slate-700' : 'hover:bg-slate-100')} title="Refresh">
+        <button onClick={loadFolders} className={cls('p-2 rounded-lg border', border, dk ? 'hover:bg-[#2f3336]' : 'hover:bg-slate-100')} title="Refresh">
           <RefreshCw size={14} />
         </button>
       </div>
 
       {/* Section tabs: Folders vs Drive Config */}
-      <div className={cls('flex border-b', border, dk ? 'bg-slate-800/20' : 'bg-slate-50/40')}>
+      <div className={cls('flex border-b', border, dk ? 'bg-[#16181c]/20' : 'bg-slate-50/40')}>
         {(['folders', 'drive'] as const).map(tab => (
           <button
             key={tab}
@@ -341,7 +341,7 @@ export default function MaterialManager({ isDarkMode, currentUserId, onPreviewFi
             const isSaving = driveSaving === key;
             const currentConfig = driveConfigs.find(c => c.major === m.value);
             return (
-              <div key={key} className={cls('rounded-xl border p-4 space-y-3', border, dk ? 'bg-slate-800/40' : 'bg-white')}>
+              <div key={key} className={cls('rounded-xl border p-4 space-y-3', border, dk ? 'bg-[#16181c]/40' : 'bg-white')}>
                 <div className="flex items-center gap-2">
                   <span className="text-base">{m.emoji}</span>
                   <span className="text-sm font-semibold">{m.label}</span>
@@ -465,7 +465,7 @@ export default function MaterialManager({ isDarkMode, currentUserId, onPreviewFi
                 <div className="flex items-center gap-2 min-w-0">
                   <span style={{ color: selectedFolder.color }}><FolderOpen size={16} /></span>
                   <span className="font-semibold truncate">{selectedFolder.name}</span>
-                  <span className={cls('text-xs px-1.5 py-0.5 rounded-full', dk ? 'bg-slate-700 text-slate-400' : 'bg-slate-100 text-slate-500')}>
+                  <span className={cls('text-xs px-1.5 py-0.5 rounded-full', dk ? 'bg-[#2f3336] text-slate-400' : 'bg-slate-100 text-slate-500')}>
                     {materials.length} file{materials.length !== 1 ? 's' : ''}
                   </span>
                 </div>
@@ -488,7 +488,7 @@ export default function MaterialManager({ isDarkMode, currentUserId, onPreviewFi
 
               {/* Upload queue */}
               {hasUploads && (
-                <div className={cls('border-b px-4 py-3 space-y-2', border, dk ? 'bg-slate-800/50' : 'bg-blue-50/50')}>
+                <div className={cls('border-b px-4 py-3 space-y-2', border, dk ? 'bg-[#16181c]/50' : 'bg-blue-50/50')}>
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-semibold">Upload queue</span>
                     <div className="flex gap-2">
@@ -497,7 +497,7 @@ export default function MaterialManager({ isDarkMode, currentUserId, onPreviewFi
                           Upload {pendingUploads.length} file{pendingUploads.length > 1 ? 's' : ''}
                         </button>
                       )}
-                      <button onClick={() => setUploadItems([])} className={cls('text-xs px-2 py-1 rounded', dk ? 'bg-slate-700 hover:bg-slate-600' : 'bg-slate-200 hover:bg-slate-300')}>
+                      <button onClick={() => setUploadItems([])} className={cls('text-xs px-2 py-1 rounded', dk ? 'bg-[#2f3336] hover:bg-[#38444d]' : 'bg-slate-200 hover:bg-slate-300')}>
                         Clear
                       </button>
                     </div>
@@ -509,11 +509,11 @@ export default function MaterialManager({ isDarkMode, currentUserId, onPreviewFi
                         <input
                           value={u.title}
                           onChange={e => setUploadItems(prev => prev.map((x, j) => j === i ? { ...x, title: e.target.value } : x))}
-                          className={cls('w-full text-xs px-2 py-1 rounded border', border, dk ? 'bg-slate-700 text-white' : 'bg-white text-slate-900')}
+                          className={cls('w-full text-xs px-2 py-1 rounded border', border, dk ? 'bg-[#2f3336] text-white' : 'bg-white text-slate-900')}
                           disabled={u.status !== 'pending'}
                         />
                         {u.status === 'uploading' && (
-                          <div className={cls('mt-1 h-1 rounded-full overflow-hidden', dk ? 'bg-slate-700' : 'bg-slate-200')}>
+                          <div className={cls('mt-1 h-1 rounded-full overflow-hidden', dk ? 'bg-[#2f3336]' : 'bg-slate-200')}>
                             <div className="h-full bg-blue-500 transition-all" style={{ width: `${u.progress}%` }} />
                           </div>
                         )}
@@ -557,7 +557,7 @@ export default function MaterialManager({ isDarkMode, currentUserId, onPreviewFi
                         key={m.id}
                         className={cls(
                           'group flex items-center gap-3 p-3 rounded-xl border transition-colors',
-                          dk ? 'border-slate-700 bg-slate-800/50 hover:border-slate-600' : 'border-slate-200 bg-white hover:border-slate-300',
+                          dk ? 'border-[#2f3336] bg-[#16181c]/50 hover:border-[#38444d]' : 'border-slate-200 bg-white hover:border-slate-300',
                         )}
                       >
                         <span className="text-xl flex-shrink-0">{fileIcon(m.file_type)}</span>
@@ -569,7 +569,7 @@ export default function MaterialManager({ isDarkMode, currentUserId, onPreviewFi
                                 value={renameMaterialName}
                                 onChange={e => setRenameMaterialName(e.target.value)}
                                 onKeyDown={e => { if (e.key === 'Enter') handleRenameMaterial(m.id); if (e.key === 'Escape') setRenamingMaterial(null); }}
-                                className={cls('flex-1 text-sm px-2 py-0.5 rounded border', border, dk ? 'bg-slate-700 text-white' : 'bg-white text-slate-900')}
+                                className={cls('flex-1 text-sm px-2 py-0.5 rounded border', border, dk ? 'bg-[#2f3336] text-white' : 'bg-white text-slate-900')}
                               />
                               <button onClick={() => handleRenameMaterial(m.id)} className="text-green-500"><Check size={14} /></button>
                               <button onClick={() => setRenamingMaterial(null)} className="text-red-400"><X size={14} /></button>
@@ -585,13 +585,13 @@ export default function MaterialManager({ isDarkMode, currentUserId, onPreviewFi
                         </div>
                         <div className="hidden group-hover:flex items-center gap-1 flex-shrink-0">
                           {onPreviewFile && (
-                            <button onClick={() => onPreviewFile(m.file_url, m.title)} className={cls('p-1.5 rounded-lg', dk ? 'hover:bg-slate-600 text-slate-400' : 'hover:bg-slate-100 text-slate-500')} title="Preview">
+                            <button onClick={() => onPreviewFile(m.file_url, m.title)} className={cls('p-1.5 rounded-lg', dk ? 'hover:bg-[#38444d] text-slate-400' : 'hover:bg-slate-100 text-slate-500')} title="Preview">
                               <Eye size={14} />
                             </button>
                           )}
                           <button
                             onClick={() => { setRenamingMaterial(m.id); setRenameMaterialName(m.title); }}
-                            className={cls('p-1.5 rounded-lg', dk ? 'hover:bg-slate-600 text-slate-400' : 'hover:bg-slate-100 text-slate-500')}
+                            className={cls('p-1.5 rounded-lg', dk ? 'hover:bg-[#38444d] text-slate-400' : 'hover:bg-slate-100 text-slate-500')}
                             title="Rename"
                           ><Edit2 size={14} /></button>
                           <button
@@ -644,7 +644,7 @@ export default function MaterialManager({ isDarkMode, currentUserId, onPreviewFi
               </div>
             </div>
             <div className="flex gap-2 justify-end pt-1">
-              <button onClick={() => setShowCreateFolder(false)} className={cls('px-4 py-2 rounded-lg text-sm border', border, dk ? 'hover:bg-slate-700' : 'hover:bg-slate-50')}>Cancel</button>
+              <button onClick={() => setShowCreateFolder(false)} className={cls('px-4 py-2 rounded-lg text-sm border', border, dk ? 'hover:bg-[#2f3336]' : 'hover:bg-slate-50')}>Cancel</button>
               <button
                 onClick={handleCreateFolder}
                 disabled={!newFolderName.trim() || savingFolder}
@@ -674,7 +674,7 @@ export default function MaterialManager({ isDarkMode, currentUserId, onPreviewFi
               className={input}
             />
             <div className="flex gap-2 justify-end">
-              <button onClick={() => setRenameFolder(null)} className={cls('px-4 py-2 rounded-lg text-sm border', border, dk ? 'hover:bg-slate-700' : 'hover:bg-slate-50')}>Cancel</button>
+              <button onClick={() => setRenameFolder(null)} className={cls('px-4 py-2 rounded-lg text-sm border', border, dk ? 'hover:bg-[#2f3336]' : 'hover:bg-slate-50')}>Cancel</button>
               <button onClick={handleRenameFolder} disabled={!renameName.trim()} className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 disabled:opacity-50">Save</button>
             </div>
           </div>
@@ -698,7 +698,7 @@ export default function MaterialManager({ isDarkMode, currentUserId, onPreviewFi
               </div>
             </div>
             <div className="flex gap-2 justify-end">
-              <button onClick={() => setDeleteTarget(null)} className={cls('px-4 py-2 rounded-lg text-sm border', border, dk ? 'hover:bg-slate-700' : 'hover:bg-slate-50')}>Cancel</button>
+              <button onClick={() => setDeleteTarget(null)} className={cls('px-4 py-2 rounded-lg text-sm border', border, dk ? 'hover:bg-[#2f3336]' : 'hover:bg-slate-50')}>Cancel</button>
               <button
                 onClick={handleDeleteConfirmed}
                 disabled={deleting}

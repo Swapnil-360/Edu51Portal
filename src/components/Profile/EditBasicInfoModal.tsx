@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { X, Loader2 } from "lucide-react";
 import { SocialProfile, ProfileVisibility } from "../../types/social";
 import { updateProfile } from "../../lib/api/profileApi";
@@ -62,27 +62,27 @@ export default function EditBasicInfoModal({ profile, onClose, onSaved, isDarkMo
 
   const inputCls = `w-full px-3 py-2 rounded-lg text-sm border outline-none transition-colors ${
     isDarkMode
-      ? "bg-slate-800 border-slate-600 text-white placeholder-slate-500 focus:border-blue-500"
-      : "bg-white border-slate-300 text-slate-900 placeholder-slate-400 focus:border-blue-500"
+      ? "bg-[#16181c] border-[#2f3336] text-[#e7e9ea] placeholder-[#71767b] focus:border-[#1e9df1]"
+      : "bg-white border-slate-300 text-slate-900 placeholder-[#71767b] focus:border-[#1e9df1]"
   }`;
-  const labelCls = `block text-xs font-medium mb-1 ${isDarkMode ? "text-slate-300" : "text-slate-600"}`;
+  const labelCls = `block text-xs font-medium mb-1 ${isDarkMode ? "text-[#8b98a5]" : "text-slate-600"}`;
 
   return (
     <div className="fixed inset-0 z-[130] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
       <div
         className={`w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl ${
-          isDarkMode ? "bg-slate-900 border border-slate-700" : "bg-white"
+          isDarkMode ? "bg-[#17181c] border border-[#2f3336]" : "bg-white"
         }`}
       >
         <div
           className={`sticky top-0 px-5 py-4 border-b flex items-center justify-between ${
-            isDarkMode ? "bg-slate-900 border-slate-700" : "bg-white border-slate-200"
+            isDarkMode ? "bg-[#17181c] border-[#2f3336]" : "bg-white border-slate-200"
           }`}
         >
-          <h2 className={`text-lg font-bold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+          <h2 className={`text-lg font-bold ${isDarkMode ? "text-[#e7e9ea]" : "text-slate-900"}`}>
             Edit Profile Details
           </h2>
-          <button onClick={onClose} className={isDarkMode ? "text-slate-400 hover:text-white" : "text-slate-500 hover:text-slate-900"}>
+          <button onClick={onClose} className={isDarkMode ? "text-[#71767b] hover:text-[#e7e9ea]" : "text-slate-500 hover:text-slate-900"}>
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -167,11 +167,11 @@ export default function EditBasicInfoModal({ profile, onClose, onSaved, isDarkMo
           </div>
         </div>
 
-        <div className={`px-5 py-4 border-t flex justify-end gap-2 ${isDarkMode ? "border-slate-700" : "border-slate-200"}`}>
+        <div className={`px-5 py-4 border-t flex justify-end gap-2 ${isDarkMode ? "border-[#2f3336]" : "border-slate-200"}`}>
           <button
             onClick={onClose}
             className={`px-4 py-2 rounded-lg text-sm font-medium ${
-              isDarkMode ? "bg-slate-800 text-slate-300 hover:bg-slate-700" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+              isDarkMode ? "bg-[#16181c] text-[#8b98a5] hover:bg-[#2f3336]" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
             }`}
           >
             Cancel
@@ -179,7 +179,7 @@ export default function EditBasicInfoModal({ profile, onClose, onSaved, isDarkMo
           <button
             onClick={save}
             disabled={saving}
-            className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-60 flex items-center gap-2"
+            className="px-4 py-2 rounded-lg bg-[#1e9df1] text-white text-sm font-medium hover:bg-[#1677cc] disabled:opacity-60 flex items-center gap-2"
           >
             {saving && <Loader2 className="w-4 h-4 animate-spin" />}
             Save Changes
@@ -189,3 +189,4 @@ export default function EditBasicInfoModal({ profile, onClose, onSaved, isDarkMo
     </div>
   );
 }
+

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+﻿import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import {
   FileText, FileSpreadsheet, ImageIcon, Upload, Trash2,
   Download, Globe, Lock, X, Paperclip, Eye, ArrowUpDown,
@@ -249,10 +249,10 @@ export default function TeamFiles({ teamId, currentUserId, isMember, canManage, 
   if (!isMember) {
     return (
       <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
-        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-4 ${isDarkMode ? 'bg-slate-800' : 'bg-slate-100'}`}>
-          <Paperclip size={24} className={isDarkMode ? 'text-slate-500' : 'text-slate-400'} />
+        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-4 ${isDarkMode ? 'bg-[#16181c]' : 'bg-slate-100'}`}>
+          <Paperclip size={24} className={isDarkMode ? 'text-slate-500' : 'text-[#71767b]'} />
         </div>
-        <p className={`text-sm font-semibold ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+        <p className={`text-sm font-semibold ${isDarkMode ? 'text-[#71767b]' : 'text-slate-500'}`}>
           Join this team to view and share files
         </p>
       </div>
@@ -273,8 +273,8 @@ export default function TeamFiles({ teamId, currentUserId, isMember, canManage, 
               transition={{ type: 'spring', stiffness: 400, damping: 30 }}
               className={`pointer-events-auto flex items-center gap-2 px-3.5 py-2.5 rounded-xl shadow-lg text-xs font-semibold max-w-xs ${
                 t.type === 'error'
-                  ? 'bg-rose-600 text-white'
-                  : isDarkMode ? 'bg-slate-800 border border-slate-700 text-white' : 'bg-white border border-slate-200 text-slate-900 shadow-black/10'
+                  ? 'bg-rose-600 text-[#e7e9ea]'
+                  : isDarkMode ? 'bg-[#16181c] border border-[#2f3336] text-[#e7e9ea]' : 'bg-white border border-slate-200 text-slate-900 shadow-black/10'
               }`}
             >
               {t.type === 'error'
@@ -290,8 +290,8 @@ export default function TeamFiles({ teamId, currentUserId, isMember, canManage, 
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-1">
         <div>
-          <h3 className={`text-sm font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Files</h3>
-          <p className={`text-xs ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+          <h3 className={`text-sm font-bold ${isDarkMode ? 'text-[#e7e9ea]' : 'text-slate-900'}`}>Files</h3>
+          <p className={`text-xs ${isDarkMode ? 'text-slate-500' : 'text-[#71767b]'}`}>
             {files.length} {files.length === 1 ? 'file' : 'files'} · max 20 MB each
           </p>
         </div>
@@ -301,15 +301,15 @@ export default function TeamFiles({ teamId, currentUserId, isMember, canManage, 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 flex-wrap pt-1">
         {/* Left side: Type filter pills */}
         {files.length > 0 && (
-          <div className={`flex items-center gap-1 p-0.5 rounded-xl w-fit border ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
+          <div className={`flex items-center gap-1 p-0.5 rounded-xl w-fit border ${isDarkMode ? 'bg-[#17181c] border-[#2f3336]' : 'bg-white border-slate-200'}`}>
             {TYPE_FILTERS.map(({ key, label }) => (
               <button
                 key={key}
                 onClick={() => setTypeFilter(key)}
                 className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all ${
                   typeFilter === key
-                    ? 'bg-blue-600 text-white shadow-sm'
-                    : isDarkMode ? 'text-slate-500 hover:text-slate-300' : 'text-slate-400 hover:text-slate-700'
+                    ? 'bg-blue-600 text-[#e7e9ea] shadow-sm'
+                    : isDarkMode ? 'text-slate-500 hover:text-[#8b98a5]' : 'text-[#71767b] hover:text-slate-700'
                 }`}
               >
                 {label}
@@ -321,16 +321,16 @@ export default function TeamFiles({ teamId, currentUserId, isMember, canManage, 
         {/* Right side: Sort controls + Upload button */}
         <div className="flex items-center gap-2 flex-wrap ml-auto sm:ml-0">
           {/* Sort control */}
-          <div className={`flex items-center gap-1 p-0.5 rounded-lg border text-[11px] font-bold ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
-            <ArrowUpDown size={11} className={`ml-1.5 ${isDarkMode ? 'text-slate-600' : 'text-slate-400'}`} />
+          <div className={`flex items-center gap-1 p-0.5 rounded-lg border text-[11px] font-bold ${isDarkMode ? 'bg-[#17181c] border-[#2f3336]' : 'bg-white border-slate-200'}`}>
+            <ArrowUpDown size={11} className={`ml-1.5 ${isDarkMode ? 'text-slate-500' : 'text-[#71767b]'}`} />
             {(['newest', 'oldest', 'type'] as SortBy[]).map(s => (
               <button
                 key={s}
                 onClick={() => setSortBy(s)}
                 className={`px-2 py-1 rounded-md capitalize transition-all ${
                   sortBy === s
-                    ? isDarkMode ? 'bg-slate-700 text-white' : 'bg-slate-900 text-white'
-                    : isDarkMode ? 'text-slate-500 hover:text-slate-300' : 'text-slate-400 hover:text-slate-700'
+                    ? isDarkMode ? 'bg-[#2f3336] text-[#e7e9ea]' : 'bg-[#17181c] text-[#e7e9ea]'
+                    : isDarkMode ? 'text-slate-500 hover:text-[#8b98a5]' : 'text-[#71767b] hover:text-slate-700'
                 }`}
               >
                 {s}
@@ -342,7 +342,7 @@ export default function TeamFiles({ teamId, currentUserId, isMember, canManage, 
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-xs font-bold transition-all shadow-sm"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-[#e7e9ea] text-xs font-bold transition-all shadow-sm"
           >
             <Upload size={13} />
             {uploading ? 'Uploading…' : 'Upload'}
@@ -365,24 +365,24 @@ export default function TeamFiles({ teamId, currentUserId, isMember, canManage, 
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className={`rounded-xl border overflow-hidden ${isDarkMode ? 'border-slate-800 bg-slate-900' : 'border-slate-200 bg-slate-50'}`}
+            className={`rounded-xl border overflow-hidden ${isDarkMode ? 'border-[#2f3336] bg-[#17181c]' : 'border-slate-200 bg-slate-50'}`}
           >
             <div className="p-3 space-y-2">
               {queue.map(item => (
                 <div key={item.id} className="space-y-1">
                   <div className="flex items-center justify-between gap-2">
-                    <span className={`text-[11px] font-semibold truncate flex-1 ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
+                    <span className={`text-[11px] font-semibold truncate flex-1 ${isDarkMode ? 'text-[#8b98a5]' : 'text-slate-700'}`}>
                       {item.name}
                     </span>
                     <span className={`text-[10px] font-bold flex-shrink-0 ${
                       item.status === 'error' ? 'text-rose-400' :
                       item.status === 'done' ? 'text-emerald-400' :
-                      isDarkMode ? 'text-slate-500' : 'text-slate-400'
+                      isDarkMode ? 'text-slate-500' : 'text-[#71767b]'
                     }`}>
                       {item.status === 'error' ? 'Failed' : item.status === 'done' ? 'Done' : `${item.pct}%`}
                     </span>
                   </div>
-                  <div className={`h-1 rounded-full overflow-hidden ${isDarkMode ? 'bg-slate-800' : 'bg-slate-200'}`}>
+                  <div className={`h-1 rounded-full overflow-hidden ${isDarkMode ? 'bg-[#16181c]' : 'bg-slate-200'}`}>
                     <motion.div
                       animate={{ width: `${item.pct}%` }}
                       transition={{ ease: 'linear' }}
@@ -409,15 +409,15 @@ export default function TeamFiles({ teamId, currentUserId, isMember, canManage, 
           className={`flex flex-col items-center justify-center gap-3 py-14 rounded-2xl border-2 border-dashed cursor-pointer transition-colors ${
             dragging
               ? isDarkMode ? 'border-blue-500 bg-blue-500/10' : 'border-blue-400 bg-blue-50'
-              : isDarkMode ? 'border-slate-700 hover:border-slate-600' : 'border-slate-200 hover:border-slate-300'
+              : isDarkMode ? 'border-[#2f3336] hover:border-[#38444d]' : 'border-slate-200 hover:border-slate-300'
           }`}
         >
-          <Upload size={28} className={isDarkMode ? 'text-slate-600' : 'text-slate-300'} />
+          <Upload size={28} className={isDarkMode ? 'text-slate-500' : 'text-[#8b98a5]'} />
           <div className="text-center">
-            <p className={`text-sm font-semibold ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+            <p className={`text-sm font-semibold ${isDarkMode ? 'text-[#71767b]' : 'text-slate-500'}`}>
               Drop files here or click to upload
             </p>
-            <p className={`text-xs mt-1 ${isDarkMode ? 'text-slate-600' : 'text-slate-400'}`}>
+            <p className={`text-xs mt-1 ${isDarkMode ? 'text-slate-500' : 'text-[#71767b]'}`}>
               PDF · DOCX · XLSX · PNG · JPG · WebP · max 20 MB
             </p>
           </div>
@@ -435,12 +435,12 @@ export default function TeamFiles({ teamId, currentUserId, isMember, canManage, 
           {loading ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {[...Array(3)].map((_, i) => (
-                <div key={i} className={`h-44 rounded-2xl animate-pulse ${isDarkMode ? 'bg-slate-800' : 'bg-slate-100'}`} />
+                <div key={i} className={`h-44 rounded-2xl animate-pulse ${isDarkMode ? 'bg-[#16181c]' : 'bg-slate-100'}`} />
               ))}
             </div>
           ) : displayed.length === 0 ? (
-            <div className={`py-12 rounded-2xl border text-center ${isDarkMode ? 'border-slate-800' : 'border-slate-200'}`}>
-              <p className={`text-sm ${isDarkMode ? 'text-slate-600' : 'text-slate-400'}`}>No files match this filter</p>
+            <div className={`py-12 rounded-2xl border text-center ${isDarkMode ? 'border-[#2f3336]' : 'border-slate-200'}`}>
+              <p className={`text-sm ${isDarkMode ? 'text-slate-500' : 'text-[#71767b]'}`}>No files match this filter</p>
             </div>
           ) : (
             <motion.div layout className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -468,7 +468,7 @@ export default function TeamFiles({ teamId, currentUserId, isMember, canManage, 
       {loading && files.length === 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className={`h-44 rounded-2xl animate-pulse ${isDarkMode ? 'bg-slate-800' : 'bg-slate-100'}`} />
+            <div key={i} className={`h-44 rounded-2xl animate-pulse ${isDarkMode ? 'bg-[#16181c]' : 'bg-slate-100'}`} />
           ))}
         </div>
       )}
@@ -490,17 +490,17 @@ export default function TeamFiles({ teamId, currentUserId, isMember, canManage, 
               transition={{ type: 'spring', stiffness: 340, damping: 28 }}
               onClick={e => e.stopPropagation()}
               className={`relative w-full max-w-3xl max-h-[85vh] rounded-2xl overflow-hidden flex flex-col shadow-2xl ${
-                isDarkMode ? 'bg-slate-900 border border-slate-800' : 'bg-white border border-slate-200'
+                isDarkMode ? 'bg-[#17181c] border border-[#2f3336]' : 'bg-white border border-slate-200'
               }`}
             >
               {/* Modal header */}
-              <div className={`flex items-center justify-between gap-3 px-4 py-3 border-b flex-shrink-0 ${isDarkMode ? 'border-slate-800' : 'border-slate-100'}`}>
+              <div className={`flex items-center justify-between gap-3 px-4 py-3 border-b flex-shrink-0 ${isDarkMode ? 'border-[#2f3336]' : 'border-slate-100'}`}>
                 <div className="flex items-center gap-2.5 min-w-0">
                   <FileIcon mime={previewFile.file_type} size={16} />
-                  <span className={`text-sm font-bold truncate ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                  <span className={`text-sm font-bold truncate ${isDarkMode ? 'text-[#e7e9ea]' : 'text-slate-900'}`}>
                     {previewFile.name}
                   </span>
-                  <span className={`text-[10px] flex-shrink-0 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+                  <span className={`text-[10px] flex-shrink-0 ${isDarkMode ? 'text-slate-500' : 'text-[#71767b]'}`}>
                     {formatFileSize(previewFile.file_size)}
                   </span>
                 </div>
@@ -508,14 +508,14 @@ export default function TeamFiles({ teamId, currentUserId, isMember, canManage, 
                   <button
                     onClick={() => downloadFile(previewFile.file_url, previewFile.name)}
                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
-                      isDarkMode ? 'bg-slate-800 hover:bg-slate-700 text-slate-300' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                      isDarkMode ? 'bg-[#16181c] hover:bg-[#2f3336] text-[#8b98a5]' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
                     }`}
                   >
                     <Download size={12} /> Download
                   </button>
                   <button
                     onClick={() => setPreviewFile(null)}
-                    className={`p-1.5 rounded-lg transition-colors ${isDarkMode ? 'hover:bg-slate-800 text-slate-500' : 'hover:bg-slate-100 text-slate-400'}`}
+                    className={`p-1.5 rounded-lg transition-colors ${isDarkMode ? 'hover:bg-[#16181c] text-slate-500' : 'hover:bg-slate-100 text-[#71767b]'}`}
                   >
                     <X size={16} />
                   </button>
@@ -556,16 +556,16 @@ export default function TeamFiles({ teamId, currentUserId, isMember, canManage, 
                   <div className="flex flex-col items-center justify-center gap-4 py-16 px-4 text-center">
                     <FileIcon mime={previewFile.file_type} size={40} />
                     <div>
-                      <p className={`text-sm font-semibold ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
+                      <p className={`text-sm font-semibold ${isDarkMode ? 'text-[#8b98a5]' : 'text-slate-700'}`}>
                         Preview not available for this file type
                       </p>
-                      <p className={`text-xs mt-1 ${isDarkMode ? 'text-slate-600' : 'text-slate-400'}`}>
+                      <p className={`text-xs mt-1 ${isDarkMode ? 'text-slate-500' : 'text-[#71767b]'}`}>
                         Download the file to open it
                       </p>
                     </div>
                     <button
                       onClick={() => downloadFile(previewFile.file_url, previewFile.name)}
-                      className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold transition-colors"
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-[#e7e9ea] text-sm font-bold transition-colors"
                     >
                       <Download size={14} /> Download
                     </button>
@@ -605,12 +605,12 @@ function FileCard({
       exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.15 } }}
       transition={{ type: 'spring', stiffness: 320, damping: 26 }}
       className={`group relative flex flex-col gap-2.5 p-3.5 rounded-2xl border transition-shadow hover:shadow-md ${
-        isDarkMode ? 'border-slate-800 bg-slate-900 hover:border-slate-700' : 'border-slate-200 bg-white hover:border-slate-300'
+        isDarkMode ? 'border-[#2f3336] bg-[#17181c] hover:border-[#2f3336]' : 'border-slate-200 bg-white hover:border-slate-300'
       }`}
     >
       {/* Icon + visibility badge row */}
       <div className="flex items-start justify-between gap-2">
-        <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${isDarkMode ? 'bg-slate-800' : 'bg-slate-50'}`}>
+        <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${isDarkMode ? 'bg-[#16181c]' : 'bg-slate-50'}`}>
           <FileIcon mime={file.file_type} size={20} />
         </div>
         {canManage ? (
@@ -620,8 +620,8 @@ function FileCard({
             title={isPublic ? 'Make private' : 'Make public'}
             className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border transition-all disabled:opacity-50 ${
               isPublic
-                ? 'bg-emerald-600 text-white border-emerald-600'
-                : isDarkMode ? 'border-slate-700 text-slate-500 hover:border-slate-600' : 'border-slate-200 text-slate-400 hover:border-slate-300'
+                ? 'bg-emerald-600 text-[#e7e9ea] border-emerald-600'
+                : isDarkMode ? 'border-[#2f3336] text-slate-500 hover:border-[#38444d]' : 'border-slate-200 text-[#71767b] hover:border-slate-300'
             }`}
           >
             {isPublic ? <Globe size={9} /> : <Lock size={9} />}
@@ -631,7 +631,7 @@ function FileCard({
           <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border ${
             isPublic
               ? 'bg-emerald-600/15 text-emerald-500 border-emerald-600/20'
-              : isDarkMode ? 'border-slate-700 text-slate-600' : 'border-slate-200 text-slate-400'
+              : isDarkMode ? 'border-[#2f3336] text-slate-600' : 'border-slate-200 text-[#71767b]'
           }`}>
             {isPublic ? <Globe size={9} /> : <Lock size={9} />}
             {isPublic ? 'Public' : 'Private'}
@@ -641,10 +641,10 @@ function FileCard({
 
       {/* File name */}
       <div className="flex-1 min-w-0">
-        <p className={`text-xs font-bold leading-tight line-clamp-2 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+        <p className={`text-xs font-bold leading-tight line-clamp-2 ${isDarkMode ? 'text-[#e7e9ea]' : 'text-slate-900'}`}>
           {file.name}
         </p>
-        <p className={`text-[10px] mt-0.5 ${isDarkMode ? 'text-slate-600' : 'text-slate-400'}`}>
+        <p className={`text-[10px] mt-0.5 ${isDarkMode ? 'text-slate-500' : 'text-[#71767b]'}`}>
           {formatFileSize(file.file_size)}
         </p>
       </div>
@@ -654,9 +654,9 @@ function FileCard({
         {(file.uploader?.avatar_url || file.uploader?.profile_pic) ? (
           <img src={(file.uploader.avatar_url || file.uploader.profile_pic)!} className="w-4 h-4 rounded-full object-cover flex-shrink-0" alt="" />
         ) : (
-          <div className={`w-4 h-4 rounded-full flex-shrink-0 ${isDarkMode ? 'bg-slate-700' : 'bg-slate-200'}`} />
+          <div className={`w-4 h-4 rounded-full flex-shrink-0 ${isDarkMode ? 'bg-[#2f3336]' : 'bg-slate-200'}`} />
         )}
-        <span className={`text-[10px] ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+        <span className={`text-[10px] ${isDarkMode ? 'text-slate-500' : 'text-[#71767b]'}`}>
           {file.uploader?.name ?? 'Unknown'} · {relativeDate(file.created_at)}
         </span>
       </div>
@@ -666,7 +666,7 @@ function FileCard({
         {isPreviewable(file.file_type, file.name) && (
           <button
             onClick={onPreview}
-            className={`p-1.5 rounded-lg transition-colors ${isDarkMode ? 'bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white' : 'bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-900'}`}
+            className={`p-1.5 rounded-lg transition-colors ${isDarkMode ? 'bg-[#16181c] hover:bg-[#2f3336] text-[#71767b] hover:text-[#e7e9ea]' : 'bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-900'}`}
             title="Preview"
           >
             <Eye size={12} />
@@ -674,7 +674,7 @@ function FileCard({
         )}
         <button
           onClick={() => downloadFile(file.file_url, file.name)}
-          className={`p-1.5 rounded-lg transition-colors ${isDarkMode ? 'bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white' : 'bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-900'}`}
+          className={`p-1.5 rounded-lg transition-colors ${isDarkMode ? 'bg-[#16181c] hover:bg-[#2f3336] text-[#71767b] hover:text-[#e7e9ea]' : 'bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-900'}`}
           title="Download"
         >
           <Download size={12} />
@@ -682,7 +682,7 @@ function FileCard({
         {canDelete && (
           <button
             onClick={onDelete}
-            className={`p-1.5 rounded-lg transition-colors ${isDarkMode ? 'bg-slate-800 hover:bg-rose-900/40 text-slate-400 hover:text-rose-400' : 'bg-slate-100 hover:bg-rose-50 text-slate-400 hover:text-rose-500'}`}
+            className={`p-1.5 rounded-lg transition-colors ${isDarkMode ? 'bg-[#16181c] hover:bg-rose-900/40 text-[#71767b] hover:text-rose-400' : 'bg-slate-100 hover:bg-rose-50 text-[#71767b] hover:text-rose-500'}`}
             title="Delete"
           >
             <Trash2 size={12} />

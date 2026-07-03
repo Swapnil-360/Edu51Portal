@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspense, startTransition } from "react";
+﻿import { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspense, startTransition } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 // import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
@@ -3055,7 +3055,7 @@ For any queries, contact your course instructors or the department.`,
     <div
       className={`min-h-screen transition-colors duration-300 ${
         isDarkMode
-          ? "bg-[#0e1312]"
+          ? "bg-[#000000]"
           : "bg-white"
       }`}
     >
@@ -3065,7 +3065,7 @@ For any queries, contact your course instructors or the department.`,
           <div
             className={`pointer-events-auto w-full rounded-xl shadow-2xl p-4 border flex items-start gap-3.5 transition-all duration-300 border-l-4 ${
               isDarkMode
-                ? "bg-slate-800 border-slate-700 text-slate-100 shadow-black/50"
+                ? "bg-[#16181c] border-[#2f3336] text-[#e7e9ea] shadow-black/50"
                 : "bg-white border-slate-200 text-slate-900 shadow-slate-200/50"
             } ${
               majorAccessMessage.type === "error"
@@ -3081,7 +3081,7 @@ For any queries, contact your course instructors or the department.`,
             ) : majorAccessMessage.type === "success" ? (
               <CheckCircle className="flex-shrink-0 w-5 h-5 text-emerald-500 mt-0.5" />
             ) : (
-              <Info className={`flex-shrink-0 w-5 h-5 mt-0.5 ${isDarkMode ? "text-teal-400" : "text-teal-600"}`} />
+              <Info className={`flex-shrink-0 w-5 h-5 mt-0.5 ${isDarkMode ? "text-[#1e9df1]" : "text-[#1e9df1]"}`} />
             )}
             <div className="flex-1 min-w-0">
               <p className={`text-[10px] font-bold uppercase tracking-widest mb-0.5 ${
@@ -3089,12 +3089,12 @@ For any queries, contact your course instructors or the department.`,
                   ? "text-rose-500"
                   : majorAccessMessage.type === "success"
                     ? "text-emerald-500"
-                    : isDarkMode ? "text-teal-400" : "text-teal-600"
+                    : isDarkMode ? "text-[#1e9df1]" : "text-[#1e9df1]"
               }`}>
                 {majorAccessMessage.type === "error" ? "Error" : majorAccessMessage.type === "success" ? "Success" : "Notice"}
               </p>
               <p className={`font-semibold text-xs sm:text-sm leading-snug break-words ${
-                isDarkMode ? "text-slate-100" : "text-slate-800"
+                isDarkMode ? "text-[#e7e9ea]" : "text-slate-800"
               }`}>
                 {majorAccessMessage.message}
               </p>
@@ -3102,7 +3102,7 @@ For any queries, contact your course instructors or the department.`,
             <button
               onClick={() => setMajorAccessMessage(null)}
               className={`flex-shrink-0 mt-0.5 transition-colors ${
-                isDarkMode ? "text-slate-400 hover:text-slate-200" : "text-slate-400 hover:text-slate-600"
+                isDarkMode ? "text-slate-400 hover:text-[#d9d9d9]" : "text-slate-400 hover:text-slate-600"
               }`}
             >
               <X className="h-4 w-4" />
@@ -3116,7 +3116,7 @@ For any queries, contact your course instructors or the department.`,
       <header
         className={`fixed top-0 left-0 right-0 w-full z-50 transition-all duration-300 border-b backdrop-blur-md ${
           isDarkMode
-            ? "bg-slate-950/80 border-slate-800/50 text-white shadow-lg shadow-black/20"
+            ? "bg-[#000000]/80 border-[#2f3336]/50 text-white shadow-lg shadow-black/20"
             : "bg-white/80 border-slate-200/50 text-gray-900 shadow-sm shadow-slate-100/10"
         }`}
       >
@@ -3130,7 +3130,7 @@ For any queries, contact your course instructors or the department.`,
                 onClick={() => setShowMobileMenu(!showMobileMenu)}
                 className={`p-2 rounded-xl transition-all duration-200 lg:hidden ${
                   isDarkMode
-                    ? "hover:bg-white/10 text-slate-300"
+                    ? "hover:bg-white/10 text-[#8b98a5]"
                     : "hover:bg-black/5 text-slate-600"
                 }`}
                 title="Menu"
@@ -3154,10 +3154,11 @@ For any queries, contact your course instructors or the department.`,
                   height="44"
                   decoding="async"
                 />
-                <span className={`text-xl font-extrabold tracking-tight whitespace-nowrap ${
-                  isDarkMode ? "text-white" : "text-slate-900"
-                }`}>
-                  Edu<span className="text-red-500">51</span><span className={isDarkMode ? "text-slate-300" : "text-slate-600"}>Portal</span>
+                <span
+                  className={`text-xl font-bold tracking-tight whitespace-nowrap ${isDarkMode ? "text-[#e7e9ea]" : "text-[#0f1419]"}`}
+                  style={{ fontFamily: "'Exo 2', sans-serif" }}
+                >
+                  Edu<span className="text-red-500">51</span>Portal
                 </span>
               </button>
             </div>
@@ -3178,10 +3179,11 @@ For any queries, contact your course instructors or the department.`,
                   height="40"
                   decoding="async"
                 />
-                <span className={`text-lg font-extrabold tracking-tight whitespace-nowrap ${
-                  isDarkMode ? "text-white" : "text-slate-900"
-                }`}>
-                  Edu<span className="text-red-500">51</span><span className={isDarkMode ? "text-slate-300" : "text-slate-600"}>Portal</span>
+                <span
+                  className={`text-lg font-bold tracking-tight whitespace-nowrap ${isDarkMode ? "text-[#e7e9ea]" : "text-[#0f1419]"}`}
+                  style={{ fontFamily: "'Exo 2', sans-serif" }}
+                >
+                  Edu<span className="text-red-500">51</span>Portal
                 </span>
               </button>
 
@@ -3208,7 +3210,7 @@ For any queries, contact your course instructors or the department.`,
                       onClick={() => setShowSignInModal(true)}
                       className={`px-4 py-2 rounded-xl text-sm font-semibold border transition-all duration-200 ${
                         isDarkMode
-                          ? "bg-slate-800 text-slate-200 border-slate-700 hover:bg-slate-700 hover:text-white"
+                          ? "bg-[#16181c] text-[#d9d9d9] border-[#2f3336] hover:bg-[#2f3336] hover:text-white"
                           : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:text-slate-900 shadow-sm"
                       }`}
                     >
@@ -3230,7 +3232,7 @@ For any queries, contact your course instructors or the department.`,
                     onClick={() => setShowSignInModal(true)}
                     className={`lg:hidden flex items-center justify-center w-9 h-9 rounded-full border transition-all duration-200 ${
                       isDarkMode
-                        ? "bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700 hover:text-white"
+                        ? "bg-[#16181c] border-[#2f3336] text-[#8b98a5] hover:bg-[#2f3336] hover:text-white"
                         : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50 shadow-sm"
                     }`}
                     title="Sign In"
@@ -3247,7 +3249,7 @@ For any queries, contact your course instructors or the department.`,
                     onClick={() => setShowUserDropdown(!showUserDropdown)}
                     className={`flex items-center gap-2 pl-1 pr-3 py-1 rounded-full border transition-all duration-200 ${
                       isDarkMode
-                        ? "bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700"
+                        ? "bg-[#16181c] border-[#2f3336] text-[#d9d9d9] hover:bg-[#2f3336]"
                         : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50 shadow-sm"
                     }`}
                   >
@@ -3284,12 +3286,12 @@ For any queries, contact your course instructors or the department.`,
                     <div
                       className={`absolute right-0 mt-2 w-52 rounded-xl border shadow-xl py-2 z-50 transition-all duration-200 ${
                         isDarkMode
-                          ? "bg-slate-900 border-slate-700 text-slate-200"
+                          ? "bg-[#17181c] border-[#2f3336] text-[#d9d9d9]"
                           : "bg-white border-slate-200 text-slate-700"
                       }`}
                     >
                       {/* User Info Header in Dropdown */}
-                      <div className={`px-4 py-3 border-b ${isDarkMode ? "border-slate-700" : "border-slate-100"}`}>
+                      <div className={`px-4 py-3 border-b ${isDarkMode ? "border-[#2f3336]" : "border-slate-100"}`}>
                         <p className={`text-[10px] font-medium uppercase tracking-wider mb-1 ${isDarkMode ? "text-slate-500" : "text-slate-400"}`}>Signed in as</p>
                         <p className={`font-semibold text-sm truncate ${isDarkMode ? "text-white" : "text-slate-900"}`}>{userProfile.name}</p>
                         {userProfile.bubtEmail && (
@@ -3307,7 +3309,7 @@ For any queries, contact your course instructors or the department.`,
                         }}
                         className={`w-full px-4 py-2.5 text-left text-sm font-medium flex items-center gap-2 transition-colors ${
                           isDarkMode
-                            ? "hover:bg-slate-800 text-slate-200 hover:text-white"
+                            ? "hover:bg-[#16181c] text-[#d9d9d9] hover:text-white"
                             : "hover:bg-slate-100 text-slate-700 hover:text-slate-900"
                         }`}
                       >
@@ -3324,7 +3326,7 @@ For any queries, contact your course instructors or the department.`,
                         }}
                         className={`w-full px-4 py-2.5 text-left text-sm font-medium flex items-center gap-2 transition-colors ${
                           isDarkMode
-                            ? "hover:bg-slate-800 text-slate-200 hover:text-white"
+                            ? "hover:bg-[#16181c] text-[#d9d9d9] hover:text-white"
                             : "hover:bg-slate-100 text-slate-700 hover:text-slate-900"
                         }`}
                       >
@@ -3337,7 +3339,7 @@ For any queries, contact your course instructors or the department.`,
                         onClick={toggleDarkMode}
                         className={`w-full px-4 py-2.5 text-left text-sm font-medium flex items-center gap-2 transition-colors ${
                           isDarkMode
-                            ? "hover:bg-slate-800 text-slate-200 hover:text-white"
+                            ? "hover:bg-[#16181c] text-[#d9d9d9] hover:text-white"
                             : "hover:bg-slate-100 text-slate-700 hover:text-slate-900"
                         }`}
                       >
@@ -3365,7 +3367,7 @@ For any queries, contact your course instructors or the department.`,
                           }}
                           className={`w-full px-4 py-2.5 text-left text-sm font-medium flex items-center gap-2 transition-colors ${
                             isDarkMode
-                              ? "hover:bg-slate-800 text-slate-200 hover:text-white"
+                              ? "hover:bg-[#16181c] text-[#d9d9d9] hover:text-white"
                               : "hover:bg-slate-100 text-slate-700 hover:text-slate-900"
                           }`}
                         >
@@ -3415,7 +3417,7 @@ For any queries, contact your course instructors or the department.`,
                         }}
                         className={`w-full px-4 py-2.5 text-left text-sm font-medium flex items-center gap-2 transition-colors ${
                           isDarkMode
-                            ? "hover:bg-slate-800 text-red-400 hover:text-red-300"
+                            ? "hover:bg-[#16181c] text-red-400 hover:text-red-300"
                             : "hover:bg-slate-100 text-red-650 hover:text-red-750"
                         }`}
                       >
@@ -3435,7 +3437,7 @@ For any queries, contact your course instructors or the department.`,
                     title="Notifications"
                     className={`relative flex items-center justify-center w-9 h-9 rounded-full border transition-all duration-200 ${
                       isDarkMode
-                        ? "bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700 hover:text-white"
+                        ? "bg-[#16181c] border-[#2f3336] text-[#8b98a5] hover:bg-[#2f3336] hover:text-white"
                         : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50 shadow-sm"
                     }`}
                   >
@@ -3456,14 +3458,14 @@ For any queries, contact your course instructors or the department.`,
                         transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
                         className={`notification-panel absolute right-0 mt-2 w-80 max-h-[420px] overflow-y-auto rounded-xl shadow-xl z-[120] ${
                           isDarkMode
-                            ? "bg-[#0e1312]/95 backdrop-blur-md border border-[#2c3b3a]"
+                            ? "bg-[#000000]/95 backdrop-blur-md border border-[#2f3336]"
                             : "bg-white/95 backdrop-blur-md border border-slate-200 shadow-slate-300/40"
                         }`}
                       >
                         {/* Header */}
-                        <div className={`sticky top-0 flex items-center justify-between px-4 py-3 border-b ${isDarkMode ? "border-[#2c3b3a] bg-[#0e1312]/90 backdrop-blur-md" : "border-slate-100 bg-white/90 backdrop-blur-md"}`}>
+                        <div className={`sticky top-0 flex items-center justify-between px-4 py-3 border-b ${isDarkMode ? "border-[#2f3336] bg-[#000000]/90 backdrop-blur-md" : "border-slate-100 bg-white/90 backdrop-blur-md"}`}>
                           <div className="flex items-center gap-2">
-                            <h3 className={`text-sm font-semibold ${isDarkMode ? "text-[#e9ecec]" : "text-slate-900"}`}>Notifications</h3>
+                            <h3 className={`text-sm font-semibold ${isDarkMode ? "text-[#e7e9ea]" : "text-slate-900"}`}>Notifications</h3>
                             {(getUnreadNoticeCount() + mentionNotifications.length) > 0 && (
                               <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-red-500 text-white">
                                 {getUnreadNoticeCount() + mentionNotifications.length}
@@ -3474,14 +3476,14 @@ For any queries, contact your course instructors or the department.`,
                             {mentionNotifications.length > 0 && authSession?.user?.id && (
                               <button
                                 onClick={() => { markAllNotificationsRead(authSession.user.id); setMentionNotifications([]); }}
-                                className={`text-xs px-2 py-1 rounded-lg transition-colors ${isDarkMode ? "text-[#93a5a4] hover:text-[#e9ecec] hover:bg-[#212d2b]" : "text-slate-500 hover:text-slate-700 hover:bg-slate-100"}`}
+                                className={`text-xs px-2 py-1 rounded-lg transition-colors ${isDarkMode ? "text-[#71767b] hover:text-[#e7e9ea] hover:bg-[#16181c]" : "text-slate-500 hover:text-slate-700 hover:bg-slate-100"}`}
                               >
                                 Mark all read
                               </button>
                             )}
                             <button
                               onClick={() => setShowNoticePanel(false)}
-                              className={`w-7 h-7 flex items-center justify-center rounded-lg transition-colors ${isDarkMode ? "text-[#93a5a4] hover:bg-[#212d2b] hover:text-[#e9ecec]" : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"}`}
+                              className={`w-7 h-7 flex items-center justify-center rounded-lg transition-colors ${isDarkMode ? "text-[#71767b] hover:bg-[#16181c] hover:text-[#e7e9ea]" : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"}`}
                             >
                               <X className="h-3.5 w-3.5" />
                             </button>
@@ -3491,14 +3493,14 @@ For any queries, contact your course instructors or the department.`,
                         {/* Content */}
                         {notices.length === 0 && emergencyAlerts.length === 0 && emergencyLinks.length === 0 && mentionNotifications.length === 0 ? (
                           <div className="flex flex-col items-center justify-center py-10 gap-3 px-6 text-center">
-                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${isDarkMode ? "bg-[#212d2b]" : "bg-slate-100"}`}>
-                              <Bell className={`h-6 w-6 ${isDarkMode ? "text-[#93a5a4]" : "text-slate-400"}`} />
+                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${isDarkMode ? "bg-[#16181c]" : "bg-slate-100"}`}>
+                              <Bell className={`h-6 w-6 ${isDarkMode ? "text-[#71767b]" : "text-slate-400"}`} />
                             </div>
-                            <p className={`font-semibold text-sm ${isDarkMode ? "text-[#e9ecec]" : "text-slate-700"}`}>All caught up</p>
-                            <p className={`text-xs ${isDarkMode ? "text-[#93a5a4]" : "text-slate-400"}`}>No new notifications right now.</p>
+                            <p className={`font-semibold text-sm ${isDarkMode ? "text-[#e7e9ea]" : "text-slate-700"}`}>All caught up</p>
+                            <p className={`text-xs ${isDarkMode ? "text-[#71767b]" : "text-slate-400"}`}>No new notifications right now.</p>
                           </div>
                         ) : (
-                          <div className={`divide-y ${isDarkMode ? "divide-[#2c3b3a]" : "divide-gray-100"}`}>
+                          <div className={`divide-y ${isDarkMode ? "divide-[#2f3336]" : "divide-gray-100"}`}>
                             {mentionNotifications.map((n, idx) => (
                               <motion.button
                                 key={n.id}
@@ -3513,27 +3515,27 @@ For any queries, contact your course instructors or the department.`,
                                 </div>
                                 <div className="min-w-0 flex-1">
                                   <p className="text-[9px] font-bold uppercase tracking-widest mb-0.5 text-amber-500">Mentioned you</p>
-                                  <p className={`text-xs font-medium leading-snug ${isDarkMode ? "text-[#e9ecec]" : "text-slate-800"}`}>{n.title}</p>
-                                  {n.body && <p className={`text-[11px] mt-0.5 truncate ${isDarkMode ? "text-[#93a5a4]" : "text-slate-500"}`}>"{n.body}"</p>}
+                                  <p className={`text-xs font-medium leading-snug ${isDarkMode ? "text-[#e7e9ea]" : "text-slate-800"}`}>{n.title}</p>
+                                  {n.body && <p className={`text-xs mt-0.5 truncate ${isDarkMode ? "text-[#71767b]" : "text-slate-500"}`}>"{n.body}"</p>}
                                 </div>
                               </motion.button>
                             ))}
                             {emergencyAlerts.map((alert) => (
-                              <div key={alert.id} className={`flex gap-3 px-4 py-3.5 transition-colors ${isDarkMode ? "hover:bg-slate-800/60" : "hover:bg-red-50"}`}>
+                              <div key={alert.id} className={`flex gap-3 px-4 py-3.5 transition-colors ${isDarkMode ? "hover:bg-[#16181c]/60" : "hover:bg-red-50"}`}>
                                 <span className="text-base flex-shrink-0">🚨</span>
                                 <div className="min-w-0">
                                   <p className="text-[9px] font-bold uppercase tracking-widest mb-0.5 text-red-500">Emergency</p>
-                                  <p className={`text-xs leading-snug ${isDarkMode ? "text-[#e9ecec]" : "text-slate-800"}`}>{alert.message}</p>
+                                  <p className={`text-xs leading-snug ${isDarkMode ? "text-[#e7e9ea]" : "text-slate-800"}`}>{alert.message}</p>
                                 </div>
                               </div>
                             ))}
                             {emergencyLinks.map((link) => (
-                              <div key={link.id} onClick={() => { if (link.url) window.open(link.url, "_blank"); }} className={`flex gap-3 px-4 py-3.5 cursor-pointer transition-colors ${isDarkMode ? "hover:bg-slate-800/60" : "hover:bg-purple-50"}`}>
+                              <div key={link.id} onClick={() => { if (link.url) window.open(link.url, "_blank"); }} className={`flex gap-3 px-4 py-3.5 cursor-pointer transition-colors ${isDarkMode ? "hover:bg-[#16181c]/60" : "hover:bg-purple-50"}`}>
                                 <span className="text-base flex-shrink-0">🔗</span>
                                 <div className="min-w-0">
                                   <p className="text-[9px] font-bold uppercase tracking-widest mb-0.5 text-purple-500">Important Link</p>
-                                  <p className={`text-xs font-medium ${isDarkMode ? "text-[#e9ecec]" : "text-slate-800"}`}>{link.title}</p>
-                                  {link.url && <p className={`text-[11px] mt-0.5 truncate ${isDarkMode ? "text-[#93a5a4]" : "text-slate-400"}`}>{link.url}</p>}
+                                  <p className={`text-xs font-medium ${isDarkMode ? "text-[#e7e9ea]" : "text-slate-800"}`}>{link.title}</p>
+                                  {link.url && <p className={`text-xs mt-0.5 truncate ${isDarkMode ? "text-[#71767b]" : "text-slate-400"}`}>{link.url}</p>}
                                 </div>
                               </div>
                             ))}
@@ -3547,16 +3549,16 @@ For any queries, contact your course instructors or the department.`,
                                   animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
                                   transition={{ duration: 0.25, delay: idx * 0.05 }}
                                   onClick={() => { handleNoticeClick(notice); markNoticeAsRead(notice.id); setShowNoticePanel(false); }}
-                                  className={`relative flex gap-3 px-4 py-3.5 cursor-pointer transition-colors ${isDarkMode ? "hover:bg-[#212d2b]" : "hover:bg-slate-50"} ${isUnread ? (isDarkMode ? "bg-blue-950/30" : "bg-blue-50/60") : ""}`}
+                                  className={`relative flex gap-3 px-4 py-3.5 cursor-pointer transition-colors ${isDarkMode ? "hover:bg-[#16181c]" : "hover:bg-slate-50"} ${isUnread ? (isDarkMode ? "bg-blue-950/30" : "bg-blue-50/60") : ""}`}
                                 >
                                   {isUnread && <span className="absolute left-2 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-blue-500" />}
                                   <span className="text-base flex-shrink-0">{emoji}</span>
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-start justify-between gap-2">
-                                      <p className={`text-xs font-semibold line-clamp-2 leading-snug ${isDarkMode ? "text-[#e9ecec]" : "text-slate-900"}`}>{notice.title}</p>
+                                      <p className={`text-xs font-semibold line-clamp-2 leading-snug ${isDarkMode ? "text-[#e7e9ea]" : "text-slate-900"}`}>{notice.title}</p>
                                       {notice.priority === "urgent" && <span className="flex-shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-500 text-white animate-pulse">URGENT</span>}
                                     </div>
-                                    <p className={`text-[10px] mt-1 ${isDarkMode ? "text-[#93a5a4]" : "text-slate-400"}`}>
+                                    <p className={`text-[10px] mt-1 ${isDarkMode ? "text-[#71767b]" : "text-slate-400"}`}>
                                       {new Date(notice.created_at).toLocaleDateString("en-BD", { month: "short", day: "numeric" })}
                                     </p>
                                   </div>
@@ -3597,7 +3599,7 @@ For any queries, contact your course instructors or the department.`,
             <div
               className={`sticky top-0 px-4 sm:px-6 py-4 border-b transition-colors duration-300 ${
                 isDarkMode
-                  ? "border-gray-700/50 bg-gray-900/80 backdrop-blur-sm"
+                  ? "border-[#2f3336]/50 bg-[#17181c]/80 backdrop-blur-sm"
                   : "border-gray-200/50 bg-white/80 backdrop-blur-sm"
               }`}
             >
@@ -3609,11 +3611,11 @@ For any queries, contact your course instructors or the department.`,
                 </h2>
                 <button
                   onClick={() => setShowMobileMenu(false)}
-                  className={`p-1 rounded-lg transition-all ${isDarkMode ? "hover:bg-gray-700" : "hover:bg-gray-100"}`}
+                  className={`p-1 rounded-lg transition-all ${isDarkMode ? "hover:bg-[#2f3336]" : "hover:bg-gray-100"}`}
                   title="Close"
                 >
                   <X
-                    className={`h-5 w-5 ${isDarkMode ? "text-gray-400" : "text-gray-600"}`}
+                    className={`h-5 w-5 ${isDarkMode ? "text-[#71767b]" : "text-gray-600"}`}
                   />
                 </button>
               </div>
@@ -3631,21 +3633,21 @@ For any queries, contact your course instructors or the department.`,
                 }}
                 className={`w-full flex items-center gap-3 p-3 sm:p-4 rounded-lg transition-all duration-300 border ${
                   isDarkMode
-                    ? "hover:bg-slate-800/50 border-gray-700/50 hover:border-slate-600/50 text-gray-100"
+                    ? "hover:bg-[#16181c]/50 border-[#2f3336]/50 hover:border-[#38444d]/50 text-gray-100"
                     : "hover:bg-slate-100/50 border-gray-200/50 hover:border-slate-300 text-gray-900"
-                } ${currentView === "home" ? (isDarkMode ? "bg-slate-800/80 border-slate-700" : "bg-slate-100 border-slate-300") : ""}`}
+                } ${currentView === "home" ? (isDarkMode ? "bg-[#16181c]/80 border-[#2f3336]" : "bg-slate-100 border-slate-300") : ""}`}
               >
                 <div
-                  className={`p-2 rounded-lg flex-shrink-0 ${isDarkMode ? "bg-slate-800" : "bg-slate-100"}`}
+                  className={`p-2 rounded-lg flex-shrink-0 ${isDarkMode ? "bg-[#16181c]" : "bg-slate-100"}`}
                 >
                   <Home
-                    className={`w-5 h-5 ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}
+                    className={`w-5 h-5 ${isDarkMode ? "text-[#8b98a5]" : "text-slate-600"}`}
                   />
                 </div>
                 <div className="text-left flex-1 min-w-0">
                   <p className="font-semibold text-sm">Home</p>
                   <p
-                    className={`text-xs ${isDarkMode ? "text-gray-400" : "text-gray-600"}`}
+                    className={`text-xs ${isDarkMode ? "text-[#71767b]" : "text-gray-600"}`}
                   >
                     Main Dashboard
                   </p>
@@ -3669,7 +3671,7 @@ For any queries, contact your course instructors or the department.`,
                 }}
                 className={`w-full flex items-center gap-3 p-3 sm:p-4 rounded-lg transition-all duration-300 border ${
                   isDarkMode
-                    ? "hover:bg-green-900/30 border-gray-700/50 hover:border-green-500/50 text-gray-100"
+                    ? "hover:bg-green-900/30 border-[#2f3336]/50 hover:border-green-500/50 text-gray-100"
                     : "hover:bg-green-50 border-gray-200/50 hover:border-green-300 text-gray-900"
                 } ${currentView === "wc26" ? (isDarkMode ? "bg-green-950/40 border-green-600/60" : "bg-green-100/50 border-green-300") : ""}`}
               >
@@ -3683,7 +3685,7 @@ For any queries, contact your course instructors or the department.`,
                       LIVE
                     </span>
                   </div>
-                  <p className={`text-xs ${isDarkMode ? "text-gray-400" : "text-gray-600"}`}>
+                  <p className={`text-xs ${isDarkMode ? "text-[#71767b]" : "text-gray-600"}`}>
                     Pick a team · earn points · leaderboard
                   </p>
                 </div>
@@ -3706,9 +3708,9 @@ For any queries, contact your course instructors or the department.`,
                 }}
                 className={`w-full flex items-center gap-3 p-3 sm:p-4 rounded-lg transition-all duration-300 border ${
                   isDarkMode
-                    ? "hover:bg-blue-900/30 border-gray-700/50 hover:border-blue-500/50 text-gray-100"
+                    ? "hover:bg-blue-900/30 border-[#2f3336]/50 hover:border-blue-500/50 text-gray-100"
                     : "hover:bg-blue-50 border-gray-200/50 hover:border-blue-300 text-gray-900"
-                } ${!isLoggedIn ? "opacity-60" : ""} ${currentView === "semester" ? (isDarkMode ? "bg-blue-950/40 border-blue-600/60" : "bg-blue-100/50 border-blue-300") : ""}`}
+                } ${!isLoggedIn ? "opacity-60" : ""} ${currentView === "semester" ? (isDarkMode ? "bg-blue-950/40 border-[#1e9df1]/60" : "bg-blue-100/50 border-blue-300") : ""}`}
               >
                 <div
                   className={`p-2 rounded-lg flex-shrink-0 ${isDarkMode ? "bg-blue-900/40" : "bg-blue-100"}`}
@@ -3720,7 +3722,7 @@ For any queries, contact your course instructors or the department.`,
                 <div className="text-left flex-1 min-w-0">
                   <p className="font-semibold text-sm">Semester Tracker</p>
                   <p
-                    className={`text-xs ${isDarkMode ? "text-gray-400" : "text-gray-600"}`}
+                    className={`text-xs ${isDarkMode ? "text-[#71767b]" : "text-gray-600"}`}
                   >
                     View progress
                   </p>
@@ -3744,7 +3746,7 @@ For any queries, contact your course instructors or the department.`,
                 }}
                 className={`w-full flex items-center gap-3 p-3 sm:p-4 rounded-lg transition-all duration-300 border ${
                   isDarkMode
-                    ? "hover:bg-emerald-900/30 border-gray-700/50 hover:border-emerald-500/50 text-gray-100"
+                    ? "hover:bg-emerald-900/30 border-[#2f3336]/50 hover:border-emerald-500/50 text-gray-100"
                     : "hover:bg-emerald-50 border-gray-200/50 hover:border-emerald-300 text-gray-900"
                 } ${!isLoggedIn ? "opacity-60" : ""} ${(currentView === "teams" || currentView === "team") ? (isDarkMode ? "bg-emerald-950/40 border-emerald-600/60" : "bg-emerald-100/50 border-emerald-300") : ""}`}
               >
@@ -3763,7 +3765,7 @@ For any queries, contact your course instructors or the department.`,
                     </span>
                   </div>
                   <p
-                    className={`text-xs ${isDarkMode ? "text-gray-400" : "text-gray-600"}`}
+                    className={`text-xs ${isDarkMode ? "text-[#71767b]" : "text-gray-600"}`}
                   >
                     Create teams & find members
                   </p>
@@ -3778,9 +3780,9 @@ For any queries, contact your course instructors or the department.`,
                 }}
                 className={`w-full flex items-center gap-3 p-3 sm:p-4 rounded-lg transition-all duration-300 border ${
                   isDarkMode
-                    ? "hover:bg-blue-900/30 border-gray-700/50 hover:border-blue-500/50 text-gray-100"
+                    ? "hover:bg-blue-900/30 border-[#2f3336]/50 hover:border-blue-500/50 text-gray-100"
                     : "hover:bg-blue-50 border-gray-200/50 hover:border-blue-300 text-gray-900"
-                } ${currentView === "shared-resources" ? (isDarkMode ? "bg-blue-950/40 border-blue-600/60" : "bg-blue-100/50 border-blue-300") : ""}`}
+                } ${currentView === "shared-resources" ? (isDarkMode ? "bg-blue-950/40 border-[#1e9df1]/60" : "bg-blue-100/50 border-blue-300") : ""}`}
               >
                 <div className={`p-2 rounded-lg flex-shrink-0 ${isDarkMode ? "bg-blue-900/40" : "bg-blue-100"}`}>
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={isDarkMode ? "text-blue-400" : "text-blue-600"}>
@@ -3789,7 +3791,7 @@ For any queries, contact your course instructors or the department.`,
                 </div>
                 <div className="text-left flex-1 min-w-0">
                   <p className="font-semibold text-sm">Shared Resources</p>
-                  <p className={`text-xs ${isDarkMode ? "text-gray-400" : "text-gray-600"}`}>
+                  <p className={`text-xs ${isDarkMode ? "text-[#71767b]" : "text-gray-600"}`}>
                     Public files from all teams
                   </p>
                 </div>
@@ -3812,7 +3814,7 @@ For any queries, contact your course instructors or the department.`,
                 }}
                 className={`w-full flex items-center gap-3 p-3 sm:p-4 rounded-lg transition-all duration-300 border ${
                   isDarkMode
-                    ? "hover:bg-sky-900/30 border-gray-700/50 hover:border-sky-500/50 text-gray-100"
+                    ? "hover:bg-sky-900/30 border-[#2f3336]/50 hover:border-sky-500/50 text-gray-100"
                     : "hover:bg-sky-50 border-gray-200/50 hover:border-sky-300 text-gray-900"
                 } ${!isLoggedIn ? "opacity-60" : ""} ${currentView === "network" ? (isDarkMode ? "bg-sky-950/40 border-sky-600/60" : "bg-sky-100/50 border-sky-300") : ""}`}
               >
@@ -3831,7 +3833,7 @@ For any queries, contact your course instructors or the department.`,
                     </span>
                   </div>
                   <p
-                    className={`text-xs ${isDarkMode ? "text-gray-400" : "text-gray-600"}`}
+                    className={`text-xs ${isDarkMode ? "text-[#71767b]" : "text-gray-600"}`}
                   >
                     Connect with classmates
                   </p>
@@ -3846,7 +3848,7 @@ For any queries, contact your course instructors or the department.`,
                 }}
                 className={`w-full flex items-center gap-3 p-3 sm:p-4 rounded-lg transition-all duration-300 border ${
                   isDarkMode
-                    ? "hover:bg-amber-900/30 border-gray-700/50 hover:border-amber-500/50 text-gray-100"
+                    ? "hover:bg-amber-900/30 border-[#2f3336]/50 hover:border-amber-500/50 text-gray-100"
                     : "hover:bg-amber-50 border-gray-200/50 hover:border-amber-300 text-gray-900"
                 } ${currentView === "alumni" ? (isDarkMode ? "bg-amber-950/40 border-amber-600/60" : "bg-amber-100/50 border-amber-300") : ""}`}
               >
@@ -3861,13 +3863,13 @@ For any queries, contact your course instructors or the department.`,
                   <div className="flex items-center gap-2">
                     <p className="font-semibold text-sm">Alumni Hub</p>
                     <span
-                      className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold ${isDarkMode ? "bg-slate-700 text-slate-300" : "bg-slate-200 text-slate-600"}`}
+                      className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold ${isDarkMode ? "bg-[#2f3336] text-[#8b98a5]" : "bg-slate-200 text-slate-600"}`}
                     >
                       SOON
                     </span>
                   </div>
                   <p
-                    className={`text-xs ${isDarkMode ? "text-gray-400" : "text-gray-600"}`}
+                    className={`text-xs ${isDarkMode ? "text-[#71767b]" : "text-gray-600"}`}
                   >
                     Alumni from our varsity
                   </p>
@@ -3891,7 +3893,7 @@ For any queries, contact your course instructors or the department.`,
                 }}
                 className={`w-full flex items-center gap-3 p-3 sm:p-4 rounded-lg transition-all duration-300 border ${
                   isDarkMode
-                    ? "hover:bg-purple-900/30 border-gray-700/50 hover:border-purple-500/50 text-gray-100"
+                    ? "hover:bg-purple-900/30 border-[#2f3336]/50 hover:border-purple-500/50 text-gray-100"
                     : "hover:bg-purple-50 border-gray-200/50 hover:border-purple-300 text-gray-900"
                 } ${!isLoggedIn ? "opacity-60" : ""} ${currentView === "custom" ? (isDarkMode ? "bg-purple-950/40 border-purple-600/60" : "bg-purple-100/50 border-purple-300") : ""}`}
               >
@@ -3905,7 +3907,7 @@ For any queries, contact your course instructors or the department.`,
                 <div className="text-left flex-1 min-w-0">
                   <p className="font-semibold text-sm">Custom Routine</p>
                   <p
-                    className={`text-xs ${isDarkMode ? "text-gray-400" : "text-gray-600"}`}
+                    className={`text-xs ${isDarkMode ? "text-[#71767b]" : "text-gray-600"}`}
                   >
                     Build your own schedule
                   </p>
@@ -3915,7 +3917,7 @@ For any queries, contact your course instructors or the department.`,
 
             {/* Authentication Section - At Bottom */}
             <div
-              className={`px-4 pt-3 pb-[env(safe-area-inset-bottom,12px)] space-y-2 border-t mt-auto ${isDarkMode ? "border-gray-700/30" : "border-gray-200/50"}`}
+              className={`px-4 pt-3 pb-[env(safe-area-inset-bottom,12px)] space-y-2 border-t mt-auto ${isDarkMode ? "border-[#2f3336]/30" : "border-gray-200/50"}`}
               style={{ paddingBottom: "max(12px, env(safe-area-inset-bottom))" }}
             >
               {isLoggedIn ? (
@@ -3981,7 +3983,7 @@ For any queries, contact your course instructors or the department.`,
                       className={`w-full flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium transition-all duration-200 ${
                         isDarkMode
                           ? "bg-white text-gray-900 hover:bg-gray-100"
-                          : "bg-gray-900 text-white hover:bg-gray-800"
+                          : "bg-[#17181c] text-white hover:bg-[#16181c]"
                       }`}
                     >
                       <LogIn className="h-5 w-5" />
@@ -4003,7 +4005,7 @@ For any queries, contact your course instructors or the department.`,
                   </div>
 
                   <p
-                    className={`text-xs text-center ${isDarkMode ? "text-gray-400" : "text-gray-600"}`}
+                    className={`text-xs text-center ${isDarkMode ? "text-[#71767b]" : "text-gray-600"}`}
                   >
                     New here? Join our community for exclusive study materials &
                     features! 📚
@@ -4028,11 +4030,11 @@ For any queries, contact your course instructors or the department.`,
           {/* Notification Drawer */}
           <div
             className={`notification-panel fixed top-0 right-0 h-[100dvh] w-[88vw] max-w-sm shadow-2xl z-[120] flex flex-col ${
-              isDarkMode ? "bg-slate-900 border-l border-slate-800" : "bg-white border-l border-slate-200"
+              isDarkMode ? "bg-[#17181c] border-l border-[#2f3336]" : "bg-white border-l border-slate-200"
             }`}
           >
             {/* Header */}
-            <div className={`flex-shrink-0 flex items-center justify-between px-5 py-4 border-b ${isDarkMode ? "border-slate-800" : "border-slate-100"}`}>
+            <div className={`flex-shrink-0 flex items-center justify-between px-5 py-4 border-b ${isDarkMode ? "border-[#2f3336]" : "border-slate-100"}`}>
               <div className="flex items-center gap-2.5">
                 <h2 className={`font-bold text-base ${isDarkMode ? "text-white" : "text-slate-900"}`}>Notifications</h2>
                 {(getUnreadNoticeCount() + mentionNotifications.length) > 0 && (
@@ -4048,7 +4050,7 @@ For any queries, contact your course instructors or the department.`,
                       markAllNotificationsRead(authSession.user.id);
                       setMentionNotifications([]);
                     }}
-                    className={`text-xs px-2 py-1 rounded-lg transition-colors ${isDarkMode ? "text-slate-400 hover:text-slate-200 hover:bg-slate-800" : "text-slate-500 hover:text-slate-700 hover:bg-slate-100"}`}
+                    className={`text-xs px-2 py-1 rounded-lg transition-colors ${isDarkMode ? "text-slate-400 hover:text-[#d9d9d9] hover:bg-[#16181c]" : "text-slate-500 hover:text-slate-700 hover:bg-slate-100"}`}
                   >
                     Mark all read
                   </button>
@@ -4056,7 +4058,7 @@ For any queries, contact your course instructors or the department.`,
                 <button
                   onClick={() => setShowNoticePanel(false)}
                   className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors ${
-                    isDarkMode ? "text-slate-400 hover:bg-slate-800 hover:text-white" : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+                    isDarkMode ? "text-slate-400 hover:bg-[#16181c] hover:text-white" : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
                   }`}
                 >
                   <X className="h-4 w-4" />
@@ -4068,14 +4070,14 @@ For any queries, contact your course instructors or the department.`,
             <div className="flex-1 overflow-y-auto">
               {notices.length === 0 && emergencyAlerts.length === 0 && emergencyLinks.length === 0 && mentionNotifications.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full gap-3 px-6 text-center">
-                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${isDarkMode ? "bg-slate-800" : "bg-slate-100"}`}>
+                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${isDarkMode ? "bg-[#16181c]" : "bg-slate-100"}`}>
                     <Bell className={`h-7 w-7 ${isDarkMode ? "text-slate-500" : "text-slate-400"}`} />
                   </div>
-                  <p className={`font-semibold text-sm ${isDarkMode ? "text-slate-300" : "text-slate-700"}`}>All caught up</p>
+                  <p className={`font-semibold text-sm ${isDarkMode ? "text-[#8b98a5]" : "text-slate-700"}`}>All caught up</p>
                   <p className={`text-xs ${isDarkMode ? "text-slate-500" : "text-slate-400"}`}>No new notifications right now.</p>
                 </div>
               ) : (
-                <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                <div className="divide-y divide-slate-100 dark:divide-[#2f3336]">
 
                   {/* Mention Notifications */}
                   {mentionNotifications.map((n) => (
@@ -4097,7 +4099,7 @@ For any queries, contact your course instructors or the department.`,
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className={`text-[10px] font-bold uppercase tracking-widest mb-0.5 text-amber-500`}>Mentioned you</p>
-                        <p className={`text-sm font-medium leading-snug ${isDarkMode ? "text-slate-200" : "text-slate-800"}`}>{n.title}</p>
+                        <p className={`text-sm font-medium leading-snug ${isDarkMode ? "text-[#d9d9d9]" : "text-slate-800"}`}>{n.title}</p>
                         {n.body && <p className={`text-xs mt-0.5 truncate ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>"{n.body}"</p>}
                         <p className={`text-[10px] mt-1 ${isDarkMode ? "text-slate-500" : "text-slate-400"}`}>
                           {new Date(n.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} · Tap to open chat
@@ -4108,11 +4110,11 @@ For any queries, contact your course instructors or the department.`,
 
                   {/* Emergency Alerts */}
                   {emergencyAlerts.map((alert) => (
-                    <div key={alert.id} className={`flex gap-3 px-5 py-4 ${isDarkMode ? "hover:bg-slate-800/60" : "hover:bg-red-50"} transition-colors cursor-default`}>
+                    <div key={alert.id} className={`flex gap-3 px-5 py-4 ${isDarkMode ? "hover:bg-[#16181c]/60" : "hover:bg-red-50"} transition-colors cursor-default`}>
                       <span className="text-xl flex-shrink-0 mt-0.5">🚨</span>
                       <div className="min-w-0">
                         <p className={`text-[10px] font-bold uppercase tracking-widest mb-1 text-red-500`}>Emergency</p>
-                        <p className={`text-sm leading-snug ${isDarkMode ? "text-slate-200" : "text-slate-800"}`}>{alert.message}</p>
+                        <p className={`text-sm leading-snug ${isDarkMode ? "text-[#d9d9d9]" : "text-slate-800"}`}>{alert.message}</p>
                       </div>
                     </div>
                   ))}
@@ -4121,13 +4123,13 @@ For any queries, contact your course instructors or the department.`,
                   {emergencyLinks.map((link) => (
                     <div
                       key={link.id}
-                      className={`flex gap-3 px-5 py-4 ${isDarkMode ? "hover:bg-slate-800/60" : "hover:bg-purple-50"} transition-colors cursor-pointer`}
+                      className={`flex gap-3 px-5 py-4 ${isDarkMode ? "hover:bg-[#16181c]/60" : "hover:bg-purple-50"} transition-colors cursor-pointer`}
                       onClick={() => { if (link.url) window.open(link.url, "_blank"); }}
                     >
                       <span className="text-xl flex-shrink-0 mt-0.5">🔗</span>
                       <div className="min-w-0">
                         <p className={`text-[10px] font-bold uppercase tracking-widest mb-1 text-purple-500`}>Important Link</p>
-                        <p className={`text-sm font-medium ${isDarkMode ? "text-slate-200" : "text-slate-800"}`}>{link.title}</p>
+                        <p className={`text-sm font-medium ${isDarkMode ? "text-[#d9d9d9]" : "text-slate-800"}`}>{link.title}</p>
                         {link.url && <p className={`text-xs mt-0.5 truncate ${isDarkMode ? "text-slate-500" : "text-slate-400"}`}>{link.url}</p>}
                       </div>
                     </div>
@@ -4148,7 +4150,7 @@ For any queries, contact your course instructors or the department.`,
                         key={notice.id}
                         onClick={() => { handleNoticeClick(notice); markNoticeAsRead(notice.id); setShowNoticePanel(false); }}
                         className={`relative flex gap-3 px-5 py-4 cursor-pointer transition-colors ${
-                          isDarkMode ? "hover:bg-slate-800/60" : "hover:bg-slate-50"
+                          isDarkMode ? "hover:bg-[#16181c]/60" : "hover:bg-slate-50"
                         } ${isUnread ? (isDarkMode ? "bg-blue-950/30" : "bg-blue-50/60") : ""}`}
                       >
                         {/* Unread dot */}
@@ -4158,7 +4160,7 @@ For any queries, contact your course instructors or the department.`,
 
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-2">
-                            <p className={`text-sm font-semibold line-clamp-2 leading-snug ${isDarkMode ? "text-slate-100" : "text-slate-900"}`}>
+                            <p className={`text-sm font-semibold line-clamp-2 leading-snug ${isDarkMode ? "text-[#e7e9ea]" : "text-slate-900"}`}>
                               {notice.title}
                             </p>
                             {notice.priority === "urgent" && (
@@ -4178,7 +4180,7 @@ For any queries, contact your course instructors or the department.`,
                               </span>
                             )}
                             {notice.attachment_url && (
-                              <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${isDarkMode ? "bg-slate-700 text-slate-400" : "bg-slate-100 text-slate-500"}`}>
+                              <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${isDarkMode ? "bg-[#2f3336] text-slate-400" : "bg-slate-100 text-slate-500"}`}>
                                 📎 {notice.attachment_type === "pdf" ? "PDF" : "File"}
                               </span>
                             )}
@@ -4207,7 +4209,7 @@ For any queries, contact your course instructors or the department.`,
 
           {/* ── Announcement Banner ── */}
           {showAnnouncementBanner && (
-            <div className={`relative z-10 w-full text-white ${isDarkMode ? "bg-[#151b1a] border-b border-[#2c3b3a]" : "bg-[#4e7d7a]"}`}>
+            <div className={`relative z-10 w-full text-white ${isDarkMode ? "bg-[#17181c] border-b border-[#2f3336]" : "bg-[#1e9df1]"}`}>
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-start justify-between gap-3">
                 {/* Clickable text area */}
                 <button
@@ -4259,83 +4261,119 @@ For any queries, contact your course instructors or the department.`,
           <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 xl:px-10 py-4 sm:py-5 lg:py-6">
             {/* Home Page */}
             {currentView === "home" && (
-              <div className="relative z-10 space-y-6 sm:space-y-8 md:space-y-10 w-full">
-                {/* Welcome Hero Section */}
-                <div className="text-center pt-3 pb-1 sm:pt-5 sm:pb-2">
-                  {/* Logo */}
-                  <div className="flex justify-center mb-3">
-                    <div className="relative inline-block">
-                      <img
-                        src="/image.png"
-                        alt="BUBT Logo"
-                        className="h-16 w-16 sm:h-20 sm:w-20 object-contain"
-                      />
-                      <div className="absolute -inset-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full opacity-20 blur-lg"></div>
-                    </div>
+              <motion.div
+                className="relative z-10 space-y-4 sm:space-y-5 w-full"
+                initial="hidden"
+                animate="visible"
+                variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.11 } } }}
+              >
+
+                {/* ── Hero Section ── */}
+                <motion.div
+                  className="relative text-center pt-2 pb-1 sm:pt-4 sm:pb-2"
+                  variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.1 } } }}
+                >
+
+                  {/* Background glow orbs — not animated */}
+                  <div className="absolute inset-0 pointer-events-none overflow-hidden -z-10">
+                    <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-[min(520px,100vw)] h-[220px] rounded-full blur-[80px]"
+                      style={{ background: isDarkMode ? 'rgba(139,92,246,0.18)' : 'rgba(139,92,246,0.10)' }} />
+                    <div className="absolute top-6 -left-8 w-[200px] h-[160px] rounded-full blur-[60px]"
+                      style={{ background: isDarkMode ? 'rgba(59,130,246,0.13)' : 'rgba(59,130,246,0.08)' }} />
+                    <div className="absolute top-2 -right-8 w-[180px] h-[140px] rounded-full blur-[60px]"
+                      style={{ background: isDarkMode ? 'rgba(20,184,166,0.12)' : 'rgba(20,184,166,0.07)' }} />
                   </div>
 
-                  {/* Welcome Title */}
-                  <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4">
-                    <span
-                      className={`transition-colors duration-300 ${isDarkMode ? "text-gray-200" : "text-slate-800"}`}
-                    >
-                      Welcome to{" "}
-                    </span>
-                    <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                      Edu<span className="text-[#ef4444]">51</span>Portal
-                    </span>
-                  </h1>
+                  {/* BUBT logo — prominent, centered */}
+                  <motion.div
+                    className="flex flex-col items-center mb-5"
+                    variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] } } }}
+                  >
+                    <img
+                      src="/image.png"
+                      alt="BUBT"
+                      className="w-16 h-16 sm:w-20 sm:h-20 object-contain mb-3 drop-shadow logo-glow-pulse"
+                    />
+                    <p className={`text-[11px] font-medium tracking-widest uppercase ${isDarkMode ? 'text-[#71767b]' : 'text-slate-400'}`}>
+                      BUBT · Intake 51 · CSE Department
+                    </p>
+                  </motion.div>
 
-                  {/* Subtitle and Description */}
-                  <div className="max-w-2xl mx-auto space-y-4">
-                    <div className="space-y-2">
-                      <p
-                        className={`text-xl sm:text-2xl font-semibold transition-colors duration-300 ${
-                          isDarkMode ? "text-gray-300" : "text-slate-700"
-                        }`}
-                      >
-                        BUBT Intake 51 Excellence Platform
-                      </p>
-                      <p
-                        className={`text-sm sm:text-base transition-colors duration-300 ${
-                          isDarkMode ? "text-gray-400" : "text-slate-600"
-                        }`}
-                      >
-                        Department of Computer Science & Engineering
-                      </p>
-                    </div>
+                  {/* Brand headline */}
+                  <motion.h1
+                    className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-none mb-2"
+                    style={{ fontFamily: "'Exo 2', sans-serif" }}
+                    variants={{ hidden: { opacity: 0, y: 18 }, visible: { opacity: 1, y: 0, transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] } } }}
+                  >
+                    <span className={isDarkMode ? 'text-[#e7e9ea]' : 'text-[#0f1419]'}>Edu</span><span className="glitch-51 text-[#ef4444]" data-text="51">51</span><span className={isDarkMode ? 'text-[#e7e9ea]' : 'text-[#0f1419]'}>Portal</span>
+                  </motion.h1>
 
-                    {/* Registration Call-to-Action removed per request */}
-                  </div>
-                </div>
+                  {/* Tagline */}
+                  <motion.p
+                    className={`text-sm sm:text-base font-normal max-w-xs sm:max-w-sm mx-auto leading-relaxed px-2 ${isDarkMode ? 'text-[#71767b]' : 'text-slate-400'}`}
+                    variants={{ hidden: { opacity: 0, y: 14 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] } } }}
+                  >
+                    One place for your courses, batch collaboration, and quick AI help.
+                  </motion.p>
+                </motion.div>
 
-                {/* Guest notice — clean minimal banner */}
+                {/* ── Guest CTA ── */}
                 {!isLoggedIn && (
-                  <div className={`flex items-center justify-between gap-4 px-5 py-3.5 rounded-2xl border transition-colors duration-300 ${
-                    isDarkMode
-                      ? "bg-slate-800/60 border-slate-700"
-                      : "bg-slate-50 border-slate-200"
-                  }`}>
-                    <div className="flex items-center gap-3 min-w-0">
-                      <span className={`w-2 h-2 rounded-full flex-shrink-0 bg-emerald-500`} />
-                      <p className={`text-sm font-medium ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>
-                        Browsing as guest — course materials available this semester
-                      </p>
+                  <motion.div
+                    className={`relative overflow-hidden flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-4 py-3.5 rounded-2xl border ${
+                      isDarkMode ? 'bg-[#16181c] border-[#2f3336]' : 'bg-gradient-to-r from-[#e3ecf6] to-[#f0f8ff] border-[#c8dff0]'
+                    }`}
+                    variants={{ hidden: { opacity: 0, y: 14 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] } } }}
+                  >
+                    <div className={`absolute inset-0 pointer-events-none ${isDarkMode ? 'opacity-0' : 'opacity-100'}`}>
+                      <div className="absolute top-0 left-0 w-32 h-full bg-gradient-to-r from-violet-400/10 to-transparent" />
+                    </div>
+                    <div className="flex items-start gap-3 min-w-0 relative">
+                      <span className="relative flex h-2.5 w-2.5 flex-shrink-0 mt-1">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60" />
+                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
+                      </span>
+                      <div className="min-w-0">
+                        <p className={`text-sm font-semibold ${isDarkMode ? 'text-[#d9d9d9]' : 'text-slate-800'}`}>Browsing as guest</p>
+                        <p className={`text-xs leading-snug ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>Create an account to unlock your full schedule, teams, and more.</p>
+                      </div>
                     </div>
                     <button
                       onClick={() => { setIsEditingProfile(false); setShowSignUpModal(true); }}
-                      className="flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-colors duration-150"
+                      className="self-stretch sm:self-auto flex-shrink-0 px-5 py-2 rounded-xl text-sm font-bold text-white text-center transition-all shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]"
+                      style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)' }}
                     >
-                      Create Account
+                      Create Account →
                     </button>
-                  </div>
+                  </motion.div>
                 )}
 
-                {/* Major-Based Sections - Spring 2026 */}
-                <div className="w-full">
-                  <div className="mb-5 text-center">
-                    <p className={`text-sm font-medium ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                      Select your major section
+                {/* ── Major Card Stack ── */}
+                <motion.div
+                  className="w-full"
+                  variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] } } }}
+                >
+                  {/* Section header */}
+                  <div className="mb-3 text-center">
+                    <div className="inline-flex items-center gap-2.5 mb-2">
+                      <motion.div
+                        className={`h-px ${isDarkMode ? 'bg-gradient-to-r from-transparent to-[#1e9df1]/60' : 'bg-gradient-to-r from-transparent to-[#1e9df1]/40'}`}
+                        initial={{ width: 0 }}
+                        whileInView={{ width: 40 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
+                      />
+                      <span className={`text-[11px] font-bold uppercase tracking-[0.15em] ${isDarkMode ? 'text-[#1e9df1]' : 'text-[#1677cc]'}`}>Study Materials</span>
+                      <motion.div
+                        className={`h-px ${isDarkMode ? 'bg-gradient-to-l from-transparent to-[#1e9df1]/60' : 'bg-gradient-to-l from-transparent to-[#1e9df1]/40'}`}
+                        initial={{ width: 0 }}
+                        whileInView={{ width: 40 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
+                      />
+                    </div>
+                    <p className={`text-lg sm:text-xl font-semibold ${isDarkMode ? 'text-[#e7e9ea]' : 'text-slate-800'}`}>
+                      Course materials by major
                     </p>
                   </div>
 
@@ -4379,7 +4417,7 @@ For any queries, contact your course instructors or the department.`,
                         glowColor: "#10b981",
                         tags: [
                           { label: "Network Security", color: "bg-emerald-100 text-emerald-700" },
-                          { label: "Wireless Systems", color: "bg-teal-100 text-teal-700" },
+                          { label: "Wireless Systems", color: "bg-[#1e9df1]/10 text-[#1e9df1]" },
                         ],
                         view: "networking" as const,
                         majorKey: "Networking",
@@ -4426,17 +4464,17 @@ For any queries, contact your course instructors or the department.`,
                     );
                   })()}
 
-                </div>
+                </motion.div>
                 {/* New Version CTA moved above; removing duplicate here */}
 
                 {/* Platform Features ticker */}
                 <div className="w-full">
-                  <div className="text-center mb-4">
-                    <p className={`text-sm font-semibold tracking-wide uppercase transition-colors duration-300 ${
-                      isDarkMode ? "text-slate-500" : "text-slate-400"
-                    }`}>
-                      What you can do on Edu51Portal
+                  <div className="flex items-center gap-3 mb-4 justify-center">
+                    <div className={`h-px flex-1 max-w-[80px] ${isDarkMode ? 'bg-[#16181c]' : 'bg-slate-200'}`} />
+                    <p className={`text-[11px] font-bold tracking-[0.15em] uppercase ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+                      Platform capabilities
                     </p>
+                    <div className={`h-px flex-1 max-w-[80px] ${isDarkMode ? 'bg-[#16181c]' : 'bg-slate-200'}`} />
                   </div>
                   <MarqueeTicker isDarkMode={isDarkMode} />
                 </div>
@@ -4446,7 +4484,7 @@ For any queries, contact your course instructors or the department.`,
                 {/* ── Footer ── */}
                 <footer
                   className={`rounded-2xl border overflow-hidden transition-colors duration-300 ${
-                    isDarkMode ? "bg-slate-900 border-slate-700/50" : "bg-white border-slate-200"
+                    isDarkMode ? "bg-[#17181c] border-[#2f3336]/50" : "bg-white border-slate-200"
                   }`}
                 >
                   <div className="px-6 pt-8 pb-6">
@@ -4456,7 +4494,10 @@ For any queries, contact your course instructors or the department.`,
                       <div className="sm:col-span-1">
                         <div className="flex items-center gap-2 mb-3">
                           <img src="/Edu_51_Logo.png" alt="Edu51Portal Logo" className="w-8 h-8 rounded-lg object-contain" />
-                          <span className={`text-base font-bold tracking-tight ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                          <span
+                            className={`text-base font-bold tracking-tight ${isDarkMode ? "text-white" : "text-slate-900"}`}
+                            style={{ fontFamily: "'Exo 2', sans-serif" }}
+                          >
                             Edu<span className="text-[#ef4444]">51</span>Portal
                           </span>
                         </div>
@@ -4469,7 +4510,7 @@ For any queries, contact your course instructors or the department.`,
                             onClick={handleFacebookClick}
                             target="_blank" rel="noopener noreferrer"
                             title="Facebook" aria-label="Facebook"
-                            className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${isDarkMode ? "bg-slate-800 hover:bg-blue-600 text-slate-400 hover:text-white" : "bg-slate-100 hover:bg-blue-600 text-slate-500 hover:text-white"}`}
+                            className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${isDarkMode ? "bg-[#16181c] hover:bg-blue-600 text-slate-400 hover:text-white" : "bg-slate-100 hover:bg-blue-600 text-slate-500 hover:text-white"}`}
                           >
                             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                               <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
@@ -4480,7 +4521,7 @@ For any queries, contact your course instructors or the department.`,
                             onClick={handleWhatsAppClick}
                             target="_blank" rel="noopener noreferrer"
                             title="WhatsApp" aria-label="WhatsApp"
-                            className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${isDarkMode ? "bg-slate-800 hover:bg-green-600 text-slate-400 hover:text-white" : "bg-slate-100 hover:bg-green-600 text-slate-500 hover:text-white"}`}
+                            className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${isDarkMode ? "bg-[#16181c] hover:bg-green-600 text-slate-400 hover:text-white" : "bg-slate-100 hover:bg-green-600 text-slate-500 hover:text-white"}`}
                           >
                             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                               <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
@@ -4489,7 +4530,7 @@ For any queries, contact your course instructors or the department.`,
                           <button
                             onClick={handleEmailClick}
                             title="Email Support" aria-label="Email Support"
-                            className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${isDarkMode ? "bg-slate-800 hover:bg-red-600 text-slate-400 hover:text-white" : "bg-slate-100 hover:bg-red-600 text-slate-500 hover:text-white"}`}
+                            className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${isDarkMode ? "bg-[#16181c] hover:bg-red-600 text-slate-400 hover:text-white" : "bg-slate-100 hover:bg-red-600 text-slate-500 hover:text-white"}`}
                           >
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                               <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -4500,7 +4541,7 @@ For any queries, contact your course instructors or the department.`,
 
                       {/* Col 2 — About */}
                       <div>
-                        <h4 className={`text-xs font-semibold uppercase tracking-wider mb-3 ${isDarkMode ? "text-slate-300" : "text-slate-700"}`}>About</h4>
+                        <h4 className={`text-xs font-semibold uppercase tracking-wider mb-3 ${isDarkMode ? "text-[#8b98a5]" : "text-slate-700"}`}>About</h4>
                         <ul className={`space-y-2 text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
                           <li>BUBT · Dept. of CSE</li>
                           <li>Intake 51 · All Sections</li>
@@ -4513,7 +4554,7 @@ For any queries, contact your course instructors or the department.`,
 
                       {/* Col 3 — Support */}
                       <div>
-                        <h4 className={`text-xs font-semibold uppercase tracking-wider mb-3 ${isDarkMode ? "text-slate-300" : "text-slate-700"}`}>Support</h4>
+                        <h4 className={`text-xs font-semibold uppercase tracking-wider mb-3 ${isDarkMode ? "text-[#8b98a5]" : "text-slate-700"}`}>Support</h4>
                         <ul className="space-y-2">
                           <li>
                             <button onClick={() => setShowFeedbackModal(true)} className={`text-xs font-semibold hover:underline underline-offset-2 transition-colors ${isDarkMode ? "text-blue-400 hover:text-blue-300" : "text-blue-600 hover:text-blue-700"}`}>
@@ -4551,22 +4592,22 @@ For any queries, contact your course instructors or the department.`,
                   </div>
 
                   {/* Bottom bar */}
-                  <div className={`px-6 py-4 border-t flex flex-col sm:flex-row items-center justify-between gap-2 transition-colors duration-300 ${isDarkMode ? "border-slate-700/50 bg-slate-800/40" : "border-slate-100 bg-slate-50"}`}>
+                  <div className={`px-6 py-4 border-t flex flex-col sm:flex-row items-center justify-between gap-2 transition-colors duration-300 ${isDarkMode ? "border-[#2f3336]/50 bg-[#16181c]/40" : "border-slate-100 bg-slate-50"}`}>
                     <p className={`text-xs ${isDarkMode ? "text-slate-500" : "text-slate-400"}`}>
                       © {new Date().getFullYear()} Edu<span className="text-[#ef4444]">51</span>Portal · BUBT Intake 51 · All rights reserved.
                     </p>
                     <div className="flex items-center gap-3">
-                      <button onClick={() => goToView("terms")} className={`text-xs hover:underline underline-offset-2 transition-colors ${isDarkMode ? "text-slate-500 hover:text-slate-300" : "text-slate-400 hover:text-slate-600"}`}>
+                      <button onClick={() => goToView("terms")} className={`text-xs hover:underline underline-offset-2 transition-colors ${isDarkMode ? "text-slate-500 hover:text-[#8b98a5]" : "text-slate-400 hover:text-slate-600"}`}>
                         Terms
                       </button>
-                      <span className={`text-xs ${isDarkMode ? "text-slate-700" : "text-slate-300"}`}>·</span>
-                      <button onClick={() => goToView("privacy")} className={`text-xs hover:underline underline-offset-2 transition-colors ${isDarkMode ? "text-slate-500 hover:text-slate-300" : "text-slate-400 hover:text-slate-600"}`}>
+                      <span className={`text-xs ${isDarkMode ? "text-slate-600" : "text-[#8b98a5]"}`}>·</span>
+                      <button onClick={() => goToView("privacy")} className={`text-xs hover:underline underline-offset-2 transition-colors ${isDarkMode ? "text-slate-500 hover:text-[#8b98a5]" : "text-slate-400 hover:text-slate-600"}`}>
                         Privacy
                       </button>
                     </div>
                   </div>
                 </footer>
-              </div>
+              </motion.div>
             )}
 
             {/* Major Section Courses */}
@@ -4602,7 +4643,7 @@ For any queries, contact your course instructors or the department.`,
                       </button>
                       <button
                         onClick={() => setShowSignInModal(true)}
-                        className={`px-5 py-2.5 rounded-lg font-medium transition-colors ${isDarkMode ? "bg-slate-700 text-white hover:bg-slate-600" : "bg-white text-blue-700 border border-blue-200 hover:bg-blue-50"}`}
+                        className={`px-5 py-2.5 rounded-lg font-medium transition-colors ${isDarkMode ? "bg-[#2f3336] text-white hover:bg-[#38444d]" : "bg-white text-blue-700 border border-blue-200 hover:bg-blue-50"}`}
                       >
                         Sign In
                       </button>
@@ -4611,7 +4652,7 @@ For any queries, contact your course instructors or the department.`,
                 )}
                 <Suspense fallback={
                   <div className="flex justify-center py-16">
-                    <div className={`w-8 h-8 rounded-full border-4 border-t-blue-500 animate-spin ${isDarkMode ? "border-slate-700" : "border-slate-200"}`} />
+                    <div className={`w-8 h-8 rounded-full border-4 border-t-[#1e9df1] animate-spin ${isDarkMode ? "border-[#2f3336]" : "border-slate-200"}`} />
                   </div>
                 }>
                   <>
@@ -4651,8 +4692,8 @@ For any queries, contact your course instructors or the department.`,
                             : activeMajor === "Networking" ? "🌐 Networking Section"
                             : "Department of CSE"}{" "}- Intake 51
                         </h2>
-                        <p className={`text-lg transition-colors duration-300 ${isDarkMode ? "text-gray-400" : "text-gray-700"}`}>
-                          {activeMajor ? `${activeMajor} Major` : "Select your major"}{" "}• Choose your course to access materials
+                        <p className={`text-lg transition-colors duration-300 ${isDarkMode ? "text-[#71767b]" : "text-gray-700"}`}>
+                          {activeMajor ? `${activeMajor} Major` : "Pick your major below"}{" "}• Choose a course to access materials
                         </p>
                       </div>
                       <GDriveFolderBrowser
@@ -4707,7 +4748,7 @@ For any queries, contact your course instructors or the department.`,
                 </div>
                 <p
                   className={`text-sm sm:text-base md:text-lg select-text transition-colors duration-300 px-2 sm:px-0 ${
-                    isDarkMode ? "text-gray-400" : "text-gray-600"
+                    isDarkMode ? "text-[#71767b]" : "text-gray-600"
                   }`}
                 >
                   {selectedCourse.description}
@@ -4724,8 +4765,8 @@ For any queries, contact your course instructors or the department.`,
                           ? "bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 text-white shadow-2xl shadow-blue-500/50"
                           : "bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 text-white shadow-2xl shadow-blue-400/50"
                         : isDarkMode
-                          ? "bg-gray-800/80 border border-gray-700 text-gray-300 hover:border-blue-500/50 hover:bg-gray-800"
-                          : "bg-gray-100/80 border border-gray-200 text-gray-700 hover:border-blue-400 hover:bg-gray-200"
+                          ? "bg-[#16181c]/80 border border-[#2f3336] text-[#8b98a5] hover:border-blue-500/50 hover:bg-[#16181c]"
+                          : "bg-gray-100/80 border border-gray-200 text-gray-700 hover:border-[#1e9df1] hover:bg-gray-200"
                     }`}
                   >
                     {/* Animated background for active state */}
@@ -4763,7 +4804,7 @@ For any queries, contact your course instructors or the department.`,
                           ? "bg-gradient-to-r from-purple-600 via-pink-500 to-rose-500 text-white shadow-2xl shadow-pink-500/50"
                           : "bg-gradient-to-r from-purple-500 via-pink-500 to-rose-600 text-white shadow-2xl shadow-pink-400/50"
                         : isDarkMode
-                          ? "bg-gray-800/80 border border-gray-700 text-gray-300 hover:border-purple-500/50 hover:bg-gray-800"
+                          ? "bg-[#16181c]/80 border border-[#2f3336] text-[#8b98a5] hover:border-purple-500/50 hover:bg-[#16181c]"
                           : "bg-gray-100/80 border border-gray-200 text-gray-700 hover:border-purple-400 hover:bg-gray-200"
                     }`}
                   >
@@ -4798,13 +4839,11 @@ For any queries, contact your course instructors or the department.`,
                 {loading ? (
                   <div className="text-center py-8">
                     <div
-                      className={`animate-spin rounded-full h-8 w-8 border-b-2 mx-auto ${
-                        isDarkMode ? "border-blue-400" : "border-blue-600"
-                      }`}
+                      className={`animate-spin rounded-full h-8 w-8 border-b-2 mx-auto border-[#1e9df1]`}
                     ></div>
                     <p
                       className={`mt-2 transition-colors duration-300 ${
-                        isDarkMode ? "text-gray-400" : "text-gray-600"
+                        isDarkMode ? "text-[#71767b]" : "text-gray-600"
                       }`}
                     >
                       Loading materials...
@@ -4814,7 +4853,7 @@ For any queries, contact your course instructors or the department.`,
                   <div className="text-center py-12">
                     <FileText
                       className={`h-12 w-12 mx-auto mb-4 transition-colors duration-300 ${
-                        isDarkMode ? "text-gray-600" : "text-gray-400"
+                        isDarkMode ? "text-slate-500" : "text-[#71767b]"
                       }`}
                     />
                     <h3
@@ -4826,7 +4865,7 @@ For any queries, contact your course instructors or the department.`,
                     </h3>
                     <p
                       className={`transition-colors duration-300 ${
-                        isDarkMode ? "text-gray-400" : "text-gray-600"
+                        isDarkMode ? "text-[#71767b]" : "text-gray-600"
                       }`}
                     >
                       No materials have been uploaded for {selectedExamPeriod}{" "}
@@ -4860,7 +4899,7 @@ For any queries, contact your course instructors or the department.`,
                         </h3>
                         <p
                           className={`text-xs sm:text-sm md:text-base transition-colors duration-300 ${
-                            isDarkMode ? "text-gray-400" : "text-gray-600"
+                            isDarkMode ? "text-[#71767b]" : "text-gray-600"
                           }`}
                         >
                           Materials uploaded for {selectedExamPeriod} exam
@@ -4876,7 +4915,7 @@ For any queries, contact your course instructors or the department.`,
                           key={material.id}
                           className={`rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl border backdrop-blur-sm p-4 sm:p-5 md:p-6 lg:p-8 hover:shadow-lg sm:hover:shadow-2xl transition-all duration-300 transform hover:sm:-translate-y-1 md:hover:-translate-y-2 ${
                             isDarkMode
-                              ? "bg-gradient-to-br from-gray-800 via-gray-900 to-slate-900 border-gray-700/50"
+                              ? "bg-gradient-to-br from-gray-800 via-gray-900 to-slate-900 border-[#2f3336]/50"
                               : `bg-gradient-to-br ${materialScheme.bg} border-white/20`
                           }`}
                         >
@@ -4903,7 +4942,7 @@ For any queries, contact your course instructors or the department.`,
                                 <p
                                   className={`text-xs sm:text-sm md:text-base lg:text-lg mb-3 sm:mb-4 md:mb-5 leading-relaxed line-clamp-2 transition-colors duration-300 ${
                                     isDarkMode
-                                      ? "text-gray-300"
+                                      ? "text-[#8b98a5]"
                                       : "text-gray-700"
                                   }`}
                                 >
@@ -4924,7 +4963,7 @@ For any queries, contact your course instructors or the department.`,
                                     <div
                                       className={`px-2 sm:px-3 md:px-4 py-1 sm:py-1.5 md:py-2 rounded-lg sm:rounded-lg md:rounded-xl font-semibold transition-colors duration-300 whitespace-nowrap ${
                                         isDarkMode
-                                          ? "bg-gray-700/50 text-gray-300"
+                                          ? "bg-[#2f3336]/50 text-[#8b98a5]"
                                           : "bg-gradient-to-r from-gray-100 to-slate-200 text-gray-800"
                                       }`}
                                     >
@@ -4954,7 +4993,7 @@ For any queries, contact your course instructors or the department.`,
                                   onClick={() => openMaterialViewer(material)}
                                   className={`p-2 sm:p-2.5 rounded-lg sm:rounded-xl transition-all duration-300 ${
                                     isDarkMode
-                                      ? "text-gray-400 hover:text-red-400 hover:bg-red-900/30"
+                                      ? "text-[#71767b] hover:text-red-400 hover:bg-red-900/30"
                                       : "text-gray-500 hover:text-red-600 hover:bg-red-50"
                                   }`}
                                   title="Watch Video"
@@ -4966,7 +5005,7 @@ For any queries, contact your course instructors or the department.`,
                                   onClick={() => openMaterialViewer(material)}
                                   className={`p-2 sm:p-2.5 rounded-lg sm:rounded-xl transition-all duration-300 ${
                                     isDarkMode
-                                      ? "text-gray-400 hover:text-blue-400 hover:bg-blue-900/30"
+                                      ? "text-[#71767b] hover:text-blue-400 hover:bg-blue-900/30"
                                       : "text-gray-500 hover:text-blue-600 hover:bg-blue-50"
                                   }`}
                                   title="Preview File"
@@ -4978,7 +5017,7 @@ For any queries, contact your course instructors or the department.`,
                                   className={`p-2 sm:p-2.5 cursor-not-allowed rounded-lg sm:rounded-xl ${
                                     isDarkMode
                                       ? "text-gray-600"
-                                      : "text-gray-300"
+                                      : "text-[#8b98a5]"
                                   }`}
                                   title="No preview available"
                                   disabled
@@ -4994,8 +5033,8 @@ For any queries, contact your course instructors or the department.`,
                                   download
                                   className={`p-2 sm:p-2.5 rounded-lg sm:rounded-xl transition-all duration-300 ${
                                     isDarkMode
-                                      ? "text-gray-400 hover:text-teal-400 hover:bg-teal-900/30"
-                                      : "text-gray-500 hover:text-teal-600 hover:bg-teal-50"
+                                      ? "text-[#71767b] hover:text-[#1e9df1] hover:bg-[#1e9df1]/10"
+                                      : "text-gray-500 hover:text-[#1e9df1] hover:bg-[#1e9df1]/5"
                                   }`}
                                   title="Download File"
                                 >
@@ -5006,7 +5045,7 @@ For any queries, contact your course instructors or the department.`,
                                   className={`p-2 sm:p-2.5 cursor-not-allowed rounded-lg sm:rounded-xl ${
                                     isDarkMode
                                       ? "text-gray-600"
-                                      : "text-gray-300"
+                                      : "text-[#8b98a5]"
                                   }`}
                                   title="No file to download"
                                   disabled
@@ -5032,7 +5071,7 @@ For any queries, contact your course instructors or the department.`,
                   <div className="flex justify-center mb-6">
                     <div
                       className={`rounded-3xl shadow-xl p-4 transition-colors duration-300 ${
-                        isDarkMode ? "bg-gray-800" : "bg-white"
+                        isDarkMode ? "bg-[#16181c]" : "bg-white"
                       }`}
                     >
                       <img
@@ -5051,7 +5090,7 @@ For any queries, contact your course instructors or the department.`,
                   </h1>
                   <p
                     className={`text-sm transition-colors duration-300 ${
-                      isDarkMode ? "text-gray-400" : "text-gray-600"
+                      isDarkMode ? "text-[#71767b]" : "text-gray-600"
                     }`}
                   >
                     Last updated:{" "}
@@ -5066,7 +5105,7 @@ For any queries, contact your course instructors or the department.`,
                 {/* Privacy Content */}
                 <div
                   className={`rounded-2xl shadow-xl p-6 sm:p-8 transition-colors duration-300 ${
-                    isDarkMode ? "bg-gray-800" : "bg-white"
+                    isDarkMode ? "bg-[#16181c]" : "bg-white"
                   }`}
                 >
                   <div className="space-y-6">
@@ -5081,7 +5120,7 @@ For any queries, contact your course instructors or the department.`,
                       </h2>
                       <p
                         className={`leading-relaxed transition-colors duration-300 ${
-                          isDarkMode ? "text-gray-300" : "text-gray-700"
+                          isDarkMode ? "text-[#8b98a5]" : "text-gray-700"
                         }`}
                       >
                         Welcome to Edu
@@ -5113,7 +5152,7 @@ For any queries, contact your course instructors or the department.`,
                         </h3>
                         <ul
                           className={`list-disc list-inside space-y-2 ml-4 transition-colors duration-300 ${
-                            isDarkMode ? "text-gray-300" : "text-gray-700"
+                            isDarkMode ? "text-[#8b98a5]" : "text-gray-700"
                           }`}
                         >
                           <li>
@@ -5145,7 +5184,7 @@ For any queries, contact your course instructors or the department.`,
                       </h2>
                       <ul
                         className={`list-disc list-inside space-y-2 ml-4 transition-colors duration-300 ${
-                          isDarkMode ? "text-gray-300" : "text-gray-700"
+                          isDarkMode ? "text-[#8b98a5]" : "text-gray-700"
                         }`}
                       >
                         <li>
@@ -5175,14 +5214,14 @@ For any queries, contact your course instructors or the department.`,
                       </h2>
                       <p
                         className={`leading-relaxed mb-3 transition-colors duration-300 ${
-                          isDarkMode ? "text-gray-300" : "text-gray-700"
+                          isDarkMode ? "text-[#8b98a5]" : "text-gray-700"
                         }`}
                       >
                         Our platform integrates with Google Drive to:
                       </p>
                       <ul
                         className={`list-disc list-inside space-y-2 ml-4 transition-colors duration-300 ${
-                          isDarkMode ? "text-gray-300" : "text-gray-700"
+                          isDarkMode ? "text-[#8b98a5]" : "text-gray-700"
                         }`}
                       >
                         <li>
@@ -5200,7 +5239,7 @@ For any queries, contact your course instructors or the department.`,
                       </ul>
                       <p
                         className={`leading-relaxed mt-3 transition-colors duration-300 ${
-                          isDarkMode ? "text-gray-300" : "text-gray-700"
+                          isDarkMode ? "text-[#8b98a5]" : "text-gray-700"
                         }`}
                       >
                         We only request the minimum necessary permissions for
@@ -5221,14 +5260,14 @@ For any queries, contact your course instructors or the department.`,
                       </h2>
                       <p
                         className={`leading-relaxed mb-3 transition-colors duration-300 ${
-                          isDarkMode ? "text-gray-300" : "text-gray-700"
+                          isDarkMode ? "text-[#8b98a5]" : "text-gray-700"
                         }`}
                       >
                         We use the following third-party services:
                       </p>
                       <ul
                         className={`list-disc list-inside space-y-2 ml-4 transition-colors duration-300 ${
-                          isDarkMode ? "text-gray-300" : "text-gray-700"
+                          isDarkMode ? "text-[#8b98a5]" : "text-gray-700"
                         }`}
                       >
                         <li>
@@ -5259,7 +5298,7 @@ For any queries, contact your course instructors or the department.`,
                       </h2>
                       <p
                         className={`leading-relaxed transition-colors duration-300 ${
-                          isDarkMode ? "text-gray-300" : "text-gray-700"
+                          isDarkMode ? "text-[#8b98a5]" : "text-gray-700"
                         }`}
                       >
                         We implement appropriate security measures to protect
@@ -5281,14 +5320,14 @@ For any queries, contact your course instructors or the department.`,
                       </h2>
                       <p
                         className={`leading-relaxed mb-3 transition-colors duration-300 ${
-                          isDarkMode ? "text-gray-300" : "text-gray-700"
+                          isDarkMode ? "text-[#8b98a5]" : "text-gray-700"
                         }`}
                       >
                         You have the right to:
                       </p>
                       <ul
                         className={`list-disc list-inside space-y-2 ml-4 transition-colors duration-300 ${
-                          isDarkMode ? "text-gray-300" : "text-gray-700"
+                          isDarkMode ? "text-[#8b98a5]" : "text-gray-700"
                         }`}
                       >
                         <li>Access and update your personal information</li>
@@ -5309,7 +5348,7 @@ For any queries, contact your course instructors or the department.`,
                       </h2>
                       <p
                         className={`leading-relaxed transition-colors duration-300 ${
-                          isDarkMode ? "text-gray-300" : "text-gray-700"
+                          isDarkMode ? "text-[#8b98a5]" : "text-gray-700"
                         }`}
                       >
                         If you have any questions about this Privacy Policy or
@@ -5317,7 +5356,7 @@ For any queries, contact your course instructors or the department.`,
                       </p>
                       <div
                         className={`mt-4 p-4 rounded-lg transition-colors duration-300 ${
-                          isDarkMode ? "bg-gray-700" : "bg-gray-100"
+                          isDarkMode ? "bg-[#2f3336]" : "bg-gray-100"
                         }`}
                       >
                         <p
@@ -5335,7 +5374,7 @@ For any queries, contact your course instructors or the department.`,
                         </p>
                         <p
                           className={`mt-2 transition-colors duration-300 ${
-                            isDarkMode ? "text-gray-300" : "text-gray-700"
+                            isDarkMode ? "text-[#8b98a5]" : "text-gray-700"
                           }`}
                         >
                           Organization: BUBT · Intake 51, Section 2 (AI)
@@ -5354,7 +5393,7 @@ For any queries, contact your course instructors or the department.`,
                       </h2>
                       <p
                         className={`leading-relaxed transition-colors duration-300 ${
-                          isDarkMode ? "text-gray-300" : "text-gray-700"
+                          isDarkMode ? "text-[#8b98a5]" : "text-gray-700"
                         }`}
                       >
                         We may update this Privacy Policy from time to time. We
@@ -5387,31 +5426,31 @@ For any queries, contact your course instructors or the department.`,
               <div className="space-y-8 max-w-4xl mx-auto">
                 <div className="text-center">
                   <div className="flex justify-center mb-6">
-                    <div className={`rounded-3xl shadow-xl p-4 transition-colors duration-300 ${isDarkMode ? "bg-gray-800" : "bg-white"}`}>
+                    <div className={`rounded-3xl shadow-xl p-4 transition-colors duration-300 ${isDarkMode ? "bg-[#16181c]" : "bg-white"}`}>
                       <img src="/image.png" alt="BUBT Logo" className="h-16 w-16 object-contain" />
                     </div>
                   </div>
                   <h1 className={`text-3xl sm:text-4xl font-bold mb-4 transition-colors duration-300 ${isDarkMode ? "text-gray-100" : "text-gray-900"}`}>
                     Terms &amp; Conditions
                   </h1>
-                  <p className={`text-sm transition-colors duration-300 ${isDarkMode ? "text-gray-400" : "text-gray-600"}`}>
+                  <p className={`text-sm transition-colors duration-300 ${isDarkMode ? "text-[#71767b]" : "text-gray-600"}`}>
                     Last updated: {new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
                   </p>
                 </div>
 
-                <div className={`rounded-2xl border shadow-sm transition-colors duration-300 ${isDarkMode ? "bg-gray-800/50 border-gray-700" : "bg-white border-gray-200"}`}>
+                <div className={`rounded-2xl border shadow-sm transition-colors duration-300 ${isDarkMode ? "bg-[#16181c]/50 border-[#2f3336]" : "bg-white border-gray-200"}`}>
                   <div className="space-y-8 p-6 sm:p-8">
                     <section>
                       <h2 className={`text-xl font-bold mb-3 ${isDarkMode ? "text-gray-100" : "text-gray-900"}`}>1. Acceptance of Terms</h2>
-                      <p className={`leading-relaxed ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+                      <p className={`leading-relaxed ${isDarkMode ? "text-[#8b98a5]" : "text-gray-700"}`}>
                         By accessing and using Edu51Portal, you accept and agree to be bound by these Terms &amp; Conditions. This platform is exclusively for students, faculty, and staff of BUBT Intake 51, CSE Department. If you do not agree to these terms, please do not use this platform.
                       </p>
                     </section>
 
                     <section>
                       <h2 className={`text-xl font-bold mb-3 ${isDarkMode ? "text-gray-100" : "text-gray-900"}`}>2. Eligibility</h2>
-                      <p className={`leading-relaxed mb-3 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>To use Edu51Portal, you must:</p>
-                      <ul className={`list-disc list-inside space-y-2 ml-4 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+                      <p className={`leading-relaxed mb-3 ${isDarkMode ? "text-[#8b98a5]" : "text-gray-700"}`}>To use Edu51Portal, you must:</p>
+                      <ul className={`list-disc list-inside space-y-2 ml-4 ${isDarkMode ? "text-[#8b98a5]" : "text-gray-700"}`}>
                         <li>Be enrolled as a student in BUBT Intake 51 (CSE Department) or be affiliated faculty/staff</li>
                         <li>Provide accurate registration information including your student ID, section, and major</li>
                         <li>Maintain the confidentiality of your account credentials</li>
@@ -5421,8 +5460,8 @@ For any queries, contact your course instructors or the department.`,
 
                     <section>
                       <h2 className={`text-xl font-bold mb-3 ${isDarkMode ? "text-gray-100" : "text-gray-900"}`}>3. Permitted Use</h2>
-                      <p className={`leading-relaxed mb-3 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>You may use Edu51Portal to:</p>
-                      <ul className={`list-disc list-inside space-y-2 ml-4 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+                      <p className={`leading-relaxed mb-3 ${isDarkMode ? "text-[#8b98a5]" : "text-gray-700"}`}>You may use Edu51Portal to:</p>
+                      <ul className={`list-disc list-inside space-y-2 ml-4 ${isDarkMode ? "text-[#8b98a5]" : "text-gray-700"}`}>
                         <li>Access course materials, lecture notes, and academic resources</li>
                         <li>View and track exam schedules, semester routines, and academic notices</li>
                         <li>Collaborate with classmates through team features and shared resources</li>
@@ -5433,8 +5472,8 @@ For any queries, contact your course instructors or the department.`,
 
                     <section>
                       <h2 className={`text-xl font-bold mb-3 ${isDarkMode ? "text-gray-100" : "text-gray-900"}`}>4. Prohibited Activities</h2>
-                      <p className={`leading-relaxed mb-3 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>You must not:</p>
-                      <ul className={`list-disc list-inside space-y-2 ml-4 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+                      <p className={`leading-relaxed mb-3 ${isDarkMode ? "text-[#8b98a5]" : "text-gray-700"}`}>You must not:</p>
+                      <ul className={`list-disc list-inside space-y-2 ml-4 ${isDarkMode ? "text-[#8b98a5]" : "text-gray-700"}`}>
                         <li>Share account credentials or allow unauthorized access to your account</li>
                         <li>Upload harmful, offensive, or copyrighted content without permission</li>
                         <li>Use the platform for commercial purposes or spam</li>
@@ -5446,43 +5485,43 @@ For any queries, contact your course instructors or the department.`,
 
                     <section>
                       <h2 className={`text-xl font-bold mb-3 ${isDarkMode ? "text-gray-100" : "text-gray-900"}`}>5. Content Ownership</h2>
-                      <p className={`leading-relaxed ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+                      <p className={`leading-relaxed ${isDarkMode ? "text-[#8b98a5]" : "text-gray-700"}`}>
                         Course materials, notices, and resources uploaded by faculty remain the intellectual property of the respective creators and BUBT. Student-uploaded content remains owned by the student but grants Edu51Portal a non-exclusive license to host and display it to authorized users. The Edu51Portal platform, design, and codebase are the property of the developer.
                       </p>
                     </section>
 
                     <section>
                       <h2 className={`text-xl font-bold mb-3 ${isDarkMode ? "text-gray-100" : "text-gray-900"}`}>6. Account Termination</h2>
-                      <p className={`leading-relaxed ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+                      <p className={`leading-relaxed ${isDarkMode ? "text-[#8b98a5]" : "text-gray-700"}`}>
                         We reserve the right to suspend or terminate your account if you violate these terms, engage in misconduct, or if you are no longer affiliated with BUBT Intake 51. You may request account deletion at any time by contacting support.
                       </p>
                     </section>
 
                     <section>
                       <h2 className={`text-xl font-bold mb-3 ${isDarkMode ? "text-gray-100" : "text-gray-900"}`}>7. Disclaimer of Warranties</h2>
-                      <p className={`leading-relaxed ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+                      <p className={`leading-relaxed ${isDarkMode ? "text-[#8b98a5]" : "text-gray-700"}`}>
                         Edu51Portal is provided "as is" for academic use. While we strive for accuracy, we do not guarantee that all course materials, schedules, or notices are error-free. Always verify critical academic information (exam dates, results) through official BUBT channels.
                       </p>
                     </section>
 
                     <section>
                       <h2 className={`text-xl font-bold mb-3 ${isDarkMode ? "text-gray-100" : "text-gray-900"}`}>8. Changes to Terms</h2>
-                      <p className={`leading-relaxed ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+                      <p className={`leading-relaxed ${isDarkMode ? "text-[#8b98a5]" : "text-gray-700"}`}>
                         We may update these Terms &amp; Conditions from time to time. Continued use of the platform after changes constitutes acceptance of the new terms. Significant changes will be announced via the platform's notice board.
                       </p>
                     </section>
 
                     <section>
                       <h2 className={`text-xl font-bold mb-3 ${isDarkMode ? "text-gray-100" : "text-gray-900"}`}>9. Contact</h2>
-                      <p className={`leading-relaxed mb-3 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+                      <p className={`leading-relaxed mb-3 ${isDarkMode ? "text-[#8b98a5]" : "text-gray-700"}`}>
                         For questions about these Terms &amp; Conditions, contact us at:
                       </p>
-                      <div className={`p-4 rounded-lg ${isDarkMode ? "bg-gray-700" : "bg-gray-100"}`}>
-                        <p className={isDarkMode ? "text-gray-300" : "text-gray-700"}>
+                      <div className={`p-4 rounded-lg ${isDarkMode ? "bg-[#2f3336]" : "bg-gray-100"}`}>
+                        <p className={isDarkMode ? "text-[#8b98a5]" : "text-gray-700"}>
                           Email:{" "}
                           <a href="mailto:edu51five@gmail.com" className="text-blue-500 hover:underline">edu51five@gmail.com</a>
                         </p>
-                        <p className={`mt-2 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+                        <p className={`mt-2 ${isDarkMode ? "text-[#8b98a5]" : "text-gray-700"}`}>
                           Organization: BUBT · Intake 51, Section 2 (AI)
                         </p>
                       </div>
@@ -5573,7 +5612,7 @@ For any queries, contact your course instructors or the department.`,
               >
                 {/* Modern Header */}
                 <div
-                  className={`${isDarkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"} shadow-sm border-b`}
+                  className={`${isDarkMode ? "bg-[#16181c] border-[#2f3336]" : "bg-white border-gray-200"} shadow-sm border-b`}
                 >
                   <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
                     <div className="flex flex-col space-y-4 sm:flex-row sm:justify-between sm:items-start sm:space-y-0">
@@ -5582,7 +5621,7 @@ For any queries, contact your course instructors or the department.`,
                           Admin Dashboard
                         </h1>
                         <p
-                          className={`${isDarkMode ? "text-gray-300" : "text-gray-600"} mt-2 text-sm sm:text-base`}
+                          className={`${isDarkMode ? "text-[#8b98a5]" : "text-gray-600"} mt-2 text-sm sm:text-base`}
                         >
                           Manage your educational platform with ease
                         </p>
@@ -5591,7 +5630,7 @@ For any queries, contact your course instructors or the department.`,
                             <div className="w-3 h-3 bg-green-400 rounded-full"></div>
                             <span
                               className={
-                                isDarkMode ? "text-gray-300" : "text-gray-700"
+                                isDarkMode ? "text-[#8b98a5]" : "text-gray-700"
                               }
                             >
                               {courses.length} Courses
@@ -5601,7 +5640,7 @@ For any queries, contact your course instructors or the department.`,
                             <div className="w-3 h-3 bg-blue-400 rounded-full"></div>
                             <span
                               className={
-                                isDarkMode ? "text-gray-300" : "text-gray-700"
+                                isDarkMode ? "text-[#8b98a5]" : "text-gray-700"
                               }
                             >
                               {materials.length} Materials
@@ -5611,7 +5650,7 @@ For any queries, contact your course instructors or the department.`,
                             <div className="w-3 h-3 bg-purple-400 rounded-full"></div>
                             <span
                               className={
-                                isDarkMode ? "text-gray-300" : "text-gray-700"
+                                isDarkMode ? "text-[#8b98a5]" : "text-gray-700"
                               }
                             >
                               {activeNotices.length} Active Notices
@@ -5657,7 +5696,7 @@ For any queries, contact your course instructors or the department.`,
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8">
                   {/* Quick Navigation Card */}
                   <div
-                    className={`${isDarkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-100"} rounded-2xl shadow-sm border p-4 sm:p-6`}
+                    className={`${isDarkMode ? "bg-[#16181c] border-[#2f3336]" : "bg-white border-gray-100"} rounded-2xl shadow-sm border p-4 sm:p-6`}
                   >
                     <div className="flex items-center space-x-3 mb-4">
                       <div
@@ -5690,7 +5729,7 @@ For any queries, contact your course instructors or the department.`,
                           href="#courses-section"
                           className={`group p-4 border rounded-xl transition-all duration-200 ${
                             isDarkMode
-                              ? "border-gray-700 hover:border-blue-500 hover:bg-blue-900/30"
+                              ? "border-[#2f3336] hover:border-blue-500 hover:bg-blue-900/30"
                               : "border-gray-200 hover:border-blue-300 hover:bg-blue-50"
                           }`}
                         >
@@ -5711,7 +5750,7 @@ For any queries, contact your course instructors or the department.`,
                             <span
                               className={`font-medium text-sm sm:text-base ${
                                 isDarkMode
-                                  ? "text-gray-300 group-hover:text-blue-400"
+                                  ? "text-[#8b98a5] group-hover:text-blue-400"
                                   : "text-gray-700 group-hover:text-blue-700"
                               }`}
                             >
@@ -5726,7 +5765,7 @@ For any queries, contact your course instructors or the department.`,
                           href="#materials-section"
                           className={`group p-4 border rounded-xl transition-all duration-200 ${
                             isDarkMode
-                              ? "border-gray-700 hover:border-emerald-500 hover:bg-emerald-900/30"
+                              ? "border-[#2f3336] hover:border-emerald-500 hover:bg-emerald-900/30"
                               : "border-gray-200 hover:border-emerald-300 hover:bg-emerald-50"
                           }`}
                         >
@@ -5747,7 +5786,7 @@ For any queries, contact your course instructors or the department.`,
                             <span
                               className={`font-medium text-sm sm:text-base ${
                                 isDarkMode
-                                  ? "text-gray-300 group-hover:text-emerald-400"
+                                  ? "text-[#8b98a5] group-hover:text-emerald-400"
                                   : "text-gray-700 group-hover:text-emerald-700"
                               }`}
                             >
@@ -5760,7 +5799,7 @@ For any queries, contact your course instructors or the department.`,
                         href="#notices-section"
                         className={`group p-4 border rounded-xl transition-all duration-200 ${
                           isDarkMode
-                            ? "border-gray-700 hover:border-purple-500 hover:bg-purple-900/30"
+                            ? "border-[#2f3336] hover:border-purple-500 hover:bg-purple-900/30"
                             : "border-gray-200 hover:border-purple-300 hover:bg-purple-50"
                         }`}
                       >
@@ -5781,7 +5820,7 @@ For any queries, contact your course instructors or the department.`,
                           <span
                             className={`font-medium text-sm sm:text-base ${
                               isDarkMode
-                                ? "text-gray-300 group-hover:text-purple-400"
+                                ? "text-[#8b98a5] group-hover:text-purple-400"
                                 : "text-gray-700 group-hover:text-purple-700"
                             }`}
                           >
@@ -5860,7 +5899,7 @@ For any queries, contact your course instructors or the department.`,
                           📢 Broadcast Push Notification
                         </h3>
                         <p
-                          className={`text-xs ${isDarkMode ? "text-gray-400" : "text-gray-600"}`}
+                          className={`text-xs ${isDarkMode ? "text-[#71767b]" : "text-gray-600"}`}
                         >
                           Send instant notifications to all subscribed users
                         </p>
@@ -5887,7 +5926,7 @@ For any queries, contact your course instructors or the department.`,
                             placeholder="e.g., New Study Material Uploaded"
                             className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
                               isDarkMode
-                                ? "bg-gray-800 border-gray-600 text-gray-100 placeholder-gray-400"
+                                ? "bg-[#16181c] border-gray-600 text-gray-100 placeholder-gray-400"
                                 : "bg-white border-gray-200 text-gray-900 placeholder-gray-500"
                             }`}
                           />
@@ -5911,7 +5950,7 @@ For any queries, contact your course instructors or the department.`,
                             placeholder="/course/CSE-319 or /"
                             className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
                               isDarkMode
-                                ? "bg-gray-800 border-gray-600 text-gray-100 placeholder-gray-400"
+                                ? "bg-[#16181c] border-gray-600 text-gray-100 placeholder-gray-400"
                                 : "bg-white border-gray-200 text-gray-900 placeholder-gray-500"
                             }`}
                           />
@@ -5936,7 +5975,7 @@ For any queries, contact your course instructors or the department.`,
                           rows={3}
                           className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
                             isDarkMode
-                              ? "bg-gray-800 border-gray-600 text-gray-100 placeholder-gray-400"
+                              ? "bg-[#16181c] border-gray-600 text-gray-100 placeholder-gray-400"
                               : "bg-white border-gray-200 text-gray-900 placeholder-gray-500"
                           }`}
                         />
@@ -5944,7 +5983,7 @@ For any queries, contact your course instructors or the department.`,
 
                       <div className="flex items-center justify-between pt-2">
                         <p
-                          className={`text-xs ${isDarkMode ? "text-gray-400" : "text-gray-600"}`}
+                          className={`text-xs ${isDarkMode ? "text-[#71767b]" : "text-gray-600"}`}
                         >
                           💡 Requires Edge Function with VAPID keys configured
                         </p>
@@ -5960,7 +5999,7 @@ For any queries, contact your course instructors or the department.`,
                             !broadcastPush.title ||
                             !broadcastPush.body
                               ? isDarkMode
-                                ? "bg-gray-700 text-gray-400 cursor-not-allowed"
+                                ? "bg-[#2f3336] text-[#71767b] cursor-not-allowed"
                                 : "bg-gray-200 text-gray-500 cursor-not-allowed"
                               : isDarkMode
                                 ? "bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg"
@@ -5982,7 +6021,7 @@ For any queries, contact your course instructors or the department.`,
                       id="courses-section"
                       className={`rounded-3xl shadow-xl border backdrop-blur-sm p-4 sm:p-6 md:p-8 lg:p-10 responsive-container ${
                         isDarkMode
-                          ? "bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 border-gray-700"
+                          ? "bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 border-[#2f3336]"
                           : "bg-gradient-to-br from-white via-gray-50 to-blue-50 border-white/20"
                       }`}
                     >
@@ -6028,7 +6067,7 @@ For any queries, contact your course instructors or the department.`,
                                     {course.code}
                                   </p>
                                   <p
-                                    className={`responsive-text-base mt-3 select-text leading-relaxed ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}
+                                    className={`responsive-text-base mt-3 select-text leading-relaxed ${isDarkMode ? "text-[#8b98a5]" : "text-gray-700"}`}
                                   >
                                     {course.description}
                                   </p>
@@ -6048,7 +6087,7 @@ For any queries, contact your course instructors or the department.`,
                                       </span>
                                     </div>
                                     <span
-                                      className={`font-semibold ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}
+                                      className={`font-semibold ${isDarkMode ? "text-[#8b98a5]" : "text-gray-700"}`}
                                     >
                                       materials
                                     </span>
@@ -6079,20 +6118,20 @@ For any queries, contact your course instructors or the department.`,
                         })}
                         {courses.length === 0 && (
                           <div
-                            className={`text-center py-12 rounded-xl ${isDarkMode ? "bg-gray-800" : ""}`}
+                            className={`text-center py-12 rounded-xl ${isDarkMode ? "bg-[#16181c]" : ""}`}
                           >
                             <div
-                              className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 ${isDarkMode ? "bg-gray-700" : "bg-gray-100"}`}
+                              className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 ${isDarkMode ? "bg-[#2f3336]" : "bg-gray-100"}`}
                             >
                               <span className="text-3xl">📚</span>
                             </div>
                             <p
-                              className={`text-lg font-medium ${isDarkMode ? "text-gray-300" : "text-gray-500"}`}
+                              className={`text-lg font-medium ${isDarkMode ? "text-[#8b98a5]" : "text-gray-500"}`}
                             >
                               No courses yet
                             </p>
                             <p
-                              className={`text-sm mt-1 ${isDarkMode ? "text-gray-400" : "text-gray-400"}`}
+                              className={`text-sm mt-1 ${isDarkMode ? "text-[#71767b]" : "text-[#71767b]"}`}
                             >
                               Create your first course to get started
                             </p>
@@ -6108,7 +6147,7 @@ For any queries, contact your course instructors or the department.`,
                       id="materials-section"
                       className={`rounded-2xl p-8 shadow-xl border ${
                         isDarkMode
-                          ? "bg-gradient-to-br from-gray-900 to-gray-800 border-gray-700"
+                          ? "bg-gradient-to-br from-gray-900 to-gray-800 border-[#2f3336]"
                           : "bg-gradient-to-br from-white to-gray-50 border-gray-100"
                       }`}
                     >
@@ -6125,7 +6164,7 @@ For any queries, contact your course instructors or the department.`,
                             </h3>
                             <p
                               className={
-                                isDarkMode ? "text-gray-400" : "text-gray-600"
+                                isDarkMode ? "text-[#71767b]" : "text-gray-600"
                               }
                             >
                               Manage all uploaded materials ({materials.length}{" "}
@@ -6136,7 +6175,7 @@ For any queries, contact your course instructors or the department.`,
                         <div
                           className={`text-sm px-4 py-2 rounded-full ${
                             isDarkMode
-                              ? "text-gray-400 bg-gray-700"
+                              ? "text-[#71767b] bg-[#2f3336]"
                               : "text-gray-500 bg-gray-100"
                           }`}
                         >
@@ -6152,14 +6191,14 @@ For any queries, contact your course instructors or the department.`,
                             key={material.id}
                             className={`rounded-xl border p-6 hover:shadow-lg transition-all duration-200 ${
                               isDarkMode
-                                ? "bg-gray-800 border-gray-700 hover:border-blue-500"
+                                ? "bg-[#16181c] border-[#2f3336] hover:border-blue-500"
                                 : "bg-white border-gray-200 hover:border-blue-200"
                             }`}
                           >
                             <div className="flex items-start justify-between">
                               <div className="flex-1 flex items-start space-x-4">
                                 <div
-                                  className={`p-3 rounded-lg ${isDarkMode ? "bg-gray-700" : "bg-gray-50"}`}
+                                  className={`p-3 rounded-lg ${isDarkMode ? "bg-[#2f3336]" : "bg-gray-50"}`}
                                 >
                                   {(() => {
                                     if (material.type.includes("pdf"))
@@ -6191,7 +6230,7 @@ For any queries, contact your course instructors or the department.`,
                                       );
                                     return (
                                       <FileText
-                                        className={`h-5 w-5 ${isDarkMode ? "text-gray-400" : "text-gray-600"}`}
+                                        className={`h-5 w-5 ${isDarkMode ? "text-[#71767b]" : "text-gray-600"}`}
                                       />
                                     );
                                   })()}
@@ -6203,7 +6242,7 @@ For any queries, contact your course instructors or the department.`,
                                     {material.title}
                                   </h4>
                                   <div
-                                    className={`flex items-center space-x-4 text-sm mb-2 ${isDarkMode ? "text-gray-400" : "text-gray-600"}`}
+                                    className={`flex items-center space-x-4 text-sm mb-2 ${isDarkMode ? "text-[#71767b]" : "text-gray-600"}`}
                                   >
                                     <span className="flex items-center">
                                       <BookOpen className="h-4 w-4 mr-1" />
@@ -6224,7 +6263,7 @@ For any queries, contact your course instructors or the department.`,
                                     </span>
                                     {material.size && (
                                       <span
-                                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${isDarkMode ? "bg-gray-700 text-gray-300" : "bg-gray-100 text-gray-800"}`}
+                                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${isDarkMode ? "bg-[#2f3336] text-[#8b98a5]" : "bg-gray-100 text-gray-800"}`}
                                       >
                                         {material.size}
                                       </span>
@@ -6281,12 +6320,12 @@ For any queries, contact your course instructors or the department.`,
                               No Materials Found
                             </h3>
                             <p
-                              className={`${isDarkMode ? "text-gray-400" : "text-gray-600"} text-lg mb-4`}
+                              className={`${isDarkMode ? "text-[#71767b]" : "text-gray-600"} text-lg mb-4`}
                             >
                               Upload some materials to see them here
                             </p>
                             <div
-                              className={`${isDarkMode ? "text-gray-400" : "text-gray-500"} text-sm`}
+                              className={`${isDarkMode ? "text-[#71767b]" : "text-gray-500"} text-sm`}
                             >
                               Materials will appear as beautiful cards with file
                               type indicators
@@ -6313,7 +6352,7 @@ For any queries, contact your course instructors or the department.`,
                   <div
                     className={`relative w-full max-w-[92vw] sm:max-w-md md:max-w-lg max-h-[88vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden transition-colors duration-300 ${
                       isDarkMode
-                        ? "bg-gray-800 border border-gray-700"
+                        ? "bg-[#16181c] border border-[#2f3336]"
                         : "bg-white border border-gray-200"
                     }`}
                   >
@@ -6321,7 +6360,7 @@ For any queries, contact your course instructors or the department.`,
                     <div
                       className={`flex-shrink-0 p-4 sm:p-5 border-b transition-colors duration-300 ${
                         isDarkMode
-                          ? "bg-gray-800/95 border-gray-700"
+                          ? "bg-[#16181c]/95 border-[#2f3336]"
                           : "bg-white/95 border-gray-200"
                       }`}
                     >
@@ -6337,8 +6376,8 @@ For any queries, contact your course instructors or the department.`,
                           onClick={() => setShowCreateCourse(false)}
                           className={`p-2 rounded-xl transition-all duration-300 ${
                             isDarkMode
-                              ? "text-gray-400 hover:text-gray-200 hover:bg-gray-700"
-                              : "text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                              ? "text-[#71767b] hover:text-gray-200 hover:bg-[#2f3336]"
+                              : "text-[#71767b] hover:text-gray-600 hover:bg-gray-100"
                           }`}
                         >
                           <X className="h-5 w-5 sm:h-6 sm:w-6" />
@@ -6361,7 +6400,7 @@ For any queries, contact your course instructors or the department.`,
                           }
                           className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                             isDarkMode
-                              ? "bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400"
+                              ? "bg-[#2f3336] border-gray-600 text-gray-100 placeholder-gray-400"
                               : "bg-white border-gray-300 text-gray-900"
                           }`}
                           required
@@ -6375,7 +6414,7 @@ For any queries, contact your course instructors or the department.`,
                           }
                           className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                             isDarkMode
-                              ? "bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400"
+                              ? "bg-[#2f3336] border-gray-600 text-gray-100 placeholder-gray-400"
                               : "bg-white border-gray-300 text-gray-900"
                           }`}
                           required
@@ -6391,7 +6430,7 @@ For any queries, contact your course instructors or the department.`,
                           }
                           className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                             isDarkMode
-                              ? "bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400"
+                              ? "bg-[#2f3336] border-gray-600 text-gray-100 placeholder-gray-400"
                               : "bg-white border-gray-300 text-gray-900"
                           }`}
                           rows={3}
@@ -6402,7 +6441,7 @@ For any queries, contact your course instructors or the department.`,
                       <div
                         className={`flex-shrink-0 p-4 sm:p-5 border-t transition-colors duration-300 ${
                           isDarkMode
-                            ? "bg-gray-800/95 border-gray-700"
+                            ? "bg-[#16181c]/95 border-[#2f3336]"
                             : "bg-white/95 border-gray-200"
                         }`}
                       >
@@ -6412,7 +6451,7 @@ For any queries, contact your course instructors or the department.`,
                             onClick={() => setShowCreateCourse(false)}
                             className={`flex-1 px-4 py-2.5 border rounded-lg font-medium text-sm transition-colors ${
                               isDarkMode
-                                ? "border-gray-600 text-gray-200 hover:bg-gray-700"
+                                ? "border-gray-600 text-gray-200 hover:bg-[#2f3336]"
                                 : "border-gray-300 text-gray-700 hover:bg-gray-50"
                             }`}
                           >
@@ -6446,7 +6485,7 @@ For any queries, contact your course instructors or the department.`,
                   <div
                     className={`relative w-full max-w-[92vw] sm:max-w-md md:max-w-lg max-h-[88vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden transition-colors duration-300 ${
                       isDarkMode
-                        ? "bg-gray-800 border border-gray-700"
+                        ? "bg-[#16181c] border border-[#2f3336]"
                         : "bg-white border border-gray-200"
                     }`}
                   >
@@ -6454,7 +6493,7 @@ For any queries, contact your course instructors or the department.`,
                     <div
                       className={`flex-shrink-0 p-4 sm:p-5 border-b transition-colors duration-300 ${
                         isDarkMode
-                          ? "bg-gray-800/95 border-gray-700"
+                          ? "bg-[#16181c]/95 border-[#2f3336]"
                           : "bg-white/95 border-gray-200"
                       }`}
                     >
@@ -6470,8 +6509,8 @@ For any queries, contact your course instructors or the department.`,
                           onClick={() => setShowUploadFile(false)}
                           className={`p-2 rounded-xl transition-all duration-300 ${
                             isDarkMode
-                              ? "text-gray-400 hover:text-gray-200 hover:bg-gray-700"
-                              : "text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                              ? "text-[#71767b] hover:text-gray-200 hover:bg-[#2f3336]"
+                              : "text-[#71767b] hover:text-gray-600 hover:bg-gray-100"
                           }`}
                         >
                           <X className="h-5 w-5 sm:h-6 sm:w-6" />
@@ -6495,7 +6534,7 @@ For any queries, contact your course instructors or the department.`,
                           }
                           className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                             isDarkMode
-                              ? "bg-gray-700 border-gray-600 text-gray-100"
+                              ? "bg-[#2f3336] border-gray-600 text-gray-100"
                               : "bg-white border-gray-300 text-gray-900"
                           }`}
                           required
@@ -6519,7 +6558,7 @@ For any queries, contact your course instructors or the department.`,
                           }
                           className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                             isDarkMode
-                              ? "bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400"
+                              ? "bg-[#2f3336] border-gray-600 text-gray-100 placeholder-gray-400"
                               : "bg-white border-gray-300 text-gray-900"
                           }`}
                           required
@@ -6534,7 +6573,7 @@ For any queries, contact your course instructors or the department.`,
                           }
                           className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                             isDarkMode
-                              ? "bg-gray-700 border-gray-600 text-gray-100"
+                              ? "bg-[#2f3336] border-gray-600 text-gray-100"
                               : "bg-white border-gray-300 text-gray-900"
                           }`}
                         >
@@ -6556,7 +6595,7 @@ For any queries, contact your course instructors or the department.`,
                           }
                           className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                             isDarkMode
-                              ? "bg-gray-700 border-gray-600 text-gray-100"
+                              ? "bg-[#2f3336] border-gray-600 text-gray-100"
                               : "bg-white border-gray-300 text-gray-900"
                           }`}
                           required
@@ -6574,7 +6613,7 @@ For any queries, contact your course instructors or the department.`,
                           }}
                           className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                             isDarkMode
-                              ? "bg-gray-700 border-gray-600 text-gray-100"
+                              ? "bg-[#2f3336] border-gray-600 text-gray-100"
                               : "bg-white border-gray-300 text-gray-900"
                           }`}
                           accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.mp4,.avi"
@@ -6591,7 +6630,7 @@ For any queries, contact your course instructors or the department.`,
                           }
                           className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                             isDarkMode
-                              ? "bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400"
+                              ? "bg-[#2f3336] border-gray-600 text-gray-100 placeholder-gray-400"
                               : "bg-white border-gray-300 text-gray-900"
                           }`}
                         />
@@ -6606,7 +6645,7 @@ For any queries, contact your course instructors or the department.`,
                           }
                           className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                             isDarkMode
-                              ? "bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400"
+                              ? "bg-[#2f3336] border-gray-600 text-gray-100 placeholder-gray-400"
                               : "bg-white border-gray-300 text-gray-900"
                           }`}
                           rows={3}
@@ -6617,7 +6656,7 @@ For any queries, contact your course instructors or the department.`,
                       <div
                         className={`flex-shrink-0 p-4 sm:p-5 border-t transition-colors duration-300 ${
                           isDarkMode
-                            ? "bg-gray-800/95 border-gray-700"
+                            ? "bg-[#16181c]/95 border-[#2f3336]"
                             : "bg-white/95 border-gray-200"
                         }`}
                       >
@@ -6627,7 +6666,7 @@ For any queries, contact your course instructors or the department.`,
                             onClick={() => setShowUploadFile(false)}
                             className={`flex-1 px-4 py-2.5 border rounded-lg font-medium text-sm transition-colors ${
                               isDarkMode
-                                ? "border-gray-600 text-gray-200 hover:bg-gray-700"
+                                ? "border-gray-600 text-gray-200 hover:bg-[#2f3336]"
                                 : "border-gray-300 text-gray-700 hover:bg-gray-50"
                             }`}
                           >
@@ -6661,7 +6700,7 @@ For any queries, contact your course instructors or the department.`,
                   <div
                     className={`relative w-full max-w-[92vw] sm:max-w-xl md:max-w-2xl lg:max-w-3xl max-h-[88vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden transition-colors duration-300 ${
                       isDarkMode
-                        ? "bg-gray-800 border border-gray-700"
+                        ? "bg-[#16181c] border border-[#2f3336]"
                         : "bg-white border border-gray-200"
                     }`}
                   >
@@ -6669,7 +6708,7 @@ For any queries, contact your course instructors or the department.`,
                     <div
                       className={`flex-shrink-0 p-4 sm:p-5 lg:p-6 border-b transition-colors duration-300 ${
                         isDarkMode
-                          ? "bg-gray-800/95 border-gray-700"
+                          ? "bg-[#16181c]/95 border-[#2f3336]"
                           : "bg-white/95 border-gray-200"
                       }`}
                     >
@@ -6682,7 +6721,7 @@ For any queries, contact your course instructors or the department.`,
                             <span>Create Smart Notice</span>
                           </h2>
                           <p
-                            className={`text-xs sm:text-sm mt-1 ${isDarkMode ? "text-gray-400" : "text-gray-600"}`}
+                            className={`text-xs sm:text-sm mt-1 ${isDarkMode ? "text-[#71767b]" : "text-gray-600"}`}
                           >
                             Choose a category and let the system help you create
                             targeted notices
@@ -6707,8 +6746,8 @@ For any queries, contact your course instructors or the department.`,
                           }}
                           className={`flex-shrink-0 p-2 rounded-xl transition-all duration-300 ${
                             isDarkMode
-                              ? "text-gray-400 hover:text-gray-200 hover:bg-gray-700"
-                              : "text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                              ? "text-[#71767b] hover:text-gray-200 hover:bg-[#2f3336]"
+                              : "text-[#71767b] hover:text-gray-600 hover:bg-gray-100"
                           }`}
                         >
                           <X className="h-5 w-5 sm:h-6 sm:w-6" />
@@ -6780,10 +6819,10 @@ For any queries, contact your course instructors or the department.`,
                               className={`p-3 rounded-lg border-2 transition-all duration-200 text-left ${
                                 newNotice.category === category.value
                                   ? isDarkMode
-                                    ? "border-blue-400 bg-blue-900/50 shadow-md"
+                                    ? "border-[#1e9df1] bg-blue-900/50 shadow-md"
                                     : "border-blue-500 bg-blue-50 shadow-md"
                                   : isDarkMode
-                                    ? "border-gray-600 hover:border-gray-500 hover:bg-gray-700/50"
+                                    ? "border-gray-600 hover:border-gray-500 hover:bg-[#2f3336]/50"
                                     : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
                               }`}
                             >
@@ -6796,7 +6835,7 @@ For any queries, contact your course instructors or the department.`,
                                 </span>
                               </div>
                               <p
-                                className={`text-xs ${isDarkMode ? "text-gray-400" : "text-gray-600"}`}
+                                className={`text-xs ${isDarkMode ? "text-[#71767b]" : "text-gray-600"}`}
                               >
                                 {category.desc}
                               </p>
@@ -6841,7 +6880,7 @@ For any queries, contact your course instructors or the department.`,
                                     title: e.target.value,
                                   })
                                 }
-                                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${isDarkMode ? "bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400" : "bg-white border-gray-300 text-gray-900 focus:border-blue-500"}`}
+                                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${isDarkMode ? "bg-[#2f3336] border-gray-600 text-gray-100 placeholder-gray-400" : "bg-white border-gray-300 text-gray-900 focus:border-blue-500"}`}
                                 placeholder={
                                   newNotice.category === "exam"
                                     ? "Mid-term Exam Schedule Update"
@@ -6901,10 +6940,10 @@ For any queries, contact your course instructors or the department.`,
                                     className={`p-2 rounded-lg border text-sm transition-all ${
                                       newNotice.priority === priority.value
                                         ? isDarkMode
-                                          ? "border-blue-400 bg-blue-900/50"
+                                          ? "border-[#1e9df1] bg-blue-900/50"
                                           : "border-blue-500 bg-blue-50"
                                         : isDarkMode
-                                          ? "border-gray-600 hover:border-gray-500 hover:bg-gray-700/50"
+                                          ? "border-gray-600 hover:border-gray-500 hover:bg-[#2f3336]/50"
                                           : "border-gray-200 hover:border-gray-300"
                                     }`}
                                   >
@@ -6934,7 +6973,7 @@ For any queries, contact your course instructors or the department.`,
                                     type: e.target.value as any,
                                   })
                                 }
-                                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${isDarkMode ? "bg-gray-700 border-gray-600 text-gray-100" : "bg-white border-gray-300 text-gray-900 focus:border-blue-500"}`}
+                                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${isDarkMode ? "bg-[#2f3336] border-gray-600 text-gray-100" : "bg-white border-gray-300 text-gray-900 focus:border-blue-500"}`}
                               >
                                 <option value="info">🔵 Info (Blue)</option>
                                 <option value="success">
@@ -6977,7 +7016,7 @@ For any queries, contact your course instructors or the department.`,
                                               ? "border-orange-400 bg-orange-900/50 text-gray-100"
                                               : "border-orange-500 bg-orange-50"
                                             : isDarkMode
-                                              ? "border-gray-600 hover:border-gray-500 hover:bg-gray-700/50 text-gray-200"
+                                              ? "border-gray-600 hover:border-gray-500 hover:bg-[#2f3336]/50 text-gray-200"
                                               : "border-gray-200 hover:border-gray-300"
                                         }`}
                                       >
@@ -6995,7 +7034,7 @@ For any queries, contact your course instructors or the department.`,
                                       Routine Attachment <span className="opacity-60 font-normal">(image or PDF)</span>
                                     </label>
                                     {newNotice.attachment_url && !routineFile ? (
-                                      <div className={`flex items-center justify-between gap-2 p-2.5 rounded-lg border ${isDarkMode ? "border-gray-600 bg-gray-700/40" : "border-gray-200 bg-gray-50"}`}>
+                                      <div className={`flex items-center justify-between gap-2 p-2.5 rounded-lg border ${isDarkMode ? "border-gray-600 bg-[#2f3336]/40" : "border-gray-200 bg-gray-50"}`}>
                                         <a href={newNotice.attachment_url} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-500 hover:underline truncate">
                                           {newNotice.attachment_type === "pdf" ? "📄 Current routine (PDF)" : "🖼️ Current routine (image)"}
                                         </a>
@@ -7021,7 +7060,7 @@ For any queries, contact your course instructors or the department.`,
                                         </button>
                                       </div>
                                     ) : (
-                                      <label className={`flex items-center justify-center gap-2 p-3 rounded-lg border-2 border-dashed cursor-pointer transition-all ${isDarkMode ? "border-gray-600 hover:border-orange-500 text-gray-300" : "border-gray-300 hover:border-orange-400 text-gray-600"}`}>
+                                      <label className={`flex items-center justify-center gap-2 p-3 rounded-lg border-2 border-dashed cursor-pointer transition-all ${isDarkMode ? "border-gray-600 hover:border-orange-500 text-[#8b98a5]" : "border-gray-300 hover:border-orange-400 text-gray-600"}`}>
                                         <Upload className="w-4 h-4" />
                                         <span className="text-sm">Upload routine image or PDF</span>
                                         <input
@@ -7035,7 +7074,7 @@ For any queries, contact your course instructors or the department.`,
                                         />
                                       </label>
                                     )}
-                                    <p className={`mt-1 text-[11px] ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>
+                                    <p className={`mt-1 text-[11px] ${isDarkMode ? "text-gray-500" : "text-[#71767b]"}`}>
                                       Students will see this attachment in the notice. You can also add details in the message below.
                                     </p>
                                   </div>
@@ -7060,14 +7099,14 @@ For any queries, contact your course instructors or the department.`,
                                       event_date: e.target.value,
                                     })
                                   }
-                                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${isDarkMode ? "bg-gray-700 border-gray-600 text-gray-100" : "bg-white border-gray-300 text-gray-900 focus:border-blue-500"}`}
+                                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${isDarkMode ? "bg-[#2f3336] border-gray-600 text-gray-100" : "bg-white border-gray-300 text-gray-900 focus:border-blue-500"}`}
                                 />
                               </div>
                             )}
 
                             {/* Active toggle */}
                             <div
-                              className={`flex items-center p-3 rounded-lg ${isDarkMode ? "bg-gray-700/50" : "bg-gray-50"}`}
+                              className={`flex items-center p-3 rounded-lg ${isDarkMode ? "bg-[#2f3336]/50" : "bg-gray-50"}`}
                             >
                               <input
                                 type="checkbox"
@@ -7126,7 +7165,7 @@ For any queries, contact your course instructors or the department.`,
                                 content: e.target.value,
                               })
                             }
-                            className={`w-full px-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${isDarkMode ? "bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400" : "bg-white border-gray-300 text-gray-900 focus:border-blue-500"}`}
+                            className={`w-full px-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${isDarkMode ? "bg-[#2f3336] border-gray-600 text-gray-100 placeholder-gray-400" : "bg-white border-gray-300 text-gray-900 focus:border-blue-500"}`}
                             rows={6}
                             placeholder={
                               newNotice.category === "exam" &&
@@ -7141,7 +7180,7 @@ For any queries, contact your course instructors or the department.`,
                           />
                           <div className="flex justify-between items-center mt-2">
                             <span
-                              className={`text-xs ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}
+                              className={`text-xs ${isDarkMode ? "text-[#71767b]" : "text-gray-500"}`}
                             >
                               {newNotice.content.length} characters
                             </span>
@@ -7166,7 +7205,7 @@ For any queries, contact your course instructors or the department.`,
                     <div
                       className={`flex-shrink-0 p-4 sm:p-5 lg:p-6 border-t transition-colors duration-300 ${
                         isDarkMode
-                          ? "bg-gray-800/95 border-gray-700"
+                          ? "bg-[#16181c]/95 border-[#2f3336]"
                           : "bg-white/95 border-gray-200"
                       }`}
                     >
@@ -7192,7 +7231,7 @@ For any queries, contact your course instructors or the department.`,
                           }}
                           className={`px-4 py-2.5 border rounded-lg font-medium text-sm transition-colors ${
                             isDarkMode
-                              ? "border-gray-600 text-gray-200 hover:bg-gray-700"
+                              ? "border-gray-600 text-gray-200 hover:bg-[#2f3336]"
                               : "border-gray-300 text-gray-700 hover:bg-gray-50"
                           }`}
                         >
@@ -7240,7 +7279,7 @@ For any queries, contact your course instructors or the department.`,
                 <div className="grid place-items-center h-dvh w-full px-4">
                   <div
                     className={`relative z-[120] w-full mx-auto max-w-[92vw] sm:max-w-xl md:max-w-2xl lg:max-w-3xl max-h-[88dvh] rounded-2xl shadow-2xl flex flex-col overflow-hidden ${
-                      isDarkMode ? "bg-slate-900 border border-slate-800" : "bg-white border border-slate-200"
+                      isDarkMode ? "bg-[#17181c] border border-[#2f3336]" : "bg-white border border-slate-200"
                     }`}
                   >
                     {/* Thin top accent line based on notice type */}
@@ -7252,7 +7291,7 @@ For any queries, contact your course instructors or the department.`,
                     }`} />
 
                     {/* Header */}
-                    <div className={`flex-shrink-0 px-5 py-4 border-b ${isDarkMode ? "border-slate-800" : "border-slate-100"}`}>
+                    <div className={`flex-shrink-0 px-5 py-4 border-b ${isDarkMode ? "border-[#2f3336]" : "border-slate-100"}`}>
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0 flex-1">
                           {/* Meta row */}
@@ -7278,7 +7317,7 @@ For any queries, contact your course instructors or the department.`,
                         <button
                           onClick={closeNoticeModal}
                           className={`flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full transition-colors ${
-                            isDarkMode ? "text-slate-400 hover:bg-slate-800 hover:text-white" : "text-slate-400 hover:bg-slate-100 hover:text-slate-900"
+                            isDarkMode ? "text-slate-400 hover:bg-[#16181c] hover:text-white" : "text-slate-400 hover:bg-slate-100 hover:text-slate-900"
                           }`}
                         >
                           <X className="h-4 w-4" />
@@ -7311,10 +7350,10 @@ For any queries, contact your course instructors or the department.`,
                               <img
                                 src={selectedNotice.attachment_url}
                                 alt="Exam routine"
-                                className="w-full rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:opacity-95 transition-opacity"
+                                className="w-full rounded-xl border border-gray-200 dark:border-[#2f3336] shadow-sm hover:opacity-95 transition-opacity"
                                 loading="lazy"
                               />
-                              <p className={`mt-1 text-[11px] text-center ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
+                              <p className={`mt-1 text-[11px] text-center ${isDarkMode ? "text-[#71767b]" : "text-gray-500"}`}>
                                 Tap the image to open full size
                               </p>
                             </a>
@@ -7365,7 +7404,7 @@ For any queries, contact your course instructors or the department.`,
 
                             return (
                               <div
-                                className={`text-sm leading-relaxed overflow-x-auto [&_ul]:list-disc [&_ul]:pl-5 [&_li]:mb-1 [&_table]:w-full [&_table]:border-collapse ${isDarkMode ? "text-slate-300" : "text-slate-700"}`}
+                                className={`text-sm leading-relaxed overflow-x-auto [&_ul]:list-disc [&_ul]:pl-5 [&_li]:mb-1 [&_table]:w-full [&_table]:border-collapse ${isDarkMode ? "text-[#8b98a5]" : "text-slate-700"}`}
                                 dangerouslySetInnerHTML={{
                                   __html: styledContent,
                                 }}
@@ -7588,13 +7627,13 @@ For any queries, contact your course instructors or the department.`,
                               <div>
                                 {textContent ? (
                                   <p
-                                    className={`leading-relaxed whitespace-pre-wrap mb-4 select-text transition-colors duration-300 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}
+                                    className={`leading-relaxed whitespace-pre-wrap mb-4 select-text transition-colors duration-300 ${isDarkMode ? "text-[#8b98a5]" : "text-gray-700"}`}
                                   >
                                     {textContent}
                                   </p>
                                 ) : null}
                                 <div
-                                  className={`rounded-xl p-4 text-center transition-colors duration-300 ${isDarkMode ? "bg-gray-700/50" : "bg-gray-50"}`}
+                                  className={`rounded-xl p-4 text-center transition-colors duration-300 ${isDarkMode ? "bg-[#2f3336]/50" : "bg-gray-50"}`}
                                 >
                                   <h4
                                     className={`font-semibold mb-3 transition-colors duration-300 ${isDarkMode ? "text-gray-100" : "text-gray-900"}`}
@@ -7603,7 +7642,7 @@ For any queries, contact your course instructors or the department.`,
                                     Exam Routine (PDF)
                                   </h4>
                                   <p
-                                    className={`text-sm mb-3 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}
+                                    className={`text-sm mb-3 ${isDarkMode ? "text-[#8b98a5]" : "text-gray-600"}`}
                                   >
                                     A PDF version of the routine is available.
                                     Download it below.
@@ -7627,7 +7666,7 @@ For any queries, contact your course instructors or the department.`,
                                   </div>
                                 </div>
                                 <div
-                                  className={`mt-4 rounded-lg p-4 ${isDarkMode ? "bg-gray-800/60 border border-gray-700" : "bg-white border border-gray-100"} text-sm`}
+                                  className={`mt-4 rounded-lg p-4 ${isDarkMode ? "bg-[#16181c]/60 border border-[#2f3336]" : "bg-white border border-gray-100"} text-sm`}
                                 >
                                   <h4
                                     className={`font-semibold mb-2 ${isDarkMode ? "text-gray-100" : "text-gray-900"}`}
@@ -7682,12 +7721,12 @@ For any queries, contact your course instructors or the department.`,
                             return (
                               <div>
                                 <p
-                                  className={`leading-relaxed whitespace-pre-wrap mb-6 select-text transition-colors duration-300 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}
+                                  className={`leading-relaxed whitespace-pre-wrap mb-6 select-text transition-colors duration-300 ${isDarkMode ? "text-[#8b98a5]" : "text-gray-700"}`}
                                 >
                                   {textContent}
                                 </p>
                                 <div
-                                  className={`rounded-xl p-4 text-center transition-colors duration-300 ${isDarkMode ? "bg-gray-700/50" : "bg-gray-50"}`}
+                                  className={`rounded-xl p-4 text-center transition-colors duration-300 ${isDarkMode ? "bg-[#2f3336]/50" : "bg-gray-50"}`}
                                 >
                                   <h4
                                     className={`font-semibold mb-3 transition-colors duration-300 ${isDarkMode ? "text-gray-100" : "text-gray-900"}`}
@@ -7696,7 +7735,7 @@ For any queries, contact your course instructors or the department.`,
                                     Routine
                                   </h4>
                                   <div
-                                    className="w-full bg-gray-200 dark:bg-gray-800 rounded-lg overflow-hidden"
+                                    className="w-full bg-gray-200 dark:bg-[#16181c] rounded-lg overflow-hidden"
                                     style={{ aspectRatio: "4/3" }}
                                   >
                                     <img
@@ -7706,13 +7745,13 @@ For any queries, contact your course instructors or the department.`,
                                     />
                                   </div>
                                   <p
-                                    className={`text-sm mt-2 transition-colors duration-300 ${isDarkMode ? "text-gray-400" : "text-gray-600"}`}
+                                    className={`text-sm mt-2 transition-colors duration-300 ${isDarkMode ? "text-[#71767b]" : "text-gray-600"}`}
                                   >
                                     Click on the image to view in full size
                                   </p>
                                 </div>
                                 <div
-                                  className={`mt-4 rounded-lg p-4 ${isDarkMode ? "bg-gray-800/60 border border-gray-700" : "bg-white border border-gray-100"} text-sm`}
+                                  className={`mt-4 rounded-lg p-4 ${isDarkMode ? "bg-[#16181c]/60 border border-[#2f3336]" : "bg-white border border-gray-100"} text-sm`}
                                 >
                                   <h4
                                     className={`font-semibold mb-2 ${isDarkMode ? "text-gray-100" : "text-gray-900"}`}
@@ -7753,7 +7792,7 @@ For any queries, contact your course instructors or the department.`,
                             return (
                               <div>
                                 <div
-                                  className={`rounded-lg p-4 shadow-sm border ${isDarkMode ? "bg-gray-800/80 border-gray-700" : "bg-white border-gray-100"}`}
+                                  className={`rounded-lg p-4 shadow-sm border ${isDarkMode ? "bg-[#16181c]/80 border-[#2f3336]" : "bg-white border-gray-100"}`}
                                 >
                                   <h3
                                     className={`font-semibold mb-2 ${isDarkMode ? "text-gray-100" : "text-gray-900"}`}
@@ -7763,7 +7802,7 @@ For any queries, contact your course instructors or the department.`,
                                   <div className="overflow-x-auto">
                                     {commonTime ? (
                                       <p
-                                        className={`text-sm mb-2 font-medium ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}
+                                        className={`text-sm mb-2 font-medium ${isDarkMode ? "text-[#8b98a5]" : "text-gray-600"}`}
                                       >
                                         Exam Time: {commonTime}
                                       </p>
@@ -7787,7 +7826,7 @@ For any queries, contact your course instructors or the department.`,
                                         {entriesWithParts.map((e, idx) => (
                                           <tr
                                             key={idx}
-                                            className={`${isDarkMode ? "border-t border-gray-700" : "border-t"}`}
+                                            className={`${isDarkMode ? "border-t border-[#2f3336]" : "border-t"}`}
                                           >
                                             <td
                                               className={`py-2 align-top ${isDarkMode ? "text-gray-100" : "text-gray-700"}`}
@@ -7843,13 +7882,13 @@ For any queries, contact your course instructors or the department.`,
                                             content,
                                           );
                                       }}
-                                      className={`w-full sm:w-auto px-3 py-2 sm:px-4 border rounded-lg transition text-sm ${isDarkMode ? "bg-gray-700 text-gray-100 border-gray-600 hover:bg-gray-600" : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"}`}
+                                      className={`w-full sm:w-auto px-3 py-2 sm:px-4 border rounded-lg transition text-sm ${isDarkMode ? "bg-[#2f3336] text-gray-100 border-gray-600 hover:bg-gray-600" : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"}`}
                                     >
                                       📋 Copy
                                     </button>
                                   </div>
                                   <div
-                                    className={`mt-4 rounded-lg p-4 ${isDarkMode ? "bg-gray-800/60 border border-gray-700" : "bg-white border border-gray-100"} text-sm`}
+                                    className={`mt-4 rounded-lg p-4 ${isDarkMode ? "bg-[#16181c]/60 border border-[#2f3336]" : "bg-white border border-gray-100"} text-sm`}
                                   >
                                     <h4
                                       className={`font-semibold mb-2 ${isDarkMode ? "text-gray-100" : "text-gray-900"}`}
@@ -7890,7 +7929,7 @@ For any queries, contact your course instructors or the department.`,
                           // Parse **bold** and render paragraphs
                           const parsedParagraphs = content.split(/\r?\n\r?\n/).filter(Boolean);
                           return (
-                            <div className={`space-y-3 select-text ${isDarkMode ? "text-slate-300" : "text-slate-700"}`}>
+                            <div className={`space-y-3 select-text ${isDarkMode ? "text-[#8b98a5]" : "text-slate-700"}`}>
                               {parsedParagraphs.map((para, pi) => (
                                 <p key={pi} className="leading-relaxed text-sm sm:text-base"
                                   dangerouslySetInnerHTML={{
@@ -7906,11 +7945,11 @@ For any queries, contact your course instructors or the department.`,
                       </div>
                     </div>
 
-                    <div className={`flex-shrink-0 px-5 py-3.5 border-t flex justify-end ${isDarkMode ? "border-slate-800" : "border-slate-100"}`}>
+                    <div className={`flex-shrink-0 px-5 py-3.5 border-t flex justify-end ${isDarkMode ? "border-[#2f3336]" : "border-slate-100"}`}>
                       <button
                         onClick={closeNoticeModal}
                         className={`px-5 py-2 rounded-full text-sm font-semibold transition-colors ${
-                          isDarkMode ? "bg-white text-slate-900 hover:bg-slate-100" : "bg-slate-900 text-white hover:bg-slate-700"
+                          isDarkMode ? "bg-white text-slate-900 hover:bg-slate-100" : "bg-[#17181c] text-white hover:bg-[#2f3336]"
                         }`}
                       >
                         Close
@@ -7930,7 +7969,7 @@ For any queries, contact your course instructors or the department.`,
                   className={`flex flex-col overflow-hidden transition-all duration-200 ${
                     isFullscreen
                       ? "w-full h-full rounded-none border-0"
-                      : `w-full sm:w-[92vw] md:w-[88vw] lg:max-w-6xl h-[calc(100dvh-1rem)] sm:h-[90dvh] rounded-2xl border shadow-[0_0_0_1px_rgba(255,255,255,0.06),0_32px_64px_rgba(0,0,0,0.7)] ${isDarkMode ? "bg-slate-900 border-slate-700/60" : "bg-white border-slate-200"}`
+                      : `w-full sm:w-[92vw] md:w-[88vw] lg:max-w-6xl h-[calc(100dvh-1rem)] sm:h-[90dvh] rounded-2xl border shadow-[0_0_0_1px_rgba(255,255,255,0.06),0_32px_64px_rgba(0,0,0,0.7)] ${isDarkMode ? "bg-[#17181c] border-[#2f3336]/60" : "bg-white border-slate-200"}`
                   }`}
                   style={{ animation: 'pdf-scale-in 0.2s cubic-bezier(0.22,1,0.36,1) both' }}
                 >
@@ -7938,7 +7977,7 @@ For any queries, contact your course instructors or the department.`,
                   <div className="flex-shrink-0 h-[3px] w-full bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-600" />
 
                   {/* ── Header ─────────────────────────────── */}
-                  <div className={`flex-shrink-0 flex items-center justify-between gap-2 px-3 sm:px-4 py-2.5 sm:py-3 border-b ${isDarkMode ? "bg-slate-800/80 border-slate-700/60" : "bg-slate-50 border-slate-200"}`}>
+                  <div className={`flex-shrink-0 flex items-center justify-between gap-2 px-3 sm:px-4 py-2.5 sm:py-3 border-b ${isDarkMode ? "bg-[#16181c]/80 border-[#2f3336]/60" : "bg-slate-50 border-slate-200"}`}>
                     {/* Left: icon + meta */}
                     <div className="flex items-center gap-2.5 min-w-0 flex-1">
                       <div className={`flex-shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center shadow-sm ${
@@ -7983,7 +8022,7 @@ For any queries, contact your course instructors or the department.`,
                       <button
                         onClick={toggleFullscreen}
                         title={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
-                        className={`p-1.5 sm:p-2 rounded-lg border transition-colors ${isDarkMode ? "border-slate-700 bg-slate-700/50 text-slate-400 hover:text-white hover:bg-slate-600" : "border-slate-200 bg-white text-slate-500 hover:text-slate-900 hover:bg-slate-100"}`}
+                        className={`p-1.5 sm:p-2 rounded-lg border transition-colors ${isDarkMode ? "border-[#2f3336] bg-[#2f3336]/50 text-slate-400 hover:text-white hover:bg-[#38444d]" : "border-slate-200 bg-white text-slate-500 hover:text-slate-900 hover:bg-slate-100"}`}
                       >
                         {isFullscreen
                           ? <Minimize className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
@@ -7993,7 +8032,7 @@ For any queries, contact your course instructors or the department.`,
                       <button
                         onClick={closeMaterialViewer}
                         title="Close"
-                        className={`p-1.5 sm:p-2 rounded-lg border transition-colors ${isDarkMode ? "border-slate-700 bg-slate-700/50 text-slate-400 hover:text-red-400 hover:bg-red-500/10 hover:border-red-500/30" : "border-slate-200 bg-white text-slate-500 hover:text-red-600 hover:bg-red-50 hover:border-red-200"}`}
+                        className={`p-1.5 sm:p-2 rounded-lg border transition-colors ${isDarkMode ? "border-[#2f3336] bg-[#2f3336]/50 text-slate-400 hover:text-red-400 hover:bg-red-500/10 hover:border-red-500/30" : "border-slate-200 bg-white text-slate-500 hover:text-red-600 hover:bg-red-50 hover:border-red-200"}`}
                       >
                         <X className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       </button>
@@ -8001,13 +8040,13 @@ For any queries, contact your course instructors or the department.`,
                   </div>
 
                   {/* ── Body ───────────────────────────────── */}
-                  <div className={`flex-1 overflow-hidden min-h-0 flex flex-col relative ${isDarkMode ? "bg-slate-950" : "bg-slate-100"}`}>
+                  <div className={`flex-1 overflow-hidden min-h-0 flex flex-col relative ${isDarkMode ? "bg-[#000000]" : "bg-slate-100"}`}>
                     {/* Loading overlay */}
                     {isViewerLoading && (
-                      <div className={`absolute inset-0 flex flex-col items-center justify-center z-20 ${isDarkMode ? "bg-slate-950/95" : "bg-white/95"}`}>
+                      <div className={`absolute inset-0 flex flex-col items-center justify-center z-20 ${isDarkMode ? "bg-[#000000]/95" : "bg-white/95"}`}>
                         <div className="flex flex-col items-center gap-5 w-52">
                           {/* Animated doc icon */}
-                          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${isDarkMode ? "bg-slate-800" : "bg-slate-100"}`}>
+                          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${isDarkMode ? "bg-[#16181c]" : "bg-slate-100"}`}>
                             <div className={`w-6 h-6 rounded-full border-2 border-transparent border-t-blue-500 animate-spin`} style={{ animationDuration: "0.7s" }} />
                           </div>
                           {/* Skeleton lines mimicking document content */}
@@ -8015,12 +8054,12 @@ For any queries, contact your course instructors or the department.`,
                             {[90, 78, 88, 65, 82].map((w, i) => (
                               <div
                                 key={i}
-                                className={`h-2 rounded-full animate-pulse ${isDarkMode ? "bg-slate-800" : "bg-slate-100"}`}
+                                className={`h-2 rounded-full animate-pulse ${isDarkMode ? "bg-[#16181c]" : "bg-slate-100"}`}
                                 style={{ width: `${w}%`, animationDelay: `${i * 80}ms` }}
                               />
                             ))}
                           </div>
-                          <p className={`text-xs font-medium tracking-wide ${isDarkMode ? "text-slate-600" : "text-slate-400"}`}>
+                          <p className={`text-xs font-medium tracking-wide ${isDarkMode ? "text-slate-500" : "text-slate-400"}`}>
                             Loading document…
                           </p>
                         </div>
@@ -8221,7 +8260,7 @@ For any queries, contact your course instructors or the department.`,
                       !selectedMaterial.file_url && (
                         <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6">
                           <FileText className="h-16 w-16 text-gray-500 mb-4" />
-                          <p className="text-gray-300 text-center mb-4">
+                          <p className="text-[#8b98a5] text-center mb-4">
                             No preview available for this material
                           </p>
                           <a
@@ -8237,7 +8276,7 @@ For any queries, contact your course instructors or the department.`,
                   </div>
 
                   {/* ── Footer ─────────────────────────────── */}
-                  <div className={`flex-shrink-0 flex items-center justify-between gap-2 px-3 sm:px-4 py-2 border-t ${isDarkMode ? "bg-slate-800/80 border-slate-700/60" : "bg-slate-50 border-slate-200"}`}>
+                  <div className={`flex-shrink-0 flex items-center justify-between gap-2 px-3 sm:px-4 py-2 border-t ${isDarkMode ? "bg-[#16181c]/80 border-[#2f3336]/60" : "bg-slate-50 border-slate-200"}`}>
                     {/* Left: file meta */}
                     <div className={`flex items-center gap-1.5 text-xs min-w-0 flex-1 ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
                       <span className="truncate font-medium">{selectedMaterial.title}</span>
@@ -8258,7 +8297,7 @@ For any queries, contact your course instructors or the department.`,
                           target="_blank"
                           rel="noopener noreferrer"
                           title="Open in browser"
-                          className={`p-1.5 rounded-lg transition-colors ${isDarkMode ? "text-slate-400 hover:text-blue-400 hover:bg-slate-700" : "text-slate-500 hover:text-blue-600 hover:bg-slate-200"}`}
+                          className={`p-1.5 rounded-lg transition-colors ${isDarkMode ? "text-slate-400 hover:text-blue-400 hover:bg-[#2f3336]" : "text-slate-500 hover:text-blue-600 hover:bg-slate-200"}`}
                         >
                           <ExternalLink className="h-4 w-4" />
                         </a>
@@ -8268,7 +8307,7 @@ For any queries, contact your course instructors or the department.`,
                           href={selectedMaterial.file_url}
                           download
                           title="Download"
-                          className={`p-1.5 rounded-lg transition-colors ${isDarkMode ? "text-slate-400 hover:text-teal-400 hover:bg-slate-700" : "text-slate-500 hover:text-teal-600 hover:bg-slate-200"}`}
+                          className={`p-1.5 rounded-lg transition-colors ${isDarkMode ? "text-slate-400 hover:text-[#1e9df1] hover:bg-[#2f3336]" : "text-slate-500 hover:text-[#1e9df1] hover:bg-slate-200"}`}
                         >
                           <Download className="h-4 w-4" />
                         </a>
@@ -8276,7 +8315,7 @@ For any queries, contact your course instructors or the department.`,
                       <button
                         onClick={closeMaterialViewer}
                         title="Close"
-                        className={`p-1.5 rounded-lg transition-colors ${isDarkMode ? "text-slate-400 hover:text-red-400 hover:bg-slate-700" : "text-slate-500 hover:text-red-600 hover:bg-slate-200"}`}
+                        className={`p-1.5 rounded-lg transition-colors ${isDarkMode ? "text-slate-400 hover:text-red-400 hover:bg-[#2f3336]" : "text-slate-500 hover:text-red-600 hover:bg-slate-200"}`}
                       >
                         <X className="h-4 w-4" />
                       </button>
@@ -8292,7 +8331,7 @@ For any queries, contact your course instructors or the department.`,
       {/* ── Lazy-loaded views — Suspense ensures a spinner while chunks download ── */}
       <Suspense fallback={
         <div className="fixed top-[72px] lg:top-20 inset-x-0 bottom-0 z-40 flex items-center justify-center">
-          <div className={`w-10 h-10 rounded-full border-4 border-t-blue-500 animate-spin ${isDarkMode ? "border-slate-700" : "border-slate-200"}`} />
+          <div className={`w-10 h-10 rounded-full border-4 border-t-[#1e9df1] animate-spin ${isDarkMode ? "border-[#2f3336]" : "border-slate-200"}`} />
         </div>
       }>
 
@@ -8391,7 +8430,7 @@ For any queries, contact your course instructors or the department.`,
       {/* ── V2: Alumni Hub (Phase 3 — coming soon) ── */}
       {currentView === "alumni" && (
         <main className="fixed top-[72px] lg:top-20 inset-x-0 bottom-0 z-40 overflow-y-auto overscroll-y-contain">
-          <div className={`h-full flex flex-col items-center justify-center gap-4 px-4 ${isDarkMode ? "bg-slate-950" : "bg-slate-50"}`}>
+          <div className={`h-full flex flex-col items-center justify-center gap-4 px-4 ${isDarkMode ? "bg-[#000000]" : "bg-slate-50"}`}>
             <GraduationCap className={`w-14 h-14 ${isDarkMode ? "text-amber-400" : "text-amber-500"}`} />
             <h1 className={`text-2xl font-bold ${isDarkMode ? "text-white" : "text-slate-900"}`}>Alumni Hub</h1>
             <p className={`text-sm text-center max-w-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
@@ -8399,7 +8438,7 @@ For any queries, contact your course instructors or the department.`,
             </p>
             <button
               onClick={() => goToView("home")}
-              className="mt-2 px-5 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
+              className="mt-2 px-5 py-2.5 rounded-lg bg-[#1e9df1] text-white text-sm font-medium hover:bg-[#1677cc]"
             >
               Back to Home
             </button>

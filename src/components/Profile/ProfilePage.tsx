@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+﻿import { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
   Camera,
@@ -172,22 +172,22 @@ export default function ProfilePage({ username, currentUserId, initialAvatarUrl,
     await updateProfile(profile.id, { [field]: items });
   };
 
-  const pageBg = isDarkMode ? "bg-slate-950" : "bg-slate-100";
-  const card = isDarkMode ? "bg-slate-900 border-slate-700/50" : "bg-white border-slate-200";
-  const titleCls = isDarkMode ? "text-white" : "text-slate-900";
-  const sub = isDarkMode ? "text-slate-400" : "text-slate-500";
+  const pageBg = isDarkMode ? "bg-[#000000]" : "bg-slate-100";
+  const card = isDarkMode ? "bg-[#17181c] border-[#2f3336]/50" : "bg-white border-slate-200";
+  const titleCls = isDarkMode ? "text-[#e7e9ea]" : "text-slate-900";
+  const sub = isDarkMode ? "text-[#71767b]" : "text-slate-500";
 
   if (loading) {
-    const skBg = isDarkMode ? "bg-slate-800/60" : "bg-slate-200/70";
+    const skBg = isDarkMode ? "bg-[#16181c]/60" : "bg-slate-200/70";
     return (
       <div className={`min-h-screen ${pageBg}`}>
         {/* Cover skeleton */}
-        <div className={`relative h-48 animate-pulse ${isDarkMode ? "bg-slate-800" : "bg-slate-200"}`} />
+        <div className={`relative h-48 animate-pulse ${isDarkMode ? "bg-[#16181c]" : "bg-slate-200"}`} />
         {/* Avatar + content skeleton */}
         <div className="max-w-3xl mx-auto px-4 -mt-12 pb-12">
           {/* Avatar row */}
           <div className="flex items-end gap-4 mb-6">
-            <div className={`w-24 h-24 rounded-full border-4 flex-shrink-0 overflow-hidden animate-pulse ${isDarkMode ? "border-slate-950 bg-slate-700" : "border-slate-100 bg-slate-300"}`}>
+            <div className={`w-24 h-24 rounded-full border-4 flex-shrink-0 overflow-hidden animate-pulse ${isDarkMode ? "border-[#000000] bg-[#2f3336]" : "border-slate-100 bg-slate-300"}`}>
               {initialAvatarUrl && (
                 <img src={initialAvatarUrl} alt="" className="w-full h-full object-cover" fetchpriority="high" decoding="async" />
               )}
@@ -219,7 +219,7 @@ export default function ProfilePage({ username, currentUserId, initialAvatarUrl,
     return (
       <div className={`min-h-screen flex flex-col items-center justify-center gap-4 ${pageBg}`}>
         <p className={titleCls}>Profile not found.</p>
-        <button onClick={onClose} className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm">
+        <button onClick={onClose} className="px-4 py-2 rounded-lg bg-[#1e9df1] text-white text-sm">
           Go Back
         </button>
       </div>
@@ -232,7 +232,7 @@ export default function ProfilePage({ username, currentUserId, initialAvatarUrl,
       <div className={`min-h-screen flex flex-col items-center justify-center gap-4 ${pageBg}`}>
         <Lock className={`w-10 h-10 ${sub}`} />
         <p className={titleCls}>This profile is private.</p>
-        <button onClick={onClose} className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm">
+        <button onClick={onClose} className="px-4 py-2 rounded-lg bg-[#1e9df1] text-white text-sm">
           Go Back
         </button>
       </div>
@@ -269,14 +269,14 @@ export default function ProfilePage({ username, currentUserId, initialAvatarUrl,
         {/* Header card */}
         <div className={`rounded-2xl border overflow-hidden ${card}`}>
           {/* Cover */}
-          <div className="relative h-36 sm:h-48 bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600">
+          <div className="relative h-36 sm:h-48 bg-gradient-to-r from-[#1e9df1] to-[#1677cc]">
             {profile.cover_photo_url && (
               <img src={profile.cover_photo_url} alt="" className="absolute inset-0 w-full h-full object-cover" loading="eager" fetchpriority="high" decoding="async" />
             )}
             {isOwn && (
               <button
                 onClick={() => coverInput.current?.click()}
-                className="absolute top-3 right-3 p-2 rounded-full bg-black/50 text-white hover:bg-black/70"
+                className="absolute top-3 right-3 p-2 rounded-full bg-black/50 text-[#e7e9ea] hover:bg-black/70"
                 title="Change cover photo"
               >
                 <Camera className="w-4 h-4" />
@@ -287,7 +287,7 @@ export default function ProfilePage({ username, currentUserId, initialAvatarUrl,
           <div className="px-5 pb-5">
             {/* Avatar */}
             <div className="relative -mt-12 mb-3 w-24 h-24">
-              <div className={`w-24 h-24 rounded-full overflow-hidden border-4 ${isDarkMode ? "border-slate-900 bg-slate-800" : "border-white bg-slate-200"}`}>
+              <div className={`w-24 h-24 rounded-full overflow-hidden border-4 ${isDarkMode ? "border-[#000000] bg-[#16181c]" : "border-white bg-slate-200"}`}>
                 {avatarSrc ? (
                   <img
                     src={avatarSrc}
@@ -298,7 +298,7 @@ export default function ProfilePage({ username, currentUserId, initialAvatarUrl,
                     decoding="async"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-3xl font-bold text-white bg-gradient-to-br from-blue-500 to-violet-600">
+                  <div className="w-full h-full flex items-center justify-center text-3xl font-bold text-white bg-gradient-to-br from-[#1e9df1] to-[#1677cc]">
                     {profile.name?.charAt(0)?.toUpperCase() ?? "?"}
                   </div>
                 )}
@@ -306,7 +306,7 @@ export default function ProfilePage({ username, currentUserId, initialAvatarUrl,
               {isOwn && (
                 <button
                   onClick={() => avatarInput.current?.click()}
-                  className="absolute bottom-0 right-0 p-1.5 rounded-full bg-blue-600 text-white hover:bg-blue-700 shadow"
+                  className="absolute bottom-0 right-0 p-1.5 rounded-full bg-[#1e9df1] text-white hover:bg-[#1677cc] shadow"
                   title="Change photo"
                 >
                   <Camera className="w-3.5 h-3.5" />
@@ -332,7 +332,7 @@ export default function ProfilePage({ username, currentUserId, initialAvatarUrl,
                 </div>
                 {profile.username && <p className={`text-sm ${sub}`}>@{profile.username}</p>}
                 {profile.headline && (
-                  <p className={`text-sm mt-1 ${isDarkMode ? "text-slate-300" : "text-slate-700"}`}>{profile.headline}</p>
+                  <p className={`text-sm mt-1 ${isDarkMode ? "text-[#8b98a5]" : "text-slate-700"}`}>{profile.headline}</p>
                 )}
                 <div className={`flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs ${sub}`}>
                   {profile.section && <span>{profile.section}</span>}
@@ -347,7 +347,7 @@ export default function ProfilePage({ username, currentUserId, initialAvatarUrl,
                 {/* Links */}
                 <div className="flex flex-wrap gap-2 mt-2">
                   {profile.website && (
-                    <a href={profile.website} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-blue-500 hover:underline">
+                    <a href={profile.website} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-[#1e9df1] hover:underline">
                       <Globe className="w-3 h-3" /> Website
                     </a>
                   )}
@@ -363,7 +363,7 @@ export default function ProfilePage({ username, currentUserId, initialAvatarUrl,
                 {isOwn && profile.is_admin && onOpenAdmin && (
                   <button
                     onClick={onOpenAdmin}
-                    className="px-4 py-2 rounded-lg bg-amber-500 text-white text-sm font-medium hover:bg-amber-600 flex items-center gap-2 shadow-sm"
+                    className="px-4 py-2 rounded-lg bg-amber-500 text-[#e7e9ea] text-sm font-medium hover:bg-amber-600 flex items-center gap-2 shadow-sm"
                     title="Open the admin dashboard"
                   >
                     <ShieldCheck className="w-4 h-4" /> Admin Dashboard
@@ -372,7 +372,7 @@ export default function ProfilePage({ username, currentUserId, initialAvatarUrl,
                 {isOwn ? (
                   <button
                     onClick={() => setShowEditModal(true)}
-                    className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 flex items-center gap-2"
+                    className="px-4 py-2 rounded-lg bg-[#1e9df1] text-white text-sm font-medium hover:bg-[#1677cc] flex items-center gap-2"
                   >
                     <Pencil className="w-4 h-4" /> Edit Profile
                   </button>
@@ -383,9 +383,9 @@ export default function ProfilePage({ username, currentUserId, initialAvatarUrl,
                     className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors ${
                       connection?.status === "accepted"
                         ? isDarkMode
-                          ? "bg-slate-800 text-emerald-400 border border-emerald-700/50"
+                          ? "bg-[#16181c] text-emerald-400 border border-emerald-700/50"
                           : "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                        : "bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60"
+                        : "bg-[#1e9df1] text-white hover:bg-[#1677cc] disabled:opacity-60"
                     }`}
                   >
                     {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <ConnectIcon className="w-4 h-4" />}
@@ -402,11 +402,11 @@ export default function ProfilePage({ username, currentUserId, initialAvatarUrl,
           <section className={`rounded-2xl border p-5 ${card}`}>
             <h3 className={`text-base font-bold mb-2 ${titleCls}`}>About</h3>
             {profile.about ? (
-              <p className={`text-sm whitespace-pre-wrap ${isDarkMode ? "text-slate-300" : "text-slate-700"}`}>{profile.about}</p>
+              <p className={`text-sm whitespace-pre-wrap ${isDarkMode ? "text-[#8b98a5]" : "text-slate-700"}`}>{profile.about}</p>
             ) : (
               <p className={`text-sm ${sub}`}>
                 Tell people about yourself —{" "}
-                <button onClick={() => setShowEditModal(true)} className="text-blue-500 hover:underline">add an about section</button>.
+                <button onClick={() => setShowEditModal(true)} className="text-[#1e9df1] hover:underline">add an about section</button>.
               </p>
             )}
           </section>
@@ -455,12 +455,12 @@ export default function ProfilePage({ username, currentUserId, initialAvatarUrl,
               items={profile.interests}
               onChange={(items) => saveTags("interests", items)}
               isDarkMode={isDarkMode}
-              badgeColor="purple"
+              badgeColor="blue"
               placeholder="Add an interest…"
               suggestions={INTEREST_SUGGESTIONS}
             />
           ) : (
-            <BadgeList items={profile.interests} isDarkMode={isDarkMode} badgeColor="purple" emptyText={isOwn ? "Add interests like AI, Research, Web Development…" : "No interests listed."} />
+            <BadgeList items={profile.interests} isDarkMode={isDarkMode} badgeColor="blue" emptyText={isOwn ? "Add interests like AI, Research, Web Development…" : "No interests listed."} />
           )}
         </section>
 

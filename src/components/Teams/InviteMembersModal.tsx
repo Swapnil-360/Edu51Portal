@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { X, Loader2, Search, Send } from "lucide-react";
 import { SocialProfile, Team } from "../../types/social";
 import { searchUsers } from "../../lib/api/connectionsApi";
@@ -58,16 +58,16 @@ export default function InviteMembersModal({ team, currentUserId, onClose, isDar
 
   const inputCls = `px-3 py-2 rounded-lg text-sm border outline-none ${
     isDarkMode
-      ? "bg-slate-800 border-slate-600 text-white placeholder-slate-500 focus:border-blue-500"
-      : "bg-white border-slate-300 text-slate-900 placeholder-slate-400 focus:border-blue-500"
+      ? "bg-[#16181c] border-[#38444d] text-[#e7e9ea] placeholder-[#71767b] focus:border-blue-500"
+      : "bg-white border-slate-300 text-slate-900 placeholder-[#71767b] focus:border-blue-500"
   }`;
 
   return (
     <div className="fixed inset-0 z-[130] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className={`w-full max-w-lg max-h-[85vh] flex flex-col rounded-2xl shadow-2xl ${isDarkMode ? "bg-slate-900 border border-slate-700" : "bg-white"}`}>
-        <div className={`px-5 py-4 border-b flex items-center justify-between ${isDarkMode ? "border-slate-700" : "border-slate-200"}`}>
-          <h2 className={`text-lg font-bold ${isDarkMode ? "text-white" : "text-slate-900"}`}>Invite Members</h2>
-          <button onClick={onClose} className={isDarkMode ? "text-slate-400 hover:text-white" : "text-slate-500"}>
+      <div className={`w-full max-w-lg max-h-[85vh] flex flex-col rounded-2xl shadow-2xl ${isDarkMode ? "bg-[#17181c] border border-[#2f3336]" : "bg-white"}`}>
+        <div className={`px-5 py-4 border-b flex items-center justify-between ${isDarkMode ? "border-[#2f3336]" : "border-slate-200"}`}>
+          <h2 className={`text-lg font-bold ${isDarkMode ? "text-[#e7e9ea]" : "text-slate-900"}`}>Invite Members</h2>
+          <button onClick={onClose} className={isDarkMode ? "text-[#71767b] hover:text-[#e7e9ea]" : "text-slate-500"}>
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -88,7 +88,7 @@ export default function InviteMembersModal({ team, currentUserId, onClose, isDar
               onKeyDown={(e) => e.key === "Enter" && runSearch()}
               placeholder="Skills (comma separated)"
             />
-            <button onClick={runSearch} className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 flex items-center gap-1.5">
+            <button onClick={runSearch} className="px-4 py-2 rounded-lg bg-blue-600 text-[#e7e9ea] text-sm font-medium hover:bg-blue-700 flex items-center gap-1.5">
               <Search className="w-4 h-4" />
             </button>
           </div>
@@ -100,7 +100,7 @@ export default function InviteMembersModal({ team, currentUserId, onClose, isDar
               <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
             </div>
           ) : results.length === 0 ? (
-            <p className={`text-sm text-center py-8 ${isDarkMode ? "text-slate-500" : "text-slate-400"}`}>
+            <p className={`text-sm text-center py-8 ${isDarkMode ? "text-slate-500" : "text-[#71767b]"}`}>
               No matching users found.
             </p>
           ) : (
@@ -118,7 +118,7 @@ export default function InviteMembersModal({ team, currentUserId, onClose, isDar
                     <button
                       onClick={() => sendInvite(p.id)}
                       disabled={busy === p.id}
-                      className="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-medium hover:bg-blue-700 flex items-center gap-1"
+                      className="px-3 py-1.5 rounded-lg bg-blue-600 text-[#e7e9ea] text-xs font-medium hover:bg-blue-700 flex items-center gap-1"
                     >
                       {busy === p.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
                       Invite

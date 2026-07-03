@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Book, FileText, Search as SearchIcon } from 'lucide-react';
 import type { SearchResult } from '../../types';
 
@@ -34,7 +34,7 @@ export function SearchResults({ query, results, onSelectResult }: SearchResultsP
               <div className="flex items-start space-x-4">
                 <div className={`p-3 rounded-full ${
                   result.type === 'course' 
-                    ? 'bg-teal-100 text-teal-600' 
+                    ? 'bg-[#1e9df1]/10 text-[#1e9df1]' 
                     : 'bg-blue-100 text-blue-600'
                 }`}>
                   {result.type === 'course' ? (
@@ -45,12 +45,12 @@ export function SearchResults({ query, results, onSelectResult }: SearchResultsP
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center space-x-2 mb-1">
-                    <h3 className="text-lg font-semibold text-gray-900 hover:text-teal-600 transition-colors">
+                    <h3 className="text-lg font-semibold text-gray-900 hover:text-[#1e9df1] transition-colors">
                       {result.title}
                     </h3>
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                       result.type === 'course' 
-                        ? 'bg-teal-100 text-teal-700' 
+                        ? 'bg-[#1e9df1]/10 text-[#1e9df1]' 
                         : 'bg-blue-100 text-blue-700'
                     }`}>
                       {result.type}

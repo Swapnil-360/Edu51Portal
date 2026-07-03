@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { X, Bug, Lightbulb, Sparkles, MessageSquare, Send, Loader2 } from "lucide-react";
 import { submitFeedback } from "../lib/api/feedbackApi";
@@ -77,11 +77,11 @@ export function FeedbackModal({
     onClose();
   };
 
-  const card = isDarkMode ? "bg-slate-900 border-slate-700" : "bg-white border-slate-200";
-  const label = isDarkMode ? "text-slate-300" : "text-slate-700";
+  const card = isDarkMode ? "bg-[#17181c] border-[#2f3336]" : "bg-white border-slate-200";
+  const label = isDarkMode ? "text-[#8b98a5]" : "text-slate-700";
   const input = isDarkMode
-    ? "bg-slate-800 border-slate-700 text-slate-100 placeholder-slate-500 focus:border-blue-500"
-    : "bg-white border-slate-300 text-slate-900 placeholder-slate-400 focus:border-blue-500";
+    ? "bg-[#16181c] border-[#2f3336] text-[#e7e9ea] placeholder-[#71767b] focus:border-blue-500"
+    : "bg-white border-slate-300 text-slate-900 placeholder-[#71767b] focus:border-blue-500";
 
   return (
     <motion.div
@@ -99,12 +99,12 @@ export function FeedbackModal({
         className={`w-full sm:max-w-lg max-h-[92dvh] overflow-y-auto rounded-t-2xl sm:rounded-2xl border shadow-2xl ${card}`}
       >
         {/* Header */}
-        <div className={`sticky top-0 z-10 flex items-center justify-between px-5 py-4 border-b ${isDarkMode ? "border-slate-700 bg-slate-900" : "border-slate-200 bg-white"}`}>
+        <div className={`sticky top-0 z-10 flex items-center justify-between px-5 py-4 border-b ${isDarkMode ? "border-[#2f3336] bg-[#17181c]" : "border-slate-200 bg-white"}`}>
           <div>
             <h2 className={`text-lg font-bold ${isDarkMode ? "text-white" : "text-slate-900"}`}>Send Feedback</h2>
             <p className={`text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>Help us improve Edu51Portal</p>
           </div>
-          <button onClick={onClose} className={`p-1.5 rounded-full ${isDarkMode ? "text-slate-400 hover:bg-slate-800" : "text-slate-500 hover:bg-slate-100"}`}>
+          <button onClick={onClose} className={`p-1.5 rounded-full ${isDarkMode ? "text-slate-400 hover:bg-[#16181c]" : "text-slate-500 hover:bg-slate-100"}`}>
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -126,7 +126,7 @@ export function FeedbackModal({
                       active
                         ? "border-blue-500 bg-blue-500/10 text-blue-500"
                         : isDarkMode
-                          ? "border-slate-700 text-slate-300 hover:border-slate-600"
+                          ? "border-[#2f3336] text-[#8b98a5] hover:border-[#38444d]"
                           : "border-slate-200 text-slate-600 hover:border-slate-300"
                     }`}
                   >

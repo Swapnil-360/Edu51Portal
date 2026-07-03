@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Users, Calendar, BookOpen, Lock } from 'lucide-react';
 
 interface IntakeViewProps {
@@ -15,7 +15,7 @@ export function IntakeView({ onSelectSection, isDarkMode = false }: IntakeViewPr
     { id: '5', name: 'Section 2 (AI)', courseCount: 5, description: 'Dept. of CSE · AI Major', accessible: true },
   ];
 
-  const bg = isDarkMode ? 'bg-slate-950' : 'bg-slate-50';
+  const bg = isDarkMode ? 'bg-[#000000]' : 'bg-slate-50';
   const headingColor = isDarkMode ? 'text-white' : 'text-slate-900';
   const subColor = isDarkMode ? 'text-slate-400' : 'text-slate-500';
 
@@ -35,10 +35,10 @@ export function IntakeView({ onSelectSection, isDarkMode = false }: IntakeViewPr
               className={`relative rounded-2xl border transition-all duration-200 group ${
                 section.accessible
                   ? isDarkMode
-                    ? 'bg-slate-900 border-slate-800 hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-500/5 cursor-pointer'
+                    ? 'bg-[#17181c] border-[#2f3336] hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-500/5 cursor-pointer'
                     : 'bg-white border-slate-200 hover:border-blue-300 hover:shadow-lg cursor-pointer'
                   : isDarkMode
-                    ? 'bg-slate-900/40 border-slate-800/50 cursor-not-allowed opacity-50'
+                    ? 'bg-[#17181c]/40 border-[#2f3336]/50 cursor-not-allowed opacity-50'
                     : 'bg-white/60 border-slate-200/60 cursor-not-allowed opacity-50'
               }`}
             >
@@ -49,18 +49,18 @@ export function IntakeView({ onSelectSection, isDarkMode = false }: IntakeViewPr
                       ? isDarkMode
                         ? 'bg-blue-900/40 group-hover:bg-blue-800/50'
                         : 'bg-blue-50 group-hover:bg-blue-100'
-                      : isDarkMode ? 'bg-slate-800' : 'bg-slate-100'
+                      : isDarkMode ? 'bg-[#16181c]' : 'bg-slate-100'
                   }`}>
                     <Users className={`h-5 w-5 ${
                       section.accessible
                         ? 'text-blue-500'
-                        : isDarkMode ? 'text-slate-600' : 'text-slate-400'
+                        : isDarkMode ? 'text-slate-500' : 'text-slate-400'
                     }`} />
                   </div>
 
                   {!section.accessible && (
                     <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold ${
-                      isDarkMode ? 'bg-slate-800 text-slate-500' : 'bg-slate-100 text-slate-400'
+                      isDarkMode ? 'bg-[#16181c] text-slate-500' : 'bg-slate-100 text-slate-400'
                     }`}>
                       <Lock className="w-3 h-3" /> Coming Soon
                     </div>
@@ -88,7 +88,7 @@ export function IntakeView({ onSelectSection, isDarkMode = false }: IntakeViewPr
                   {section.description}
                 </p>
 
-                <div className={`flex items-center gap-1.5 text-xs ${isDarkMode ? 'text-slate-600' : 'text-slate-400'}`}>
+                <div className={`flex items-center gap-1.5 text-xs ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
                   <Calendar className="h-3.5 w-3.5" />
                   Summer 2026
                 </div>

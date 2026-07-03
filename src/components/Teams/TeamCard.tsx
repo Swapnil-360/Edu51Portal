@@ -1,4 +1,4 @@
-import { Users } from "lucide-react";
+﻿import { Users } from "lucide-react";
 import { Team, TEAM_CATEGORY_LABELS } from "../../types/social";
 
 interface Props {
@@ -20,14 +20,14 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 export default function TeamCard({ team, isDarkMode, onOpen, action }: Props) {
-  const title = isDarkMode ? "text-white" : "text-slate-900";
-  const sub = isDarkMode ? "text-slate-400" : "text-slate-500";
+  const title = isDarkMode ? "text-[#e7e9ea]" : "text-slate-900";
+  const sub = isDarkMode ? "text-[#71767b]" : "text-slate-500";
   const gradientClass = CATEGORY_COLORS[team.category] ?? "from-blue-500 to-violet-500";
 
   return (
     <div
       className={`rounded-xl border overflow-hidden transition-colors ${
-        isDarkMode ? "bg-slate-900 border-slate-700/50 hover:border-slate-600" : "bg-white border-slate-200 hover:border-slate-300"
+        isDarkMode ? "bg-[#17181c] border-[#2f3336]/50 hover:border-[#38444d]" : "bg-white border-slate-200 hover:border-slate-300"
       }`}
     >
       {/* Banner + logo using relative/absolute so they never collide */}
@@ -42,7 +42,7 @@ export default function TeamCard({ team, isDarkMode, onOpen, action }: Props) {
         {/* Logo straddles banner bottom edge */}
         <button
           onClick={() => onOpen(team)}
-          className={`absolute bottom-0 left-4 translate-y-1/2 w-14 h-14 rounded-xl overflow-hidden border-[3px] flex items-center justify-center text-xl font-bold text-white bg-gradient-to-br ${gradientClass} ${isDarkMode ? "border-slate-900" : "border-white"} shadow-md`}
+          className={`absolute bottom-0 left-4 translate-y-1/2 w-14 h-14 rounded-xl overflow-hidden border-[3px] flex items-center justify-center text-xl font-bold text-[#e7e9ea] bg-gradient-to-br ${gradientClass} ${isDarkMode ? "border-slate-900" : "border-white"} shadow-md`}
         >
           {team.logo_url ? (
             <img src={team.logo_url} alt={team.name} className="w-full h-full object-cover" loading="lazy" />
@@ -63,7 +63,7 @@ export default function TeamCard({ team, isDarkMode, onOpen, action }: Props) {
         </p>
 
         {team.description && (
-          <p className={`text-xs mt-2 line-clamp-2 ${isDarkMode ? "text-slate-300" : "text-slate-600"}`}>{team.description}</p>
+          <p className={`text-xs mt-2 line-clamp-2 ${isDarkMode ? "text-[#8b98a5]" : "text-slate-600"}`}>{team.description}</p>
         )}
 
         {team.required_skills.length > 0 && (
