@@ -178,7 +178,8 @@ Per-team file sharing with public/private visibility. Members upload; owner/admi
 
 | What | File | Lines |
 |------|------|-------|
-| WC26 page (Pick Team / Leaderboard / Matches tabs) | `src/components/WorldCup/WorldCupPage.tsx` | — |
+| WC26 page (renders the hero banner + tab content below it) | `src/components/WorldCup/WorldCupPage.tsx` | — |
+| Page header (title, personal stats, refresh, Pick Team/Leaderboard/Matches tabs, live/countdown state, Ken Burns backdrop) — replaces the old plain sticky header, everything lives in one panel now | `src/components/WorldCup/WC26HeroBanner.tsx` | — |
 | Intro modal (one-time, post-login) | `src/components/WorldCup/WC26IntroModal.tsx` | — |
 | 48 teams data + logo helpers | `src/lib/wc26Teams.ts` | — |
 | Sync + leaderboard API | `src/lib/api/worldCupApi.ts` | — |
@@ -189,7 +190,8 @@ Per-team file sharing with public/private visibility. Members upload; owner/admi
 **Database:** `wc26_matches` table — home/away team TLA codes, scores, status, stage, group  
 **Scoring:** win = 3 pts, draw = 1 pt, +1 per goal scored by picked team  
 **Sync:** server-side `pg_cron` job (`sync-wc26-matches-every-minute`, migration `20260704040331_wc26_cron_and_realtime`) invokes the edge function every 60s via `pg_net`, independent of any client being open. Frontend no longer polls the edge function — it subscribes to Supabase Realtime (`postgres_changes` on `wc26_matches`) and refetches from the DB the instant a row changes. Manual refresh button still force-syncs via `syncWC26Matches(true)`.  
-**Stages:** `GROUP_STAGE` → `LAST_32` → `LAST_16` → `QUARTER_FINALS` → `SEMI_FINALS` → `THIRD_PLACE` → `FINAL` (must match football-data.org's stage enum exactly — `STAGE_ORDER`/`STAGE_LABEL` in `WorldCupPage.tsx`)
+**Stages:** `GROUP_STAGE` → `LAST_32` → `LAST_16` → `QUARTER_FINALS` → `SEMI_FINALS` → `THIRD_PLACE` → `FINAL` (must match football-data.org's stage enum exactly — `STAGE_ORDER`/`STAGE_LABEL` in `WorldCupPage.tsx`)  
+**Hero banner:** the entire page top is one flush panel (full-width, `border-b`, no rounded corners/gap) — title, personal stats line, refresh button, tabs, and a tagline/countdown row all rendered by `WC26HeroBanner`, not split across a separate header + card. Shows a live-match state (pulsing "Live Now" + score line, no countdown) when any match is `IN_PLAY`/`PAUSED`/`HALFTIME`; otherwise a DD:HH:MM:SS countdown to the next unplayed match's kickoff. No external image asset — backdrop is a radial gradient + a large low-opacity `/FIFA-World-Cup-Logo-2026.png` watermark with a slow Framer Motion zoom (Ken Burns). Not sticky (the previous plain header was; a ~260px hero pinned while scrolling read as broken, so tab access requires scrolling back up).
 
 ---
 
@@ -230,7 +232,7 @@ Google Drive-backed study material management. Admin manages Drive directly; stu
 | Section view | `src/components/Student/SectionView.tsx` | — |
 | Course view | `src/components/Student/CourseView.tsx` | — |
 | Semester tracker | `src/components/SemesterTracker.tsx` | — |
-| Custom routine | `src/components/Student/CustomRoutine.tsx` | Modern redesign (2026-07-02): 280px form sidebar + colorful timetable grid. Per-day accent headers (Sun=sky, Mon=violet, Tue=amber, Wed=emerald, Thu=rose) as compact pills in a sticky row. Fixed-height grid (440px) with percentage-based absolute positioning for cards. Time column shows hour ranges ("8–9 AM"). Full-width break overlay spanning all columns. Notes column (right, `minmax(140px, 190px)`) with editable per-slot textareas persisted to `localStorage`. Download via `window.print()`. Syncs to `user_routines` table (auth-scoped). All logic unchanged (overlap detection, 3hr lab auto-split, RLS). |
+| Custom routine | `src/components/Student/CustomRoutine.tsx` | Redesigned 2026-07-04: **no left sidebar** — classes are added via a centered modal (gradient header) opened by the top-bar "Add Class" button OR by clicking an empty grid slot (desktop, prefills day + snapped start via `nearestAllowedStart`). **Responsive dual-view**: desktop (`lg:`) = colorful gradient-wrapped weekly grid (Time \| Sun–Thu \| per-hour Notes column, 440px, per-day accent pills, break overlay); mobile (`<lg`) = day-switcher pill tabs + single-column agenda list with a per-day notes textarea and inline "Add class to {day}" buttons. Entry cards are clean surfaces (`#1b1e23`/white) with a colored left accent bar + REG/IMP/RT + LAB/TH pills (no more sticky-note tilt). Per-hour notes (grid, keys like `"09:00"`) and per-day notes (mobile, keys like `"Sun"`) coexist in the same `localStorage`/`user_routines` store. Download via `window.print()`. All logic unchanged (overlap detection, 3hr lab auto-split, auth-scoped RLS). |
 | Exam materials dashboard | `src/components/Student/ExamMaterialsDashboard.tsx` | — |
 | PDF viewer | `src/components/PDFViewer.tsx` + `PDFViewer.css` | Fullscreen-capable modal with dark/light mode, entry animation, loading/error states, responsive sizing via CSS (`dvh`, `min()`), no emojis — fully keyboard and touch accessible |
 | Material viewer modal | `src/App.tsx` (~line 7789) | Inline modal opened via `openMaterialViewer(material)` from GDriveCourseView. Redesigned 2026-06-20: backdrop blur, color-coded file type icons, gradient header, dark/light aware, `pdf-scale-in` entry animation. |

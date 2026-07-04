@@ -13,6 +13,7 @@ import {
 } from "../../lib/api/worldCupApi";
 import { updateProfile } from "../../lib/api/profileApi";
 import { getProfileById } from "../../lib/api/profileApi";
+import { WC26HeroBanner } from "./WC26HeroBanner";
 
 interface Props {
   currentUserId: string;
@@ -118,6 +119,19 @@ export function WorldCupPage({ currentUserId, onClose, isDarkMode }: Props) {
   const myRank       = myTeam ? leaderboard.findIndex((e) => e.id === currentUserId) + 1 : null;
   const myLiveMatch  = myTeam ? liveMatches.find(m => m.home_code === myTeam || m.away_code === myTeam) : null;
 
+  const nextMatch = matches
+    .filter(m => !isLiveMatch(m) && m.status !== "FINISHED" && new Date(m.utc_date).getTime() > Date.now())
+    .sort((a, b) => new Date(a.utc_date).getTime() - new Date(b.utc_date).getTime())[0] ?? null;
+
+  const heroLiveMatch = liveMatches[0] ?? null;
+  const heroLiveLabel = heroLiveMatch
+    ? (() => {
+        const home = getTeamByCode(heroLiveMatch.home_code);
+        const away = getTeamByCode(heroLiveMatch.away_code);
+        return `${home?.name ?? heroLiveMatch.home_code} ${heroLiveMatch.home_score ?? 0}–${heroLiveMatch.away_score ?? 0} ${away?.name ?? heroLiveMatch.away_code} · in progress now`;
+      })()
+    : undefined;
+
   const byStage = matches.reduce<Record<string, WC26Match[]>>((acc, m) => {
     const key = m.stage ?? "OTHER";
     if (!acc[key]) acc[key] = [];
@@ -141,70 +155,33 @@ export function WorldCupPage({ currentUserId, onClose, isDarkMode }: Props) {
     setPicking(false);
   };
 
-  const tabCls = (t: Tab) =>
-    `relative px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
-      tab === t
-        ? "bg-green-600 text-white"
-        : isDarkMode ? "text-slate-400 hover:text-white" : "text-slate-500 hover:text-slate-900"
-    }`;
-
   return (
     <div className={`min-h-screen ${bg}`}>
-      {/* ── Header ── */}
-      <div className={`sticky top-0 z-10 border-b ${isDarkMode ? "bg-[#000000] border-[#2f3336]" : "bg-white border-slate-200"}`}>
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <img src="/FIFA-World-Cup-Logo-2026.png" alt="FIFA World Cup 2026" className="w-10 h-10 object-contain" />
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className={`font-bold text-lg leading-tight ${text}`}>World Cup 2026</h1>
-                {liveCount > 0 && (
-                  <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-600 text-white text-[10px] font-bold animate-pulse">
-                    ● LIVE {liveCount > 1 ? liveCount : ""}
-                  </span>
-                )}
-              </div>
-              {pickedTeam && (
-                <p className={`text-xs ${sub} flex items-center gap-1.5`}>
-                  <TeamLogo team={pickedTeam} className="w-5 h-4 inline" />
-                  {pickedTeam.name} · {myPoints} pts
-                  {myRank ? ` · #${myRank}` : ""}
-                  {myLiveMatch && (
-                    <span className="text-red-400 font-bold animate-pulse">
-                      · {myLiveMatch.home_code === myTeam
-                          ? `${myLiveMatch.home_score ?? 0}–${myLiveMatch.away_score ?? 0}`
-                          : `${myLiveMatch.away_score ?? 0}–${myLiveMatch.home_score ?? 0}`} LIVE
-                    </span>
-                  )}
-                </p>
-              )}
-            </div>
-          </div>
-          {syncing
-            ? <Loader2 className="w-4 h-4 animate-spin text-green-500" />
-            : (
-              <button onClick={() => load(true)} title="Refresh scores"
-                className={`p-1.5 rounded-full ${isDarkMode ? "hover:bg-[#16181c] text-slate-500 hover:text-[#8b98a5]" : "hover:bg-slate-100 text-slate-400"}`}>
-                <RefreshCw className="w-3.5 h-3.5" />
-              </button>
-            )
-          }
-        </div>
-
-        {/* Tabs */}
-        <div className="max-w-4xl mx-auto px-4 pb-3 flex gap-1">
-          <button className={tabCls("pick")} onClick={() => setTab("pick")}>Pick Team</button>
-          <button className={tabCls("leaderboard")} onClick={() => setTab("leaderboard")}>Leaderboard</button>
-          <button className={tabCls("matches")} onClick={() => setTab("matches")}>
-            Matches
-            {liveCount > 0 && (
-              <span className="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-bold">
-                {liveCount}
-              </span>
-            )}
-          </button>
-        </div>
-      </div>
+      {/* ── Hero banner (title, personal stats, refresh, tabs, countdown — all in one panel) ── */}
+      <WC26HeroBanner
+        isDarkMode={isDarkMode}
+        videoSrc="https://www.dqnamo.com/videos/home/world-cup-2026.mp4"
+        posterSrc="https://www.dqnamo.com/images/home/world-cup-2026.jpg"
+        targetDate={heroLiveMatch ? null : nextMatch ? new Date(nextMatch.utc_date) : null}
+        isLive={!!heroLiveMatch}
+        liveLabel={heroLiveLabel}
+        pickedTeamName={pickedTeam?.name}
+        pickedTeamLogo={pickedTeam ? teamLogoUrl(pickedTeam.logo) : undefined}
+        myPoints={myPoints}
+        myRank={myRank}
+        myLiveScoreLabel={
+          myLiveMatch
+            ? myLiveMatch.home_code === myTeam
+              ? `${myLiveMatch.home_score ?? 0}–${myLiveMatch.away_score ?? 0}`
+              : `${myLiveMatch.away_score ?? 0}–${myLiveMatch.home_score ?? 0}`
+            : undefined
+        }
+        liveCount={liveCount}
+        syncing={syncing}
+        onRefresh={() => load(true)}
+        tab={tab}
+        onTabChange={setTab}
+      />
 
       {/* ── Live score banner ── */}
       {liveCount > 0 && (
