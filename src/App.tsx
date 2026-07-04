@@ -3143,15 +3143,15 @@ For any queries, contact your course instructors or the department.`,
               {/* Logo — desktop only (left-aligned) */}
               <button
                 onClick={() => goToView("home")}
-                className="hidden lg:flex items-center gap-3 focus:outline-none group"
+                className="hidden lg:flex items-center gap-1 focus:outline-none group"
                 title="Go to Home"
               >
                 <img
-                  src="/Edu_51_Logo.png"
+                  src="/Edu51Portal.png"
                   alt="Edu51Portal Logo"
-                  className="h-11 w-11 object-contain flex-shrink-0 drop-shadow-sm"
-                  width="44"
-                  height="44"
+                  className="h-16 w-16 object-cover rounded-xl flex-shrink-0 drop-shadow-sm"
+                  width="64"
+                  height="64"
                   decoding="async"
                 />
                 <span
@@ -3172,9 +3172,9 @@ For any queries, contact your course instructors or the department.`,
                 title="Go to Home"
               >
                 <img
-                  src="/Edu_51_Logo.png"
+                  src="/Edu51Portal.png"
                   alt="Edu51Portal Logo"
-                  className="h-10 w-10 object-contain drop-shadow-sm"
+                  className="h-10 w-10 object-cover rounded-xl drop-shadow-sm"
                   width="40"
                   height="40"
                   decoding="async"
