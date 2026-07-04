@@ -223,6 +223,25 @@ export interface TeamFile {
 }
 
 
+export interface AlumniProfile {
+  id: string;
+  full_name: string;
+  email: string;
+  avatar_url: string | null;
+  graduation_year: number;
+  major: string;
+  current_role: string | null;
+  current_company: string | null;
+  location: string | null;
+  linkedin_url: string | null;
+  bio: string | null;
+  career_tips: string | null;
+  is_verified: boolean;
+  is_available_for_mentorship: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 // Columns selected for profile lists/cards (never select legacy base64 profile_pic in lists)
 export const SOCIAL_PROFILE_COLS =
   "id,username,name,headline,about,location,website,social_links,avatar_url,cover_photo_url,skills,interests,visibility,is_alumni,is_admin,section,major,bubt_email,phone,wc26_team,created_at";

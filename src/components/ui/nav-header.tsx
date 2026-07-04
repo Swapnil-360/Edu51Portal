@@ -1,4 +1,4 @@
-﻿import React, { useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Home } from "lucide-react";
 
@@ -230,7 +230,7 @@ export function AppNavHeader({
     {
       label: "Alumni",
       view: "alumni",
-      badge: "soon",
+      badge: "new",
       isActive: currentView === "alumni",
       onClick: () => goToView("alumni"),
     },

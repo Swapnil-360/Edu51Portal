@@ -1,0 +1,176 @@
+import { useEffect, useState, useCallback } from 'react';
+import { supabase, supabaseConfigured } from '../lib/supabase';
+import { AlumniProfile } from '../types/social';
+
+export const MOCK_ALUMNI: AlumniProfile[] = [
+  {
+    id: "mock-alumni-1",
+    full_name: "Tariqul Islam",
+    email: "tariqul@gmail.com",
+    avatar_url: null,
+    graduation_year: 2024,
+    major: "CSE",
+    current_role: "Software Engineer",
+    current_company: "Google",
+    location: "Dhaka, Bangladesh",
+    linkedin_url: "https://linkedin.com",
+    bio: "Passionate software engineer focused on building scalable web apps.",
+    career_tips: "Focus on fundamentals (DSA) and build personal projects.",
+    is_verified: true,
+    is_available_for_mentorship: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: "mock-alumni-2",
+    full_name: "Sadia Rahman",
+    email: "sadia@gmail.com",
+    avatar_url: null,
+    graduation_year: 2023,
+    major: "EEE",
+    current_role: "Hardware Design Engineer",
+    current_company: "Intel",
+    location: "Austin, USA",
+    linkedin_url: "https://linkedin.com",
+    bio: "Designing the next generation of processors.",
+    career_tips: "Get hands-on experience with FPGA and microcontrollers early on.",
+    is_verified: true,
+    is_available_for_mentorship: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: "mock-alumni-3",
+    full_name: "Mahmudul Hasan",
+    email: "mahmudul@gmail.com",
+    avatar_url: null,
+    graduation_year: 2022,
+    major: "BBA",
+    current_role: "Product Manager",
+    current_company: "Pathao",
+    location: "Dhaka, Bangladesh",
+    linkedin_url: "https://linkedin.com",
+    bio: "Loves analyzing consumer behavior and building products.",
+    career_tips: "Develop empathy for users and learn to read product analytics.",
+    is_verified: true,
+    is_available_for_mentorship: false,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  }
+];
+
+export function useAlumni(filters?: { major?: string; search?: string; mentorshipOnly?: boolean }) {
+  const [alumni, setAlumni] = useState<AlumniProfile[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchAlumni = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      if (!supabaseConfigured) {
+        // Mock fallback mode
+        let data = [...MOCK_ALUMNI];
+        if (filters) {
+          if (filters.major && filters.major !== 'All') {
+            if (filters.major === 'Other') {
+              data = data.filter((a) => !['CSE', 'EEE', 'BBA'].includes(a.major.toUpperCase()));
+            } else {
+              data = data.filter((a) => a.major.toLowerCase() === filters.major!.toLowerCase());
+            }
+          }
+          if (filters.mentorshipOnly) {
+            data = data.filter((a) => a.is_available_for_mentorship);
+          }
+          if (filters.search) {
+            const searchLower = filters.search.toLowerCase();
+            data = data.filter(
+              (a) =>
+                a.full_name.toLowerCase().includes(searchLower) ||
+                (a.current_role && a.current_role.toLowerCase().includes(searchLower)) ||
+                (a.current_company && a.current_company.toLowerCase().includes(searchLower))
+            );
+          }
+        }
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        setAlumni(data);
+      } else {
+        // Supabase DB fetch
+        let query = supabase.from('alumni_profiles').select('*').eq('is_verified', true);
+
+        if (filters) {
+          if (filters.major && filters.major !== 'All') {
+            if (filters.major === 'Other') {
+              query = query.not('major', 'in', '("CSE","EEE","BBA")');
+            } else {
+              query = query.eq('major', filters.major);
+            }
+          }
+          if (filters.mentorshipOnly) {
+            query = query.eq('is_available_for_mentorship', true);
+          }
+          if (filters.search && filters.search.trim()) {
+            const searchVal = filters.search.trim();
+            query = query.or(
+              `full_name.ilike.%${searchVal}%,current_role.ilike.%${searchVal}%,current_company.ilike.%${searchVal}%`
+            );
+          }
+        }
+
+        query = query.order('created_at', { ascending: false });
+
+        const { data, error: fetchErr } = await query;
+        if (fetchErr) throw fetchErr;
+        setAlumni(data || []);
+      }
+    } catch (err: any) {
+      console.error('Error fetching alumni:', err);
+      setError(err?.message || 'Failed to fetch alumni profiles');
+    } finally {
+      setLoading(false);
+    }
+  }, [filters?.major, filters?.search, filters?.mentorshipOnly]);
+
+  useEffect(() => {
+    fetchAlumni();
+  }, [fetchAlumni]);
+
+  return { alumni, loading, error, refetch: fetchAlumni };
+}
+
+export function useAlumniById(id: string) {
+  const [alumni, setAlumni] = useState<AlumniProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!id) return;
+    const fetchSingleAlumni = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        if (!supabaseConfigured) {
+          const found = MOCK_ALUMNI.find((a) => a.id === id) || null;
+          await new Promise((resolve) => setTimeout(resolve, 200));
+          setAlumni(found);
+        } else {
+          const { data, error: fetchErr } = await supabase
+            .from('alumni_profiles')
+            .select('*')
+            .eq('id', id)
+            .single();
+          if (fetchErr) throw fetchErr;
+          setAlumni(data);
+        }
+      } catch (err: any) {
+        console.error('Error fetching single alumni profile:', err);
+        setError(err?.message || 'Failed to load alumni profile');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchSingleAlumni();
+  }, [id]);
+
+  return { alumni, loading, error };
+}

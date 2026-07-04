@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspense, startTransition } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspense, startTransition } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 // import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
@@ -106,6 +106,9 @@ const TeamPage = lazy(() => import("./components/Teams/TeamPage"));
 const PublicFilesPage = lazy(() => import("./components/Teams/PublicFilesPage"));
 const WorldCupPage = lazy(() => import("./components/WorldCup/WorldCupPage").then(m => ({ default: m.WorldCupPage })));
 const WC26IntroModal = lazy(() => import("./components/WorldCup/WC26IntroModal").then(m => ({ default: m.WC26IntroModal })));
+const AlumniDirectoryPage = lazy(() => import("./components/Alumni/AlumniDirectoryPage"));
+const AlumniProfilePage = lazy(() => import("./components/Alumni/AlumniProfilePage"));
+const AlumniRegisterForm = lazy(() => import("./components/Alumni/AlumniRegisterForm"));
 
 interface Course {
   id: string;
@@ -208,6 +211,9 @@ function App() {
     return path.startsWith("/teams/") ? path.slice(7) : null;
   });
 
+  const [alumniSubView, setAlumniSubView] = useState<"directory" | "profile" | "register">("directory");
+  const [selectedAlumniId, setSelectedAlumniId] = useState<string | null>(null);
+
   // Helper to change view and update browser history (memoized)
   const goToView = useCallback(
     (
@@ -249,7 +255,11 @@ function App() {
         path = `/teams/${extra}`;
         setSelectedTeamId(extra);
       } else if (view === "teams") path = "/teams";
-      else if (view === "alumni") path = "/alumni";
+      else if (view === "alumni") {
+        path = "/alumni";
+        setAlumniSubView("directory");
+        setSelectedAlumniId(null);
+      }
       else if (view === "wc26") path = "/wc26";
       else if (view === "shared-resources") path = "/shared-resources";
       else if (view === "home") path = "/home";
@@ -258,7 +268,7 @@ function App() {
       if (!["ai", "section5"].includes(view)) setMajorAccessMessage(null);
       startTransition(() => setCurrentView(view));
     },
-    [],
+    [setAlumniSubView, setSelectedAlumniId],
   );
 
   // Admin status is DB-driven (profiles.is_admin), applied after the profile loads.
@@ -297,7 +307,11 @@ function App() {
           setSelectedTeamId(path.slice(7));
           setCurrentView("team");
         } else if (path === "/teams") setCurrentView("teams");
-        else if (path === "/alumni") setCurrentView("alumni");
+        else if (path === "/alumni") {
+          setAlumniSubView("directory");
+          setSelectedAlumniId(null);
+          setCurrentView("alumni");
+        }
         else if (path === "/wc26") setCurrentView("wc26");
         else if (path === "/" || path === "/home" || path === "" || !path)
           setCurrentView("home");
@@ -306,7 +320,7 @@ function App() {
     };
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
-  }, [isAdmin]);
+  }, [isAdmin, setAlumniSubView, setSelectedAlumniId]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [materials, setMaterials] = useState<Material[]>([]);
   const [totalMaterialsCount, setTotalMaterialsCount] = useState<number>(0);
@@ -8427,22 +8441,55 @@ For any queries, contact your course instructors or the department.`,
         </main>
       )}
 
-      {/* ── V2: Alumni Hub (Phase 3 — coming soon) ── */}
+      {/* ── V2: Alumni Hub ── */}
       {currentView === "alumni" && (
         <main className="fixed top-[72px] lg:top-20 inset-x-0 bottom-0 z-40 overflow-y-auto overscroll-y-contain">
-          <div className={`h-full flex flex-col items-center justify-center gap-4 px-4 ${isDarkMode ? "bg-[#000000]" : "bg-slate-50"}`}>
-            <GraduationCap className={`w-14 h-14 ${isDarkMode ? "text-amber-400" : "text-amber-500"}`} />
-            <h1 className={`text-2xl font-bold ${isDarkMode ? "text-white" : "text-slate-900"}`}>Alumni Hub</h1>
-            <p className={`text-sm text-center max-w-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-              The BUBT alumni directory is coming soon — connect with graduates from our varsity, see where they work, and get guidance.
-            </p>
-            <button
-              onClick={() => goToView("home")}
-              className="mt-2 px-5 py-2.5 rounded-lg bg-[#1e9df1] text-white text-sm font-medium hover:bg-[#1677cc]"
-            >
-              Back to Home
-            </button>
-          </div>
+          <Suspense fallback={
+            <div className={`h-full flex items-center justify-center p-4 ${isDarkMode ? "bg-[#000000]" : "bg-slate-50"}`}>
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#1e9df1]"></div>
+            </div>
+          }>
+            {alumniSubView === "directory" && (
+              <AlumniDirectoryPage
+                isDarkMode={isDarkMode}
+                isLoggedIn={!!authSession?.user}
+                onViewProfile={(id) => {
+                  setSelectedAlumniId(id);
+                  setAlumniSubView("profile");
+                }}
+                onRegisterClick={() => {
+                  if (!authSession?.user) {
+                    setMajorAccessMessage("Please sign in to register as alumni");
+                    setShowSignInModal(true);
+                  } else {
+                    setAlumniSubView("register");
+                  }
+                }}
+                onClose={() => goToView("home")}
+              />
+            )}
+            {alumniSubView === "profile" && selectedAlumniId && (
+              <AlumniProfilePage
+                id={selectedAlumniId}
+                isDarkMode={isDarkMode}
+                onBack={() => {
+                  setAlumniSubView("directory");
+                  setSelectedAlumniId(null);
+                }}
+              />
+            )}
+            {alumniSubView === "register" && authSession?.user && (
+              <AlumniRegisterForm
+                isDarkMode={isDarkMode}
+                userId={authSession.user.id}
+                userEmail={authSession.user.email || ""}
+                onBack={() => setAlumniSubView("directory")}
+                onSubmitSuccess={() => {
+                  setAlumniSubView("directory");
+                }}
+              />
+            )}
+          </Suspense>
         </main>
       )}
 
