@@ -3143,15 +3143,15 @@ For any queries, contact your course instructors or the department.`,
               {/* Logo — desktop only (left-aligned) */}
               <button
                 onClick={() => goToView("home")}
-                className="hidden lg:flex items-center gap-1 focus:outline-none group"
+                className="hidden lg:flex items-center gap-0.1 focus:outline-none group"
                 title="Go to Home"
               >
                 <img
                   src="/Edu51Portal.png"
                   alt="Edu51Portal Logo"
-                  className="h-16 w-16 object-cover rounded-xl flex-shrink-0 drop-shadow-sm"
-                  width="64"
-                  height="64"
+                  className="h-20 w-20 object-cover rounded-x1 flex-shrink-0 drop-shadow-sm"
+                  width="84"
+                  height="84"
                   decoding="async"
                 />
                 <span
@@ -3168,15 +3168,15 @@ For any queries, contact your course instructors or the department.`,
               {/* Mobile: centered logo */}
               <button
                 onClick={() => goToView("home")}
-                className="flex lg:hidden items-center gap-2.5 focus:outline-none"
+                className="flex lg:hidden items-center gap-0.1 focus:outline-none"
                 title="Go to Home"
               >
                 <img
                   src="/Edu51Portal.png"
                   alt="Edu51Portal Logo"
-                  className="h-10 w-10 object-cover rounded-xl drop-shadow-sm"
-                  width="40"
-                  height="40"
+                  className="h-14 w-14 object-cover rounded-xl drop-shadow-sm"
+                  width="54"
+                  height="54"
                   decoding="async"
                 />
                 <span
