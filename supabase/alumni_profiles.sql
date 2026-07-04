@@ -1,6 +1,6 @@
 -- Create alumni_profiles table
 CREATE TABLE IF NOT EXISTS public.alumni_profiles (
-    id UUID PRIMARY KEY REFERENCES public.profiles(id) ON DELETE CASCADE,
+    id UUID PRIMARY KEY,
     full_name TEXT NOT NULL,
     email TEXT NOT NULL,
     avatar_url TEXT,
