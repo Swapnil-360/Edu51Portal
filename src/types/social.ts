@@ -230,9 +230,9 @@ export interface AlumniProfile {
   avatar_url: string | null;
   graduation_year: number;
   major: string;
-  current_role: string | null;
-  current_company: string | null;
-  location: string | null;
+  job_title: string | null;
+  company_name: string | null;
+  city: string | null;
   linkedin_url: string | null;
   bio: string | null;
   career_tips: string | null;

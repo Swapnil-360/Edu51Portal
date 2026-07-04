@@ -83,10 +83,10 @@ export default function AlumniProfilePage({ id, isDarkMode, onBack }: Props) {
                 )}
               </div>
 
-              {alumni.current_role ? (
+              {alumni.job_title ? (
                 <p className={`text-base font-semibold ${isDarkMode ? "text-[#1e9df1]" : "text-[#1677cc]"}`}>
-                  {alumni.current_role}
-                  {alumni.current_company ? ` at ${alumni.current_company}` : ""}
+                  {alumni.job_title}
+                  {alumni.company_name ? ` at ${alumni.company_name}` : ""}
                 </p>
               ) : (
                 <p className={`text-sm italic ${subColor}`}>Graduate</p>
@@ -102,10 +102,10 @@ export default function AlumniProfilePage({ id, isDarkMode, onBack }: Props) {
                   <Calendar className="h-3.5 w-3.5 text-slate-500" />
                   Class of {alumni.graduation_year}
                 </span>
-                {alumni.location && (
+                {alumni.city && (
                   <span className="flex items-center gap-1.5">
                     <MapPin className="h-3.5 w-3.5 text-slate-500" />
-                    {alumni.location}
+                    {alumni.city}
                   </span>
                 )}
               </div>

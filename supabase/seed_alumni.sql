@@ -6,9 +6,9 @@ CREATE TABLE IF NOT EXISTS public.alumni_profiles (
     avatar_url TEXT,
     graduation_year INT NOT NULL,
     major TEXT NOT NULL,
-    current_role TEXT,
-    current_company TEXT,
-    location TEXT,
+    job_title TEXT,
+    company_name TEXT,
+    city TEXT,
     linkedin_url TEXT,
     bio TEXT,
     career_tips TEXT,
@@ -62,7 +62,7 @@ TRUNCATE TABLE public.alumni_profiles;
 -- Insert 10 verified dummy alumni profiles
 INSERT INTO public.alumni_profiles (
     id, full_name, email, avatar_url, graduation_year, major, 
-    current_role, current_company, location, linkedin_url, bio, 
+    job_title, company_name, city, linkedin_url, bio, 
     career_tips, is_verified, is_available_for_mentorship
 ) VALUES
 (

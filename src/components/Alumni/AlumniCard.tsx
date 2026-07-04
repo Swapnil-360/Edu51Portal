@@ -37,10 +37,10 @@ export default function AlumniCard({ alumni, isDarkMode, onViewProfile }: Props)
           <h3 className={`text-sm font-semibold truncate block ${title}`}>
             {alumni.full_name}
           </h3>
-          {alumni.current_role ? (
+          {alumni.job_title ? (
             <p className={`text-xs truncate font-medium ${isDarkMode ? "text-[#1e9df1]" : "text-[#1677cc]"}`}>
-              {alumni.current_role}
-              {alumni.current_company ? ` at ${alumni.current_company}` : ""}
+              {alumni.job_title}
+              {alumni.company_name ? ` at ${alumni.company_name}` : ""}
             </p>
           ) : (
             <p className={`text-xs truncate italic ${sub}`}>Graduate</p>

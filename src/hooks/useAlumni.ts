@@ -10,9 +10,9 @@ export const MOCK_ALUMNI: AlumniProfile[] = [
     avatar_url: null,
     graduation_year: 2024,
     major: "CSE",
-    current_role: "Software Engineer",
-    current_company: "Google",
-    location: "Dhaka, Bangladesh",
+    job_title: "Software Engineer",
+    company_name: "Google",
+    city: "Dhaka, Bangladesh",
     linkedin_url: "https://linkedin.com",
     bio: "Passionate software engineer focused on building scalable web apps.",
     career_tips: "Focus on fundamentals (DSA) and build personal projects.",
@@ -28,9 +28,9 @@ export const MOCK_ALUMNI: AlumniProfile[] = [
     avatar_url: null,
     graduation_year: 2023,
     major: "EEE",
-    current_role: "Hardware Design Engineer",
-    current_company: "Intel",
-    location: "Austin, USA",
+    job_title: "Hardware Design Engineer",
+    company_name: "Intel",
+    city: "Austin, USA",
     linkedin_url: "https://linkedin.com",
     bio: "Designing the next generation of processors.",
     career_tips: "Get hands-on experience with FPGA and microcontrollers early on.",
@@ -46,9 +46,9 @@ export const MOCK_ALUMNI: AlumniProfile[] = [
     avatar_url: null,
     graduation_year: 2022,
     major: "BBA",
-    current_role: "Product Manager",
-    current_company: "Pathao",
-    location: "Dhaka, Bangladesh",
+    job_title: "Product Manager",
+    company_name: "Pathao",
+    city: "Dhaka, Bangladesh",
     linkedin_url: "https://linkedin.com",
     bio: "Loves analyzing consumer behavior and building products.",
     career_tips: "Develop empathy for users and learn to read product analytics.",
@@ -87,8 +87,8 @@ export function useAlumni(filters?: { major?: string; search?: string; mentorshi
             data = data.filter(
               (a) =>
                 a.full_name.toLowerCase().includes(searchLower) ||
-                (a.current_role && a.current_role.toLowerCase().includes(searchLower)) ||
-                (a.current_company && a.current_company.toLowerCase().includes(searchLower))
+                (a.job_title && a.job_title.toLowerCase().includes(searchLower)) ||
+                (a.company_name && a.company_name.toLowerCase().includes(searchLower))
             );
           }
         }
@@ -112,7 +112,7 @@ export function useAlumni(filters?: { major?: string; search?: string; mentorshi
           if (filters.search && filters.search.trim()) {
             const searchVal = filters.search.trim();
             query = query.or(
-              `full_name.ilike.%${searchVal}%,current_role.ilike.%${searchVal}%,current_company.ilike.%${searchVal}%`
+              `full_name.ilike.%${searchVal}%,job_title.ilike.%${searchVal}%,company_name.ilike.%${searchVal}%`
             );
           }
         }
