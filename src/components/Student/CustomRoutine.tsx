@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import { Plus, Trash2, AlertTriangle, Save, Clock, MapPin, Download, X, Layers } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase, supabaseConfigured } from '../../lib/supabase';
@@ -30,9 +30,9 @@ interface CustomRoutineProps {
   userId?: string;
 }
 
-const DAYS: Day[] = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu'];
-const END_TIME = '17:45';
-const START_TIME = '08:00';
+const ALL_DAYS: Day[] = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const END_TIME = '22:00';
+const START_TIME = '07:00';
 const START_MINUTES = toMinutes(START_TIME);
 const END_MINUTES = toMinutes(END_TIME);
 const SLOT_MINUTES = 90;
@@ -245,50 +245,18 @@ export default function CustomRoutine({ onClose, isDarkMode: dk, userId }: Custo
     });
   }, [notesStorageKey]);
 
-  const allowedStartTimes = useMemo(() => {
-    const times: string[] = [];
-    const startMin = toMinutes('08:15');
-    const dur = form.mode === 'lab' && labDuration === 180 ? 180 : SLOT_MINUTES;
-    const bS = toMinutes(BREAK_START), bE = toMinutes(BREAK_END);
-    for (let t = startMin; t <= END_MINUTES; t += SLOT_MINUTES) {
-      const end = t + dur;
-      if (end > END_MINUTES) continue;
-      const crossesBreak = Math.max(t, bS) < Math.min(end, bE);
-      if (form.mode === 'lab' && labDuration === 180) {
-        if (t < bS && end > bE) { times.push(fmt2(t)); continue; }
-        if (crossesBreak) continue;
-      } else {
-        if (crossesBreak) continue;
-      }
-      times.push(fmt2(t));
-    }
-    return times;
-  }, [form.mode, labDuration]);
-
   useEffect(() => {
     const dur = form.mode === 'lab' && labDuration === 180 ? 180 : SLOT_MINUTES;
-    const startMin = toMinutes(form.start || '09:45');
+    const startMin = toMinutes(form.start || '08:15');
     let endMin = startMin + dur;
     if (form.mode === 'lab' && labDuration === 180) {
       const bS = toMinutes(BREAK_START), bE = toMinutes(BREAK_END);
       if (startMin < bS && startMin + dur > bS) endMin = startMin + dur + (bE - bS);
     }
-    setForm(f => ({ ...f, end: fmt2(Math.min(endMin, END_MINUTES)) }));
+    setForm(f => ({ ...f, end: fmt2(Math.min(endMin, toMinutes('23:59'))) }));
   }, [form.start, form.mode, labDuration]);
 
   const clearForm = () => setForm(f => ({ ...f, title: '', courseCode: '', room: '', section: '', teacher: '' }));
-
-  // Snap a clicked minute to the nearest valid start time for the current mode/duration
-  const nearestAllowedStart = (clickMin: number) => {
-    if (allowedStartTimes.length === 0) return '09:45';
-    let best = allowedStartTimes[0];
-    let bestDiff = Infinity;
-    for (const t of allowedStartTimes) {
-      const diff = Math.abs(toMinutes(t) - clickMin);
-      if (diff < bestDiff) { bestDiff = diff; best = t; }
-    }
-    return best;
-  };
 
   // Open the Add-Class modal, optionally pre-filling the day, start time (from a grid click), and type
   const openAddModal = (day?: Day, startMin?: number, type?: RoutineType) => {
@@ -297,7 +265,7 @@ export default function CustomRoutine({ onClose, isDarkMode: dk, userId }: Custo
       ...f,
       title: '', courseCode: '', room: '', section: '', teacher: '',
       day: day ?? f.day,
-      start: startMin !== undefined ? nearestAllowedStart(startMin) : f.start,
+      start: startMin !== undefined ? fmt2(startMin) : (f.start || '08:15'),
       type: type ?? f.type,
     }));
     setShowFormModal(true);
@@ -308,7 +276,7 @@ export default function CustomRoutine({ onClose, isDarkMode: dk, userId }: Custo
     if (!form.title?.trim() || !form.start || !form.end) { setFormError('Please fill in title and time.'); return; }
     const s = toMinutes(form.start), e = toMinutes(form.end);
     if (e <= s) { setFormError('End time must be after start time.'); return; }
-    if (e > END_MINUTES) { setFormError('End time must be on or before 5:45 PM.'); return; }
+    if (e > END_MINUTES) { setFormError(`End time must be on or before ${format12h(END_TIME)}.`); return; }
     const bS = toMinutes(BREAK_START), bE = toMinutes(BREAK_END);
     const newDay = (form.day as Day) || 'Sun';
     const newType = (form.type as RoutineType) || 'regular';
@@ -316,7 +284,7 @@ export default function CustomRoutine({ onClose, isDarkMode: dk, userId }: Custo
     // 3hr lab spanning break — auto-split
     if (form.mode === 'lab' && labDuration === 180 && Math.max(s, bS) < Math.min(e, bE)) {
       const firstEndMin = bS, secondStartMin = bE, secondEndMin = bE + SLOT_MINUTES;
-      if (secondEndMin > END_MINUTES) { setFormError('❌ 3hr lab cannot extend beyond 5:45 PM.'); return; }
+      if (secondEndMin > END_MINUTES) { setFormError(`❌ 3hr lab cannot extend beyond ${format12h(END_TIME)}.`); return; }
       for (const [slotS, slotE] of [[s, firstEndMin], [secondStartMin, secondEndMin]] as [number, number][]) {
         const over = entries.filter(en => en.day === newDay && Math.max(slotS, toMinutes(en.start)) < Math.min(slotE, toMinutes(en.end)));
         if (over.length >= 2) { setFormError('❌ Max 2 overlapping courses. One 3hr lab slot has too many.'); return; }
@@ -378,21 +346,105 @@ export default function CustomRoutine({ onClose, isDarkMode: dk, userId }: Custo
   const todayName = (['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as Day[])[new Date().getDay()];
   const [mobileDay, setMobileDay] = useState<Day>(todayName);
 
+  const [visibleDays, setVisibleDays] = useState<Day[]>(() => {
+    const defaultDays: Day[] = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu'];
+    if (typeof window === 'undefined') return defaultDays;
+    try {
+      const stored = localStorage.getItem(`userRoutineVisibleDays_${userId || 'anon'}`);
+      if (stored) return JSON.parse(stored) as Day[];
+    } catch { /* ignore */ }
+    return defaultDays;
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(`userRoutineVisibleDays_${userId || 'anon'}`, JSON.stringify(visibleDays));
+    } catch { /* ignore */ }
+  }, [visibleDays, userId]);
+
+  useEffect(() => {
+    const daysWithClasses = Array.from(new Set(entries.map(e => e.day)));
+    const missingDays = daysWithClasses.filter(d => !visibleDays.includes(d));
+    if (missingDays.length > 0) {
+      setVisibleDays(prev => {
+        const next = [...prev];
+        missingDays.forEach(d => {
+          if (!next.includes(d)) next.push(d);
+        });
+        const order: Day[] = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        return next.sort((a, b) => order.indexOf(a) - order.indexOf(b));
+      });
+    }
+  }, [entries, visibleDays]);
+
+  useEffect(() => {
+    if (visibleDays.length > 0 && !visibleDays.includes(mobileDay)) {
+      setMobileDay(visibleDays[0]);
+    }
+  }, [visibleDays, mobileDay]);
+
+  const toggleDayVisibility = (day: Day) => {
+    setVisibleDays(prev => {
+      let next;
+      if (prev.includes(day)) {
+        const hasClasses = entries.some(e => e.day === day);
+        if (hasClasses) return prev; // Cannot hide day if it has classes
+        next = prev.filter(d => d !== day);
+      } else {
+        next = [...prev, day];
+      }
+      const order: Day[] = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      return next.sort((a, b) => order.indexOf(a) - order.indexOf(b));
+    });
+  };
+
   // ── Grid helpers (desktop weekly grid) ───────────────────────────────────────
-  const totalMinutes = END_MINUTES - START_MINUTES;
-  const timeToTop = (hhmm: string) => ((toMinutes(hhmm) - START_MINUTES) / totalMinutes) * 100;
-  const heightFromRange = (start: string, end: string) => ((toMinutes(end) - toMinutes(start)) / totalMinutes) * 100;
-  const hourMarks = useMemo(() => {
-    const marks: number[] = [];
-    for (let m = START_MINUTES; m <= END_MINUTES; m += 60) marks.push(m);
-    if (marks[marks.length - 1] !== END_MINUTES) marks.push(END_MINUTES);
-    return marks;
-  }, []);
+  const intervals = useMemo(() => {
+    const uniqueMinutes = new Set<number>();
+    
+    // Always start at 08:15 unless user has earlier entries.
+    const startMins = Math.min(toMinutes('08:15'), ...entries.map(e => toMinutes(e.start)));
+    const endMins = Math.max(toMinutes('17:15'), ...entries.map(e => toMinutes(e.end)));
+    
+    uniqueMinutes.add(startMins);
+    uniqueMinutes.add(endMins);
+    uniqueMinutes.add(toMinutes(BREAK_START));
+    uniqueMinutes.add(toMinutes(BREAK_END));
+
+    entries.forEach(e => {
+      uniqueMinutes.add(toMinutes(e.start));
+      uniqueMinutes.add(toMinutes(e.end));
+    });
+
+    const sorted = Array.from(uniqueMinutes).sort((a, b) => a - b);
+    const list = [];
+    for (let i = 0; i < sorted.length - 1; i++) {
+      const start = sorted[i];
+      const end = sorted[i + 1];
+      list.push({
+        start,
+        end,
+        duration: end - start,
+      });
+    }
+    return list;
+  }, [entries]);
+
+  const groups = useMemo(() => {
+    const res: Record<string, RoutineEntry[]> = {};
+    entries.forEach(e => {
+      const key = `${e.day}-${e.start}`;
+      if (!res[key]) res[key] = [];
+      res[key].push(e);
+    });
+    return res;
+  }, [entries]);
+
   const GRID_H = 580;
 
   // ── Download ───────────────────────────────────────────────────────────────
   const handleDownload = () => {
-    const dayRows = DAYS.map(d => ({
+    const dayRows = ALL_DAYS.map(d => ({
       day: d,
       slots: entries.filter(e => e.day === d).sort((a, b) => toMinutes(a.start) - toMinutes(b.start)),
     })).filter(d => d.slots.length > 0);
@@ -444,6 +496,7 @@ ${slots.map(s => `<tr>
   // Per-day accent colours
   const DAY_COLOR: Record<string, string> = {
     Sun: '#0ea5e9', Mon: '#7c3aed', Tue: '#d97706', Wed: '#059669', Thu: '#e11d48',
+    Fri: '#ec4899', Sat: '#6366f1',
   };
 
   return (
@@ -454,6 +507,31 @@ ${slots.map(s => `<tr>
         <div className="flex items-center gap-2.5 flex-wrap">
           <span className={`text-sm font-bold ${dk ? 'text-white' : 'text-slate-900'}`}>My Routine</span>
           <span className={`text-[10px] font-medium ${dk ? 'text-slate-500' : 'text-slate-400'}`}>· Intake 51</span>
+          
+          {/* Day Adjuster Toggles */}
+          <div className="flex items-center gap-1.5 border-l pl-2.5 border-slate-200 dark:border-[#2f3336]">
+            <span className={`text-[9px] font-bold uppercase tracking-wider ${dk ? 'text-slate-500' : 'text-slate-400'}`}>Days:</span>
+            {ALL_DAYS.map(day => {
+              const isVisible = visibleDays.includes(day);
+              const hasClasses = entries.some(e => e.day === day);
+              return (
+                <button
+                  key={day}
+                  onClick={() => toggleDayVisibility(day)}
+                  disabled={hasClasses}
+                  className={`text-[9px] font-black w-[22px] h-[22px] rounded-full flex items-center justify-center border transition-all ${
+                    isVisible
+                      ? dk ? 'bg-sky-500/20 border-sky-500 text-sky-400' : 'bg-sky-50 border-sky-300 text-sky-600 shadow-sm'
+                      : dk ? 'border-[#2f3336] text-slate-600 hover:border-slate-700' : 'border-slate-200 text-slate-300 hover:border-slate-400'
+                  } ${hasClasses ? 'opacity-90 cursor-not-allowed' : ''}`}
+                  title={hasClasses ? `${day} contains classes (cannot hide)` : `${isVisible ? 'Hide' : 'Show'} ${day}`}
+                >
+                  {day[0]}
+                </button>
+              );
+            })}
+          </div>
+
           {entries.length > 0 && (
             <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${dk ? 'bg-[#16181c] text-slate-400' : 'bg-slate-100 text-slate-500'}`}>
               {entries.length} {entries.length === 1 ? 'class' : 'classes'}
@@ -520,15 +598,15 @@ ${slots.map(s => `<tr>
             {/* Inset white/dark table */}
             <div className={`mx-2.5 mb-2.5 rounded-2xl overflow-hidden ${dk ? 'bg-[#0d0f11]' : 'bg-white'}`}>
 
-              {/* Header row: Time | Day pills × 5 | Notes */}
+              {/* Header row: Time | Day pills | Notes */}
               <div className={`grid border-b ${dk ? 'border-[#2f3336]' : 'border-slate-200'}`}
-                style={{ gridTemplateColumns: '68px repeat(5, 1fr) minmax(150px, 200px)' }}>
+                style={{ gridTemplateColumns: `72px repeat(${visibleDays.length}, 1fr) minmax(150px, 200px)` }}>
 
                 <div className={`flex items-center justify-center py-3 border-r ${dk ? 'border-[#2f3336]' : 'border-slate-100'}`}>
                   <span className={`text-[9px] font-bold uppercase tracking-widest ${dk ? 'text-slate-500' : 'text-slate-400'}`}>Time</span>
                 </div>
 
-                {DAYS.map(d => {
+                {visibleDays.map(d => {
                   const isToday = d === todayName;
                   const color = DAY_COLOR[d];
                   return (
@@ -548,15 +626,122 @@ ${slots.map(s => `<tr>
               </div>
 
               {/* Grid body */}
-              <div className="relative grid" style={{ gridTemplateColumns: '68px repeat(5, 1fr) minmax(150px, 200px)', height: GRID_H }}>
+              <div className="grid relative" style={{
+                gridTemplateColumns: `72px repeat(${visibleDays.length}, 1fr) minmax(150px, 200px)`,
+                gridTemplateRows: intervals.map(int => `${Math.max(48, int.duration * 0.8)}px`).join(' '),
+              }}>
+
+                {/* Day column backgrounds & vertical dividers */}
+                {visibleDays.map((d, colIdx) => {
+                  const color = DAY_COLOR[d];
+                  return (
+                    <div
+                      key={`col-bg-${d}`}
+                      className={`border-r ${dk ? 'border-[#2f3336]' : 'border-slate-100'}`}
+                      style={{
+                        gridColumnStart: colIdx + 2,
+                        gridRowStart: 1,
+                        gridRowEnd: intervals.length + 1,
+                        background: dk ? `${color}04` : `${color}06`,
+                        zIndex: 0,
+                      }}
+                    />
+                  );
+                })}
+
+                {/* Time column labels */}
+                {intervals.map((int, idx) => (
+                  <div
+                    key={`time-label-${idx}`}
+                    className={`flex flex-col items-end justify-center pr-2.5 py-1 select-none border-b border-r ${dk ? 'border-[#2f3336]' : 'border-slate-100'}`}
+                    style={{
+                      gridColumnStart: 1,
+                      gridRowStart: idx + 1,
+                      gridRowEnd: idx + 2,
+                      zIndex: 1,
+                    }}
+                  >
+                    <span className={`text-[9px] font-bold tabular-nums leading-tight text-right ${dk ? 'text-slate-400' : 'text-slate-500'}`}>
+                      {format12h(fmt2(int.start))}
+                    </span>
+                    <span className={`text-[9px] font-bold tabular-nums leading-tight text-right ${dk ? 'text-slate-400' : 'text-slate-500'}`}>
+                      – {format12h(fmt2(int.end))}
+                    </span>
+                  </div>
+                ))}
+
+                {/* Clickable empty cells (hover for '+') and horizontal lines */}
+                {visibleDays.map((d, colIdx) => (
+                  intervals.map((int, rowIdx) => {
+                    const isBreak = Math.max(int.start, toMinutes(BREAK_START)) < Math.min(int.end, toMinutes(BREAK_END));
+                    if (isBreak) return null;
+                    return (
+                      <button
+                        key={`slot-${d}-${rowIdx}`}
+                        onClick={() => openAddModal(d, int.start)}
+                        className="relative flex items-center justify-center group/slot transition-colors hover:bg-[#1e9df1]/5"
+                        style={{
+                          gridColumnStart: colIdx + 2,
+                          gridRowStart: rowIdx + 1,
+                          gridRowEnd: rowIdx + 2,
+                          zIndex: 1,
+                          borderBottom: rowIdx === intervals.length - 1 ? undefined : `1px solid ${dk ? 'rgba(47,51,54,0.4)' : 'rgba(203,213,225,0.4)'}`,
+                        }}
+                        title={`Add class · ${d}`}
+                      >
+                        <span className="opacity-0 group-hover/slot:opacity-100 transition-opacity flex items-center justify-center w-5 h-5 rounded-full bg-[#1e9df1]/12 text-[#1e9df1]">
+                          <Plus className="w-3.5 h-3.5" />
+                        </span>
+                      </button>
+                    );
+                  })
+                ))}
+
+                {/* Notes column */}
+                {intervals.map((int, idx) => {
+                  const key = fmt2(int.start);
+                  return (
+                    <div
+                      key={`notes-${idx}`}
+                      className={`relative border-b ${dk ? 'border-[#2f3336]' : 'border-slate-100'} ${dk ? 'bg-[#16181c]/30' : 'bg-amber-50/20'}`}
+                      style={{
+                        gridColumnStart: visibleDays.length + 2,
+                        gridRowStart: idx + 1,
+                        gridRowEnd: idx + 2,
+                        zIndex: 1,
+                      }}
+                    >
+                      <textarea
+                        value={notes[key] || ''}
+                        onChange={e => updateNote(key, e.target.value)}
+                        placeholder="Add note…"
+                        style={{ fontSize: noteFontSize(notes[key] || '') }}
+                        className={`w-full h-full px-2 py-1.5 leading-relaxed resize-none bg-transparent border-0 focus:outline-none focus:bg-amber-50/50 transition-colors ${dk ? 'text-slate-300 placeholder-slate-600 focus:bg-[#16181c]/30' : 'text-slate-600 placeholder-slate-300'}`}
+                      />
+                    </div>
+                  );
+                })}
 
                 {/* Break overlay */}
                 {(() => {
-                  const bTop = ((toMinutes(BREAK_START) - START_MINUTES) / totalMinutes) * 100;
-                  const bH = ((toMinutes(BREAK_END) - toMinutes(BREAK_START)) / totalMinutes) * 100;
+                  const breakRowIdx = intervals.findIndex(int => int.start === toMinutes(BREAK_START) && int.end === toMinutes(BREAK_END));
+                  if (breakRowIdx === -1) return null;
                   return (
-                    <div className={`absolute z-20 flex items-center justify-center pointer-events-none border-y ${dk ? 'bg-[#0d0f11]/95 border-[#2f3336]/60' : 'bg-violet-50/95 border-violet-200/60'}`}
-                      style={{ left: 68, right: 0, top: `${bTop}%`, height: `${bH}%` }}>
+                    <div
+                      className={`absolute z-10 flex items-center justify-center border-y pointer-events-none ${
+                        dk ? 'bg-[#0d0f11]/90 border-[#2f3336]/60' : 'bg-violet-50/90 border-violet-200/60'
+                      }`}
+                      style={{
+                        gridColumnStart: 2,
+                        gridColumnEnd: visibleDays.length + 2,
+                        gridRowStart: breakRowIdx + 1,
+                        gridRowEnd: breakRowIdx + 2,
+                        left: 0,
+                        right: 0,
+                        top: 0,
+                        bottom: 0,
+                      }}
+                    >
                       <span className={`text-[10px] font-black tracking-widest uppercase ${dk ? 'text-violet-400' : 'text-violet-500'}`}>
                         Break &nbsp;·&nbsp; 12:45 – 1:15
                       </span>
@@ -564,152 +749,93 @@ ${slots.map(s => `<tr>
                   );
                 })()}
 
-                {/* Time column */}
-                <div className={`relative border-r ${dk ? 'border-[#2f3336]' : 'border-slate-100'}`}>
-                  {hourMarks.slice(0, -1).map((m, idx) => {
-                    const nextM = hourMarks[idx + 1];
-                    const top = ((m - START_MINUTES) / totalMinutes) * 100;
-                    const height = ((nextM - m) / totalMinutes) * 100;
+                {/* Entry cards */}
+                <AnimatePresence>
+                  {Object.entries(groups).map(([groupKey, group]) => {
+                    if (group.length === 0) return null;
+                    const first = group[0];
+                    const startRowIdx = intervals.findIndex(int => int.start === toMinutes(first.start));
+                    const endRowIdx = intervals.findIndex(int => int.end === toMinutes(first.end));
+                    if (startRowIdx === -1 || endRowIdx === -1) return null;
+
+                    const colIdx = visibleDays.indexOf(first.day);
+                    if (colIdx === -1) return null;
+
                     return (
-                      <div key={idx} className={`absolute left-0 right-0 flex flex-col items-end justify-start pr-2 pt-1 select-none border-b ${dk ? 'border-[#2f3336]' : 'border-slate-100'}`}
-                        style={{ top: `${top}%`, height: `${height}%` }}>
-                        <span className={`text-[9px] font-bold tabular-nums leading-tight ${dk ? 'text-slate-400' : 'text-slate-500'}`}>{fmtSlotRange(m, nextM)}</span>
-                        <span className={`text-[7px] font-medium leading-none ${dk ? 'text-slate-500' : 'text-[#8b98a5]'}`}>{m < 720 ? 'AM' : 'PM'}</span>
-                      </div>
-                    );
-                  })}
-                </div>
+                      <div
+                        key={groupKey}
+                        className="p-0.5 h-full w-full"
+                        style={{
+                          gridColumnStart: colIdx + 2,
+                          gridRowStart: startRowIdx + 1,
+                          gridRowEnd: endRowIdx + 2,
+                          zIndex: 10,
+                        }}
+                      >
+                        <div className={`h-full w-full ${group.length > 1 ? 'grid grid-cols-2 gap-1' : ''}`}>
+                          {group.map(entry => {
+                            const typeColor = entry.type === 'regular' ? '#10b981' : entry.type === 'improvement' ? '#3b82f6' : '#f43f5e';
+                            return (
+                              <motion.div
+                                key={entry.id}
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.12 } }}
+                                onClick={() => setSelectedEntryId(entry.id)}
+                                className={`relative cursor-pointer group rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all hover:z-30 h-full ${dk ? 'bg-[#1b1e23]' : 'bg-white'}`}
+                                style={{
+                                  border: `1px solid ${typeColor}${dk ? '40' : '2b'}`,
+                                }}
+                              >
+                                <span className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ background: typeColor }} />
+                                <div className="h-full pl-2.5 pr-1.5 py-1.5 flex flex-col overflow-hidden justify-between">
+                                  <div className="min-w-0">
+                                    <div className={`text-[10px] font-bold leading-tight line-clamp-1 ${dk ? 'text-white' : 'text-slate-900'}`} title={entry.title}>
+                                      {entry.title}
+                                    </div>
+                                    {entry.courseCode && (
+                                      <div className={`text-[8px] font-semibold mt-0.5 leading-none ${dk ? 'text-slate-400' : 'text-slate-500'}`}>
+                                        {entry.courseCode}
+                                      </div>
+                                    )}
+                                  </div>
 
-                {/* Day columns */}
-                {DAYS.map((d, colIdx) => {
-                  const color = DAY_COLOR[d];
-                  return (
-                    <motion.div key={d}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: colIdx * 0.05, duration: 0.2 }}
-                      className={`relative border-r ${dk ? 'border-[#2f3336]' : 'border-slate-100'}`}
-                      style={{ background: dk ? `${color}08` : `${color}09` }}>
+                                  <div className="min-w-0 mt-1">
+                                    <div className={`text-[8px] leading-none tabular-nums ${dk ? 'text-slate-400' : 'text-slate-500'}`}>
+                                      {format12h(entry.start)}–{format12h(entry.end)}
+                                    </div>
+                                    {(entry.room || entry.section) && (
+                                      <div className={`text-[8px] mt-0.5 leading-none ${dk ? 'text-slate-500' : 'text-slate-400'}`}>
+                                        {[entry.room, entry.section].filter(Boolean).join(' · ')}
+                                      </div>
+                                    )}
+                                  </div>
 
-                      {/* Hour grid lines */}
-                      {hourMarks.slice(1).map((m, idx) => (
-                        <div key={`line-${idx}`} className="absolute left-0 right-0 pointer-events-none"
-                          style={{ top: `${((m - START_MINUTES) / totalMinutes) * 100}%`, height: 1, background: dk ? 'rgba(47,51,54,0.9)' : 'rgba(203,213,225,0.6)' }} />
-                      ))}
-
-                      {/* Clickable empty slots — hover shows a + to add a class */}
-                      {hourMarks.slice(0, -1).map((m, idx) => {
-                        const nextM = hourMarks[idx + 1];
-                        const top = ((m - START_MINUTES) / totalMinutes) * 100;
-                        const height = ((nextM - m) / totalMinutes) * 100;
-                        return (
-                          <button key={`slot-${idx}`} onClick={() => openAddModal(d, m)}
-                            className="absolute left-0 right-0 flex items-center justify-center group/slot"
-                            style={{ top: `${top}%`, height: `${height}%`, zIndex: 0 }}
-                            title={`Add class · ${d}`}>
-                            <span className={`opacity-0 group-hover/slot:opacity-100 transition-opacity flex items-center justify-center w-5 h-5 rounded-full ${dk ? 'bg-[#1e9df1]/20 text-[#1e9df1]' : 'bg-[#1e9df1]/12 text-[#1e9df1]'}`}>
-                              <Plus className="w-3 h-3" />
-                            </span>
-                          </button>
-                        );
-                      })}
-
-                      {/* Entry cards — clean modern cards */}
-                      <AnimatePresence>
-                        {entries.filter(e => e.day === d).map(entry => {
-                          const top = timeToTop(entry.start);
-                          const height = heightFromRange(entry.start, entry.end);
-                          const typeColor = entry.type === 'regular' ? '#10b981' : entry.type === 'improvement' ? '#3b82f6' : '#f43f5e';
-                          // Overlapping courses (a regular + an improvement/retake) render as a stack —
-                          // the regular sits on top; the other peeks out behind it (offset down-right)
-                          const overlapIds = conflicts[entry.id] ?? [];
-                          const stacked = overlapIds.length > 0;
-                          let lane = 0;
-                          if (stacked) {
-                            const other = entries.find(e2 => e2.id === overlapIds[0]);
-                            if (other) {
-                              lane = entry.type === other.type
-                                ? (entry.createdAt <= other.createdAt ? 0 : 1)
-                                : (entry.type === 'regular' ? 0 : 1);
-                            }
-                          }
-                          const isFront = lane === 0;
-                          const leftStyle = stacked && !isFront ? '11px' : '3px';
-                          const widthStyle = stacked ? 'calc(100% - 18px)' : 'calc(100% - 6px)';
-                          const topStyle = stacked && !isFront ? `calc(${top}% + 8px)` : `${top}%`;
-                          return (
-                            <motion.div key={entry.id}
-                              initial={{ opacity: 0, scale: 0.94 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.12 } }}
-                              transition={{ type: 'spring', stiffness: 360, damping: 28 }}
-                              onClick={() => setSelectedEntryId(entry.id)}
-                              className={`absolute cursor-pointer group rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all hover:z-30 ${dk ? 'bg-[#1b1e23]' : 'bg-white'}`}
-                              style={{
-                                left: leftStyle, width: widthStyle, top: topStyle, height: `${Math.max(height, 3.5)}%`, minHeight: 34,
-                                border: `1px solid ${typeColor}${dk ? '40' : '2b'}`,
-                                boxShadow: stacked && isFront ? (dk ? '0 5px 14px rgba(0,0,0,0.55)' : '0 5px 14px rgba(15,23,42,0.18)') : undefined,
-                                zIndex: stacked ? (isFront ? 3 : 2) : 2,
-                              }}>
-                              <span className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ background: typeColor }} />
-                              <div className="h-full pl-2.5 pr-1.5 py-1.5 flex flex-col overflow-hidden">
-                                <div className={`text-[11px] font-bold leading-tight line-clamp-1 ${dk ? 'text-white' : 'text-slate-900'}`}>{entry.title}</div>
-                                {entry.courseCode && (
-                                  <div className={`text-[9px] font-semibold mt-0.5 leading-none ${dk ? 'text-slate-400' : 'text-slate-500'}`}>{entry.courseCode}</div>
-                                )}
-                                <div className={`text-[9px] mt-0.5 leading-none tabular-nums ${dk ? 'text-slate-400' : 'text-slate-500'}`}>{format12h(entry.start)}–{format12h(entry.end)}</div>
-                                {(entry.room || entry.section) && (
-                                  <div className={`text-[8px] mt-0.5 leading-none ${dk ? 'text-slate-500' : 'text-slate-400'}`}>{[entry.room, entry.section].filter(Boolean).join(' · ')}</div>
-                                )}
-                                <div className="mt-auto flex items-center gap-1 pt-0.5">
-                                  <span className="text-[7px] font-black px-1.5 py-0.5 rounded-full text-white leading-none" style={{ background: typeColor }}>
-                                    {entry.type === 'regular' ? 'REG' : entry.type === 'improvement' ? 'IMP' : 'RT'}
-                                  </span>
-                                  <span className={`text-[7px] font-black px-1.5 py-0.5 rounded-full text-white leading-none ${entry.mode === 'lab' ? 'bg-violet-500' : 'bg-slate-400'}`}>
-                                    {entry.mode === 'lab' ? 'LAB' : 'TH'}
-                                  </span>
-                                  {stacked && isFront && (
-                                    <span className="inline-flex items-center gap-0.5 text-[7px] font-black px-1.5 py-0.5 rounded-full text-white leading-none bg-slate-600" title={`${overlapIds.length + 1} classes in this slot`}>
-                                      <Layers className="w-2 h-2" /> {overlapIds.length + 1}
+                                  <div className="flex items-center gap-0.5 pt-1 mt-auto">
+                                    <span className="text-[6.5px] font-black px-1.5 py-0.5 rounded text-white leading-none" style={{ background: typeColor }}>
+                                      {entry.type === 'regular' ? 'REG' : entry.type === 'improvement' ? 'IMP' : 'RT'}
                                     </span>
-                                  )}
+                                    <span className={`text-[6.5px] font-black px-1.5 py-0.5 rounded text-white leading-none ${entry.mode === 'lab' ? 'bg-violet-500' : 'bg-slate-400'}`}>
+                                      {entry.mode === 'lab' ? 'LAB' : 'TH'}
+                                    </span>
+                                  </div>
                                 </div>
-                              </div>
 
-                              <button
-                                onClick={ev => { ev.stopPropagation(); removeEntry(entry.id); }}
-                                className={`absolute top-1 right-1 p-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity ${dk ? 'text-slate-400 hover:text-rose-400 hover:bg-rose-900/20' : 'text-slate-400 hover:text-rose-500 hover:bg-rose-50'}`}>
-                                <X className="w-2.5 h-2.5" />
-                              </button>
-                            </motion.div>
-                          );
-                        })}
-                      </AnimatePresence>
-                    </motion.div>
-                  );
-                })}
-
-                {/* Notes column — per hour slot */}
-                <div className={`relative ${dk ? 'bg-[#16181c]/30' : 'bg-amber-50/30'}`}>
-                  {hourMarks.slice(0, -1).map((m, idx) => {
-                    const nextM = hourMarks[idx + 1];
-                    const top = ((m - START_MINUTES) / totalMinutes) * 100;
-                    const height = ((nextM - m) / totalMinutes) * 100;
-                    const key = fmt2(m);
-                    return (
-                      <div key={idx} className={`absolute left-0 right-0 border-b ${dk ? 'border-[#2f3336]' : 'border-slate-100'}`}
-                        style={{ top: `${top}%`, height: `${height}%` }}>
-                        <textarea
-                          value={notes[key] || ''}
-                          onChange={e => updateNote(key, e.target.value)}
-                          placeholder="Add note…"
-                          style={{ fontSize: noteFontSize(notes[key] || '') }}
-                          className={`w-full h-full px-2 py-1 leading-relaxed resize-none bg-transparent border-0 focus:outline-none focus:bg-amber-50/50 transition-colors ${dk ? 'text-slate-300 placeholder-slate-600 focus:bg-[#16181c]/30' : 'text-slate-600 placeholder-slate-300'}`}
-                        />
+                                <button
+                                  onClick={ev => { ev.stopPropagation(); removeEntry(entry.id); }}
+                                  className={`absolute top-1 right-1 p-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity ${dk ? 'text-slate-400 hover:text-rose-400 hover:bg-rose-900/20' : 'text-slate-400 hover:text-rose-500 hover:bg-rose-50'}`}
+                                >
+                                  <X className="w-2.5 h-2.5" />
+                                </button>
+                              </motion.div>
+                            );
+                          })}
+                        </div>
                       </div>
                     );
                   })}
-                </div>
+                </AnimatePresence>
+
               </div>
             </div>
           </div>
@@ -735,7 +861,7 @@ ${slots.map(s => `<tr>
         <div className="lg:hidden flex-1 flex flex-col min-w-0">
           {/* Day tabs */}
           <div className={`print-hide sticky top-0 z-10 flex gap-1.5 px-4 py-3 overflow-x-auto border-b ${dk ? 'bg-[#17181c]/95 border-[#2f3336] backdrop-blur' : 'bg-white/95 border-slate-200 backdrop-blur'}`}>
-            {DAYS.map(d => {
+            {visibleDays.map(d => {
               const isSelected = d === mobileDay;
               const isToday = d === todayName;
               const color = DAY_COLOR[d];
@@ -989,7 +1115,7 @@ ${slots.map(s => `<tr>
                   <div>
                     <label className={labelCls}>Day</label>
                     <select value={form.day as string} onChange={e => setForm(f => ({ ...f, day: e.target.value as Day }))} className={inputCls}>
-                      {DAYS.map(d => <option key={d} value={d}>{d}</option>)}
+                      {ALL_DAYS.map(d => <option key={d} value={d}>{d}</option>)}
                     </select>
                   </div>
                 </div>
@@ -1026,24 +1152,37 @@ ${slots.map(s => `<tr>
                 <div className="grid grid-cols-2 gap-2.5">
                   <div>
                     <label className={labelCls}>Start</label>
-                    <select value={form.start} onChange={e => setForm(f => ({ ...f, start: e.target.value }))} className={inputCls}>
-                      {allowedStartTimes.map(t => <option key={t} value={t}>{format12h(t)}</option>)}
-                    </select>
+                    <input
+                      type="time"
+                      value={form.start || ''}
+                      onChange={e => setForm(f => ({ ...f, start: e.target.value }))}
+                      className={inputCls}
+                    />
                   </div>
                   <div>
-                    <label className={labelCls}>{form.mode === 'lab' ? 'Duration' : 'End'}</label>
-                    {form.mode === 'lab' ? (
-                      <select value={labDuration} onChange={e => setLabDuration(Number(e.target.value) as 90 | 180)} className={inputCls}>
-                        <option value={90}>1h 30m</option>
-                        <option value={180}>3h (split)</option>
-                      </select>
-                    ) : (
-                      <div className={`px-2.5 py-2 rounded-lg border text-xs font-semibold ${dk ? 'bg-[#16181c]/40 border-[#2f3336] text-slate-500' : 'bg-slate-50 border-slate-200 text-slate-400'}`}>
-                        {format12h(form.end || '')}
-                      </div>
-                    )}
+                    <label className={labelCls}>End</label>
+                    <input
+                      type="time"
+                      value={form.end || ''}
+                      onChange={e => setForm(f => ({ ...f, end: e.target.value }))}
+                      className={inputCls}
+                    />
                   </div>
                 </div>
+
+                {form.mode === 'lab' && (
+                  <div>
+                    <label className={labelCls}>Lab Duration (Auto-Split Helper)</label>
+                    <select
+                      value={labDuration}
+                      onChange={e => setLabDuration(Number(e.target.value) as 90 | 180)}
+                      className={inputCls}
+                    >
+                      <option value={90}>1h 30m (Standard Lab)</option>
+                      <option value={180}>3h (Auto-split across 12:45–1:15 Break)</option>
+                    </select>
+                  </div>
+                )}
 
                 <div className="grid grid-cols-2 gap-2.5">
                   <div>
