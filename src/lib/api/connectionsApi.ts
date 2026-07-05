@@ -11,6 +11,34 @@ export async function sendConnectionRequest(
   requesterId: string,
   addresseeId: string,
 ): Promise<{ error: string | null }> {
+  // Check if a connection row already exists (in any status)
+  const { data: existing, error: fetchError } = await supabase
+    .from("connections")
+    .select("id, status")
+    .or(`and(requester_id.eq.${requesterId},addressee_id.eq.${addresseeId}),and(requester_id.eq.${addresseeId},addressee_id.eq.${requesterId})`)
+    .maybeSingle();
+
+  if (fetchError) {
+    return { error: fetchError.message };
+  }
+
+  if (existing) {
+    if (existing.status === "rejected") {
+      // Delete the rejected row so we can create a new pending one.
+      // This is needed to comply with the unique index connections_pair_uq and RLS delete policy.
+      const { error: deleteError } = await supabase
+        .from("connections")
+        .delete()
+        .eq("id", existing.id);
+
+      if (deleteError) {
+        return { error: deleteError.message };
+      }
+    } else {
+      return { error: "A connection or pending request already exists." };
+    }
+  }
+
   const { error } = await supabase
     .from("connections")
     .insert([{ requester_id: requesterId, addressee_id: addresseeId }]);
@@ -52,7 +80,13 @@ export async function respondToRequest(
   accept: boolean,
 ): Promise<{ error: string | null }> {
   if (!accept) {
-    const { error } = await supabase.from("connections").delete().eq("id", connectionId);
+    const { error } = await supabase
+      .from("connections")
+      .update({
+        status: "rejected",
+        responded_at: new Date().toISOString(),
+      })
+      .eq("id", connectionId);
     return { error: error?.message ?? null };
   }
   const { error } = await supabase

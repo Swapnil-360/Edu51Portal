@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   AlertCircle,
   Camera,
@@ -494,7 +494,7 @@ export default function TeamPage({ teamId, currentUserId, onClose, onViewProfile
                     {leads.map((m) => (
                       <button
                         key={m.user_id}
-                        onClick={() => m.profile?.username && onViewProfile(m.profile.username)}
+                        onClick={() => (m.profile?.username || m.profile?.id) && onViewProfile(m.profile.username || m.profile.id)}
                         className={`flex items-center gap-2.5 p-2 rounded-xl transition-colors group ${isDarkMode ? "hover:bg-[#16181c]/60" : "hover:bg-slate-50"}`}
                       >
                         <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center text-[#e7e9ea] text-xs font-bold">
@@ -591,7 +591,7 @@ export default function TeamPage({ teamId, currentUserId, onClose, onViewProfile
               {members.map((m) => (
                 <li key={m.user_id} className="flex items-center gap-3">
                   <button
-                    onClick={() => m.profile?.username && onViewProfile(m.profile.username)}
+                    onClick={() => (m.profile?.username || m.profile?.id) && onViewProfile(m.profile.username || m.profile.id)}
                     className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center text-[#e7e9ea] font-bold"
                   >
                     {m.profile?.avatar_url || m.profile?.profile_pic ? (
@@ -603,7 +603,7 @@ export default function TeamPage({ teamId, currentUserId, onClose, onViewProfile
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() => m.profile?.username && onViewProfile(m.profile.username)}
+                        onClick={() => (m.profile?.username || m.profile?.id) && onViewProfile(m.profile.username || m.profile.id)}
                         className={`text-sm font-semibold truncate hover:underline ${title}`}
                       >
                         {m.profile?.name ?? "User"}

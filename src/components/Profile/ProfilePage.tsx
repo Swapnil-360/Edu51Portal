@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
   Camera,
@@ -78,7 +78,12 @@ export default function ProfilePage({ username, currentUserId, initialAvatarUrl,
         const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 10_000));
 
         if (username) {
-          p = await Promise.race([getProfileByUsername(username), timeout]);
+          const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(username);
+          if (isUuid) {
+            p = await Promise.race([getProfileById(username), timeout]);
+          } else {
+            p = await Promise.race([getProfileByUsername(username), timeout]);
+          }
         } else if (currentUserId) {
           p = await Promise.race([getProfileById(currentUserId), timeout]);
         }
@@ -154,7 +159,7 @@ export default function ProfilePage({ username, currentUserId, initialAvatarUrl,
   const handleConnect = async () => {
     if (!profile || !currentUserId) return;
     setBusy(true);
-    if (!connection) {
+    if (!connection || connection.status === "rejected") {
       await sendConnectionRequest(currentUserId, profile.id);
     } else if (connection.status === "pending" && connection.addressee_id === currentUserId) {
       await respondToRequest(connection.id, true);
@@ -240,14 +245,15 @@ export default function ProfilePage({ username, currentUserId, initialAvatarUrl,
   }
 
   const avatarSrc = profile.avatar_url || legacyPic || initialAvatarUrl || "";
-  const connectLabel = !connection
+  const showConnect = !connection || connection.status === "rejected";
+  const connectLabel = showConnect
     ? "Connect"
     : connection.status === "accepted"
       ? "Connected"
       : connection.addressee_id === currentUserId
         ? "Accept Request"
         : "Request Sent";
-  const ConnectIcon = !connection ? UserPlus : connection.status === "accepted" ? UserCheck : connection.addressee_id === currentUserId ? UserCheck : UserX;
+  const ConnectIcon = showConnect ? UserPlus : connection.status === "accepted" ? UserCheck : connection.addressee_id === currentUserId ? UserCheck : UserX;
 
   return (
     <div className={`min-h-screen pb-32 md:pb-20 ${pageBg}`}>

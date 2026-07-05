@@ -110,7 +110,7 @@ export default function NetworkPage({ currentUserId, onClose, onViewProfile, isD
   );
 
   const viewProfile = (p: SocialProfile) => {
-    if (p.username) onViewProfile(p.username);
+    onViewProfile(p.username || p.id);
   };
 
   return (
@@ -318,7 +318,7 @@ export default function NetworkPage({ currentUserId, onClose, onViewProfile, isD
                       isDarkMode={isDarkMode}
                       onView={viewProfile}
                       action={
-                        existing ? (
+                        existing && existing.status !== "rejected" ? (
                           <span className={`px-3 py-1.5 rounded-lg text-xs font-medium ${
                             existing.status === "accepted"
                               ? isDarkMode ? "bg-emerald-900/30 text-emerald-400" : "bg-emerald-50 text-emerald-700"
