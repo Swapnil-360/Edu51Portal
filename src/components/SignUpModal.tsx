@@ -488,6 +488,30 @@ export function SignUpModal({
                 setIsSubmitting(false);
                 return;
               }
+
+              // Send in-app notification to all admins
+              try {
+                const { data: admins } = await supabase
+                  .from("profiles")
+                  .select("id")
+                  .eq("is_admin", true);
+
+                if (admins && admins.length > 0) {
+                  const notificationsToInsert = admins.map((admin) => ({
+                    user_id: admin.id,
+                    type: "alumni_approval",
+                    title: "New Alumni Registration",
+                    body: `${name} has registered as alumni and is pending verification.`,
+                    actor_id: userId,
+                    actor_name: name,
+                    read: false,
+                  }));
+
+                  await supabase.from("notifications").insert(notificationsToInsert);
+                }
+              } catch (notifErr) {
+                console.error("Failed to create admin notification:", notifErr);
+              }
             }
           }
         } else {

@@ -3,7 +3,7 @@ import { supabase } from "../supabase";
 export interface AppNotification {
   id: string;
   user_id: string;
-  type: "mention" | "notice";
+  type: "mention" | "notice" | "alumni_approval";
   title: string;
   body: string | null;
   team_id: string | null;

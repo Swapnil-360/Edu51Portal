@@ -3649,6 +3649,8 @@ For any queries, contact your course instructors or the department.`,
                                   } else if (n.team_id) {
                                     setSelectedTeamId(n.team_id);
                                     goToView("team", n.team_id);
+                                  } else if (n.type === "alumni_approval" || n.title === "New Alumni Registration") {
+                                    goToView("admin");
                                   }
                                 }}
                                 className={`w-full flex gap-3 px-4 py-3.5 text-left transition-colors ${isDarkMode ? "hover:bg-amber-900/20 bg-amber-950/10" : "hover:bg-amber-50 bg-amber-50/70"}`}
@@ -4267,6 +4269,8 @@ For any queries, contact your course instructors or the department.`,
                         } else if (n.team_id) {
                           setSelectedTeamId(n.team_id);
                           goToView("team", n.team_id);
+                        } else if (n.type === "alumni_approval" || n.title === "New Alumni Registration") {
+                          goToView("admin");
                         }
                       }}
                       className={`w-full flex gap-3 px-5 py-4 text-left transition-colors ${isDarkMode ? "hover:bg-amber-900/20 bg-amber-950/10" : "hover:bg-amber-50 bg-amber-50/70"}`}
