@@ -383,6 +383,26 @@ export default function CustomRoutine({ onClose, isDarkMode: dk, userId }: Custo
     }
   }, [visibleDays, mobileDay]);
 
+  const [userIntake, setUserIntake] = useState(() => {
+    if (typeof window === 'undefined') return "51";
+    return localStorage.getItem(`userRoutineIntake_${userId || 'anon'}`) || "51";
+  });
+
+  const [userDepartment, setUserDepartment] = useState(() => {
+    if (typeof window === 'undefined') return "CSE";
+    return localStorage.getItem(`userRoutineDept_${userId || 'anon'}`) || "CSE";
+  });
+
+  const handleIntakeChange = (val: string) => {
+    setUserIntake(val);
+    localStorage.setItem(`userRoutineIntake_${userId || 'anon'}`, val);
+  };
+
+  const handleDeptChange = (val: string) => {
+    setUserDepartment(val);
+    localStorage.setItem(`userRoutineDept_${userId || 'anon'}`, val);
+  };
+
   const toggleDayVisibility = (day: Day) => {
     setVisibleDays(prev => {
       let next;
@@ -466,7 +486,7 @@ export default function CustomRoutine({ onClose, isDarkMode: dk, userId }: Custo
   @media print{body{padding:20px}h1{font-size:18px}}
 </style></head><body>
 <h1>Edu<span style="color:#e11d48">51</span>Portal · My Routine</h1>
-<div class="sub">Intake 51 · Custom Routine · ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+<div class="sub">Intake ${userIntake} (${userDepartment}) · Custom Routine · ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
 ${dayRows.map(({ day, slots }) => `<div class="day"><div class="day-name">${day}</div>
 <table><tr><th>Time</th><th>Course</th><th>Room / Section</th><th>Teacher</th><th>Type</th></tr>
 ${slots.map(s => `<tr>
@@ -506,7 +526,33 @@ ${slots.map(s => `<tr>
       <div className={`print-hide flex-shrink-0 flex flex-wrap items-center justify-between gap-2 px-4 sm:px-5 py-3 border-b ${dk ? 'bg-[#17181c]/90 border-[#2f3336]' : 'bg-white border-slate-200 shadow-sm'}`}>
         <div className="flex items-center gap-2.5 flex-wrap">
           <span className={`text-sm font-bold ${dk ? 'text-white' : 'text-slate-900'}`}>My Routine</span>
-          <span className={`text-[10px] font-medium ${dk ? 'text-slate-500' : 'text-slate-400'}`}>· Intake 51</span>
+          {/* Intake & Dept Configuration */}
+          <div className="flex items-center gap-1.5 border-l pl-2.5 border-slate-200 dark:border-[#2f3336]">
+            <span className={`text-[9px] font-bold uppercase tracking-wider ${dk ? 'text-slate-500' : 'text-slate-400'}`}>Intake:</span>
+            <input
+              type="text"
+              value={userIntake}
+              onChange={(e) => handleIntakeChange(e.target.value)}
+              className={`w-10 px-1 py-0.5 rounded border text-[10px] font-bold text-center transition-all ${
+                dk
+                  ? "bg-[#16181c] border-[#2f3336] text-slate-300 focus:border-[#1e9df1] focus:ring-1 focus:ring-[#1e9df1]/40"
+                  : "bg-white border-slate-200 text-slate-700 focus:border-[#1677cc] focus:ring-1 focus:ring-[#1677cc]/40"
+              }`}
+              placeholder="51"
+            />
+            <span className={`text-[9px] font-bold uppercase tracking-wider ${dk ? 'text-slate-500' : 'text-slate-400'}`}>Dept:</span>
+            <input
+              type="text"
+              value={userDepartment}
+              onChange={(e) => handleDeptChange(e.target.value)}
+              className={`w-14 px-1 py-0.5 rounded border text-[10px] font-bold text-center transition-all ${
+                dk
+                  ? "bg-[#16181c] border-[#2f3336] text-slate-300 focus:border-[#1e9df1] focus:ring-1 focus:ring-[#1e9df1]/40"
+                  : "bg-white border-slate-200 text-slate-700 focus:border-[#1677cc] focus:ring-1 focus:ring-[#1677cc]/40"
+              }`}
+              placeholder="CSE"
+            />
+          </div>
           
           {/* Day Adjuster Toggles */}
           <div className="flex items-center gap-1.5 border-l pl-2.5 border-slate-200 dark:border-[#2f3336]">
@@ -591,7 +637,7 @@ ${slots.map(s => `<tr>
             <div className="px-5 pt-4 pb-3 flex items-center justify-between flex-wrap gap-2">
               <h2 className="text-white font-black text-xl tracking-tight drop-shadow-sm">Weekly Routine</h2>
               <span className="text-[11px] font-bold text-white/85 uppercase tracking-widest px-2.5 py-1 rounded-full bg-white/15">
-                Intake 51
+                Intake {userIntake} · {userDepartment}
               </span>
             </div>
 
