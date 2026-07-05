@@ -12,6 +12,7 @@ import {
   TaskPriority,
 } from "../../types/social";
 import { normalizeProfile } from "./profileApi";
+import { sanitizeIlikeTerm } from "../sanitize";
 
 export interface CreateTeamPayload {
   name: string;
@@ -72,7 +73,7 @@ export async function discoverTeams(
 ): Promise<Team[]> {
   let q = supabase.from("teams").select("*").order("created_at", { ascending: false }).limit(limit);
   if (filters.query?.trim()) {
-    const term = filters.query.trim().replace(/[%,()]/g, "");
+    const term = sanitizeIlikeTerm(filters.query.trim());
     q = q.or(`name.ilike.%${term}%,description.ilike.%${term}%`);
   }
   if (filters.category) q = q.eq("category", filters.category);

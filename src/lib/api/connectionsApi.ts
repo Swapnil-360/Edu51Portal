@@ -6,6 +6,7 @@ import {
   PROFILE_CARD_COLS,
 } from "../../types/social";
 import { normalizeProfile } from "./profileApi";
+import { sanitizeIlikeTerm } from "../sanitize";
 
 export async function sendConnectionRequest(
   requesterId: string,
@@ -124,7 +125,7 @@ export async function searchUsers(
     .limit(limit);
 
   if (filters.query?.trim()) {
-    const term = filters.query.trim().replace(/[%,()]/g, "");
+    const term = sanitizeIlikeTerm(filters.query.trim());
     q = q.or(`name.ilike.%${term}%,username.ilike.%${term}%,headline.ilike.%${term}%`);
   }
   if (filters.skills?.length) {

@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase, supabaseConfigured } from '../lib/supabase';
+import { sanitizeIlikeTerm } from '../lib/sanitize';
 import { AlumniProfile } from '../types/social';
 
 export const MOCK_ALUMNI: AlumniProfile[] = [
@@ -113,7 +114,7 @@ export function useAlumni(filters?: { major?: string; search?: string; mentorshi
             query = query.eq('is_available_for_mentorship', true);
           }
           if (filters.search && filters.search.trim()) {
-            const searchVal = filters.search.trim();
+            const searchVal = sanitizeIlikeTerm(filters.search.trim());
             query = query.or(
               `full_name.ilike.%${searchVal}%,job_title.ilike.%${searchVal}%,company_name.ilike.%${searchVal}%`
             );
