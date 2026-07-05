@@ -96,7 +96,10 @@ export function useAlumni(filters?: { major?: string; search?: string; mentorshi
         setAlumni(data);
       } else {
         // Supabase DB fetch
-        let query = supabase.from('alumni_profiles').select('*').eq('is_verified', true);
+        let query = supabase
+          .from('alumni_profiles')
+          .select('id, full_name, email, avatar_url, graduation_year, major, job_title, company_name, city, linkedin_url, bio, career_tips, is_verified, is_available_for_mentorship, created_at, updated_at')
+          .eq('is_verified', true);
 
         if (filters) {
           if (filters.major && filters.major !== 'All') {
@@ -156,7 +159,7 @@ export function useAlumniById(id: string) {
         } else {
           const { data, error: fetchErr } = await supabase
             .from('alumni_profiles')
-            .select('*')
+            .select('id, full_name, email, avatar_url, graduation_year, major, job_title, company_name, city, linkedin_url, bio, career_tips, is_verified, is_available_for_mentorship, created_at, updated_at')
             .eq('id', id)
             .single();
           if (fetchErr) throw fetchErr;

@@ -36,6 +36,15 @@ export default function AlumniRegisterForm({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
+  React.useEffect(() => {
+    if (success) {
+      const timer = setTimeout(() => {
+        onSubmitSuccess();
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [success, onSubmitSuccess]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!userId) {
