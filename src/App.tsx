@@ -443,6 +443,8 @@ function App() {
     password: localStorage.getItem("userProfilePassword") || "",
     profilePic: localStorage.getItem("userProfilePic") || "",
     avatar_url: localStorage.getItem("userProfileAvatarUrl") || "",
+    isAlumni: localStorage.getItem("userProfileIsAlumni") === "true",
+    isVerified: localStorage.getItem("userProfileIsVerified") === "true",
   });
 
   const activeMajor = isLoggedIn ? userProfile.major : guestMajor;
@@ -486,7 +488,7 @@ function App() {
   // profile_pic is served from localStorage cache and refreshed in the background.
   // avatar_url (Storage URL) is short and included so it's cached immediately on login.
   const PROFILE_META_COLS =
-    "id,name,section,major,bubt_email,notification_email,phone,created_at,last_login_at,avatar_url,is_admin,is_alumni";
+    "id,name,section,major,bubt_email,notification_email,phone,created_at,last_login_at,avatar_url,is_admin,is_alumni,is_verified";
 
   const applyProfileData = (profileData: any, email: string, password: string) => {
     // NOTE: admin status is NOT set from this profile fetch — it's resolved
@@ -509,6 +511,7 @@ function App() {
       profilePic: pic,
       avatar_url: pic,
       isAlumni: profileData?.is_alumni || false,
+      isVerified: profileData?.is_verified || false,
     };
     localStorage.setItem("userProfileBubtEmail", updatedProfile.bubtEmail);
     localStorage.setItem("userProfileName", updatedProfile.name);
@@ -517,6 +520,7 @@ function App() {
     localStorage.setItem("userProfileNotificationEmail", updatedProfile.notificationEmail);
     localStorage.setItem("userProfilePhone", updatedProfile.phone);
     localStorage.setItem("userProfileIsAlumni", updatedProfile.isAlumni ? "true" : "false");
+    localStorage.setItem("userProfileIsVerified", updatedProfile.isVerified ? "true" : "false");
     if (avatarUrl) {
       localStorage.setItem("userProfileAvatarUrl", avatarUrl);
       // Preload the image so it's in browser cache when the profile page opens
@@ -830,6 +834,8 @@ function App() {
           password: "",
           profilePic: "",
           avatar_url: "",
+          isAlumni: false,
+          isVerified: false,
         });
 
         // Clear localStorage
@@ -844,6 +850,7 @@ function App() {
         localStorage.removeItem("userProfilePassword");
         localStorage.removeItem("userProfile");
         localStorage.removeItem("userProfileIsAlumni");
+        localStorage.removeItem("userProfileIsVerified");
       }
     });
 
@@ -3106,6 +3113,73 @@ For any queries, contact your course instructors or the department.`,
     }
   };
 
+  const handlePendingAlumniSignOut = () => {
+    setUserProfile({
+      name: "Welcome Student",
+      section: "",
+      major: "",
+      bubtEmail: "",
+      notificationEmail: "",
+      phone: "",
+      password: "",
+      profilePic: "",
+      avatar_url: "",
+      isAlumni: false,
+      isVerified: false,
+    });
+    [
+      "userProfileBubtEmail",
+      "userProfileName",
+      "userProfileMajor",
+      "userProfileSection",
+      "userProfileNotificationEmail",
+      "userProfilePhone",
+      "userProfilePic",
+      "userProfileAvatarUrl",
+      "userProfilePassword",
+      "userProfile",
+      "userProfileIsAlumni",
+      "userProfileIsVerified",
+    ].forEach((k) => localStorage.removeItem(k));
+    goToView("home");
+    showMajorAccessNotification(
+      "success",
+      "Signed out successfully. See you soon!",
+    );
+    supabase.auth.signOut().catch((err: any) =>
+      console.error("[SIGN OUT] Supabase error:", err),
+    );
+  };
+
+  const isAlumniPending = isLoggedIn && userProfile.isAlumni && !userProfile.isVerified && !isAdmin;
+
+  if (isAlumniPending) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center p-4 transition-colors duration-300 ${isDarkMode ? "bg-black text-white" : "bg-slate-50 text-slate-900"}`}>
+        <div className={`max-w-md w-full p-8 rounded-2xl border text-center flex flex-col items-center gap-6 ${isDarkMode ? "bg-[#17181c] border-[#2f3336]" : "bg-white border-slate-200 shadow-xl"}`}>
+          <div className="w-16 h-16 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+            <svg className="h-10 w-10 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m0 0v2m0-2h2m-2 0H8m13-3V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h8z" />
+            </svg>
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-bold">Profile Pending Approval</h2>
+            <p className={`text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"} leading-relaxed`}>
+              Thank you for registering as an alumni! Your profile is currently being reviewed by the administration.
+              Once verified, you will have full access to the portal.
+            </p>
+          </div>
+          <button
+            onClick={handlePendingAlumniSignOut}
+            className="w-full py-2.5 rounded-lg bg-red-500 hover:bg-red-650 text-white text-sm font-semibold transition-colors shadow-lg"
+          >
+            Sign Out
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   // Main return for all other views
   return (
     <div
@@ -3463,6 +3537,7 @@ For any queries, contact your course instructors or the department.`,
                             "userProfileAvatarUrl",
                             "userProfile",
                             "userProfileIsAlumni",
+                            "userProfileIsVerified",
                           ].forEach((k) => localStorage.removeItem(k));
                           goToView("home");
                           showMajorAccessNotification(
@@ -4033,6 +4108,7 @@ For any queries, contact your course instructors or the department.`,
                       "userProfileAvatarUrl",
                       "userProfile",
                       "userProfileIsAlumni",
+                      "userProfileIsVerified",
                     ];
                     keysToRemove.forEach((key) => localStorage.removeItem(key));
                     goToView("home");

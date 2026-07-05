@@ -441,6 +441,7 @@ export function SignUpModal({
                   phone,
                   profile_pic: profilePic,
                   is_alumni: role === "alumni",
+                  is_verified: role !== "alumni",
                   created_at: new Date().toISOString(),
                   last_login_at: new Date().toISOString(),
                 },

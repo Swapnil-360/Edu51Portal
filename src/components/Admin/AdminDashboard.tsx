@@ -1,6 +1,7 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Bell, Plus, ChevronDown, ChevronUp, AlertCircle, Link as LinkIcon, Trash2, Edit2, BarChart3, BookOpen, Files, Users, TrendingUp, HardDrive, UsersRound, ShieldCheck, MessageSquare, RefreshCw, Bug, Lightbulb, Sparkles } from 'lucide-react';
 import MaterialManager from './MaterialManager';
+import { supabase, supabaseConfigured } from '../../lib/supabase';
 
 interface Notice {
   id: string;
@@ -134,6 +135,103 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
   // Live email preview toggle for the broadcast composer
   const [showEmailPreview, setShowEmailPreview] = useState(true);
+
+  // Alumni approval queue state
+  const [pendingAlumni, setPendingAlumni] = useState<any[]>([]);
+  const [pendingAlumniLoading, setPendingAlumniLoading] = useState(false);
+
+  const fetchPendingAlumni = async () => {
+    setPendingAlumniLoading(true);
+    try {
+      if (supabaseConfigured) {
+        const { data, error } = await supabase
+          .from('alumni_profiles')
+          .select('*')
+          .eq('is_verified', false);
+        if (error) throw error;
+        setPendingAlumni(data || []);
+      } else {
+        const savedMock = localStorage.getItem('mock_pending_alumni');
+        if (savedMock) {
+          setPendingAlumni(JSON.parse(savedMock));
+        } else {
+          const initialMock = [
+            {
+              id: "mock-pending-1",
+              full_name: "Tariqul Islam",
+              email: "tariqul@gmail.com",
+              student_id: "1920-1-CSE-001",
+              graduation_year: 2024,
+              dept: "CSE",
+              major: "CSE",
+              id_card_url: "https://placehold.co/400x250?text=Student+ID+Tariqul+Islam",
+            }
+          ];
+          setPendingAlumni(initialMock);
+          localStorage.setItem('mock_pending_alumni', JSON.stringify(initialMock));
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching pending alumni:", err);
+    } finally {
+      setPendingAlumniLoading(false);
+    }
+  };
+
+  const approveAlumni = async (id: string) => {
+    try {
+      if (supabaseConfigured) {
+        const { error: err1 } = await supabase
+          .from('alumni_profiles')
+          .update({ is_verified: true })
+          .eq('id', id);
+        if (err1) throw err1;
+
+        const { error: err2 } = await supabase
+          .from('profiles')
+          .update({ is_verified: true })
+          .eq('id', id);
+        if (err2) throw err2;
+      } else {
+        const updated = pendingAlumni.filter(a => a.id !== id);
+        setPendingAlumni(updated);
+        localStorage.setItem('mock_pending_alumni', JSON.stringify(updated));
+      }
+      fetchPendingAlumni();
+    } catch (err) {
+      console.error("Error approving alumni:", err);
+    }
+  };
+
+  const rejectAlumni = async (id: string) => {
+    try {
+      if (supabaseConfigured) {
+        const { error: err1 } = await supabase
+          .from('alumni_profiles')
+          .delete()
+          .eq('id', id);
+        if (err1) throw err1;
+
+        const { error: err2 } = await supabase
+          .from('profiles')
+          .delete()
+          .eq('id', id);
+        if (err2) throw err2;
+      } else {
+        const updated = pendingAlumni.filter(a => a.id !== id);
+        setPendingAlumni(updated);
+        localStorage.setItem('mock_pending_alumni', JSON.stringify(updated));
+      }
+      fetchPendingAlumni();
+    } catch (err) {
+      console.error("Error rejecting alumni:", err);
+    }
+  };
+
+  // Fetch pending alumni on mount
+  useEffect(() => {
+    fetchPendingAlumni();
+  }, []);
   // Feedback inbox filter
   const [feedbackFilter, setFeedbackFilter] = useState<'all' | 'new' | 'reviewed' | 'closed'>('all');
 
@@ -430,6 +528,108 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     </div>
                   );
                 })}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Alumni Approval Section */}
+        <div className={`group relative overflow-hidden rounded-xl lg:rounded-2xl transition-all duration-300 ${isDarkMode ? 'bg-gradient-to-br from-indigo-900/30 to-slate-800/40 backdrop-blur-xl border border-indigo-500/25' : 'bg-gradient-to-br from-indigo-50/80 to-white/60 backdrop-blur-xl border border-indigo-200/60'}`}>
+          <div className="relative z-10 p-4 sm:p-5 lg:p-6">
+            <div className="flex items-center justify-between gap-3 mb-5">
+              <div className="flex items-center gap-3">
+                <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-indigo-500/20 text-indigo-400' : 'bg-indigo-200 text-indigo-60'}`}>
+                  <Users className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 className={`text-base sm:text-lg font-bold ${isDarkMode ? 'text-indigo-200' : 'text-indigo-900'}`}>
+                    Alumni Approval Queue
+                  </h2>
+                  <p className={`text-xs sm:text-sm ${isDarkMode ? 'text-indigo-300/70' : 'text-indigo-700/70'}`}>
+                    Review and verify registration requests from graduating alumni.
+                  </p>
+                </div>
+              </div>
+              <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${pendingAlumni.length > 0 ? 'bg-indigo-500 text-white animate-pulse' : 'bg-slate-500/20 text-slate-400'}`}>
+                {pendingAlumni.length} pending
+              </span>
+            </div>
+
+            {pendingAlumniLoading ? (
+              <p className={`text-sm py-4 text-center ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Loading requests…</p>
+            ) : pendingAlumni.length === 0 ? (
+              <div className={`text-center py-6 border border-dashed rounded-lg ${isDarkMode ? 'border-[#2f3336]/60 text-slate-500' : 'border-slate-200 text-slate-400 bg-white/30'}`}>
+                <ShieldCheck className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                <p className="text-sm font-semibold">All registrations processed</p>
+                <p className="text-xs mt-0.5">No pending alumni verification requests.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[36rem] overflow-y-auto pr-1">
+                {pendingAlumni.map((alumni) => (
+                  <div
+                    key={alumni.id}
+                    className={`flex flex-col gap-4 p-4 rounded-xl border transition-all ${isDarkMode ? 'bg-[#16181c]/50 border-[#2f3336]/50 hover:border-indigo-500/30' : 'bg-white/70 border-slate-200 hover:border-indigo-300/40'}`}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <h4 className={`text-sm font-bold truncate ${isDarkMode ? 'text-gray-100' : 'text-gray-900'}`}>{alumni.full_name}</h4>
+                        <p className={`text-xs truncate ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>{alumni.email}</p>
+                      </div>
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${isDarkMode ? 'bg-[#2f3336] text-[#8b98a5]' : 'bg-slate-200 text-slate-600'}`}>
+                        ID: {alumni.student_id || '—'}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div className={`p-2 rounded ${isDarkMode ? 'bg-slate-800/40' : 'bg-slate-100/60'}`}>
+                        <span className={isDarkMode ? 'text-slate-400' : 'text-slate-500'}>Graduation Year:</span>
+                        <p className="font-semibold">{alumni.graduation_year || '—'}</p>
+                      </div>
+                      <div className={`p-2 rounded ${isDarkMode ? 'bg-slate-800/40' : 'bg-slate-100/60'}`}>
+                        <span className={isDarkMode ? 'text-slate-400' : 'text-slate-500'}>Major:</span>
+                        <p className="font-semibold uppercase">{alumni.major || '—'}</p>
+                      </div>
+                      <div className={`p-2 rounded col-span-2 ${isDarkMode ? 'bg-slate-800/40' : 'bg-slate-100/60'}`}>
+                        <span className={isDarkMode ? 'text-slate-400' : 'text-slate-500'}>Department:</span>
+                        <p className="font-semibold">{alumni.dept || '—'}</p>
+                      </div>
+                    </div>
+
+                    {/* ID Card Image Preview */}
+                    <div className="space-y-1.5">
+                      <span className={`text-[10px] font-bold uppercase tracking-wider ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Student ID Card:</span>
+                      {alumni.id_card_url ? (
+                        <div className={`relative aspect-[16/10] w-full rounded-lg overflow-hidden border ${isDarkMode ? 'border-[#2f3336] bg-slate-900/60' : 'border-slate-300 bg-slate-100'}`}>
+                          <img
+                            src={alumni.id_card_url}
+                            alt="Alumni ID Card"
+                            className="w-full h-full object-contain cursor-pointer hover:scale-[1.02] transition-transform"
+                            onClick={() => window.open(alumni.id_card_url, '_blank')}
+                          />
+                        </div>
+                      ) : (
+                        <div className={`text-xs italic py-4 text-center border border-dashed rounded-lg ${isDarkMode ? 'border-[#2f3336]/60 text-slate-500' : 'border-slate-200 text-slate-400'}`}>
+                          No ID card image uploaded
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex gap-2 border-t border-[#2f3336]/10 pt-3 mt-auto">
+                      <button
+                        onClick={() => rejectAlumni(alumni.id)}
+                        className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-all ${isDarkMode ? 'bg-red-500/20 text-red-300 hover:bg-red-500/30' : 'bg-red-100 text-red-700 hover:bg-red-200'}`}
+                      >
+                        Reject
+                      </button>
+                      <button
+                        onClick={() => approveAlumni(alumni.id)}
+                        className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-all ${isDarkMode ? 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30' : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'}`}
+                      >
+                        Approve
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>

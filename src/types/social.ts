@@ -19,6 +19,7 @@ export interface SocialProfile {
   visibility: ProfileVisibility;
   is_alumni: boolean;
   is_admin: boolean;
+  is_verified?: boolean;
   // legacy Edu51Five fields (kept working)
   section: string | null;
   major: string | null;
