@@ -20,6 +20,30 @@ export async function sendConnectionRequest(
     }
     return { error: error.message };
   }
+
+  try {
+    // Fetch sender profile name to construct the notification
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("name")
+      .eq("id", requesterId)
+      .single();
+    const name = profile?.name || "Someone";
+
+    // Insert notification row for the addressee
+    await supabase.from("notifications").insert([{
+      user_id: addresseeId,
+      type: "notice",
+      title: "Connection Request",
+      body: `${name} sent you a connection request.`,
+      actor_id: requesterId,
+      actor_name: name,
+      read: false,
+    }]);
+  } catch (err) {
+    console.error("Failed to insert connection request notification:", err);
+  }
+
   return { error: null };
 }
 

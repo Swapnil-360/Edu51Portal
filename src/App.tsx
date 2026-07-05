@@ -3553,20 +3553,32 @@ For any queries, contact your course instructors or the department.`,
                           </div>
                         ) : (
                           <div className={`divide-y ${isDarkMode ? "divide-[#2f3336]" : "divide-gray-100"}`}>
-                            {mentionNotifications.map((n, idx) => (
+                             {mentionNotifications.map((n, idx) => (
                               <motion.button
                                 key={n.id}
                                 initial={{ opacity: 0, x: 20, filter: "blur(10px)" }}
                                 animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
                                 transition={{ duration: 0.25, delay: idx * 0.05 }}
-                                onClick={() => { markNotificationRead(n.id); setMentionNotifications((prev) => prev.filter((x) => x.id !== n.id)); setShowNoticePanel(false); if (n.team_id) { setSelectedTeamId(n.team_id); goToView("team", n.team_id); } }}
+                                onClick={() => {
+                                  markNotificationRead(n.id);
+                                  setMentionNotifications((prev) => prev.filter((x) => x.id !== n.id));
+                                  setShowNoticePanel(false);
+                                  if (n.title === "Connection Request") {
+                                    goToView("network");
+                                  } else if (n.team_id) {
+                                    setSelectedTeamId(n.team_id);
+                                    goToView("team", n.team_id);
+                                  }
+                                }}
                                 className={`w-full flex gap-3 px-4 py-3.5 text-left transition-colors ${isDarkMode ? "hover:bg-amber-900/20 bg-amber-950/10" : "hover:bg-amber-50 bg-amber-50/70"}`}
                               >
-                                <div className="w-7 h-7 rounded-full flex-shrink-0 bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white text-xs font-bold">
+                                <div className={`w-7 h-7 rounded-full flex-shrink-0 bg-gradient-to-br ${n.title === "Connection Request" ? "from-sky-400 to-blue-500" : "from-amber-400 to-orange-500"} flex items-center justify-center text-white text-xs font-bold`}>
                                   {n.actor_name?.charAt(0)?.toUpperCase() ?? "@"}
                                 </div>
                                 <div className="min-w-0 flex-1">
-                                  <p className="text-[9px] font-bold uppercase tracking-widest mb-0.5 text-amber-500">Mentioned you</p>
+                                  <p className={`text-[9px] font-bold uppercase tracking-widest mb-0.5 ${n.title === "Connection Request" ? "text-sky-500" : "text-amber-500"}`}>
+                                    {n.title === "Connection Request" ? "Network" : "Mentioned you"}
+                                  </p>
                                   <p className={`text-xs font-medium leading-snug ${isDarkMode ? "text-[#e7e9ea]" : "text-slate-800"}`}>{n.title}</p>
                                   {n.body && <p className={`text-xs mt-0.5 truncate ${isDarkMode ? "text-[#71767b]" : "text-slate-500"}`}>"{n.body}"</p>}
                                 </div>
@@ -4151,22 +4163,26 @@ For any queries, contact your course instructors or the department.`,
                         markNotificationRead(n.id);
                         setMentionNotifications((prev) => prev.filter((x) => x.id !== n.id));
                         setShowNoticePanel(false);
-                        if (n.team_id) {
+                        if (n.title === "Connection Request") {
+                          goToView("network");
+                        } else if (n.team_id) {
                           setSelectedTeamId(n.team_id);
                           goToView("team", n.team_id);
                         }
                       }}
                       className={`w-full flex gap-3 px-5 py-4 text-left transition-colors ${isDarkMode ? "hover:bg-amber-900/20 bg-amber-950/10" : "hover:bg-amber-50 bg-amber-50/70"}`}
                     >
-                      <div className="w-8 h-8 rounded-full flex-shrink-0 bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white text-xs font-bold mt-0.5">
+                      <div className={`w-8 h-8 rounded-full flex-shrink-0 bg-gradient-to-br ${n.title === "Connection Request" ? "from-sky-400 to-blue-500" : "from-amber-400 to-orange-500"} flex items-center justify-center text-white text-xs font-bold mt-0.5`}>
                         {n.actor_name?.charAt(0)?.toUpperCase() ?? "@"}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className={`text-[10px] font-bold uppercase tracking-widest mb-0.5 text-amber-500`}>Mentioned you</p>
+                        <p className={`text-[10px] font-bold uppercase tracking-widest mb-0.5 ${n.title === "Connection Request" ? "text-sky-500" : "text-amber-500"}`}>
+                          {n.title === "Connection Request" ? "Network" : "Mentioned you"}
+                        </p>
                         <p className={`text-sm font-medium leading-snug ${isDarkMode ? "text-[#d9d9d9]" : "text-slate-800"}`}>{n.title}</p>
                         {n.body && <p className={`text-xs mt-0.5 truncate ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>"{n.body}"</p>}
                         <p className={`text-[10px] mt-1 ${isDarkMode ? "text-slate-500" : "text-slate-400"}`}>
-                          {new Date(n.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} · Tap to open chat
+                          {new Date(n.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} · {n.title === "Connection Request" ? "Tap to view requests" : "Tap to open chat"}
                         </p>
                       </div>
                     </button>
