@@ -214,6 +214,8 @@ export default function AlumniRegisterForm({
                   <option value="CSE">CSE</option>
                   <option value="EEE">EEE</option>
                   <option value="BBA">BBA</option>
+                  <option value="Textile">Textile</option>
+                  <option value="Civil">Civil</option>
                   <option value="Other">Other</option>
                 </select>
               </div>

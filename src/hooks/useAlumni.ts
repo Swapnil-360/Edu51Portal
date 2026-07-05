@@ -74,7 +74,7 @@ export function useAlumni(filters?: { major?: string; search?: string; mentorshi
         if (filters) {
           if (filters.major && filters.major !== 'All') {
             if (filters.major === 'Other') {
-              data = data.filter((a) => !['CSE', 'EEE', 'BBA'].includes(a.major.toUpperCase()));
+              data = data.filter((a) => !['CSE', 'EEE', 'BBA', 'TEXTILE', 'CIVIL'].includes(a.major.toUpperCase()));
             } else {
               data = data.filter((a) => a.major.toLowerCase() === filters.major!.toLowerCase());
             }
@@ -101,7 +101,7 @@ export function useAlumni(filters?: { major?: string; search?: string; mentorshi
         if (filters) {
           if (filters.major && filters.major !== 'All') {
             if (filters.major === 'Other') {
-              query = query.not('major', 'in', '("CSE","EEE","BBA")');
+              query = query.not('major', 'in', '("CSE","EEE","BBA","Textile","Civil")');
             } else {
               query = query.eq('major', filters.major);
             }

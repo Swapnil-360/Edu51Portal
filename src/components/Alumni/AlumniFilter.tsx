@@ -24,7 +24,7 @@ export default function AlumniFilter({
   const placeholderColor = isDarkMode ? "placeholder-[#71767b]" : "placeholder-slate-400";
   const focusBorder = "focus:border-[#1e9df1]";
 
-  const majors = ["All", "CSE", "EEE", "BBA", "Other"];
+  const majors = ["All", "CSE", "EEE", "BBA", "Textile", "Civil", "Other"];
 
   return (
     <div
