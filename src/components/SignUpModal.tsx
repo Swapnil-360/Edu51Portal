@@ -70,6 +70,18 @@ export function SignUpModal({
   const [success, setSuccess] = useState(false);
   const [isResending, setIsResending] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const idCardInputRef = useRef<HTMLInputElement>(null);
+
+  // Alumni sign up states
+  const [role, setRole] = useState<"student" | "alumni">("student");
+  const [studentId, setStudentId] = useState("");
+  const [gradYear, setGradYear] = useState<number | "">(2024);
+  const [dept, setDept] = useState("");
+  const [address, setAddress] = useState("");
+  const [profession, setProfession] = useState("");
+  const [maritalStatus, setMaritalStatus] = useState("");
+  const [idCardFile, setIdCardFile] = useState<File | null>(null);
+  const [idCardFileName, setIdCardFileName] = useState("");
 
   // Real-time password requirement evaluations
   const hasMinLength = password.length >= 8;
@@ -94,6 +106,7 @@ export function SignUpModal({
       setPhone(initialProfile.phone || "");
       setPassword(initialProfile.password || "");
       setProfilePic(initialProfile.profilePic || "");
+      setRole("student");
     } else {
       // Clear all fields when opening signup (not edit mode)
       setName("");
@@ -107,6 +120,15 @@ export function SignUpModal({
       setProfilePic("");
       setError("");
       setSuccess(false);
+      setRole("student");
+      setStudentId("");
+      setGradYear(2024);
+      setDept("");
+      setAddress("");
+      setProfession("");
+      setMaritalStatus("");
+      setIdCardFile(null);
+      setIdCardFileName("");
     }
     setShowPassword(false);
     setShowConfirmPassword(false);
@@ -201,24 +223,57 @@ export function SignUpModal({
       return;
     }
 
-    if (!section.trim()) {
-      setError("Please enter your section");
-      return;
-    }
-
-    if (!major) {
-      setError("Please select your major");
-      return;
-    }
-
-    if (!bubtEmail.trim()) {
-      setError("Please enter your BUBT email");
-      return;
-    }
-
-    if (!bubtEmail.endsWith("@cse.bubt.edu.bd")) {
-      setError("BUBT email must end with @cse.bubt.edu.bd");
-      return;
+    if (role === "student" || initialProfile) {
+      if (!section.trim()) {
+        setError("Please enter your section");
+        return;
+      }
+      if (!major) {
+        setError("Please select your major");
+        return;
+      }
+      if (!bubtEmail.trim()) {
+        setError("Please enter your BUBT email");
+        return;
+      }
+      if (!bubtEmail.endsWith("@cse.bubt.edu.bd")) {
+        setError("BUBT email must end with @cse.bubt.edu.bd");
+        return;
+      }
+    } else {
+      // Alumni validation
+      if (!studentId.trim()) {
+        setError("Please enter your student ID");
+        return;
+      }
+      if (!gradYear) {
+        setError("Please enter your graduation year");
+        return;
+      }
+      if (!bubtEmail.trim()) {
+        setError("Please enter your personal email");
+        return;
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(bubtEmail)) {
+        setError("Please enter a valid personal email address");
+        return;
+      }
+      if (!phone.trim()) {
+        setError("Please enter your phone number");
+        return;
+      }
+      if (!dept) {
+        setError("Please select your department");
+        return;
+      }
+      if (!major) {
+        setError("Please select your major");
+        return;
+      }
+      if (!idCardFile) {
+        setError("Please upload your student ID card");
+        return;
+      }
     }
 
     if (
@@ -255,7 +310,15 @@ export function SignUpModal({
             email: bubtEmail,
             password,
             options: {
-              data: { name, section, major, phone, notificationEmail, profilePic },
+              data: {
+                name,
+                section: role === "student" ? section : "Alumni",
+                major,
+                phone,
+                notificationEmail,
+                profilePic,
+                is_alumni: role === "alumni"
+              },
             },
           });
 
@@ -295,7 +358,7 @@ export function SignUpModal({
             if (siError || !siData?.user) {
               setError(
                 isAlreadyRegistered
-                  ? "This BUBT email is already registered. Please sign in instead."
+                  ? "This email is already registered. Please sign in instead."
                   : "Account created but could not sign in automatically. Please use the Sign In button."
               );
               return;
@@ -334,9 +397,35 @@ export function SignUpModal({
                 .maybeSingle();
               if (existingProfile) {
                 await supabase.auth.signOut();
-                setError("This BUBT email is already registered. Please sign in instead.");
+                setError("This email is already registered. Please sign in instead.");
                 return;
               }
+            }
+
+            // Upload ID Card if registering as alumni
+            let idCardUrl = "";
+            if (role === "alumni" && idCardFile) {
+              const fileExt = idCardFile.name.split('.').pop();
+              const fileName = `${userId}/id_card_${Date.now()}.${fileExt}`;
+              const { data: uploadData, error: uploadErr } = await supabase.storage
+                .from('alumni-ids')
+                .upload(fileName, idCardFile, {
+                  cacheControl: '3600',
+                  upsert: true
+                });
+
+              if (uploadErr) {
+                console.error("ID card upload error:", uploadErr);
+                setError("Failed to upload ID card. Please try again.");
+                setIsSubmitting(false);
+                return;
+              }
+
+              const { data: urlData } = supabase.storage
+                .from('alumni-ids')
+                .getPublicUrl(fileName);
+
+              idCardUrl = urlData.publicUrl;
             }
 
             const { error: profileError } = await supabase
@@ -345,12 +434,13 @@ export function SignUpModal({
                 {
                   id: userId,
                   name,
-                  section,
+                  section: role === "student" ? section : "Alumni",
                   major,
                   bubt_email: bubtEmail,
                   notification_email: notificationEmail,
                   phone,
                   profile_pic: profilePic,
+                  is_alumni: role === "alumni",
                   created_at: new Date().toISOString(),
                   last_login_at: new Date().toISOString(),
                 },
@@ -368,6 +458,39 @@ export function SignUpModal({
               }
               console.error("Profile creation error:", profileError);
               return;
+            }
+
+            // Insert alumni profile
+            if (role === "alumni") {
+              const { error: alumniError } = await supabase
+                .from("alumni_profiles")
+                .upsert(
+                  {
+                    id: userId,
+                    full_name: name,
+                    email: bubtEmail,
+                    avatar_url: profilePic || null,
+                    graduation_year: Number(gradYear),
+                    major,
+                    phone,
+                    dept,
+                    address: address || null,
+                    job_title: profession || null,
+                    marital_status: maritalStatus || null,
+                    id_card_url: idCardUrl || null,
+                    is_verified: false,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString(),
+                  },
+                  { onConflict: "id" }
+                );
+
+              if (alumniError) {
+                console.error("Alumni profile creation error:", alumniError);
+                setError(alumniError.message || "Could not save alumni profile");
+                setIsSubmitting(false);
+                return;
+              }
             }
           }
         } else {
@@ -417,11 +540,12 @@ export function SignUpModal({
 
       // Always keep local fallback for offline mode
       localStorage.setItem("userProfileName", name);
-      localStorage.setItem("userProfileSection", section);
+      localStorage.setItem("userProfileSection", role === "student" ? section : "Alumni");
       localStorage.setItem("userProfileMajor", major);
       localStorage.setItem("userProfileBubtEmail", bubtEmail);
       localStorage.setItem("userProfileNotificationEmail", notificationEmail);
       localStorage.setItem("userProfilePhone", phone);
+      localStorage.setItem("userProfileIsAlumni", role === "alumni" ? "true" : "false");
       if (password) {
         localStorage.setItem("userProfilePassword", password); // In production, this should be hashed!
       }
@@ -432,7 +556,7 @@ export function SignUpModal({
       setSuccess(true);
       onSave({
         name,
-        section,
+        section: role === "student" ? section : "Alumni",
         major,
         bubtEmail,
         notificationEmail,
@@ -455,6 +579,15 @@ export function SignUpModal({
           setPassword("");
           setConfirmPassword("");
           setProfilePic("");
+          setRole("student");
+          setStudentId("");
+          setGradYear(2024);
+          setDept("");
+          setAddress("");
+          setProfession("");
+          setMaritalStatus("");
+          setIdCardFile(null);
+          setIdCardFileName("");
         }
       }, 1500);
     } catch (err) {
@@ -561,6 +694,36 @@ export function SignUpModal({
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-5">
+                {/* Student vs. Alumni Tabs */}
+                {!initialProfile && (
+                  <div className="flex justify-center mb-6">
+                    <div className={`inline-flex rounded-full p-1 border ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-100 border-gray-200'}`}>
+                      <button
+                        type="button"
+                        onClick={() => { setRole('student'); setError(''); }}
+                        className={`px-6 py-2 rounded-full text-xs font-semibold transition-all duration-200 ${
+                          role === 'student'
+                            ? 'bg-blue-600 text-white shadow-md'
+                            : `${isDarkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`
+                        }`}
+                      >
+                        Student
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setRole('alumni'); setError(''); }}
+                        className={`px-6 py-2 rounded-full text-xs font-semibold transition-all duration-200 ${
+                          role === 'alumni'
+                            ? 'bg-blue-600 text-white shadow-md'
+                            : `${isDarkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`
+                        }`}
+                      >
+                        Alumni
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 {/* Profile Picture */}
                 <div>
                   <label
@@ -642,170 +805,411 @@ export function SignUpModal({
                   />
                 </div>
 
-                {/* Section */}
-                <div>
-                  <label
-                    htmlFor="section"
-                    className={`block text-sm font-semibold mb-2 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}
-                  >
-                    Section *
-                  </label>
-                  <input
-                    id="section"
-                    type="text"
-                    value={section}
-                    onChange={(e) => setSection(e.target.value)}
-                    placeholder="e.g., Intake 51, Section 2 (AI)"
-                    className={`w-full px-4 py-2.5 rounded-lg border transition-all focus:outline-none focus:ring-2 ${
-                      isDarkMode
-                        ? "bg-gray-800 border-gray-700 text-gray-100 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-500"
-                        : "bg-gray-50 border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400"
-                    }`}
-                  />
-                </div>
+                {(role === "student" || initialProfile) ? (
+                  <>
+                    {/* Section */}
+                    <div>
+                      <label
+                        htmlFor="section"
+                        className={`block text-sm font-semibold mb-2 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}
+                      >
+                        Section *
+                      </label>
+                      <input
+                        id="section"
+                        type="text"
+                        value={section}
+                        onChange={(e) => setSection(e.target.value)}
+                        placeholder="e.g., Intake 51, Section 2 (AI)"
+                        className={`w-full px-4 py-2.5 rounded-lg border transition-all focus:outline-none focus:ring-2 ${
+                          isDarkMode
+                            ? "bg-gray-800 border-gray-700 text-gray-100 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-500"
+                            : "bg-gray-50 border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400"
+                        }`}
+                      />
+                    </div>
 
-                {/* Major */}
-                <div>
-                  <label
-                    htmlFor="major"
-                    className={`block text-sm font-semibold mb-2 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}
-                  >
-                    Major *
-                  </label>
-                  <select
-                    id="major"
-                    value={major}
-                    onChange={(e) => setMajor(e.target.value)}
-                    className={`w-full px-4 py-2.5 rounded-lg border transition-all focus:outline-none focus:ring-2 ${
-                      isDarkMode
-                        ? "bg-gray-800 border-gray-700 text-gray-100 focus:ring-blue-500 focus:border-blue-500"
-                        : "bg-gray-50 border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500"
-                    }`}
-                  >
-                    <option value="">Select your major</option>
-                    <option value="AI">Artificial Intelligence</option>
-                    <option value="Software Engineering">Software Engineering</option>
-                    <option value="Networking">Computer Networking</option>
-                  </select>
-                </div>
+                    {/* Major */}
+                    <div>
+                      <label
+                        htmlFor="major"
+                        className={`block text-sm font-semibold mb-2 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}
+                      >
+                        Major *
+                      </label>
+                      <select
+                        id="major"
+                        value={major}
+                        onChange={(e) => setMajor(e.target.value)}
+                        className={`w-full px-4 py-2.5 rounded-lg border transition-all focus:outline-none focus:ring-2 ${
+                          isDarkMode
+                            ? "bg-gray-800 border-gray-700 text-gray-100 focus:ring-blue-500 focus:border-blue-500"
+                            : "bg-gray-50 border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500"
+                        }`}
+                      >
+                        <option value="">Select your major</option>
+                        <option value="AI">Artificial Intelligence</option>
+                        <option value="Software Engineering">Software Engineering</option>
+                        <option value="Networking">Computer Networking</option>
+                      </select>
+                    </div>
 
-                {/* BUBT Email (Account) */}
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label
-                      htmlFor="bubtEmail"
-                      className={`block text-sm font-semibold ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}
-                    >
-                      BUBT Email (Account) *
-                    </label>
-                    {/* Security Buttons - Only for Edit Profile */}
-                    {initialProfile?.name && (
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={onResetPassword}
-                          className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
-                            isDarkMode
-                              ? "bg-gray-700 hover:bg-gray-600 text-gray-200"
-                              : "bg-gray-100 hover:bg-gray-200 border border-gray-300 text-gray-700"
-                          }`}
+                    {/* BUBT Email (Account) */}
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <label
+                          htmlFor="bubtEmail"
+                          className={`block text-sm font-semibold ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}
                         >
-                          Reset Password
-                        </button>
-                        <button
-                          type="button"
-                          onClick={onChangeEmail}
-                          className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
-                            isDarkMode
-                              ? "bg-gray-700 hover:bg-gray-600 text-gray-200"
-                              : "bg-gray-100 hover:bg-gray-200 border border-gray-300 text-gray-700"
-                          }`}
-                        >
-                          Change Email
-                        </button>
+                          BUBT Email (Account) *
+                        </label>
+                        {/* Security Buttons - Only for Edit Profile */}
+                        {initialProfile?.name && (
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={onResetPassword}
+                              className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
+                                isDarkMode
+                                  ? "bg-gray-700 hover:bg-gray-600 text-gray-200"
+                                  : "bg-gray-100 hover:bg-gray-200 border border-gray-300 text-gray-700"
+                              }`}
+                            >
+                              Reset Password
+                            </button>
+                            <button
+                              type="button"
+                              onClick={onChangeEmail}
+                              className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
+                                isDarkMode
+                                  ? "bg-gray-700 hover:bg-gray-600 text-gray-200"
+                                  : "bg-gray-100 hover:bg-gray-200 border border-gray-300 text-gray-700"
+                              }`}
+                            >
+                              Change Email
+                            </button>
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                  <input
-                    id="bubtEmail"
-                    type="email"
-                    value={bubtEmail}
-                    onChange={(e) => setBubtEmail(e.target.value)}
-                    placeholder="yourname@cse.bubt.edu.bd"
-                    className={`w-full px-4 py-2.5 rounded-lg border transition-all focus:outline-none focus:ring-2 ${
-                      isDarkMode
-                        ? "bg-gray-800 border-gray-700 text-gray-100 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-500"
-                        : "bg-gray-50 border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400"
-                    }`}
-                  />
-                  <p
-                    className={`text-xs mt-1 ${isDarkMode ? "text-gray-500" : "text-gray-500"}`}
-                  >
-                    Used for account login
-                  </p>
-                </div>
+                      <input
+                        id="bubtEmail"
+                        type="email"
+                        value={bubtEmail}
+                        onChange={(e) => setBubtEmail(e.target.value)}
+                        placeholder="yourname@cse.bubt.edu.bd"
+                        className={`w-full px-4 py-2.5 rounded-lg border transition-all focus:outline-none focus:ring-2 ${
+                          isDarkMode
+                            ? "bg-gray-800 border-gray-700 text-gray-100 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-500"
+                            : "bg-gray-50 border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400"
+                        }`}
+                      />
+                      <p
+                        className={`text-xs mt-1 ${isDarkMode ? "text-gray-500" : "text-gray-500"}`}
+                      >
+                        Used for account login
+                      </p>
+                    </div>
 
-                {/* Notification Email */}
-                <div>
-                  <label
-                    htmlFor="notificationEmail"
-                    className={`block text-sm font-semibold mb-2 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}
-                  >
-                    Notification Email <span className={`font-normal text-xs ${isDarkMode ? "text-amber-400" : "text-amber-600"}`}>(required for password reset)</span>
-                  </label>
-                  <input
-                    id="notificationEmail"
-                    type="email"
-                    value={notificationEmail}
-                    onChange={(e) => setNotificationEmail(e.target.value)}
-                    placeholder="your.name@gmail.com"
-                    className={`w-full px-4 py-2.5 rounded-lg border transition-all focus:outline-none focus:ring-2 ${
-                      isDarkMode
-                        ? "bg-gray-800 border-gray-700 text-gray-100 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-500"
-                        : "bg-gray-50 border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400"
-                    }`}
-                  />
-                  {notificationEmail.trim() === "" ? (
-                    <p
-                      className={`text-xs mt-1 ${isDarkMode ? "text-amber-300" : "text-amber-600"}`}
-                    >
-                      ⚠ Required for password reset and admin notifications. Add your Gmail or personal email.
-                    </p>
-                  ) : (
-                    <p
-                      className={`text-xs mt-1 ${isDarkMode ? "text-gray-500" : "text-gray-500"}`}
-                    >
-                      Reset password emails and admin notifications will be sent here.
-                    </p>
-                  )}
-                </div>
+                    {/* Notification Email */}
+                    <div>
+                      <label
+                        htmlFor="notificationEmail"
+                        className={`block text-sm font-semibold mb-2 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}
+                      >
+                        Notification Email <span className={`font-normal text-xs ${isDarkMode ? "text-amber-400" : "text-amber-600"}`}>(required for password reset)</span>
+                      </label>
+                      <input
+                        id="notificationEmail"
+                        type="email"
+                        value={notificationEmail}
+                        onChange={(e) => setNotificationEmail(e.target.value)}
+                        placeholder="your.name@gmail.com"
+                        className={`w-full px-4 py-2.5 rounded-lg border transition-all focus:outline-none focus:ring-2 ${
+                          isDarkMode
+                            ? "bg-gray-800 border-gray-700 text-gray-100 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-500"
+                            : "bg-gray-50 border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400"
+                        }`}
+                      />
+                      {notificationEmail.trim() === "" ? (
+                        <p
+                          className={`text-xs mt-1 ${isDarkMode ? "text-amber-300" : "text-amber-600"}`}
+                        >
+                          ⚠ Required for password reset and admin notifications. Add your Gmail or personal email.
+                        </p>
+                      ) : (
+                        <p
+                          className={`text-xs mt-1 ${isDarkMode ? "text-gray-500" : "text-gray-500"}`}
+                        >
+                          Reset password emails and admin notifications will be sent here.
+                        </p>
+                      )}
+                    </div>
 
-                {/* Phone Number (Optional, can be used for login) */}
-                <div>
-                  <label
-                    htmlFor="phone"
-                    className={`block text-sm font-semibold mb-2 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}
-                  >
-                    Phone Number
-                  </label>
-                  <input
-                    id="phone"
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="01XXXXXXXXX (optional)"
-                    className={`w-full px-4 py-2.5 rounded-lg border transition-all focus:outline-none focus:ring-2 ${
-                      isDarkMode
-                        ? "bg-gray-800 border-gray-700 text-gray-100 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-500"
-                        : "bg-gray-50 border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400"
-                    }`}
-                  />
-                  <p
-                    className={`text-xs mt-1 ${isDarkMode ? "text-gray-500" : "text-gray-500"}`}
-                  >
-                    Can also be used for login
-                  </p>
-                </div>
+                    {/* Phone Number (Optional, can be used for login) */}
+                    <div>
+                      <label
+                        htmlFor="phone"
+                        className={`block text-sm font-semibold mb-2 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}
+                      >
+                        Phone Number
+                      </label>
+                      <input
+                        id="phone"
+                        type="tel"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        placeholder="01XXXXXXXXX (optional)"
+                        className={`w-full px-4 py-2.5 rounded-lg border transition-all focus:outline-none focus:ring-2 ${
+                          isDarkMode
+                            ? "bg-gray-800 border-gray-700 text-gray-100 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-500"
+                            : "bg-gray-50 border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400"
+                        }`}
+                      />
+                      <p
+                        className={`text-xs mt-1 ${isDarkMode ? "text-gray-500" : "text-gray-500"}`}
+                      >
+                        Can also be used for login
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    {/* Alumni-specific form fields */}
+                    {/* Student ID */}
+                    <div>
+                      <label htmlFor="studentId" className={`block text-sm font-semibold mb-2 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+                        Student ID *
+                      </label>
+                      <input
+                        id="studentId"
+                        type="text"
+                        value={studentId}
+                        onChange={(e) => setStudentId(e.target.value)}
+                        placeholder="e.g. 2020-1-2-001"
+                        className={`w-full px-4 py-2.5 rounded-lg border transition-all focus:outline-none focus:ring-2 ${
+                          isDarkMode
+                            ? "bg-gray-800 border-gray-700 text-gray-100 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-500"
+                            : "bg-gray-50 border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400"
+                        }`}
+                      />
+                    </div>
+
+                    {/* Graduation Year */}
+                    <div>
+                      <label htmlFor="gradYear" className={`block text-sm font-semibold mb-2 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+                        Graduation Year *
+                      </label>
+                      <input
+                        id="gradYear"
+                        type="number"
+                        value={gradYear}
+                        onChange={(e) => setGradYear(e.target.value ? Number(e.target.value) : "")}
+                        placeholder="e.g. 2024"
+                        className={`w-full px-4 py-2.5 rounded-lg border transition-all focus:outline-none focus:ring-2 ${
+                          isDarkMode
+                            ? "bg-gray-800 border-gray-700 text-gray-100 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-500"
+                            : "bg-gray-50 border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400"
+                        }`}
+                      />
+                    </div>
+
+                    {/* Personal Email */}
+                    <div>
+                      <label htmlFor="alumniEmail" className={`block text-sm font-semibold mb-2 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+                        Personal Email (Account Login) *
+                      </label>
+                      <input
+                        id="alumniEmail"
+                        type="email"
+                        value={bubtEmail}
+                        onChange={(e) => setBubtEmail(e.target.value)}
+                        placeholder="yourname@gmail.com"
+                        className={`w-full px-4 py-2.5 rounded-lg border transition-all focus:outline-none focus:ring-2 ${
+                          isDarkMode
+                            ? "bg-gray-800 border-gray-700 text-gray-100 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-500"
+                            : "bg-gray-50 border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400"
+                        }`}
+                      />
+                    </div>
+
+                    {/* Phone Number (Required for Alumni) */}
+                    <div>
+                      <label htmlFor="alumniPhone" className={`block text-sm font-semibold mb-2 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+                        Phone Number *
+                      </label>
+                      <input
+                        id="alumniPhone"
+                        type="tel"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        placeholder="01XXXXXXXXX"
+                        className={`w-full px-4 py-2.5 rounded-lg border transition-all focus:outline-none focus:ring-2 ${
+                          isDarkMode
+                            ? "bg-gray-800 border-gray-700 text-gray-100 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-500"
+                            : "bg-gray-50 border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400"
+                        }`}
+                      />
+                    </div>
+
+                    {/* Department */}
+                    <div>
+                      <label htmlFor="dept" className={`block text-sm font-semibold mb-2 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+                        Department *
+                      </label>
+                      <select
+                        id="dept"
+                        value={dept}
+                        onChange={(e) => setDept(e.target.value)}
+                        className={`w-full px-4 py-2.5 rounded-lg border transition-all focus:outline-none focus:ring-2 ${
+                          isDarkMode
+                            ? "bg-gray-800 border-gray-700 text-gray-100 focus:ring-blue-500 focus:border-blue-500"
+                            : "bg-gray-50 border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500"
+                        }`}
+                      >
+                        <option value="">Select department</option>
+                        <option value="CSE">Computer Science & Engineering</option>
+                        <option value="EEE">Electrical & Electronic Engineering</option>
+                        <option value="BBA">Business Administration</option>
+                        <option value="Textile">Textile Engineering</option>
+                        <option value="Civil">Civil Engineering</option>
+                        <option value="English">English</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
+
+                    {/* Major */}
+                    <div>
+                      <label htmlFor="alumniMajor" className={`block text-sm font-semibold mb-2 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+                        Major *
+                      </label>
+                      <select
+                        id="alumniMajor"
+                        value={major}
+                        onChange={(e) => setMajor(e.target.value)}
+                        className={`w-full px-4 py-2.5 rounded-lg border transition-all focus:outline-none focus:ring-2 ${
+                          isDarkMode
+                            ? "bg-gray-800 border-gray-700 text-gray-100 focus:ring-blue-500 focus:border-blue-500"
+                            : "bg-gray-50 border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500"
+                        }`}
+                      >
+                        <option value="">Select major</option>
+                        <option value="CSE">CSE</option>
+                        <option value="EEE">EEE</option>
+                        <option value="BBA">BBA</option>
+                        <option value="Textile">Textile Engineering</option>
+                        <option value="Civil">Civil Engineering</option>
+                        <option value="English">English</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
+
+                    {/* Address (Optional) */}
+                    <div>
+                      <label htmlFor="address" className={`block text-sm font-semibold mb-2 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+                        Address (Optional)
+                      </label>
+                      <input
+                        id="address"
+                        type="text"
+                        value={address}
+                        onChange={(e) => setAddress(e.target.value)}
+                        placeholder="e.g. Dhaka, Bangladesh"
+                        className={`w-full px-4 py-2.5 rounded-lg border transition-all focus:outline-none focus:ring-2 ${
+                          isDarkMode
+                            ? "bg-gray-800 border-gray-700 text-gray-100 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-500"
+                            : "bg-gray-50 border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400"
+                        }`}
+                      />
+                    </div>
+
+                    {/* Profession (Optional) */}
+                    <div>
+                      <label htmlFor="profession" className={`block text-sm font-semibold mb-2 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+                        Profession (Optional)
+                      </label>
+                      <input
+                        id="profession"
+                        type="text"
+                        value={profession}
+                        onChange={(e) => setProfession(e.target.value)}
+                        placeholder="e.g. Software Engineer"
+                        className={`w-full px-4 py-2.5 rounded-lg border transition-all focus:outline-none focus:ring-2 ${
+                          isDarkMode
+                            ? "bg-gray-800 border-gray-700 text-gray-100 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-500"
+                            : "bg-gray-50 border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400"
+                        }`}
+                      />
+                    </div>
+
+                    {/* Marital Status (Optional) */}
+                    <div>
+                      <label htmlFor="maritalStatus" className={`block text-sm font-semibold mb-2 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+                        Marital Status (Optional)
+                      </label>
+                      <select
+                        id="maritalStatus"
+                        value={maritalStatus}
+                        onChange={(e) => setMaritalStatus(e.target.value)}
+                        className={`w-full px-4 py-2.5 rounded-lg border transition-all focus:outline-none focus:ring-2 ${
+                          isDarkMode
+                            ? "bg-gray-800 border-gray-700 text-gray-100 focus:ring-blue-500 focus:border-blue-500"
+                            : "bg-gray-50 border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500"
+                        }`}
+                      >
+                        <option value="">Select marital status</option>
+                        <option value="Single">Single</option>
+                        <option value="Married">Married</option>
+                        <option value="Divorced">Divorced</option>
+                        <option value="Widowed">Widowed</option>
+                        <option value="Prefer not to say">Prefer not to say</option>
+                      </select>
+                    </div>
+
+                    {/* ID Card Upload */}
+                    <div>
+                      <label className={`block text-sm font-semibold mb-2 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+                        Student ID Card (Image or PDF) *
+                      </label>
+                      <div className="flex items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={() => idCardInputRef.current?.click()}
+                          className={`flex-1 px-4 py-2.5 rounded-lg border font-medium text-sm transition-all flex items-center justify-center gap-2 ${
+                            isDarkMode
+                              ? "bg-gray-800 hover:bg-gray-700 border-gray-700 text-gray-300"
+                              : "bg-gray-100 hover:bg-gray-200 border-gray-300 text-gray-700"
+                          }`}
+                        >
+                          <ImageIcon className="h-4 w-4" />
+                          {idCardFileName ? "Change File" : "Choose File"}
+                        </button>
+                        <input
+                          ref={idCardInputRef}
+                          type="file"
+                          accept="image/*,application/pdf"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              if (file.size > 10 * 1024 * 1024) {
+                                setError("ID Card file size must be less than 10MB");
+                                return;
+                              }
+                              setIdCardFile(file);
+                              setIdCardFileName(file.name);
+                              setError("");
+                            }
+                          }}
+                          className="hidden"
+                        />
+                      </div>
+                      {idCardFileName && (
+                        <p className={`text-xs mt-1.5 font-medium ${isDarkMode ? "text-blue-400" : "text-blue-600"}`}>
+                          Selected: {idCardFileName}
+                        </p>
+                      )}
+                    </div>
+                  </>
+                )}
 
                 {/* Password (only for new registration) */}
                 {!initialProfile && (

@@ -486,7 +486,7 @@ function App() {
   // profile_pic is served from localStorage cache and refreshed in the background.
   // avatar_url (Storage URL) is short and included so it's cached immediately on login.
   const PROFILE_META_COLS =
-    "id,name,section,major,bubt_email,notification_email,phone,created_at,last_login_at,avatar_url,is_admin";
+    "id,name,section,major,bubt_email,notification_email,phone,created_at,last_login_at,avatar_url,is_admin,is_alumni";
 
   const applyProfileData = (profileData: any, email: string, password: string) => {
     // NOTE: admin status is NOT set from this profile fetch — it's resolved
@@ -508,6 +508,7 @@ function App() {
       password,
       profilePic: pic,
       avatar_url: pic,
+      isAlumni: profileData?.is_alumni || false,
     };
     localStorage.setItem("userProfileBubtEmail", updatedProfile.bubtEmail);
     localStorage.setItem("userProfileName", updatedProfile.name);
@@ -515,6 +516,7 @@ function App() {
     localStorage.setItem("userProfileMajor", updatedProfile.major);
     localStorage.setItem("userProfileNotificationEmail", updatedProfile.notificationEmail);
     localStorage.setItem("userProfilePhone", updatedProfile.phone);
+    localStorage.setItem("userProfileIsAlumni", updatedProfile.isAlumni ? "true" : "false");
     if (avatarUrl) {
       localStorage.setItem("userProfileAvatarUrl", avatarUrl);
       // Preload the image so it's in browser cache when the profile page opens
@@ -706,6 +708,7 @@ function App() {
               phone: prev.phone || meta.phone || "",
               notificationEmail:
                 prev.notificationEmail || meta.notificationEmail || "",
+              isAlumni: prev.isAlumni || meta.is_alumni || false,
             }));
             // Retry profile load after 15s — gives Supabase cold-start time to wake up
             setTimeout(async () => {
@@ -788,6 +791,7 @@ function App() {
             notificationEmail: prev.notificationEmail || meta.notificationEmail || "",
             profilePic: prev.profilePic || cachedAvatarUrl || cachedPic,
             avatar_url: prev.avatar_url || cachedAvatarUrl || cachedPic,
+            isAlumni: prev.isAlumni || meta.is_alumni || false,
           }));
           localStorage.setItem("userProfileName", quickName);
         }
@@ -839,6 +843,7 @@ function App() {
         localStorage.removeItem("userProfileAvatarUrl");
         localStorage.removeItem("userProfilePassword");
         localStorage.removeItem("userProfile");
+        localStorage.removeItem("userProfileIsAlumni");
       }
     });
 
@@ -3457,6 +3462,7 @@ For any queries, contact your course instructors or the department.`,
                             "userProfilePassword",
                             "userProfileAvatarUrl",
                             "userProfile",
+                            "userProfileIsAlumni",
                           ].forEach((k) => localStorage.removeItem(k));
                           goToView("home");
                           showMajorAccessNotification(
@@ -4026,6 +4032,7 @@ For any queries, contact your course instructors or the department.`,
                       "userProfilePassword",
                       "userProfileAvatarUrl",
                       "userProfile",
+                      "userProfileIsAlumni",
                     ];
                     keysToRemove.forEach((key) => localStorage.removeItem(key));
                     goToView("home");

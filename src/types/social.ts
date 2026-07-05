@@ -240,6 +240,12 @@ export interface AlumniProfile {
   is_available_for_mentorship: boolean;
   created_at: string;
   updated_at: string;
+  student_id?: string | null;
+  dept?: string | null;
+  address?: string | null;
+  marital_status?: string | null;
+  id_card_url?: string | null;
+  phone?: string | null;
 }
 
 // Columns selected for profile lists/cards (never select legacy base64 profile_pic in lists)

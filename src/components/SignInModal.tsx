@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { X, LogIn, Mail, Lock, ArrowLeft, CheckCircle, Eye, EyeOff } from 'lucide-react';
 import { supabase, supabaseConfigured } from '../lib/supabase';
 
@@ -19,6 +19,7 @@ export function SignInModal({
 }: SignInModalProps) {
   // Temporary feature flag: hide "Login with Google" in Sign In modal until configured
   const SHOW_GOOGLE_SIGNIN = false;
+  const [role, setRole] = useState<'student' | 'alumni'>('student');
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -54,6 +55,7 @@ export function SignInModal({
 
   useEffect(() => {
     submissionIdRef.current += 1;
+    setRole('student');
     setIdentifier('');
     setPassword('');
     setError('');
@@ -111,6 +113,11 @@ export function SignInModal({
       return;
     }
 
+    if (role === 'student' && identifier.includes('@') && !identifier.toLowerCase().endsWith('@cse.bubt.edu.bd')) {
+      setError('Student email must end with @cse.bubt.edu.bd.');
+      return;
+    }
+
     setIsSubmitting(true);
     // Snapshot the submission ID so we can detect if the modal was closed/reopened
     // while this async call was in flight and silently discard the stale result.
@@ -141,6 +148,29 @@ export function SignInModal({
               setError(error.message || 'Invalid credentials. Please try again.');
             }
             return;
+          }
+
+          // Validate role against profile
+          const { data: pData, error: pErr } = await supabase
+            .from('profiles')
+            .select('is_alumni')
+            .eq('id', data.user.id)
+            .single();
+
+          if (!pErr && pData) {
+            const isAlumniUser = pData.is_alumni;
+            if (role === 'student' && isAlumniUser) {
+              await supabase.auth.signOut();
+              setError('This account is registered as an Alumni. Please select the Alumni tab to sign in.');
+              setIsSubmitting(false);
+              return;
+            }
+            if (role === 'alumni' && !isAlumniUser) {
+              await supabase.auth.signOut();
+              setError('This account is registered as a Student. Please select the Student tab to sign in.');
+              setIsSubmitting(false);
+              return;
+            }
           }
 
           // ── Close modal immediately using user_metadata + localStorage cache ──
@@ -238,6 +268,15 @@ export function SignInModal({
 
       if (identifierMatch && passwordMatch) {
         if (isStale()) return;
+        const isAlumniUser = profile.isAlumni || false;
+        if (role === 'student' && isAlumniUser) {
+          setError('This account is registered as an Alumni. Please select the Alumni tab to sign in.');
+          return;
+        }
+        if (role === 'alumni' && !isAlumniUser) {
+          setError('This account is registered as a Student. Please select the Student tab to sign in.');
+          return;
+        }
         setIsSubmitting(false);
         console.log('✅ Sign in successful (local fallback)');
         onClose();
@@ -388,6 +427,34 @@ export function SignInModal({
             onSubmit={handleSubmit}
             className="space-y-5"
           >
+          {/* Student vs. Alumni Tabs */}
+          <div className="flex justify-center mb-6">
+            <div className={`inline-flex rounded-full p-1 border ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-100 border-gray-200'}`}>
+              <button
+                type="button"
+                onClick={() => { setRole('student'); setError(''); }}
+                className={`px-6 py-2 rounded-full text-xs font-semibold transition-all duration-200 ${
+                  role === 'student'
+                    ? 'bg-blue-600 text-white shadow-md'
+                    : `${isDarkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`
+                }`}
+              >
+                Student
+              </button>
+              <button
+                type="button"
+                onClick={() => { setRole('alumni'); setError(''); }}
+                className={`px-6 py-2 rounded-full text-xs font-semibold transition-all duration-200 ${
+                  role === 'alumni'
+                    ? 'bg-blue-600 text-white shadow-md'
+                    : `${isDarkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`
+                }`}
+              >
+                Alumni
+              </button>
+            </div>
+          </div>
+
           {error && (
             <div className={`p-4 rounded-xl border text-sm ${
               isDarkMode
@@ -419,7 +486,7 @@ export function SignInModal({
                     ? 'bg-gray-700/50 border-gray-600/50 text-gray-100 placeholder-gray-400 focus:border-blue-500'
                     : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400 focus:border-blue-500'
                 } focus:outline-none focus:ring-2 focus:ring-blue-500/50`}
-                placeholder="your.email@cse.bubt.edu.bd or 01XXXXXXXXX"
+                placeholder={role === 'student' ? "your.email@cse.bubt.edu.bd or 01XXXXXXXXX" : "your.email@example.com or 01XXXXXXXXX"}
                 disabled={isSubmitting}
               />
             </div>
