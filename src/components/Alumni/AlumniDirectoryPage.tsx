@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, GraduationCap, PlusCircle, SearchX } from "lucide-react";
+import { ArrowLeft, GraduationCap, SearchX } from "lucide-react";
 import { useAlumni } from "../../hooks/useAlumni";
 import AlumniFilter from "./AlumniFilter";
 import AlumniCard from "./AlumniCard";
@@ -56,14 +56,6 @@ export default function AlumniDirectoryPage({
               <p className={`text-xs ${subColor}`}>Connect with BUBT alumni and find mentorship</p>
             </div>
           </div>
-
-          <button
-            onClick={onRegisterClick}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#1e9df1] hover:bg-[#1677cc] text-white text-xs font-semibold shadow-md shadow-[#1e9df1]/10 transition-all duration-150"
-          >
-            <PlusCircle className="h-4 w-4" />
-            Register as Alumni
-          </button>
         </div>
 
         {/* Filters */}
