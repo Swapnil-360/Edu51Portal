@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Loader2, Search, UserCheck, UserPlus, UserX, X, Users, Inbox, SearchX } from "lucide-react";
 import { motion } from "framer-motion";
 import { Connection, SocialProfile } from "../../types/social";
@@ -18,9 +18,10 @@ interface Props {
   onClose: () => void;
   onViewProfile: (username: string) => void;
   isDarkMode: boolean;
+  onPendingRequestsChange?: (count: number) => void;
 }
 
-export default function NetworkPage({ currentUserId, onClose, onViewProfile, isDarkMode }: Props) {
+export default function NetworkPage({ currentUserId, onClose, onViewProfile, isDarkMode, onPendingRequestsChange }: Props) {
   const [tab, setTab] = useState<Tab>("connections");
   const [connections, setConnections] = useState<Connection[]>([]);
   const [loading, setLoading] = useState(true);
@@ -37,6 +38,8 @@ export default function NetworkPage({ currentUserId, onClose, onViewProfile, isD
     setLoading(true);
     const conns = await listMyConnections(currentUserId);
     setConnections(conns);
+    const incomingCount = conns.filter((c) => c.status === "pending" && c.addressee_id === currentUserId).length;
+    onPendingRequestsChange?.(incomingCount);
     setLoading(false);
   };
 

@@ -11,6 +11,7 @@ interface NavTab {
   onClick: () => void;
   isActive: boolean;
   icon?: React.ReactNode;
+  hasRedDot?: boolean;
 }
 
 interface SlideNavProps {
@@ -123,8 +124,14 @@ const NavTab = ({
         <>
           {tab.badge === "live" && <LiveDot />}
           <span>{tab.label}</span>
-          {tab.badge === "new" && <NewBadge isActive={tab.isActive} isDarkMode={isDarkMode} />}
+          {tab.badge === "new" && !tab.hasRedDot && <NewBadge isActive={tab.isActive} isDarkMode={isDarkMode} />}
           {tab.badge === "soon" && <SoonBadge isActive={tab.isActive} isDarkMode={isDarkMode} />}
+          {tab.hasRedDot && (
+            <span className="relative flex h-2 w-2 ml-0.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500 shadow-[0_0_6px_#ef4444]"></span>
+            </span>
+          )}
         </>
       )}
 
@@ -166,6 +173,7 @@ interface AppNavHeaderProps {
   goToView: (view: string) => void;
   showMajorAccessNotification: (type: string, msg: string) => void;
   setShowSignInModal: (v: boolean) => void;
+  pendingConnectionsCount?: number;
 }
 
 export function AppNavHeader({
@@ -175,6 +183,7 @@ export function AppNavHeader({
   goToView,
   showMajorAccessNotification,
   setShowSignInModal,
+  pendingConnectionsCount = 0,
 }: AppNavHeaderProps) {
   const requireLogin = (view: string, label: string) => {
     if (!isLoggedIn) {
@@ -219,6 +228,7 @@ export function AppNavHeader({
       badge: "new",
       isActive: currentView === "network",
       onClick: () => requireLogin("network", "My Network"),
+      hasRedDot: pendingConnectionsCount > 0,
     },
     {
       label: "Resources",

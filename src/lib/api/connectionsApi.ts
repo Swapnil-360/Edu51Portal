@@ -27,10 +27,14 @@ export async function respondToRequest(
   connectionId: string,
   accept: boolean,
 ): Promise<{ error: string | null }> {
+  if (!accept) {
+    const { error } = await supabase.from("connections").delete().eq("id", connectionId);
+    return { error: error?.message ?? null };
+  }
   const { error } = await supabase
     .from("connections")
     .update({
-      status: accept ? "accepted" : "rejected",
+      status: "accepted",
       responded_at: new Date().toISOString(),
     })
     .eq("id", connectionId);

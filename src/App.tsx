@@ -453,6 +453,9 @@ function App() {
     message: string;
   } | null>(null);
 
+  // Connections requests notification state
+  const [pendingConnectionsCount, setPendingConnectionsCount] = useState(0);
+
   const _toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const _welcomeShown = useRef(false);
   const showMajorAccessNotification = (
@@ -1445,11 +1448,22 @@ function App() {
     const userId = authSession?.user?.id;
     if (!userId) {
       setMentionNotifications([]);
+      setPendingConnectionsCount(0);
       return;
     }
 
     // Load unread notifications
     getUnreadNotifications(userId).then(setMentionNotifications);
+
+    // Load initial pending connection requests count
+    supabase
+      .from("connections")
+      .select("id", { count: "exact" })
+      .eq("addressee_id", userId)
+      .eq("status", "pending")
+      .then(({ count }) => {
+        if (count !== null) setPendingConnectionsCount(count);
+      });
 
     // Realtime: get new mention notifications as they arrive
     const channel = supabase
@@ -1459,6 +1473,28 @@ function App() {
         { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${userId}` },
         (payload: any) => {
           setMentionNotifications((prev) => [payload.new as AppNotification, ...prev]);
+        },
+      )
+      .subscribe();
+
+    // Realtime: get new connection requests as they arrive
+    const connChannel = supabase
+      .channel(`user-connections-${userId}`)
+      .on(
+        "postgres_changes" as any,
+        { event: "INSERT", schema: "public", table: "connections", filter: `addressee_id=eq.${userId}` },
+        async (payload: any) => {
+          const requesterId = payload.new.requester_id;
+          if (requesterId) {
+            const { data } = await supabase
+              .from("profiles")
+              .select("name")
+              .eq("id", requesterId)
+              .single();
+            const senderName = data?.name || "Someone";
+            showMajorAccessNotification("info", `🌐 ${senderName} sent you a connection request!`);
+            setPendingConnectionsCount((prev) => prev + 1);
+          }
         },
       )
       .subscribe();
@@ -1484,6 +1520,7 @@ function App() {
     return () => {
       clearTimeout(promptTimer);
       channel.unsubscribe();
+      connChannel.unsubscribe();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authSession?.user?.id]);
@@ -3210,6 +3247,7 @@ For any queries, contact your course instructors or the department.`,
                   goToView={goToView}
                   showMajorAccessNotification={showMajorAccessNotification}
                   setShowSignInModal={setShowSignInModal}
+                  pendingConnectionsCount={pendingConnectionsCount}
                 />
               </nav>
             </div>
@@ -3833,18 +3871,30 @@ For any queries, contact your course instructors or the department.`,
                 } ${!isLoggedIn ? "opacity-60" : ""} ${currentView === "network" ? (isDarkMode ? "bg-sky-950/40 border-sky-600/60" : "bg-sky-100/50 border-sky-300") : ""}`}
               >
                 <div
-                  className={`p-2 rounded-lg flex-shrink-0 ${isDarkMode ? "bg-sky-900/40" : "bg-sky-100"}`}
+                  className={`p-2 rounded-lg flex-shrink-0 relative ${isDarkMode ? "bg-sky-900/40" : "bg-sky-100"}`}
                 >
                   <UserPlus
                     className={`w-5 h-5 ${isDarkMode ? "text-sky-400" : "text-sky-600"}`}
                   />
+                  {pendingConnectionsCount > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500 shadow-[0_0_8px_#ef4444]"></span>
+                    </span>
+                  )}
                 </div>
                 <div className="text-left flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <p className="font-semibold text-sm">My Network</p>
-                    <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-sky-500 text-white">
-                      NEW
-                    </span>
+                    {pendingConnectionsCount > 0 ? (
+                      <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-red-500 text-white animate-pulse">
+                        {pendingConnectionsCount}
+                      </span>
+                    ) : (
+                      <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-sky-500 text-white">
+                        NEW
+                      </span>
+                    )}
                   </div>
                   <p
                     className={`text-xs ${isDarkMode ? "text-[#71767b]" : "text-gray-600"}`}
@@ -8392,6 +8442,7 @@ For any queries, contact your course instructors or the department.`,
             onClose={() => goToView("home")}
             onViewProfile={(username) => goToView("profile", username)}
             isDarkMode={isDarkMode}
+            onPendingRequestsChange={setPendingConnectionsCount}
           />
         </main>
       )}
