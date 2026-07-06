@@ -3596,7 +3596,7 @@ For any queries, contact your course instructors or the department.`,
                         }`}
                       >
                         {/* Header */}
-                        <div className={`sticky top-0 flex items-center justify-between px-4 py-3 border-b ${isDarkMode ? "border-[#2f3336] bg-[#000000]/90 backdrop-blur-md" : "border-slate-100 bg-white/90 backdrop-blur-md"}`}>
+                        <div className={`sticky top-0 z-10 flex items-center justify-between px-4 py-3 border-b ${isDarkMode ? "border-[#2f3336] bg-black" : "border-slate-100 bg-white"}`}>
                           <div className="flex items-center gap-2">
                             <h3 className={`text-sm font-semibold ${isDarkMode ? "text-[#e7e9ea]" : "text-slate-900"}`}>Notifications</h3>
                             {(getUnreadNoticeCount() + mentionNotifications.length) > 0 && (
