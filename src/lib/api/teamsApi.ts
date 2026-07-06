@@ -329,6 +329,13 @@ export async function postAnnouncement(
   const { error } = await supabase.from("team_announcements").insert([
     { team_id: teamId, author_id: authorId, title, body: body ?? null },
   ]);
+
+  if (!error) {
+    notifyTeamAnnouncement(teamId, authorId, title).catch((err) => {
+      console.warn("Announcement notification error:", err);
+    });
+  }
+
   return { error: error?.message ?? null };
 }
 
@@ -418,5 +425,79 @@ export async function updateTeamTask(
 export async function deleteTeamTask(taskId: string): Promise<{ error: string | null }> {
   const { error } = await supabase.from("team_tasks").delete().eq("id", taskId);
   return { error: error?.message ?? null };
+}
+
+export async function notifyTeamAnnouncement(
+  teamId: string,
+  authorId: string,
+  annTitle: string,
+): Promise<void> {
+  try {
+    // 1. Fetch team details
+    const { data: teamData } = await supabase
+      .from("teams")
+      .select("name")
+      .eq("id", teamId)
+      .single();
+    
+    if (!teamData) return;
+    const teamName = teamData.name;
+
+    // 2. Fetch author profile details
+    const { data: authorData } = await supabase
+      .from("profiles")
+      .select("name")
+      .eq("id", authorId)
+      .single();
+    
+    const authorName = authorData?.name || "Team Admin";
+
+    // 3. Fetch team members
+    const { data: members } = await supabase
+      .from("team_members")
+      .select("user_id")
+      .eq("team_id", teamId);
+    
+    if (!members || !members.length) return;
+
+    // 4. Filter out the author of the announcement
+    const recipientIds = members
+      .map((m: any) => m.user_id)
+      .filter((id) => id !== authorId);
+    
+    if (recipientIds.length === 0) return;
+
+    // 5. Insert in-app notifications
+    const notificationRows = recipientIds.map((userId) => ({
+      user_id: userId,
+      type: "notice",
+      title: `There is an announcement from ${teamName}`,
+      body: annTitle,
+      team_id: teamId,
+      actor_id: authorId,
+      actor_name: authorName,
+      read: false,
+    }));
+
+    await supabase.from("notifications").insert(notificationRows);
+
+    // 6. Send push notifications via Supabase Edge Function
+    await Promise.all(
+      recipientIds.map((userId) =>
+        supabase.functions
+          .invoke("send-push-notification", {
+            body: {
+              title: `Announcement from ${teamName}`,
+              body: `There is an announcement from ${teamName}`,
+              url: `/teams/${teamId}`,
+              targetUserId: userId,
+            },
+          })
+          .catch(() => {})
+      )
+    );
+  } catch (err) {
+    console.warn("Failed to notify team members about announcement:", err);
+  }
 }
 
