@@ -488,7 +488,7 @@ function App() {
   // profile_pic is served from localStorage cache and refreshed in the background.
   // avatar_url (Storage URL) is short and included so it's cached immediately on login.
   const PROFILE_META_COLS =
-    "id,name,section,major,bubt_email,notification_email,phone,created_at,last_login_at,avatar_url,is_admin,is_alumni";
+    "id,name,section,major,bubt_email,notification_email,phone,created_at,last_login_at,avatar_url,is_admin,is_alumni,is_verified";
 
   const applyProfileData = (profileData: any, email: string, password: string) => {
     // NOTE: admin status is NOT set from this profile fetch — it's resolved
@@ -554,19 +554,7 @@ function App() {
         return false;
       }
 
-      let isVerifiedVal = false;
-      if (profileData?.is_alumni) {
-        const { data: alumniProfile } = await supabase
-          .from("alumni_profiles")
-          .select("is_verified")
-          .eq("id", profileData.id)
-          .maybeSingle();
-        if (alumniProfile) {
-          isVerifiedVal = alumniProfile.is_verified || false;
-        }
-      }
-
-      applyProfileData({ ...profileData, is_verified: isVerifiedVal }, email, password);
+      applyProfileData(profileData, email, password);
       console.log("Profile loaded from Supabase");
 
       // Refresh profile_pic in background so next session gets latest image
@@ -605,19 +593,7 @@ function App() {
         return false;
       }
 
-      let isVerifiedVal = false;
-      if (profileData?.is_alumni) {
-        const { data: alumniProfile } = await supabase
-          .from("alumni_profiles")
-          .select("is_verified")
-          .eq("id", userId)
-          .maybeSingle();
-        if (alumniProfile) {
-          isVerifiedVal = alumniProfile.is_verified || false;
-        }
-      }
-
-      applyProfileData({ ...profileData, is_verified: isVerifiedVal }, profileData?.bubt_email || "", password);
+      applyProfileData(profileData, profileData?.bubt_email || "", password);
       console.log("Profile loaded from Supabase by ID");
 
       // Refresh profile_pic in background
