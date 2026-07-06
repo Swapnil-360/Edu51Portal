@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { X, Bug, Lightbulb, Sparkles, MessageSquare, Send, Loader2 } from "lucide-react";
 import { submitFeedback } from "../lib/api/feedbackApi";
@@ -54,6 +54,14 @@ export function FeedbackModal({
   if (!isOpen) return null;
 
   const handleSubmit = async () => {
+    if (!email.trim()) {
+      onResult?.("error", "Please enter your email address.");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      onResult?.("error", "Please enter a valid email address.");
+      return;
+    }
     if (message.trim().length < 3) {
       onResult?.("error", "Please write a bit more detail (min 3 characters).");
       return;
@@ -177,7 +185,7 @@ export function FeedbackModal({
               />
             </div>
             <div>
-              <label className={`block text-sm font-semibold mb-1.5 ${label}`}>Email <span className="font-normal opacity-60">(optional)</span></label>
+              <label className={`block text-sm font-semibold mb-1.5 ${label}`}>Email *</label>
               <input
                 type="email"
                 value={email}

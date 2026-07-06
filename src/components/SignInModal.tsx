@@ -429,13 +429,23 @@ export function SignInModal({
           >
           {/* Student vs. Alumni Tabs */}
           <div className="flex justify-center mb-6">
-            <div className={`inline-flex rounded-full p-1 border ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-100 border-gray-200'}`}>
+            <div className={`relative inline-flex items-center w-52 rounded-full p-1 border ${
+              isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-100 border-gray-200'
+            }`}>
+              {/* Sliding Pill Background */}
+              <div 
+                className="absolute top-1 bottom-1 left-1 rounded-full bg-blue-600 shadow-md transition-transform duration-300 ease-[cubic-bezier(0.25,1,0.5,1)]"
+                style={{
+                  width: 'calc(50% - 4px)',
+                  transform: role === 'student' ? 'translateX(0)' : 'translateX(100%)',
+                }}
+              />
               <button
                 type="button"
                 onClick={() => { setRole('student'); setError(''); }}
-                className={`px-6 py-2 rounded-full text-xs font-semibold transition-all duration-200 ${
+                className={`relative z-10 flex-1 py-2 text-center text-xs font-semibold transition-colors duration-200 focus:outline-none ${
                   role === 'student'
-                    ? 'bg-blue-600 text-white shadow-md'
+                    ? 'text-white'
                     : `${isDarkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`
                 }`}
               >
@@ -444,9 +454,9 @@ export function SignInModal({
               <button
                 type="button"
                 onClick={() => { setRole('alumni'); setError(''); }}
-                className={`px-6 py-2 rounded-full text-xs font-semibold transition-all duration-200 ${
+                className={`relative z-10 flex-1 py-2 text-center text-xs font-semibold transition-colors duration-200 focus:outline-none ${
                   role === 'alumni'
-                    ? 'bg-blue-600 text-white shadow-md'
+                    ? 'text-white'
                     : `${isDarkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`
                 }`}
               >

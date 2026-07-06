@@ -258,10 +258,6 @@ export function SignUpModal({
         setError("Please enter a valid personal email address");
         return;
       }
-      if (!phone.trim()) {
-        setError("Please enter your phone number");
-        return;
-      }
       if (!dept) {
         setError("Please select your department");
         return;
@@ -271,7 +267,7 @@ export function SignUpModal({
         return;
       }
       if (!idCardFile) {
-        setError("Please upload your student ID card");
+        setError("Please upload a verification document (ID card, payslip, or certificate)");
         return;
       }
     }
@@ -415,8 +411,8 @@ export function SignUpModal({
                 });
 
               if (uploadErr) {
-                console.error("ID card upload error:", uploadErr);
-                setError("Failed to upload ID card. Please try again.");
+                console.error("Verification document upload error:", uploadErr);
+                setError("Failed to upload verification document. Please try again.");
                 setIsSubmitting(false);
                 return;
               }
@@ -698,13 +694,23 @@ export function SignUpModal({
                 {/* Student vs. Alumni Tabs */}
                 {!initialProfile && (
                   <div className="flex justify-center mb-6">
-                    <div className={`inline-flex rounded-full p-1 border ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-100 border-gray-200'}`}>
+                    <div className={`relative inline-flex items-center w-52 rounded-full p-1 border ${
+                      isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-100 border-gray-200'
+                    }`}>
+                      {/* Sliding Pill Background */}
+                      <div 
+                        className="absolute top-1 bottom-1 left-1 rounded-full bg-blue-600 shadow-md transition-transform duration-300 ease-[cubic-bezier(0.25,1,0.5,1)]"
+                        style={{
+                          width: 'calc(50% - 4px)',
+                          transform: role === 'student' ? 'translateX(0)' : 'translateX(100%)',
+                        }}
+                      />
                       <button
                         type="button"
                         onClick={() => { setRole('student'); setError(''); }}
-                        className={`px-6 py-2 rounded-full text-xs font-semibold transition-all duration-200 ${
+                        className={`relative z-10 flex-1 py-2 text-center text-xs font-semibold transition-colors duration-200 focus:outline-none ${
                           role === 'student'
-                            ? 'bg-blue-600 text-white shadow-md'
+                            ? 'text-white'
                             : `${isDarkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`
                         }`}
                       >
@@ -713,9 +719,9 @@ export function SignUpModal({
                       <button
                         type="button"
                         onClick={() => { setRole('alumni'); setError(''); }}
-                        className={`px-6 py-2 rounded-full text-xs font-semibold transition-all duration-200 ${
+                        className={`relative z-10 flex-1 py-2 text-center text-xs font-semibold transition-colors duration-200 focus:outline-none ${
                           role === 'alumni'
-                            ? 'bg-blue-600 text-white shadow-md'
+                            ? 'text-white'
                             : `${isDarkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`
                         }`}
                       >
@@ -1033,10 +1039,10 @@ export function SignUpModal({
                       />
                     </div>
 
-                    {/* Phone Number (Required for Alumni) */}
+                    {/* Phone Number (Optional for Alumni) */}
                     <div>
                       <label htmlFor="alumniPhone" className={`block text-sm font-semibold mb-2 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
-                        Phone Number *
+                        Phone Number (Optional)
                       </label>
                       <input
                         id="alumniPhone"
@@ -1104,73 +1110,14 @@ export function SignUpModal({
                       </select>
                     </div>
 
-                    {/* Address (Optional) */}
-                    <div>
-                      <label htmlFor="address" className={`block text-sm font-semibold mb-2 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
-                        Address (Optional)
-                      </label>
-                      <input
-                        id="address"
-                        type="text"
-                        value={address}
-                        onChange={(e) => setAddress(e.target.value)}
-                        placeholder="e.g. Dhaka, Bangladesh"
-                        className={`w-full px-4 py-2.5 rounded-lg border transition-all focus:outline-none focus:ring-2 ${
-                          isDarkMode
-                            ? "bg-gray-800 border-gray-700 text-gray-100 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-500"
-                            : "bg-gray-50 border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400"
-                        }`}
-                      />
-                    </div>
-
-                    {/* Profession (Optional) */}
-                    <div>
-                      <label htmlFor="profession" className={`block text-sm font-semibold mb-2 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
-                        Profession (Optional)
-                      </label>
-                      <input
-                        id="profession"
-                        type="text"
-                        value={profession}
-                        onChange={(e) => setProfession(e.target.value)}
-                        placeholder="e.g. Software Engineer"
-                        className={`w-full px-4 py-2.5 rounded-lg border transition-all focus:outline-none focus:ring-2 ${
-                          isDarkMode
-                            ? "bg-gray-800 border-gray-700 text-gray-100 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-500"
-                            : "bg-gray-50 border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400"
-                        }`}
-                      />
-                    </div>
-
-                    {/* Marital Status (Optional) */}
-                    <div>
-                      <label htmlFor="maritalStatus" className={`block text-sm font-semibold mb-2 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
-                        Marital Status (Optional)
-                      </label>
-                      <select
-                        id="maritalStatus"
-                        value={maritalStatus}
-                        onChange={(e) => setMaritalStatus(e.target.value)}
-                        className={`w-full px-4 py-2.5 rounded-lg border transition-all focus:outline-none focus:ring-2 ${
-                          isDarkMode
-                            ? "bg-gray-800 border-gray-700 text-gray-100 focus:ring-blue-500 focus:border-blue-500"
-                            : "bg-gray-50 border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500"
-                        }`}
-                      >
-                        <option value="">Select marital status</option>
-                        <option value="Single">Single</option>
-                        <option value="Married">Married</option>
-                        <option value="Divorced">Divorced</option>
-                        <option value="Widowed">Widowed</option>
-                        <option value="Prefer not to say">Prefer not to say</option>
-                      </select>
-                    </div>
-
                     {/* ID Card Upload */}
                     <div>
-                      <label className={`block text-sm font-semibold mb-2 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
-                        Student ID Card (Image or PDF) *
+                      <label className={`block text-sm font-semibold mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+                        Verification Document *
                       </label>
+                      <p className={`text-xs mb-3 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
+                        Upload your BUBT ID card, semester payslip, honors certificate, or graduation document (Image or PDF, max 10MB).
+                      </p>
                       <div className="flex items-center gap-3">
                         <button
                           type="button"
@@ -1192,7 +1139,7 @@ export function SignUpModal({
                             const file = e.target.files?.[0];
                             if (file) {
                               if (file.size > 10 * 1024 * 1024) {
-                                setError("ID Card file size must be less than 10MB");
+                                setError("Verification document file size must be less than 10MB");
                                 return;
                               }
                               setIdCardFile(file);

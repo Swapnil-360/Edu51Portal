@@ -4739,15 +4739,6 @@ For any queries, contact your course instructors or the department.`,
                               Privacy Policy
                             </button>
                           </li>
-                          <li>
-                            <a
-                              href="https://www.mrswapnil.me"
-                              target="_blank" rel="noopener noreferrer"
-                              className={`text-xs hover:underline underline-offset-2 transition-colors ${isDarkMode ? "text-slate-400 hover:text-blue-400" : "text-slate-500 hover:text-blue-600"}`}
-                            >
-                              Developer Portfolio ↗
-                            </a>
-                          </li>
                         </ul>
                       </div>
 

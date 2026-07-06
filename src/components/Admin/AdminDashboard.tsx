@@ -597,19 +597,36 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
                     {/* ID Card Image Preview */}
                     <div className="space-y-1.5">
-                      <span className={`text-[10px] font-bold uppercase tracking-wider ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Student ID Card:</span>
+                      <span className={`text-[10px] font-bold uppercase tracking-wider ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Verification Document:</span>
                       {alumni.id_card_url ? (
-                        <div className={`relative aspect-[16/10] w-full rounded-lg overflow-hidden border ${isDarkMode ? 'border-[#2f3336] bg-slate-900/60' : 'border-slate-300 bg-slate-100'}`}>
-                          <img
-                            src={alumni.id_card_url}
-                            alt="Alumni ID Card"
-                            className="w-full h-full object-contain cursor-pointer hover:scale-[1.02] transition-transform"
+                        alumni.id_card_url.toLowerCase().endsWith('.pdf') || alumni.id_card_url.includes('.pdf') ? (
+                          <div 
                             onClick={() => window.open(alumni.id_card_url, '_blank')}
-                          />
-                        </div>
+                            className={`flex flex-col items-center justify-center aspect-[16/10] w-full rounded-lg border cursor-pointer p-4 transition-all hover:scale-[1.01] ${
+                              isDarkMode 
+                                ? 'border-[#2f3336] bg-slate-900/40 hover:bg-slate-900/80 text-slate-300' 
+                                : 'border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700'
+                            }`}
+                          >
+                            <svg className="w-10 h-10 text-red-500 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                            </svg>
+                            <span className="text-xs font-semibold">Verification PDF</span>
+                            <span className={`text-[10px] mt-1 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Click to open in new tab</span>
+                          </div>
+                        ) : (
+                          <div className={`relative aspect-[16/10] w-full rounded-lg overflow-hidden border ${isDarkMode ? 'border-[#2f3336] bg-slate-900/60' : 'border-slate-300 bg-slate-100'}`}>
+                            <img
+                              src={alumni.id_card_url}
+                              alt="Alumni Verification Document"
+                              className="w-full h-full object-contain cursor-pointer hover:scale-[1.02] transition-transform"
+                              onClick={() => window.open(alumni.id_card_url, '_blank')}
+                            />
+                          </div>
+                        )
                       ) : (
                         <div className={`text-xs italic py-4 text-center border border-dashed rounded-lg ${isDarkMode ? 'border-[#2f3336]/60 text-slate-500' : 'border-slate-200 text-slate-400'}`}>
-                          No ID card image uploaded
+                          No document uploaded
                         </div>
                       )}
                     </div>
