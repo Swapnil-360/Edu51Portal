@@ -309,7 +309,7 @@ export function SignUpModal({
               data: {
                 name,
                 section: role === "student" ? section : "Alumni",
-                major,
+                major: role === "student" ? major : "AI",
                 phone,
                 notificationEmail,
                 profilePic,
@@ -431,7 +431,7 @@ export function SignUpModal({
                   id: userId,
                   name,
                   section: role === "student" ? section : "Alumni",
-                  major,
+                  major: role === "student" ? major : "AI",
                   bubt_email: bubtEmail,
                   notification_email: notificationEmail,
                   phone,
