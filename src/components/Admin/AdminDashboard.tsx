@@ -186,12 +186,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           .update({ is_verified: true })
           .eq('id', id);
         if (err1) throw err1;
-
-        const { error: err2 } = await supabase
-          .from('profiles')
-          .update({ is_verified: true })
-          .eq('id', id);
-        if (err2) throw err2;
       } else {
         const updated = pendingAlumni.filter(a => a.id !== id);
         setPendingAlumni(updated);

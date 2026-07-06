@@ -437,13 +437,13 @@ export function SignUpModal({
                   phone,
                   profile_pic: profilePic,
                   is_alumni: role === "alumni",
-                  is_verified: role !== "alumni",
                   created_at: new Date().toISOString(),
                   last_login_at: new Date().toISOString(),
                 },
                 { onConflict: "id" },
               );
             if (profileError) {
+              console.error("Profile creation database error:", profileError);
               if (
                 profileError.message.includes("duplicate key value") ||
                 profileError.message.includes("profiles_bubt_email_key") ||
@@ -451,9 +451,9 @@ export function SignUpModal({
               ) {
                 setError("This email is already registered. Please sign in instead.");
               } else {
-                setError(profileError.message || "Could not save profile");
+                setError(`Database error (profile): ${profileError.message}. Code: ${profileError.code}`);
               }
-              console.error("Profile creation error:", profileError);
+              setIsSubmitting(false);
               return;
             }
 
@@ -469,12 +469,7 @@ export function SignUpModal({
                     avatar_url: profilePic || null,
                     graduation_year: Number(gradYear),
                     major,
-                    phone,
-                    dept,
-                    address: address || null,
                     job_title: profession || null,
-                    marital_status: maritalStatus || null,
-                    id_card_url: idCardUrl || null,
                     is_verified: false,
                     created_at: new Date().toISOString(),
                     updated_at: new Date().toISOString(),
@@ -483,8 +478,8 @@ export function SignUpModal({
                 );
 
               if (alumniError) {
-                console.error("Alumni profile creation error:", alumniError);
-                setError(alumniError.message || "Could not save alumni profile");
+                console.error("Alumni profile creation database error:", alumniError);
+                setError(`Database error (alumni_profile): ${alumniError.message}. Code: ${alumniError.code}`);
                 setIsSubmitting(false);
                 return;
               }
@@ -611,9 +606,9 @@ export function SignUpModal({
           setIdCardFileName("");
         }
       }, 1500);
-    } catch (err) {
-      console.error("Supabase sign-up error:", err);
-      setError("An error occurred. Please try again.");
+    } catch (err: any) {
+      console.error("Supabase sign-up exception error:", err);
+      setError(err?.message || "An error occurred. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
