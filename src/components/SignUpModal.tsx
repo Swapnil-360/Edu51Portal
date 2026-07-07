@@ -514,6 +514,8 @@ export function SignUpModal({
               } catch (notifErr) {
                 console.error("Failed to create admin notification:", notifErr);
               }
+              // Sign out immediately so unverified session is cleared
+              await supabase.auth.signOut();
             }
           }
         } else {
@@ -586,6 +588,8 @@ export function SignUpModal({
         phone,
         password,
         profilePic,
+        isAlumni: role === "alumni",
+        isVerified: role !== "alumni",
       });
 
       setTimeout(() => {

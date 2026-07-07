@@ -168,6 +168,13 @@ export function SignInModal({
             return;
           }
 
+          if (role === 'alumni' && !preFetchedVerified) {
+            await supabase.auth.signOut();
+            setError('Your profile is pending admin approval. You can log in once approved.');
+            setIsSubmitting(false);
+            return;
+          }
+
           // Validate role against profile
           const { data: pData, error: pErr } = await supabase
             .from('profiles')
