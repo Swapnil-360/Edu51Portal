@@ -206,6 +206,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const rejectAlumni = async (id: string) => {
     try {
       if (supabaseConfigured) {
+        // Delete related notifications first to clear foreign key constraints
+        await supabase
+          .from('notifications')
+          .delete()
+          .or(`actor_id.eq.${id},user_id.eq.${id}`);
+
         const { error: err1 } = await supabase
           .from('alumni_profiles')
           .delete()
