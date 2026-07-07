@@ -554,7 +554,19 @@ function App() {
         return false;
       }
 
-      applyProfileData(profileData, email, password);
+      let isVerifiedVal = profileData?.is_verified || false;
+      if (profileData?.is_alumni) {
+        const { data: alumniProfile } = await supabase
+          .from("alumni_profiles")
+          .select("is_verified")
+          .eq("id", profileData.id)
+          .maybeSingle();
+        if (alumniProfile) {
+          isVerifiedVal = alumniProfile.is_verified || false;
+        }
+      }
+
+      applyProfileData({ ...profileData, is_verified: isVerifiedVal }, email, password);
       console.log("Profile loaded from Supabase");
 
       // Refresh profile_pic in background so next session gets latest image
@@ -593,7 +605,19 @@ function App() {
         return false;
       }
 
-      applyProfileData(profileData, profileData?.bubt_email || "", password);
+      let isVerifiedVal = profileData?.is_verified || false;
+      if (profileData?.is_alumni) {
+        const { data: alumniProfile } = await supabase
+          .from("alumni_profiles")
+          .select("is_verified")
+          .eq("id", userId)
+          .maybeSingle();
+        if (alumniProfile) {
+          isVerifiedVal = alumniProfile.is_verified || false;
+        }
+      }
+
+      applyProfileData({ ...profileData, is_verified: isVerifiedVal }, profileData?.bubt_email || "", password);
       console.log("Profile loaded from Supabase by ID");
 
       // Refresh profile_pic in background

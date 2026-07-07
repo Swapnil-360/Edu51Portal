@@ -189,7 +189,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
         const { error: err2 } = await supabase
           .from('profiles')
-          .update({ is_verified: true })
+          .update({ is_verified: true, is_alumni: true })
           .eq('id', id);
         if (err2) throw err2;
       } else {
