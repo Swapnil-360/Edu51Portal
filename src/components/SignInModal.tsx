@@ -131,6 +131,24 @@ export function SignInModal({
       // Try Supabase auth first if configured and email provided
       if (supabaseConfigured && trimmedIdentifier.includes('@') && (supabase as any).auth?.signInWithPassword) {
         try {
+          // Pre-fetch verification status by email BEFORE calling signInWithPassword
+          // to ensure localStorage is populated when onAuthStateChange fires.
+          let preFetchedVerified = false;
+          if (role === 'alumni') {
+            const { data: alumniProfile } = await supabase
+              .from('alumni_profiles')
+              .select('is_verified')
+              .eq('email', normalizedIdentifier)
+              .maybeSingle();
+            
+            preFetchedVerified = alumniProfile?.is_verified || false;
+            localStorage.setItem('userProfileIsAlumni', 'true');
+            localStorage.setItem('userProfileIsVerified', preFetchedVerified ? 'true' : 'false');
+          } else {
+            localStorage.setItem('userProfileIsAlumni', 'false');
+            localStorage.setItem('userProfileIsVerified', 'true');
+          }
+
           const { data, error } = await (supabase as any).auth.signInWithPassword({
             email: normalizedIdentifier,
             password,
