@@ -52,6 +52,7 @@ import { MajorCardStack } from "./components/ui/MajorCardStack";
 import { Tiles } from "./components/ui/tiles";
 const PDFViewer = lazy(() => import("./components/PDFViewer"));
 const AdminDashboard = lazy(() => import("./components/Admin/AdminDashboard"));
+const AlumniDashboard = lazy(() => import("./components/Alumni/AlumniDashboard"));
 const GDriveFolderBrowser = lazy(() => import("./components/Student/GDriveFolderBrowser").then(m => ({ default: m.GDriveFolderBrowser })));
 const GDriveCourseView = lazy(() => import("./components/Student/GDriveCourseView").then(m => ({ default: m.GDriveCourseView })));
 const AIAssistant = lazy(() => import("./components/AIAssistant/AIAssistant").then(m => ({ default: m.AIAssistant })));
@@ -3202,6 +3203,35 @@ For any queries, contact your course instructors or the department.`,
           </button>
         </div>
       </div>
+    );
+  }
+
+  const isAlumniDashboardActive = isLoggedIn && userProfile.isAlumni && userProfile.isVerified && !isAdmin;
+
+  if (isAlumniDashboardActive) {
+    return (
+      <Suspense fallback={
+        <div className={`min-h-screen flex items-center justify-center ${isDarkMode ? "bg-black" : "bg-slate-50"}`}>
+          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+        </div>
+      }>
+        <AlumniDashboard
+          isDarkMode={isDarkMode}
+          toggleDarkMode={toggleDarkMode}
+          userProfile={userProfile}
+          setUserProfile={setUserProfile}
+          setIsLoggedIn={setIsLoggedIn}
+          setAuthSession={setAuthSession}
+          setIsAdmin={setIsAdmin}
+          showMajorAccessNotification={showMajorAccessNotification}
+          mentionNotifications={mentionNotifications}
+          setMentionNotifications={setMentionNotifications}
+          getUnreadNoticeCount={getUnreadNoticeCount}
+          unreadNotices={unreadNotices}
+          setUnreadNotices={setUnreadNotices}
+          authSession={authSession}
+        />
+      </Suspense>
     );
   }
 

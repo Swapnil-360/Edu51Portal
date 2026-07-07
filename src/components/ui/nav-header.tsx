@@ -254,3 +254,57 @@ export function AppNavHeader({
 
   return <SlideNav tabs={tabs} isDarkMode={isDarkMode} />;
 }
+
+interface AlumniNavHeaderProps {
+  currentView: string;
+  isDarkMode: boolean;
+  goToView: (view: string) => void;
+  pendingConnectionsCount?: number;
+}
+
+export function AlumniNavHeader({
+  currentView,
+  isDarkMode,
+  goToView,
+  pendingConnectionsCount = 0,
+}: AlumniNavHeaderProps) {
+  const tabs: NavTab[] = [
+    {
+      label: "Home",
+      view: "home",
+      icon: <Home className="h-4 w-4" />,
+      isActive: currentView === "home",
+      onClick: () => goToView("home"),
+    },
+    {
+      label: "Network",
+      view: "network",
+      badge: "new",
+      isActive: currentView === "network",
+      onClick: () => goToView("network"),
+      hasRedDot: pendingConnectionsCount > 0,
+    },
+    {
+      label: "Teams",
+      view: "teams",
+      badge: "new",
+      isActive: currentView === "teams" || currentView === "team",
+      onClick: () => goToView("teams"),
+    },
+    {
+      label: "Resources",
+      view: "resources",
+      badge: "new",
+      isActive: currentView === "resources",
+      onClick: () => goToView("resources"),
+    },
+    {
+      label: "Profile",
+      view: "profile",
+      isActive: currentView === "profile",
+      onClick: () => goToView("profile"),
+    },
+  ];
+
+  return <SlideNav tabs={tabs} isDarkMode={isDarkMode} />;
+}
