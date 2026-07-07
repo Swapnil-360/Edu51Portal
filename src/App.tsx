@@ -3695,13 +3695,17 @@ For any queries, contact your course instructors or the department.`,
                                       ? "text-sky-500" 
                                       : (n.type === "notice" || n.title.toLowerCase().includes("announcement"))
                                         ? "text-orange-500"
-                                        : "text-amber-500"
+                                        : n.type === "alumni_approval"
+                                          ? "text-purple-500"
+                                          : "text-amber-500"
                                   }`}>
                                     {n.title === "Connection Request" 
                                       ? "Network" 
                                       : (n.type === "notice" || n.title.toLowerCase().includes("announcement"))
                                         ? "Announcement"
-                                        : "Mentioned you"}
+                                        : n.type === "alumni_approval"
+                                          ? "Alumni Approval"
+                                          : "Mentioned you"}
                                   </p>
                                   <p className={`text-xs font-medium leading-snug ${isDarkMode ? "text-[#e7e9ea]" : "text-slate-800"}`}>{n.title}</p>
                                   {n.body && <p className={`text-xs mt-0.5 truncate ${isDarkMode ? "text-[#71767b]" : "text-slate-500"}`}>"{n.body}"</p>}
@@ -4315,13 +4319,17 @@ For any queries, contact your course instructors or the department.`,
                             ? "text-sky-500" 
                             : (n.type === "notice" || n.title.toLowerCase().includes("announcement"))
                               ? "text-orange-500"
-                              : "text-amber-500"
+                              : n.type === "alumni_approval"
+                                ? "text-purple-500"
+                                : "text-amber-500"
                         }`}>
                           {n.title === "Connection Request" 
                             ? "Network" 
                             : (n.type === "notice" || n.title.toLowerCase().includes("announcement"))
                               ? "Announcement"
-                              : "Mentioned you"}
+                              : n.type === "alumni_approval"
+                                ? "Alumni Approval"
+                                : "Mentioned you"}
                         </p>
                         <p className={`text-sm font-medium leading-snug ${isDarkMode ? "text-[#d9d9d9]" : "text-slate-800"}`}>{n.title}</p>
                         {n.body && <p className={`text-xs mt-0.5 truncate ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>"{n.body}"</p>}
@@ -4331,7 +4339,9 @@ For any queries, contact your course instructors or the department.`,
                               ? "Tap to view requests" 
                               : (n.type === "notice" || n.title.toLowerCase().includes("announcement"))
                                 ? "Tap to view announcements"
-                                : "Tap to open chat"
+                                : n.type === "alumni_approval"
+                                  ? "Tap to review request"
+                                  : "Tap to open chat"
                           }
                         </p>
                       </div>
@@ -8829,8 +8839,12 @@ For any queries, contact your course instructors or the department.`,
             password: profile.password,
             profilePic: profile.profilePic,
             avatar_url: profile.profilePic,
+            isAlumni: profile.isAlumni || false,
+            isVerified: profile.isVerified ?? true,
           });
-          setIsLoggedIn(true);
+          if (!profile.isAlumni) {
+            setIsLoggedIn(true);
+          }
           setIsEditingProfile(false);
           setShowSignUpModal(false);
 
