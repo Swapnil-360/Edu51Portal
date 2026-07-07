@@ -465,17 +465,6 @@ export default function AlumniDashboard({
                   <BookOpen className="w-5 h-5 text-slate-400" />
                   <span className="font-semibold text-sm">Resources</span>
                 </button>
-
-                {/* Profile */}
-                <button
-                  onClick={() => { setCurrentView("profile"); setShowMobileMenu(false); }}
-                  className={`w-full flex items-center gap-3 p-3.5 rounded-lg border text-left ${
-                    isDarkMode ? "hover:bg-[#16181c]/50 border-[#2f3336]/50" : "hover:bg-slate-100/50 border-gray-200/50"
-                  } ${currentView === "profile" ? (isDarkMode ? "bg-[#16181c]" : "bg-slate-100") : ""}`}
-                >
-                  <User className="w-5 h-5 text-slate-400" />
-                  <span className="font-semibold text-sm">Profile</span>
-                </button>
               </div>
             </div>
           </>

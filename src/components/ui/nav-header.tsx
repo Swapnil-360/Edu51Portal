@@ -298,12 +298,6 @@ export function AlumniNavHeader({
       isActive: currentView === "resources",
       onClick: () => goToView("resources"),
     },
-    {
-      label: "Profile",
-      view: "profile",
-      isActive: currentView === "profile",
-      onClick: () => goToView("profile"),
-    },
   ];
 
   return <SlideNav tabs={tabs} isDarkMode={isDarkMode} />;

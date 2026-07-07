@@ -21,7 +21,7 @@ export default function AlumniHomePage({ isDarkMode, userProfile }: Props) {
           Welcome back, {userProfile.name}! 👋
         </h1>
         <p className={`text-sm sm:text-base ${subColor}`}>
-          Intake 51 Alumni · {userProfile.major ? userProfile.major.toUpperCase() : "CSE"}
+          Alumni · {userProfile.major ? userProfile.major.toUpperCase() : "CSE"}
         </p>
       </div>
 
