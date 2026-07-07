@@ -128,7 +128,7 @@ export default function AlumniDashboard({
   const renderActiveView = () => {
     switch (currentView) {
       case "home":
-        return <AlumniHomePage isDarkMode={isDarkMode} userProfile={userProfile} />;
+        return <AlumniHomePage isDarkMode={isDarkMode} userProfile={userProfile} authSession={authSession} />;
       case "network":
         return <AlumniNetworkPage isDarkMode={isDarkMode} />;
       case "teams":
@@ -138,7 +138,7 @@ export default function AlumniDashboard({
       case "profile":
         return <AlumniProfilePage isDarkMode={isDarkMode} authSession={authSession} />;
       default:
-        return <AlumniHomePage isDarkMode={isDarkMode} userProfile={userProfile} />;
+        return <AlumniHomePage isDarkMode={isDarkMode} userProfile={userProfile} authSession={authSession} />;
     }
   };
 
