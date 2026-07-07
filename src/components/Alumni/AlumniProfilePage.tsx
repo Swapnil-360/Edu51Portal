@@ -1,14 +1,100 @@
+import { useState, useEffect } from "react";
 import { ArrowLeft, Mail, Linkedin, MapPin, Calendar, BookOpen, Quote, ShieldCheck } from "lucide-react";
 import { useAlumniById } from "../../hooks/useAlumni";
+import { supabase } from "../../lib/supabase";
 
 interface Props {
   id: string;
   isDarkMode: boolean;
   onBack: () => void;
+  authSession: any;
+  userProfile: any;
 }
 
-export default function AlumniProfilePage({ id, isDarkMode, onBack }: Props) {
+export default function AlumniProfilePage({ id, isDarkMode, onBack, authSession, userProfile }: Props) {
   const { alumni, loading, error } = useAlumniById(id);
+  const [hasPendingRequest, setHasPendingRequest] = useState(false);
+  const [checkingRequest, setCheckingRequest] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [topic, setTopic] = useState("Career Guidance");
+  const [message, setMessage] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    const checkPending = async () => {
+      if (!authSession?.user?.id || !id) return;
+      try {
+        setCheckingRequest(true);
+        const { data, error } = await supabase
+          .from("mentorship_requests")
+          .select("status")
+          .eq("student_id", authSession.user.id)
+          .eq("alumni_id", id)
+          .eq("status", "pending")
+          .maybeSingle();
+
+        if (!error && data) {
+          setHasPendingRequest(true);
+        }
+      } catch (err) {
+        console.error("Error checking pending request:", err);
+      } finally {
+        setCheckingRequest(false);
+      }
+    };
+    checkPending();
+  }, [authSession, id]);
+
+  const handleSubmitRequest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!authSession?.user?.id) return;
+    try {
+      setSubmitting(true);
+      setErrorMsg(null);
+
+      // Insert request
+      const { error: insertErr } = await supabase
+        .from("mentorship_requests")
+        .insert({
+          student_id: authSession.user.id,
+          alumni_id: id,
+          student_name: userProfile.name,
+          student_email: userProfile.bubtEmail,
+          topic,
+          message: message || null,
+          status: "pending"
+        });
+
+      if (insertErr) throw insertErr;
+
+      // Send in-app notification to the alumni user
+      const { error: notifErr } = await supabase
+        .from("notifications")
+        .insert({
+          user_id: id,
+          type: "mentorship_request",
+          title: "New Mentorship Request",
+          body: `${userProfile.name} wants your guidance on ${topic}`,
+          actor_id: authSession.user.id,
+          actor_name: userProfile.name,
+          read: false
+        });
+
+      if (notifErr) {
+        console.error("Failed to send notification to alumni:", notifErr);
+      }
+
+      setHasPendingRequest(true);
+      setShowModal(false);
+      alert("Request sent! Alumni will respond soon.");
+    } catch (err: any) {
+      console.error("Error submitting mentorship request:", err);
+      setErrorMsg(err.message || "Failed to submit request. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const pageBg = isDarkMode ? "bg-[#000000]" : "bg-slate-50";
   const textColor = isDarkMode ? "text-white" : "text-slate-900";
@@ -137,6 +223,20 @@ export default function AlumniProfilePage({ id, isDarkMode, onBack }: Props) {
                 ✓ Available to Mentor Students
               </span>
             )}
+            {alumni.is_available_for_mentorship && authSession?.user && !userProfile?.isAlumni && (
+              hasPendingRequest ? (
+                <span className="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                  Request Pending
+                </span>
+              ) : (
+                <button
+                  onClick={() => setShowModal(true)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#1e9df1] hover:bg-[#1677cc] text-white text-xs font-semibold transition-colors shadow-sm cursor-pointer"
+                >
+                  Request Mentorship
+                </button>
+              )
+            )}
           </div>
 
           {/* Bio Section */}
@@ -171,6 +271,64 @@ export default function AlumniProfilePage({ id, isDarkMode, onBack }: Props) {
           )}
         </div>
       </div>
+
+      {/* Mentorship Request Modal */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in animate-duration-150">
+          <div className={`w-full max-w-md p-6 rounded-2xl border ${isDarkMode ? "bg-[#17181c] border-[#2f3336] text-white" : "bg-white border-slate-200 text-slate-900"}`}>
+            <h3 className="text-lg font-bold mb-4">Request Mentorship from {alumni.full_name}</h3>
+            
+            <form onSubmit={handleSubmitRequest} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold mb-1.5">Mentorship Topic</label>
+                <select
+                  value={topic}
+                  onChange={(e) => setTopic(e.target.value)}
+                  className={`w-full px-3.5 py-2.5 rounded-xl border text-sm focus:outline-none ${isDarkMode ? "bg-[#16181c] border-[#2f3336] text-white" : "bg-white border-slate-200 text-slate-900"}`}
+                >
+                  <option value="Career Guidance">Career Guidance</option>
+                  <option value="Job Search Help">Job Search Help</option>
+                  <option value="Technical Skills">Technical Skills</option>
+                  <option value="Interview Prep">Interview Prep</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold mb-1.5">Personal Message (Optional)</label>
+                <textarea
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  rows={4}
+                  placeholder="Tell the alumni what you need help with..."
+                  className={`w-full px-3.5 py-2.5 rounded-xl border text-sm focus:outline-none ${isDarkMode ? "bg-[#16181c] border-[#2f3336] text-white" : "bg-white border-slate-200 text-slate-900"}`}
+                />
+              </div>
+
+              {errorMsg && (
+                <p className="text-xs text-red-400 font-semibold">{errorMsg}</p>
+              )}
+
+              <div className="flex gap-2 justify-end pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowModal(false)}
+                  className={`px-4 py-2 rounded-lg text-xs font-semibold border ${isDarkMode ? "bg-[#16181c] border-[#2f3336] text-[#d9d9d9] hover:bg-[#2f3336]" : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"}`}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold bg-[#1e9df1] hover:bg-[#1677cc] text-white transition-colors disabled:opacity-50"
+                >
+                  {submitting ? "Sending..." : "Send Request"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
