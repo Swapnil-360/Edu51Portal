@@ -556,18 +556,22 @@ function App() {
       }
 
       let isVerifiedVal = profileData?.is_verified || false;
+      let alumniMajor = profileData?.major;
       if (profileData?.is_alumni) {
         const { data: alumniProfile } = await supabase
           .from("alumni_profiles")
-          .select("is_verified")
+          .select("is_verified, major")
           .eq("id", profileData.id)
           .maybeSingle();
         if (alumniProfile) {
           isVerifiedVal = alumniProfile.is_verified || false;
+          if (alumniProfile.major) {
+            alumniMajor = alumniProfile.major;
+          }
         }
       }
 
-      applyProfileData({ ...profileData, is_verified: isVerifiedVal }, email, password);
+      applyProfileData({ ...profileData, is_verified: isVerifiedVal, major: alumniMajor }, email, password);
       console.log("Profile loaded from Supabase");
 
       // Refresh profile_pic in background so next session gets latest image
@@ -607,18 +611,22 @@ function App() {
       }
 
       let isVerifiedVal = profileData?.is_verified || false;
+      let alumniMajor = profileData?.major;
       if (profileData?.is_alumni) {
         const { data: alumniProfile } = await supabase
           .from("alumni_profiles")
-          .select("is_verified")
+          .select("is_verified, major")
           .eq("id", userId)
           .maybeSingle();
         if (alumniProfile) {
           isVerifiedVal = alumniProfile.is_verified || false;
+          if (alumniProfile.major) {
+            alumniMajor = alumniProfile.major;
+          }
         }
       }
 
-      applyProfileData({ ...profileData, is_verified: isVerifiedVal }, profileData?.bubt_email || "", password);
+      applyProfileData({ ...profileData, is_verified: isVerifiedVal, major: alumniMajor }, profileData?.bubt_email || "", password);
       console.log("Profile loaded from Supabase by ID");
 
       // Refresh profile_pic in background
