@@ -819,7 +819,8 @@ function App() {
             notificationEmail: prev.notificationEmail || meta.notificationEmail || "",
             profilePic: prev.profilePic || cachedAvatarUrl || cachedPic,
             avatar_url: prev.avatar_url || cachedAvatarUrl || cachedPic,
-            isAlumni: prev.isAlumni || meta.is_alumni || false,
+            isAlumni: prev.isAlumni || meta.is_alumni || (localStorage.getItem("userProfileIsAlumni") === "true") || false,
+            isVerified: prev.isVerified || (localStorage.getItem("userProfileIsVerified") === "true") || false,
           }));
           localStorage.setItem("userProfileName", quickName);
         }
@@ -8776,6 +8777,8 @@ For any queries, contact your course instructors or the department.`,
             password,
             profilePic: prev.profilePic || picFromProfile || cachedPic,
             avatar_url: prev.avatar_url || picFromProfile || cachedPic,
+            isAlumni: prev.isAlumni || profile?.isAlumni || (localStorage.getItem("userProfileIsAlumni") === "true") || false,
+            isVerified: prev.isVerified || profile?.isVerified || (localStorage.getItem("userProfileIsVerified") === "true") || false,
           }));
           setIsLoggedIn(true);
           setShowSignInModal(false);

@@ -173,6 +173,17 @@ export function SignInModal({
             }
           }
 
+          let isVerifiedVal = false;
+          if (role === 'alumni') {
+            const { data: alumniProfile } = await supabase
+              .from('alumni_profiles')
+              .select('is_verified')
+              .eq('id', data.user.id)
+              .maybeSingle();
+            
+            isVerifiedVal = alumniProfile?.is_verified || false;
+          }
+
           // ── Close modal immediately using user_metadata + localStorage cache ──
           // App.tsx's onAuthStateChange SIGNED_IN handler will load the full DB
           // profile in the background — no need to block the modal on DB queries.
@@ -187,6 +198,8 @@ export function SignInModal({
             notification_email: meta.notificationEmail || localStorage.getItem('userProfileNotificationEmail') || '',
             phone: meta.phone || localStorage.getItem('userProfilePhone') || '',
             profile_pic: cachedPic,
+            isAlumni: role === 'alumni',
+            isVerified: role === 'alumni' ? isVerifiedVal : true,
           };
 
           localStorage.setItem('userProfileName', profile.name);
@@ -195,6 +208,8 @@ export function SignInModal({
           localStorage.setItem('userProfileBubtEmail', profile.bubt_email);
           localStorage.setItem('userProfileNotificationEmail', profile.notification_email);
           localStorage.setItem('userProfilePhone', profile.phone);
+          localStorage.setItem('userProfileIsAlumni', role === 'alumni' ? 'true' : 'false');
+          localStorage.setItem('userProfileIsVerified', (role === 'alumni' ? isVerifiedVal : true) ? 'true' : 'false');
           if (cachedPic) {
             localStorage.setItem('userProfilePic', cachedPic);
             localStorage.setItem('userProfileAvatarUrl', cachedPic);
