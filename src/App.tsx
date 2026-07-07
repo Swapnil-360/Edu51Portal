@@ -8722,6 +8722,7 @@ For any queries, contact your course instructors or the department.`,
                   }
                 }}
                 onClose={() => goToView("home")}
+                authSession={authSession}
               />
             )}
             {alumniSubView === "profile" && selectedAlumniId && (
@@ -8732,6 +8733,8 @@ For any queries, contact your course instructors or the department.`,
                   setAlumniSubView("directory");
                   setSelectedAlumniId(null);
                 }}
+                authSession={authSession}
+                userProfile={userProfile}
               />
             )}
             {alumniSubView === "register" && authSession?.user && (
