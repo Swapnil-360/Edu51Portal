@@ -278,7 +278,7 @@ export default function AlumniDirectoryPage({
                 </div>
               ))}
             </div>
-          )}
+          )
         )}
       </div>
     </div>
