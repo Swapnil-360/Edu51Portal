@@ -242,7 +242,7 @@ export function AppNavHeader({
       view: "alumni",
       badge: "new",
       isActive: currentView === "alumni",
-      onClick: () => goToView("alumni"),
+      onClick: () => requireLogin("alumni", "Alumni Hub"),
     },
     {
       label: "Routine",

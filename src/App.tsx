@@ -284,6 +284,19 @@ function App() {
     }
   }, [currentView, isAdmin]);
 
+  // Redirect guest users trying to access login-only views directly via URL/history
+  useEffect(() => {
+    if (!authLoading && !isLoggedIn) {
+      const loginRequiredViews = ["semester", "custom", "network", "teams", "team", "alumni", "wc26", "shared-resources"];
+      if (loginRequiredViews.includes(currentView) || (currentView === "profile" && !viewedUsername)) {
+        setCurrentView("home");
+        window.history.replaceState({}, "", "/home");
+        showMajorAccessNotification("error", "Please sign in to access that page");
+        setShowSignInModal(true);
+      }
+    }
+  }, [authLoading, isLoggedIn, currentView, viewedUsername]);
+
   // Listen for browser back/forward events
   useEffect(() => {
     const handlePopState = () => {
@@ -4005,6 +4018,15 @@ For any queries, contact your course instructors or the department.`,
               {/* Shared Resources */}
               <button
                 onClick={() => {
+                  if (!isLoggedIn) {
+                    showMajorAccessNotification(
+                      "error",
+                      "Please sign in to access Shared Resources",
+                    );
+                    setShowSignInModal(true);
+                    setShowMobileMenu(false);
+                    return;
+                  }
                   goToView("shared-resources");
                   setShowMobileMenu(false);
                 }}
@@ -4012,7 +4034,7 @@ For any queries, contact your course instructors or the department.`,
                   isDarkMode
                     ? "hover:bg-blue-900/30 border-[#2f3336]/50 hover:border-blue-500/50 text-gray-100"
                     : "hover:bg-blue-50 border-gray-200/50 hover:border-blue-300 text-gray-900"
-                } ${currentView === "shared-resources" ? (isDarkMode ? "bg-blue-950/40 border-[#1e9df1]/60" : "bg-blue-100/50 border-blue-300") : ""}`}
+                } ${!isLoggedIn ? "opacity-60" : ""} ${currentView === "shared-resources" ? (isDarkMode ? "bg-blue-950/40 border-[#1e9df1]/60" : "bg-blue-100/50 border-blue-300") : ""}`}
               >
                 <div className={`p-2 rounded-lg flex-shrink-0 ${isDarkMode ? "bg-blue-900/40" : "bg-blue-100"}`}>
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={isDarkMode ? "text-blue-400" : "text-blue-600"}>
@@ -4085,6 +4107,15 @@ For any queries, contact your course instructors or the department.`,
               {/* Alumni Hub */}
               <button
                 onClick={() => {
+                  if (!isLoggedIn) {
+                    showMajorAccessNotification(
+                      "error",
+                      "Please sign in to access Alumni Hub",
+                    );
+                    setShowSignInModal(true);
+                    setShowMobileMenu(false);
+                    return;
+                  }
                   goToView("alumni");
                   setShowMobileMenu(false);
                 }}
@@ -4092,7 +4123,7 @@ For any queries, contact your course instructors or the department.`,
                   isDarkMode
                     ? "hover:bg-amber-900/30 border-[#2f3336]/50 hover:border-amber-500/50 text-gray-100"
                     : "hover:bg-amber-50 border-gray-200/50 hover:border-amber-300 text-gray-900"
-                } ${currentView === "alumni" ? (isDarkMode ? "bg-amber-950/40 border-amber-600/60" : "bg-amber-100/50 border-amber-300") : ""}`}
+                } ${!isLoggedIn ? "opacity-60" : ""} ${currentView === "alumni" ? (isDarkMode ? "bg-amber-950/40 border-amber-600/60" : "bg-amber-100/50 border-amber-300") : ""}`}
               >
                 <div
                   className={`p-2 rounded-lg flex-shrink-0 ${isDarkMode ? "bg-amber-900/40" : "bg-amber-100"}`}
@@ -8698,7 +8729,7 @@ For any queries, contact your course instructors or the department.`,
       )}
 
       {/* ── V2: Alumni Hub ── */}
-      {currentView === "alumni" && (
+      {currentView === "alumni" && authSession?.user?.id && (
         <main className="fixed top-[72px] lg:top-20 inset-x-0 bottom-0 z-40 overflow-y-auto overscroll-y-contain">
           <Suspense fallback={
             <div className={`h-full flex items-center justify-center p-4 ${isDarkMode ? "bg-[#000000]" : "bg-slate-50"}`}>
