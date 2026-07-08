@@ -34,13 +34,13 @@ export default function NetworkPage({ currentUserId, onClose, onViewProfile, isD
   const [results, setResults] = useState<SocialProfile[]>([]);
   const [searching, setSearching] = useState(false);
 
-  const load = async () => {
-    setLoading(true);
+  const load = async (silent = false) => {
+    if (!silent) setLoading(true);
     const conns = await listMyConnections(currentUserId);
     setConnections(conns);
     const incomingCount = conns.filter((c) => c.status === "pending" && c.addressee_id === currentUserId).length;
     onPendingRequestsChange?.(incomingCount);
-    setLoading(false);
+    if (!silent) setLoading(false);
   };
 
   useEffect(() => {
@@ -76,7 +76,7 @@ export default function NetworkPage({ currentUserId, onClose, onViewProfile, isD
     setActionError(null);
     const result = await fn();
     if (result?.error) setActionError(result.error);
-    await load();
+    await load(true);
     setBusy(null);
   };
 
@@ -319,13 +319,32 @@ export default function NetworkPage({ currentUserId, onClose, onViewProfile, isD
                       onView={viewProfile}
                       action={
                         existing && existing.status !== "rejected" ? (
-                          <span className={`px-3 py-1.5 rounded-lg text-xs font-medium ${
-                            existing.status === "accepted"
-                              ? isDarkMode ? "bg-emerald-900/30 text-emerald-400" : "bg-emerald-50 text-emerald-700"
-                              : isDarkMode ? "bg-[#16181c] text-slate-400" : "bg-slate-100 text-slate-500"
-                          }`}>
-                            {existing.status === "accepted" ? "Connected" : "Pending"}
-                          </span>
+                          <div className="flex items-center gap-1.5">
+                            <span className={`px-3 py-1.5 rounded-lg text-xs font-medium ${
+                              existing.status === "accepted"
+                                ? isDarkMode ? "bg-emerald-900/30 text-emerald-400" : "bg-emerald-50 text-emerald-700"
+                                : isDarkMode ? "bg-[#16181c] text-slate-400" : "bg-slate-100 text-slate-500"
+                            }`}>
+                              {existing.status === "accepted" ? "Connected" : "Pending"}
+                            </span>
+                            {existing.status === "pending" && (
+                              <button
+                                onClick={() => handleAction(() => removeConnection(existing.id), existing.id)}
+                                disabled={busy === existing.id}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                                  isDarkMode
+                                    ? "bg-[#16181c] text-slate-400 hover:text-red-400 hover:bg-red-500/10 border border-[#2f3336]"
+                                    : "bg-slate-100 text-slate-500 hover:text-red-500 hover:bg-red-50 border border-slate-200"
+                                }`}
+                              >
+                                {busy === existing.id ? (
+                                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                ) : (
+                                  "Remove Request"
+                                )}
+                              </button>
+                            )}
+                          </div>
                         ) : (
                           <button
                             onClick={() => handleAction(() => sendConnectionRequest(currentUserId, p.id), p.id)}
