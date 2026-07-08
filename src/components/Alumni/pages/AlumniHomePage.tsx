@@ -14,6 +14,8 @@ interface Props {
 export default function AlumniHomePage({ isDarkMode, userProfile, authSession }: Props) {
   const [requests, setRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [mentees, setMentees] = useState<any[]>([]);
+  const [loadingMentees, setLoadingMentees] = useState(false);
 
   const textColor = isDarkMode ? "text-white" : "text-slate-900";
   const subColor = isDarkMode ? "text-slate-400" : "text-slate-500";
@@ -40,8 +42,38 @@ export default function AlumniHomePage({ isDarkMode, userProfile, authSession }:
     }
   };
 
+  const fetchMentees = async () => {
+    if (!authSession?.user?.id) return;
+    try {
+      setLoadingMentees(true);
+      const { data: conns, error: connErr } = await supabase
+        .from("mentor_connections")
+        .select("student_id")
+        .eq("alumni_id", authSession.user.id);
+
+      if (!connErr && conns && conns.length > 0) {
+        const studentIds = conns.map((c: any) => c.student_id);
+        const { data: students, error: studentErr } = await supabase
+          .from("profiles")
+          .select("id, name, major, section, avatar_url, profile_pic")
+          .in("id", studentIds);
+
+        if (!studentErr && students) {
+          setMentees(students);
+        }
+      } else {
+        setMentees([]);
+      }
+    } catch (err) {
+      console.error("Error loading mentees:", err);
+    } finally {
+      setLoadingMentees(false);
+    }
+  };
+
   useEffect(() => {
     fetchRequests();
+    fetchMentees();
   }, [authSession]);
 
   const handleAccept = async (requestId: string, studentId: string) => {
@@ -54,7 +86,18 @@ export default function AlumniHomePage({ isDarkMode, userProfile, authSession }:
 
       if (updateErr) throw updateErr;
 
-      // 2. Notify student
+      // 2. Create connection in mentor_connections
+      const { error: connErr } = await supabase
+        .from("mentor_connections")
+        .insert({
+          student_id: studentId,
+          alumni_id: authSession.user.id,
+          request_id: requestId
+        });
+
+      if (connErr) throw connErr;
+
+      // 3. Notify student
       const { error: notifErr } = await supabase
         .from("notifications")
         .insert({
@@ -73,6 +116,7 @@ export default function AlumniHomePage({ isDarkMode, userProfile, authSession }:
 
       alert("Mentorship request accepted!");
       fetchRequests();
+      fetchMentees();
     } catch (err: any) {
       console.error("Error accepting request:", err);
       alert(err.message || "Failed to accept request.");
@@ -216,6 +260,53 @@ export default function AlumniHomePage({ isDarkMode, userProfile, authSession }:
           </div>
         </div>
       )}
+
+      {/* My Mentees List */}
+      <div className={`p-6 rounded-2xl border ${cardBg} space-y-4`}>
+        <h2 className={`text-lg font-bold ${textColor}`}>My Mentees</h2>
+        {loadingMentees ? (
+          <div className="flex items-center gap-2 text-xs text-slate-500 py-4">
+            <span className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-[#1e9df1]"></span>
+            Loading mentees...
+          </div>
+        ) : mentees.length === 0 ? (
+          <p className={`text-xs ${subColor}`}>
+            No mentees connected yet. Accepted mentorship requests will build your connections here.
+          </p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            {mentees.map((mentee) => (
+              <div
+                key={mentee.id}
+                className={`p-4 rounded-xl border flex gap-3 items-center ${
+                  isDarkMode ? "bg-slate-900/40 border-[#2f3336]/40" : "bg-slate-50 border-slate-200"
+                }`}
+              >
+                <div className="w-10 h-10 rounded-full overflow-hidden border border-purple-500/30 flex-shrink-0 bg-slate-800">
+                  {mentee.avatar_url || mentee.profile_pic ? (
+                    <img src={mentee.avatar_url || mentee.profile_pic} alt={mentee.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-xs font-bold text-white bg-purple-600">
+                      {mentee.name?.charAt(0)?.toUpperCase()}
+                    </div>
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <p className={`font-bold text-xs truncate ${textColor}`}>{mentee.name}</p>
+                  <p className={`text-[10px] truncate ${subColor}`}>
+                    Dept: {mentee.major ? mentee.major.toUpperCase() : "CSE"}
+                  </p>
+                  {mentee.section && (
+                    <p className="text-[10px] text-purple-400 font-semibold">
+                      Section: {mentee.section}
+                    </p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Activity Feed Section */}
       <div className={`p-6 rounded-2xl border ${cardBg}`}>
