@@ -179,6 +179,16 @@ export function SignUpModal({
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Validate file extension and MIME type
+      const allowedImageTypes = ["image/jpeg", "image/png", "image/webp"];
+      const allowedImageExtensions = ["jpg", "jpeg", "png", "webp"];
+      const fileExt = file.name.split('.').pop()?.toLowerCase() || "";
+
+      if (!allowedImageTypes.includes(file.type) || !allowedImageExtensions.includes(fileExt)) {
+        setError("Invalid image file type. Only JPEG, PNG, and WebP images are allowed.");
+        return;
+      }
+
       // Check file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
         setError("Image size must be less than 5MB");
@@ -282,6 +292,11 @@ export function SignUpModal({
       }
       if (!gradYear) {
         setError("Please enter your graduation year");
+        return;
+      }
+      const currentYear = new Date().getFullYear();
+      if (Number(gradYear) < 1970 || Number(gradYear) > currentYear + 10) {
+        setError("Please enter a valid graduation year.");
         return;
       }
       if (!bubtEmail.trim()) {
@@ -1203,6 +1218,16 @@ export function SignUpModal({
                           onChange={(e) => {
                             const file = e.target.files?.[0];
                             if (file) {
+                              // Validate file extension and MIME type
+                              const allowedDocTypes = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+                              const allowedDocExtensions = ["jpg", "jpeg", "png", "webp", "pdf"];
+                              const fileExt = file.name.split('.').pop()?.toLowerCase() || "";
+
+                              if (!allowedDocTypes.includes(file.type) || !allowedDocExtensions.includes(fileExt)) {
+                                setError("Invalid document file type. Only JPEG, PNG, WebP, and PDF files are allowed.");
+                                return;
+                              }
+
                               if (file.size > 10 * 1024 * 1024) {
                                 setError("Verification document file size must be less than 10MB");
                                 return;
