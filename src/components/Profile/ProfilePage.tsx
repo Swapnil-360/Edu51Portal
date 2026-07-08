@@ -15,6 +15,7 @@ import {
   Users,
 } from "lucide-react";
 import { SocialProfile, Education, Experience, Connection } from "../../types/social";
+import { supabase } from "../../lib/supabase";
 import {
   getProfileById,
   getProfileByUsername,
@@ -65,6 +66,45 @@ export default function ProfilePage({ username, currentUserId, initialAvatarUrl,
   const coverInput = useRef<HTMLInputElement>(null);
 
   const isOwn = !!profile && !!currentUserId && profile.id === currentUserId;
+
+  const [mentors, setMentors] = useState<any[]>([]);
+  const [loadingMentors, setLoadingMentors] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (profile && !profile.is_alumni) {
+      const fetchMentors = async () => {
+        try {
+          setLoadingMentors(true);
+          const { data: conns, error: connErr } = await supabase
+            .from("mentor_connections")
+            .select("alumni_id")
+            .eq("student_id", profile.id);
+
+          if (cancelled) return;
+          if (!connErr && conns && conns.length > 0) {
+            const alumniIds = conns.map((c: any) => c.alumni_id);
+            const { data: alumni, error: alumniErr } = await supabase
+              .from("alumni_profiles")
+              .select("id, full_name, job_title, company_name, major, graduation_year, avatar_url")
+              .in("id", alumniIds);
+
+            if (!cancelled && !alumniErr && alumni) {
+              setMentors(alumni);
+            }
+          } else {
+            setMentors([]);
+          }
+        } catch (err) {
+          console.error("Error loading mentors:", err);
+        } finally {
+          if (!cancelled) setLoadingMentors(false);
+        }
+      };
+      fetchMentors();
+    }
+    return () => { cancelled = true; };
+  }, [profile]);
 
   useEffect(() => {
     let cancelled = false;
@@ -472,6 +512,61 @@ export default function ProfilePage({ username, currentUserId, initialAvatarUrl,
 
         <EducationSection userId={profile.id} educations={educations} isOwn={isOwn} isDarkMode={isDarkMode} onChanged={() => listEducations(profile.id).then(setEducations)} />
         <ExperienceSection userId={profile.id} experiences={experiences} isOwn={isOwn} isDarkMode={isDarkMode} onChanged={() => listExperiences(profile.id).then(setExperiences)} />
+
+        {/* My Mentors Section */}
+        {profile && !profile.is_alumni && (
+          <section className={`rounded-2xl border p-5 ${card}`}>
+            <h3 className={`text-base font-bold mb-4 ${titleCls}`}>My Mentors</h3>
+            {loadingMentors ? (
+              <div className="flex items-center gap-2 text-xs text-slate-500 py-4">
+                <Loader2 className="w-4 h-4 animate-spin text-[#1e9df1]" />
+                Loading mentors...
+              </div>
+            ) : mentors.length === 0 ? (
+              <div className="py-6 text-center space-y-2">
+                <p className={`text-sm ${sub}`}>No mentors yet. Browse Alumni Hub to find a mentor.</p>
+                {onClose && (
+                  <button
+                    onClick={onClose}
+                    className="px-3 py-1.5 rounded-lg bg-[#1e9df1]/10 text-[#1e9df1] hover:bg-[#1e9df1]/20 text-xs font-semibold cursor-pointer"
+                  >
+                    Browse Alumni Hub
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {mentors.map((mentor) => (
+                  <div
+                    key={mentor.id}
+                    className={`p-4 rounded-xl border flex gap-3 items-center ${
+                      isDarkMode ? "bg-slate-900/40 border-[#2f3336]/40" : "bg-slate-50 border-slate-200"
+                    }`}
+                  >
+                    <div className="w-12 h-12 rounded-full overflow-hidden border border-blue-500/30 flex-shrink-0 bg-slate-800">
+                      {mentor.avatar_url ? (
+                        <img src={mentor.avatar_url} alt={mentor.full_name} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-sm font-bold text-white bg-blue-600">
+                          {mentor.full_name?.charAt(0)?.toUpperCase()}
+                        </div>
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className={`font-bold text-sm truncate ${textColor}`}>{mentor.full_name}</p>
+                      <p className={`text-xs truncate ${sub}`}>
+                        {mentor.job_title} {mentor.company_name ? `at ${mentor.company_name}` : ""}
+                      </p>
+                      <p className="text-[10px] text-purple-400 font-medium">
+                        {mentor.major} · Class of {mentor.graduation_year}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
       </div>
 
       {/* hidden file inputs */}
