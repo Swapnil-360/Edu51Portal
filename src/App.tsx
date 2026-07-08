@@ -285,17 +285,7 @@ function App() {
   }, [currentView, isAdmin]);
 
   // Redirect guest users trying to access login-only views directly via URL/history
-  useEffect(() => {
-    if (!authLoading && !isLoggedIn) {
-      const loginRequiredViews = ["semester", "custom", "network", "teams", "team", "alumni", "wc26", "shared-resources"];
-      if (loginRequiredViews.includes(currentView) || (currentView === "profile" && !viewedUsername)) {
-        setCurrentView("home");
-        window.history.replaceState({}, "", "/home");
-        showMajorAccessNotification("error", "Please sign in to access that page");
-        setShowSignInModal(true);
-      }
-    }
-  }, [authLoading, isLoggedIn, currentView, viewedUsername]);
+  // (Moved below state declarations to avoid initialization ReferenceErrors)
 
   // Listen for browser back/forward events
   useEffect(() => {
@@ -474,14 +464,27 @@ function App() {
 
   const _toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const _welcomeShown = useRef(false);
-  const showMajorAccessNotification = (
+  function showMajorAccessNotification(
     type: "error" | "success" | "info",
     message: string,
-  ) => {
+  ) {
     if (_toastTimer.current) clearTimeout(_toastTimer.current);
     setMajorAccessMessage({ type, message });
     _toastTimer.current = setTimeout(() => setMajorAccessMessage(null), type === "error" ? 4000 : 2000);
-  };
+  }
+
+  // Redirect guest users trying to access login-only views directly via URL/history
+  useEffect(() => {
+    if (!authLoading && !isLoggedIn) {
+      const loginRequiredViews = ["semester", "custom", "network", "teams", "team", "alumni", "wc26", "shared-resources"];
+      if (loginRequiredViews.includes(currentView) || (currentView === "profile" && !viewedUsername)) {
+        setCurrentView("home");
+        window.history.replaceState({}, "", "/home");
+        showMajorAccessNotification("error", "Please sign in to access that page");
+        setShowSignInModal(true);
+      }
+    }
+  }, [authLoading, isLoggedIn, currentView, viewedUsername]);
 
   useEffect(() => {
     if (isLoggedIn && guestMajor) {
