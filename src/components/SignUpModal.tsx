@@ -217,14 +217,27 @@ export function SignUpModal({
     e.preventDefault();
     setError("");
 
+    const stripHtml = (text: string) => {
+      return text.replace(/<\/?[^>]+(>|$)/g, "");
+    };
+
+    const sanitizedName = stripHtml(name.trim());
+    const sanitizedSection = stripHtml(section.trim());
+    const sanitizedPhone = stripHtml(phone.trim());
+    const sanitizedStudentId = stripHtml(studentId.trim());
+    const sanitizedDept = stripHtml(dept.trim());
+    const sanitizedAddress = stripHtml(address.trim());
+    const sanitizedProfession = stripHtml(profession.trim());
+    const sanitizedMaritalStatus = stripHtml(maritalStatus.trim());
+
     // Validation
-    if (!name.trim()) {
+    if (!sanitizedName) {
       setError("Please enter your name");
       return;
     }
 
     if (role === "student" || initialProfile) {
-      if (!section.trim()) {
+      if (!sanitizedSection) {
         setError("Please enter your section");
         return;
       }
@@ -242,7 +255,7 @@ export function SignUpModal({
       }
     } else {
       // Alumni validation
-      if (!studentId.trim()) {
+      if (!sanitizedStudentId) {
         setError("Please enter your student ID");
         return;
       }
@@ -258,7 +271,7 @@ export function SignUpModal({
         setError("Please enter a valid personal email address");
         return;
       }
-      if (!dept) {
+      if (!sanitizedDept) {
         setError("Please select your department");
         return;
       }
@@ -307,10 +320,10 @@ export function SignUpModal({
             password,
             options: {
               data: {
-                name,
-                section: role === "student" ? section : "Alumni",
+                name: sanitizedName,
+                section: role === "student" ? sanitizedSection : "Alumni",
                 major: role === "student" ? major : "AI",
-                phone,
+                phone: sanitizedPhone,
                 notificationEmail,
                 profilePic,
                 is_alumni: role === "alumni"
@@ -429,12 +442,12 @@ export function SignUpModal({
               .upsert(
                 {
                   id: userId,
-                  name,
-                  section: role === "student" ? section : "Alumni",
+                  name: sanitizedName,
+                  section: role === "student" ? sanitizedSection : "Alumni",
                   major: role === "student" ? major : "AI",
                   bubt_email: bubtEmail,
                   notification_email: notificationEmail,
-                  phone,
+                  phone: sanitizedPhone,
                   profile_pic: profilePic,
                   is_alumni: role === "alumni",
                   is_verified: role !== "alumni",
@@ -465,17 +478,17 @@ export function SignUpModal({
                 .upsert(
                   {
                     id: userId,
-                    full_name: name,
+                    full_name: sanitizedName,
                     email: bubtEmail,
                     avatar_url: profilePic || null,
                     graduation_year: Number(gradYear),
                     major,
-                    phone,
-                    student_id: studentId,
-                    dept,
-                    address: address || null,
-                    job_title: profession || null,
-                    marital_status: maritalStatus || null,
+                    phone: sanitizedPhone,
+                    student_id: sanitizedStudentId,
+                    dept: sanitizedDept,
+                    address: sanitizedAddress || null,
+                    job_title: sanitizedProfession || null,
+                    marital_status: sanitizedMaritalStatus || null,
                     id_card_url: idCardUrl || null,
                     is_verified: false,
                     created_at: new Date().toISOString(),
@@ -503,9 +516,9 @@ export function SignUpModal({
                     user_id: admin.id,
                     type: "alumni_approval",
                     title: "New Alumni Registration",
-                    body: `${name} has registered as alumni and is pending verification.`,
+                    body: `${sanitizedName} has registered as alumni and is pending verification.`,
                     actor_id: userId,
-                    actor_name: name,
+                    actor_name: sanitizedName,
                     read: false,
                   }));
 
@@ -529,11 +542,11 @@ export function SignUpModal({
             // blob and sending it every time causes request timeouts on free-tier Supabase.
             const picChanged = profilePic !== (initialProfile?.profilePic ?? "");
             const updatePayload: Record<string, any> = {
-              name,
-              section,
+              name: sanitizedName,
+              section: sanitizedSection,
               major,
               notification_email: notificationEmail,
-              phone,
+              phone: sanitizedPhone,
             };
             if (picChanged) updatePayload.profile_pic = profilePic;
 
@@ -564,12 +577,12 @@ export function SignUpModal({
       }
 
       // Always keep local fallback for offline mode
-      localStorage.setItem("userProfileName", name);
-      localStorage.setItem("userProfileSection", role === "student" ? section : "Alumni");
+      localStorage.setItem("userProfileName", sanitizedName);
+      localStorage.setItem("userProfileSection", role === "student" ? sanitizedSection : "Alumni");
       localStorage.setItem("userProfileMajor", major);
       localStorage.setItem("userProfileBubtEmail", bubtEmail);
       localStorage.setItem("userProfileNotificationEmail", notificationEmail);
-      localStorage.setItem("userProfilePhone", phone);
+      localStorage.setItem("userProfilePhone", sanitizedPhone);
       localStorage.setItem("userProfileIsAlumni", role === "alumni" ? "true" : "false");
       if (password) {
         localStorage.setItem("userProfilePassword", password); // In production, this should be hashed!
@@ -580,12 +593,12 @@ export function SignUpModal({
 
       setSuccess(true);
       onSave({
-        name,
-        section: role === "student" ? section : "Alumni",
+        name: sanitizedName,
+        section: role === "student" ? sanitizedSection : "Alumni",
         major,
         bubtEmail,
         notificationEmail,
-        phone,
+        phone: sanitizedPhone,
         password,
         profilePic,
         isAlumni: role === "alumni",

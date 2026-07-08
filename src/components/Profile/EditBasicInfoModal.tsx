@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { X, Loader2 } from "lucide-react";
 import { SocialProfile, ProfileVisibility } from "../../types/social";
 import { updateProfile } from "../../lib/api/profileApi";
@@ -25,7 +25,44 @@ export default function EditBasicInfoModal({ profile, onClose, onSaved, isDarkMo
   const [error, setError] = useState("");
 
   const save = async () => {
-    if (!name.trim()) {
+    // Helper to strip HTML tags to prevent HTML Injection / XSS
+    const stripHtml = (text: string) => {
+      return text.replace(/<\/?[^>]+(>|$)/g, "");
+    };
+
+    // Helper to validate and format URLs
+    const validateAndSanitizeUrl = (url: string, fieldName: string): { url: string; error?: string } => {
+      const trimmed = url.trim();
+      if (!trimmed) return { url: "" };
+      
+      const lower = trimmed.toLowerCase();
+      if (
+        lower.startsWith("javascript:") ||
+        lower.startsWith("data:") ||
+        lower.startsWith("vbscript:")
+      ) {
+        return { url: "", error: `${fieldName} contains an invalid protocol.` };
+      }
+      
+      let formatted = trimmed;
+      if (!/^https?:\/\//i.test(trimmed)) {
+        formatted = "https://" + trimmed;
+      }
+      
+      try {
+        new URL(formatted);
+        return { url: formatted };
+      } catch (e) {
+        return { url: "", error: `${fieldName} must be a valid URL.` };
+      }
+    };
+
+    const sanitizedName = stripHtml(name.trim());
+    const sanitizedHeadline = stripHtml(headline.trim());
+    const sanitizedAbout = stripHtml(about.trim());
+    const sanitizedLocation = stripHtml(location.trim());
+
+    if (!sanitizedName) {
       setError("Name is required.");
       return;
     }
@@ -34,20 +71,46 @@ export default function EditBasicInfoModal({ profile, onClose, onSaved, isDarkMo
       setError("Username must be 3-30 characters: letters, numbers, dot, underscore.");
       return;
     }
+
+    const websiteResult = validateAndSanitizeUrl(website, "Website");
+    if (websiteResult.error) {
+      setError(websiteResult.error);
+      return;
+    }
+
+    const linkedinResult = validateAndSanitizeUrl(linkedin, "LinkedIn");
+    if (linkedinResult.error) {
+      setError(linkedinResult.error);
+      return;
+    }
+
+    const githubResult = validateAndSanitizeUrl(github, "GitHub");
+    if (githubResult.error) {
+      setError(githubResult.error);
+      return;
+    }
+
+    const facebookResult = validateAndSanitizeUrl(facebook, "Facebook");
+    if (facebookResult.error) {
+      setError(facebookResult.error);
+      return;
+    }
+
     setSaving(true);
     setError("");
+
     const social_links: Record<string, string> = {};
-    if (linkedin.trim()) social_links.linkedin = linkedin.trim();
-    if (github.trim()) social_links.github = github.trim();
-    if (facebook.trim()) social_links.facebook = facebook.trim();
+    if (linkedinResult.url) social_links.linkedin = linkedinResult.url;
+    if (githubResult.url) social_links.github = githubResult.url;
+    if (facebookResult.url) social_links.facebook = facebookResult.url;
 
     const { error: err } = await updateProfile(profile.id, {
-      name: name.trim(),
+      name: sanitizedName,
       username: uname || undefined,
-      headline: headline.trim() || null,
-      about: about.trim() || null,
-      location: location.trim() || null,
-      website: website.trim() || null,
+      headline: sanitizedHeadline || null,
+      about: sanitizedAbout || null,
+      location: sanitizedLocation || null,
+      website: websiteResult.url || null,
       social_links,
       visibility,
     });
