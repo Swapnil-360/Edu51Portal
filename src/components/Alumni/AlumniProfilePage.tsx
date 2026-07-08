@@ -14,6 +14,7 @@ interface Props {
 export default function AlumniProfilePage({ id, isDarkMode, onBack, authSession, userProfile }: Props) {
   const { alumni, loading, error } = useAlumniById(id);
   const [hasPendingRequest, setHasPendingRequest] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
   const [checkingRequest, setCheckingRequest] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [topic, setTopic] = useState("Career Guidance");
@@ -22,11 +23,25 @@ export default function AlumniProfilePage({ id, isDarkMode, onBack, authSession,
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
-    const checkPending = async () => {
+    const checkMentorshipStatus = async () => {
       if (!authSession?.user?.id || !id) return;
       try {
         setCheckingRequest(true);
-        const { data, error } = await supabase
+        // 1. Check if connected
+        const { data: connData, error: connErr } = await supabase
+          .from("mentor_connections")
+          .select("id")
+          .eq("student_id", authSession.user.id)
+          .eq("alumni_id", id)
+          .maybeSingle();
+
+        if (!connErr && connData) {
+          setIsConnected(true);
+          return;
+        }
+
+        // 2. Check if pending request exists
+        const { data: reqData, error: reqErr } = await supabase
           .from("mentorship_requests")
           .select("status")
           .eq("student_id", authSession.user.id)
@@ -34,16 +49,16 @@ export default function AlumniProfilePage({ id, isDarkMode, onBack, authSession,
           .eq("status", "pending")
           .maybeSingle();
 
-        if (!error && data) {
+        if (!reqErr && reqData) {
           setHasPendingRequest(true);
         }
       } catch (err) {
-        console.error("Error checking pending request:", err);
+        console.error("Error checking mentorship status:", err);
       } finally {
         setCheckingRequest(false);
       }
     };
-    checkPending();
+    checkMentorshipStatus();
   }, [authSession, id]);
 
   const handleSubmitRequest = async (e: React.FormEvent) => {
@@ -224,9 +239,13 @@ export default function AlumniProfilePage({ id, isDarkMode, onBack, authSession,
               </span>
             )}
             {alumni.is_available_for_mentorship && authSession?.user && !userProfile?.isAlumni && (
-              hasPendingRequest ? (
+              isConnected ? (
+                <span className="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                  ✓ Connected as Mentor
+                </span>
+              ) : hasPendingRequest ? (
                 <span className="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                  Request Pending
+                  ⏳ Request Pending
                 </span>
               ) : (
                 <button
