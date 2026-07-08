@@ -217,28 +217,45 @@ export function SignUpModal({
     e.preventDefault();
     setError("");
 
-    const stripHtml = (text: string) => {
-      return text.replace(/<\/?[^>]+(>|$)/g, "");
+    const sanitizeText = (val: string) => {
+      if (!val) return "";
+      return val
+        .trim()
+        .replace(/<\/?[^>]+(>|$)/g, "")
+        .replace(/[<>"'`/\\]/g, "");
     };
 
-    const sanitizedName = stripHtml(name.trim());
-    const sanitizedSection = stripHtml(section.trim());
-    const sanitizedPhone = stripHtml(phone.trim());
-    const sanitizedStudentId = stripHtml(studentId.trim());
-    const sanitizedDept = stripHtml(dept.trim());
-    const sanitizedAddress = stripHtml(address.trim());
-    const sanitizedProfession = stripHtml(profession.trim());
-    const sanitizedMaritalStatus = stripHtml(maritalStatus.trim());
+    const sanitizePhoneNum = (val: string) => {
+      if (!val) return "";
+      return val.trim().replace(/[^0-9+\s().-]/g, "");
+    };
+
+    const sanitizedName = sanitizeText(name);
+    const sanitizedSection = sanitizeText(section);
+    const sanitizedPhone = sanitizePhoneNum(phone);
+    const sanitizedStudentId = sanitizeText(studentId);
+    const sanitizedDept = sanitizeText(dept);
+    const sanitizedAddress = sanitizeText(address);
+    const sanitizedProfession = sanitizeText(profession);
+    const sanitizedMaritalStatus = sanitizeText(maritalStatus);
 
     // Validation
     if (!sanitizedName) {
       setError("Please enter your name");
       return;
     }
+    if (sanitizedName.length > 60) {
+      setError("Name must be under 60 characters.");
+      return;
+    }
 
     if (role === "student" || initialProfile) {
       if (!sanitizedSection) {
         setError("Please enter your section");
+        return;
+      }
+      if (sanitizedSection.length > 45) {
+        setError("Section must be under 45 characters.");
         return;
       }
       if (!major) {
@@ -257,6 +274,10 @@ export function SignUpModal({
       // Alumni validation
       if (!sanitizedStudentId) {
         setError("Please enter your student ID");
+        return;
+      }
+      if (sanitizedStudentId.length > 30) {
+        setError("Student ID must be under 30 characters.");
         return;
       }
       if (!gradYear) {
@@ -947,10 +968,11 @@ export function SignUpModal({
                         value={bubtEmail}
                         onChange={(e) => setBubtEmail(e.target.value)}
                         placeholder="yourname@cse.bubt.edu.bd"
+                        disabled={!!initialProfile}
                         className={`w-full px-4 py-2.5 rounded-lg border transition-all focus:outline-none focus:ring-2 ${
                           isDarkMode
-                            ? "bg-gray-800 border-gray-700 text-gray-100 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-500"
-                            : "bg-gray-50 border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400"
+                            ? "bg-gray-800 border-gray-700 text-gray-100 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                            : "bg-gray-50 border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400 disabled:bg-gray-100 disabled:cursor-not-allowed"
                         }`}
                       />
                       <p
