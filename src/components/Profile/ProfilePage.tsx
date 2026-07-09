@@ -13,9 +13,11 @@ import {
   UserPlus,
   UserX,
   Users,
+  MessageSquare,
 } from "lucide-react";
 import { SocialProfile, Education, Experience, Connection } from "../../types/social";
 import { supabase } from "../../lib/supabase";
+import MentorChat from "../Alumni/MentorChat";
 import {
   getProfileById,
   getProfileByUsername,
@@ -69,6 +71,7 @@ export default function ProfilePage({ username, currentUserId, initialAvatarUrl,
 
   const [mentors, setMentors] = useState<any[]>([]);
   const [loadingMentors, setLoadingMentors] = useState(false);
+  const [chatTarget, setChatTarget] = useState<any | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -539,28 +542,39 @@ export default function ProfilePage({ username, currentUserId, initialAvatarUrl,
                 {mentors.map((mentor) => (
                   <div
                     key={mentor.id}
-                    className={`p-4 rounded-xl border flex gap-3 items-center ${
+                    className={`p-4 rounded-xl border flex gap-3 items-center justify-between ${
                       isDarkMode ? "bg-slate-900/40 border-[#2f3336]/40" : "bg-slate-50 border-slate-200"
                     }`}
                   >
-                    <div className="w-12 h-12 rounded-full overflow-hidden border border-blue-500/30 flex-shrink-0 bg-slate-800">
-                      {mentor.avatar_url ? (
-                        <img src={mentor.avatar_url} alt={mentor.full_name} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-sm font-bold text-white bg-blue-600">
-                          {mentor.full_name?.charAt(0)?.toUpperCase()}
-                        </div>
-                      )}
+                    <div className="flex gap-3 items-center min-w-0">
+                      <div className="w-12 h-12 rounded-full overflow-hidden border border-blue-500/30 flex-shrink-0 bg-slate-800">
+                        {mentor.avatar_url ? (
+                          <img src={mentor.avatar_url} alt={mentor.full_name} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-sm font-bold text-white bg-blue-600">
+                            {mentor.full_name?.charAt(0)?.toUpperCase()}
+                          </div>
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className={`font-bold text-sm truncate ${titleCls}`}>{mentor.full_name}</p>
+                        <p className={`text-xs truncate ${sub}`}>
+                          {mentor.job_title} {mentor.company_name ? `at ${mentor.company_name}` : ""}
+                        </p>
+                        <p className="text-[10px] text-purple-400 font-medium">
+                          {mentor.major} · Class of {mentor.graduation_year}
+                        </p>
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <p className={`font-bold text-sm truncate ${textColor}`}>{mentor.full_name}</p>
-                      <p className={`text-xs truncate ${sub}`}>
-                        {mentor.job_title} {mentor.company_name ? `at ${mentor.company_name}` : ""}
-                      </p>
-                      <p className="text-[10px] text-purple-400 font-medium">
-                        {mentor.major} · Class of {mentor.graduation_year}
-                      </p>
-                    </div>
+                    {isOwn && (
+                      <button
+                        onClick={() => setChatTarget(mentor)}
+                        className="p-2 rounded-full bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-all border border-blue-500/20 cursor-pointer flex-shrink-0"
+                        title="Chat with Mentor"
+                      >
+                        <MessageSquare className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
@@ -599,6 +613,18 @@ export default function ProfilePage({ username, currentUserId, initialAvatarUrl,
           isDarkMode={isDarkMode}
           onClose={() => setShowEditModal(false)}
           onSaved={refreshProfile}
+        />
+      )}
+      {chatTarget && (
+        <MentorChat
+          isDarkMode={isDarkMode}
+          currentUserId={currentUserId}
+          currentUserProfile={profile}
+          targetUserId={chatTarget.id}
+          targetUserName={chatTarget.full_name}
+          targetUserAvatar={chatTarget.avatar_url}
+          isTargetAlumni={true}
+          onClose={() => setChatTarget(null)}
         />
       )}
     </div>

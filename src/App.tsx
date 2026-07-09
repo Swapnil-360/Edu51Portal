@@ -461,6 +461,51 @@ function App() {
 
   // Connections requests notification state
   const [pendingConnectionsCount, setPendingConnectionsCount] = useState(0);
+  const [unreadMsgCount, setUnreadMsgCount] = useState(0);
+
+  useEffect(() => {
+    if (!authSession?.user?.id) {
+      setUnreadMsgCount(0);
+      return;
+    }
+
+    const checkUnread = async () => {
+      try {
+        const { count, error } = await supabase
+          .from("mentor_messages")
+          .select("*", { count: "exact", head: true })
+          .eq("receiver_id", authSession.user.id)
+          .eq("is_read", false);
+
+        if (!error && count !== null) {
+          setUnreadMsgCount(count);
+        }
+      } catch (err) {
+        console.error("Error checking unread messages:", err);
+      }
+    };
+
+    checkUnread();
+
+    const channel = supabase
+      .channel("student_unread_badge")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "mentor_messages"
+        },
+        () => {
+          checkUnread();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [authSession]);
 
   const _toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const _welcomeShown = useRef(false);
@@ -3406,6 +3451,7 @@ For any queries, contact your course instructors or the department.`,
                   showMajorAccessNotification={showMajorAccessNotification}
                   setShowSignInModal={setShowSignInModal}
                   pendingConnectionsCount={pendingConnectionsCount}
+                  unreadMessagesCount={unreadMsgCount}
                 />
               </nav>
             </div>
@@ -8682,6 +8728,12 @@ For any queries, contact your course instructors or the department.`,
             onViewProfile={(username) => goToView("profile", username)}
             isDarkMode={isDarkMode}
             onPendingRequestsChange={setPendingConnectionsCount}
+            onViewAlumniProfile={(alumniId) => {
+              setSelectedAlumniId(alumniId);
+              setAlumniSubView("profile");
+              goToView("alumni");
+            }}
+            goToAlumniHub={() => goToView("alumni")}
           />
         </main>
       )}
@@ -8757,6 +8809,7 @@ For any queries, contact your course instructors or the department.`,
                 }}
                 onClose={() => goToView("home")}
                 authSession={authSession}
+                unreadMsgCount={unreadMsgCount}
               />
             )}
             {alumniSubView === "profile" && selectedAlumniId && (

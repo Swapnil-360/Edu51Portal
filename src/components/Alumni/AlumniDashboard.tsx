@@ -13,7 +13,8 @@ import {
   Users, 
   Compass, 
   BookOpen, 
-  LogIn
+  LogIn,
+  MessageSquare
 } from "lucide-react";
 import { AlumniNavHeader } from "../ui/nav-header";
 import AlumniHomePage from "./pages/AlumniHomePage";
@@ -21,6 +22,7 @@ import AlumniNetworkPage from "./pages/AlumniNetworkPage";
 import AlumniTeamsPage from "./pages/AlumniTeamsPage";
 import AlumniResourcesPage from "./pages/AlumniResourcesPage";
 import AlumniProfilePage from "./pages/AlumniProfilePage";
+import AlumniMessagesPage from "./pages/AlumniMessagesPage";
 import { supabase } from "../../lib/supabase";
 import { markAllNotificationsRead } from "../../lib/api/notificationsApi";
 
@@ -58,6 +60,46 @@ export default function AlumniDashboard({
   authSession
 }: Props) {
   const [currentView, setCurrentView] = useState("home");
+  const [unreadMsgCount, setUnreadMsgCount] = useState(0);
+
+  useEffect(() => {
+    if (!authSession?.user?.id) return;
+    const checkUnread = async () => {
+      try {
+        const { count, error } = await supabase
+          .from("mentor_messages")
+          .select("*", { count: "exact", head: true })
+          .eq("receiver_id", authSession.user.id)
+          .eq("is_read", false);
+
+        if (!error && count !== null) {
+          setUnreadMsgCount(count);
+        }
+      } catch (err) {
+        console.error("Error checking unread messages:", err);
+      }
+    };
+    checkUnread();
+
+    const channel = supabase
+      .channel("alumni_unread_badge")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "mentor_messages"
+        },
+        () => {
+          checkUnread();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [authSession]);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [showNoticePanel, setShowNoticePanel] = useState(false);
@@ -130,11 +172,13 @@ export default function AlumniDashboard({
       case "home":
         return <AlumniHomePage isDarkMode={isDarkMode} userProfile={userProfile} authSession={authSession} />;
       case "network":
-        return <AlumniNetworkPage isDarkMode={isDarkMode} />;
+        return <AlumniNetworkPage isDarkMode={isDarkMode} authSession={authSession} userProfile={userProfile} />;
       case "teams":
         return <AlumniTeamsPage isDarkMode={isDarkMode} />;
       case "resources":
         return <AlumniResourcesPage isDarkMode={isDarkMode} />;
+      case "messages":
+        return <AlumniMessagesPage isDarkMode={isDarkMode} authSession={authSession} userProfile={userProfile} />;
       case "profile":
         return <AlumniProfilePage isDarkMode={isDarkMode} authSession={authSession} />;
       default:
@@ -214,6 +258,7 @@ export default function AlumniDashboard({
                   currentView={currentView}
                   isDarkMode={isDarkMode}
                   goToView={setCurrentView}
+                  unreadMessagesCount={unreadMsgCount}
                 />
               </nav>
             </div>
@@ -464,6 +509,24 @@ export default function AlumniDashboard({
                 >
                   <BookOpen className="w-5 h-5 text-slate-400" />
                   <span className="font-semibold text-sm">Resources</span>
+                </button>
+
+                {/* Messages */}
+                <button
+                  onClick={() => { setCurrentView("messages"); setShowMobileMenu(false); }}
+                  className={`w-full flex items-center justify-between p-3.5 rounded-lg border text-left ${
+                    isDarkMode ? "hover:bg-[#16181c]/50 border-[#2f3336]/50" : "hover:bg-slate-100/50 border-gray-200/50"
+                  } ${currentView === "messages" ? (isDarkMode ? "bg-[#16181c]" : "bg-slate-100") : ""}`}
+                >
+                  <div className="flex items-center gap-3">
+                    <MessageSquare className="w-5 h-5 text-slate-400" />
+                    <span className="font-semibold text-sm">Messages</span>
+                  </div>
+                  {unreadMsgCount > 0 && (
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#1e9df1] text-white">
+                      {unreadMsgCount}
+                    </span>
+                  )}
                 </button>
               </div>
             </div>

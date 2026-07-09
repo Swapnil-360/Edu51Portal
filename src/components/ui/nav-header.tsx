@@ -174,6 +174,7 @@ interface AppNavHeaderProps {
   showMajorAccessNotification: (type: string, msg: string) => void;
   setShowSignInModal: (v: boolean) => void;
   pendingConnectionsCount?: number;
+  unreadMessagesCount?: number;
 }
 
 export function AppNavHeader({
@@ -184,6 +185,7 @@ export function AppNavHeader({
   showMajorAccessNotification,
   setShowSignInModal,
   pendingConnectionsCount = 0,
+  unreadMessagesCount = 0,
 }: AppNavHeaderProps) {
   const requireLogin = (view: string, label: string) => {
     if (!isLoggedIn) {
@@ -243,6 +245,7 @@ export function AppNavHeader({
       badge: "new",
       isActive: currentView === "alumni",
       onClick: () => requireLogin("alumni", "Alumni Hub"),
+      hasRedDot: unreadMessagesCount > 0,
     },
     {
       label: "Routine",
@@ -260,6 +263,7 @@ interface AlumniNavHeaderProps {
   isDarkMode: boolean;
   goToView: (view: string) => void;
   pendingConnectionsCount?: number;
+  unreadMessagesCount?: number;
 }
 
 export function AlumniNavHeader({
@@ -267,6 +271,7 @@ export function AlumniNavHeader({
   isDarkMode,
   goToView,
   pendingConnectionsCount = 0,
+  unreadMessagesCount = 0,
 }: AlumniNavHeaderProps) {
   const tabs: NavTab[] = [
     {
@@ -283,6 +288,13 @@ export function AlumniNavHeader({
       isActive: currentView === "network",
       onClick: () => goToView("network"),
       hasRedDot: pendingConnectionsCount > 0,
+    },
+    {
+      label: "Messages",
+      view: "messages",
+      isActive: currentView === "messages",
+      onClick: () => goToView("messages"),
+      hasRedDot: unreadMessagesCount > 0,
     },
     {
       label: "Teams",

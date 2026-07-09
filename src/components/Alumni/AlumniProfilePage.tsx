@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, Mail, Linkedin, MapPin, Calendar, BookOpen, Quote, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Mail, Linkedin, MapPin, Calendar, BookOpen, Quote, ShieldCheck, MessageSquare } from "lucide-react";
 import { useAlumniById } from "../../hooks/useAlumni";
 import { supabase } from "../../lib/supabase";
+import MentorChat from "./MentorChat";
 
 interface Props {
   id: string;
@@ -17,6 +18,7 @@ export default function AlumniProfilePage({ id, isDarkMode, onBack, authSession,
   const [isConnected, setIsConnected] = useState(false);
   const [checkingRequest, setCheckingRequest] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [showChat, setShowChat] = useState(false);
   const [topic, setTopic] = useState("Career Guidance");
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -240,9 +242,18 @@ export default function AlumniProfilePage({ id, isDarkMode, onBack, authSession,
             )}
             {alumni.is_available_for_mentorship && authSession?.user && !userProfile?.isAlumni && (
               isConnected ? (
-                <span className="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                  ✓ Connected as Mentor
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    ✓ Connected as Mentor
+                  </span>
+                  <button
+                    onClick={() => setShowChat(true)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 text-xs font-bold transition-all cursor-pointer shadow-sm"
+                  >
+                    <MessageSquare className="w-3.5 h-3.5" />
+                    Message
+                  </button>
+                </div>
               ) : hasPendingRequest ? (
                 <span className="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
                   ⏳ Request Pending
@@ -347,6 +358,18 @@ export default function AlumniProfilePage({ id, isDarkMode, onBack, authSession,
             </form>
           </div>
         </div>
+      )}
+      {showChat && (
+        <MentorChat
+          isDarkMode={isDarkMode}
+          currentUserId={authSession.user.id}
+          currentUserProfile={userProfile}
+          targetUserId={id}
+          targetUserName={alumni.full_name}
+          targetUserAvatar={alumni.avatar_url}
+          isTargetAlumni={true}
+          onClose={() => setShowChat(false)}
+        />
       )}
     </div>
   );
