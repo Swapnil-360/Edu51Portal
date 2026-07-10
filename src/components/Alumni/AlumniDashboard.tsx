@@ -176,7 +176,7 @@ export default function AlumniDashboard({
       case "teams":
         return <AlumniTeamsPage isDarkMode={isDarkMode} />;
       case "resources":
-        return <AlumniResourcesPage isDarkMode={isDarkMode} />;
+        return <AlumniResourcesPage isDarkMode={isDarkMode} authSession={authSession} userProfile={userProfile} />;
       case "messages":
         return <AlumniMessagesPage isDarkMode={isDarkMode} authSession={authSession} userProfile={userProfile} />;
       case "profile":

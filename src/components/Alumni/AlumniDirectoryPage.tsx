@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, GraduationCap, SearchX, Inbox, Calendar, MessageSquare } from "lucide-react";
+import { ArrowLeft, GraduationCap, SearchX, Inbox, Calendar, MessageSquare, BookOpen, Globe, Lock, Download, FileText, Loader2 } from "lucide-react";
 import { useAlumni } from "../../hooks/useAlumni";
 import AlumniFilter from "./AlumniFilter";
 import AlumniCard from "./AlumniCard";
@@ -30,6 +30,73 @@ export default function AlumniDirectoryPage({
   const [mentorshipOnly, setMentorshipOnly] = useState(false);
 
   const [activeTab, setActiveTab] = useState("directory");
+
+  // Resources States
+  const [resourcesList, setResourcesList] = useState<any[]>([]);
+  const [resourcesLoading, setResourcesLoading] = useState(false);
+  const [alumniNames, setAlumniNames] = useState<Record<string, string>>({});
+  const [studentMentorIds, setStudentMentorIds] = useState<string[]>([]);
+  const [resourceTypeFilter, setResourceTypeFilter] = useState("All");
+  const [resourceDeptFilter, setResourceDeptFilter] = useState("All");
+
+  const fetchResourcesData = async () => {
+    if (!authSession?.user?.id) return;
+    try {
+      setResourcesLoading(true);
+      
+      // 1. Fetch student's mentor connections
+      const { data: conns } = await supabase
+        .from("mentor_connections")
+        .select("alumni_id")
+        .eq("student_id", authSession.user.id);
+      
+      const mIds = conns?.map((c) => c.alumni_id) || [];
+      setStudentMentorIds(mIds);
+
+      // 2. Fetch public resources
+      const { data: publicRes } = await supabase
+        .from("alumni_resources")
+        .select("*")
+        .eq("visibility", "public");
+
+      // 3. Fetch private resources from connected mentors
+      let privateRes: any[] = [];
+      if (mIds.length > 0) {
+        const { data: priv } = await supabase
+          .from("alumni_resources")
+          .select("*")
+          .eq("visibility", "private")
+          .in("alumni_id", mIds);
+        privateRes = priv || [];
+      }
+
+      const combined = [...(publicRes || []), ...privateRes].sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+      setResourcesList(combined);
+
+      // 4. Fetch uploader names
+      const uploaderIds = Array.from(new Set(combined.map((r) => r.alumni_id)));
+      if (uploaderIds.length > 0) {
+        const { data: alumniProfiles } = await supabase
+          .from("alumni_profiles")
+          .select("id, full_name")
+          .in("id", uploaderIds);
+
+        if (alumniProfiles) {
+          const namesMap: Record<string, string> = {};
+          alumniProfiles.forEach((p) => {
+            namesMap[p.id] = p.full_name;
+          });
+          setAlumniNames(namesMap);
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching student resources:", err);
+    } finally {
+      setResourcesLoading(false);
+    }
+  };
   const [myRequests, setMyRequests] = useState<any[]>([]);
   const [myRequestsLoading, setMyRequestsLoading] = useState(false);
 
@@ -149,6 +216,8 @@ export default function AlumniDirectoryPage({
       fetchMyRequests();
     } else if (activeTab === "messages" && isLoggedIn) {
       fetchConversations();
+    } else if (activeTab === "resources" && isLoggedIn) {
+      fetchResourcesData();
     }
   }, [activeTab, isLoggedIn]);
 
@@ -224,6 +293,16 @@ export default function AlumniDirectoryPage({
                   {unreadMsgCount}
                 </span>
               )}
+            </button>
+            <button
+              onClick={() => setActiveTab("resources")}
+              className={`pb-3 font-semibold border-b-2 transition-all cursor-pointer ${
+                activeTab === "resources"
+                  ? "border-[#1e9df1] text-[#1e9df1]"
+                  : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+              }`}
+            >
+              Resources
             </button>
           </div>
         )}
@@ -448,6 +527,222 @@ export default function AlumniDirectoryPage({
                   </div>
                 );
               })}
+            </div>
+          )
+        )}
+
+        {activeTab === "resources" && (
+          resourcesLoading ? (
+            <div className="flex items-center gap-2 text-xs text-slate-500 py-10 justify-center">
+              <span className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-[#1e9df1]"></span>
+              Loading resources...
+            </div>
+          ) : (
+            <div className="space-y-8">
+              {/* Filters Panel */}
+              <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
+                <span className={`text-xs font-semibold ${textColor}`}>
+                  Filter Shared Resources:
+                </span>
+                <div className="flex gap-2 w-full sm:w-auto">
+                  <select
+                    value={resourceTypeFilter}
+                    onChange={(e) => setResourceTypeFilter(e.target.value)}
+                    className={`px-3 py-2 rounded-lg text-xs font-semibold border outline-none cursor-pointer transition-all flex-1 sm:flex-none ${
+                      isDarkMode
+                        ? "bg-[#16181c] border-[#2f3336] text-white focus:border-[#1e9df1]"
+                        : "bg-white border-slate-300 text-slate-800 focus:border-[#1e9df1]"
+                    }`}
+                  >
+                    <option value="All">All Types</option>
+                    <option value="Career Tips">Career Tips</option>
+                    <option value="Job Guide">Job Guide</option>
+                    <option value="Study Material">Study Material</option>
+                    <option value="Industry Insight">Industry Insight</option>
+                  </select>
+
+                  <select
+                    value={resourceDeptFilter}
+                    onChange={(e) => setResourceDeptFilter(e.target.value)}
+                    className={`px-3 py-2 rounded-lg text-xs font-semibold border outline-none cursor-pointer transition-all flex-1 sm:flex-none ${
+                      isDarkMode
+                        ? "bg-[#16181c] border-[#2f3336] text-white focus:border-[#1e9df1]"
+                        : "bg-white border-slate-300 text-slate-800 focus:border-[#1e9df1]"
+                    }`}
+                  >
+                    <option value="All">All Departments</option>
+                    <option value="CSE">CSE</option>
+                    <option value="EEE">EEE</option>
+                    <option value="BBA">BBA</option>
+                    <option value="Civil">Civil</option>
+                    <option value="Textile">Textile</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Private Resources from connected Mentors */}
+              <div className="space-y-3">
+                <h3 className={`text-sm font-extrabold flex items-center gap-2 ${textColor}`}>
+                  <Lock className="w-4 h-4 text-amber-400" />
+                  Shared by My Mentors
+                </h3>
+                
+                {resourcesList.filter(r => r.visibility === "private" && studentMentorIds.includes(r.alumni_id)).length === 0 ? (
+                  <div className={`p-6 text-center rounded-xl border border-dashed ${isDarkMode ? "border-[#2f3336]/60 bg-[#16181c]/30 text-slate-500" : "border-slate-200 bg-slate-50/50 text-slate-400"}`}>
+                    <p className="text-xs">No private resources shared by your connected mentors yet.</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {resourcesList
+                      .filter((res) => {
+                        const isPrivate = res.visibility === "private";
+                        const isMentor = studentMentorIds.includes(res.alumni_id);
+                        const typeMatch = resourceTypeFilter === "All" || res.type === resourceTypeFilter;
+                        const deptMatch = resourceDeptFilter === "All" || res.department === resourceDeptFilter;
+                        return isPrivate && isMentor && typeMatch && deptMatch;
+                      })
+                      .map((res) => (
+                        <div
+                          key={res.id}
+                          className={`p-5 rounded-xl border flex flex-col justify-between gap-4 ${cardBorder}`}
+                        >
+                          <div className="space-y-3">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="space-y-1 min-w-0">
+                                <h4 className={`font-bold text-sm leading-snug break-words ${textColor}`}>
+                                  {res.title}
+                                </h4>
+                                <p className="text-[10px] text-purple-400 font-semibold uppercase tracking-wider">
+                                  {res.type} · Dept: {res.department}
+                                </p>
+                              </div>
+                              <span className="px-2.5 py-0.5 rounded-full text-[9px] font-extrabold bg-amber-500/10 text-amber-400 border border-amber-500/25 flex items-center gap-1">
+                                <Lock className="w-2.5 h-2.5" />
+                                Mentor Shared
+                              </span>
+                            </div>
+
+                            {res.description && (
+                              <p className={`text-xs leading-relaxed italic ${subColor}`}>
+                                "{res.description}"
+                              </p>
+                            )}
+
+                            <div className="flex items-center gap-2 text-xs text-amber-400 bg-amber-500/5 px-3 py-1.5 rounded-lg w-fit max-w-full">
+                              <FileText className="w-4 h-4 flex-shrink-0" />
+                              <span className="truncate text-[11px]">{res.file_name}</span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between pt-3 border-t border-[#2f3336]/10 mt-1">
+                            <div className="min-w-0">
+                              <p className={`text-[10px] font-semibold truncate ${textColor}`}>
+                                Mentor: {alumniNames[res.alumni_id] || "Verified Alumni"}
+                              </p>
+                              <span className={`text-[9px] flex items-center gap-1 ${subColor} mt-0.5`}>
+                                <Calendar className="w-3 h-3" />
+                                {new Date(res.created_at).toLocaleDateString()}
+                              </span>
+                            </div>
+
+                            <button
+                              onClick={() => window.open(res.file_url, "_blank")}
+                              className="px-3 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/25 transition-all text-xs font-bold flex items-center gap-1 cursor-pointer"
+                            >
+                              <Download className="w-3.5 h-3.5" />
+                              Get File
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Public Resources */}
+              <div className="space-y-3">
+                <h3 className={`text-sm font-extrabold flex items-center gap-2 ${textColor}`}>
+                  <Globe className="w-4 h-4 text-emerald-400" />
+                  Public Resources
+                </h3>
+
+                {resourcesList.filter((res) => {
+                  const isPublic = res.visibility === "public";
+                  const typeMatch = resourceTypeFilter === "All" || res.type === resourceTypeFilter;
+                  const deptMatch = resourceDeptFilter === "All" || res.department === resourceDeptFilter;
+                  return isPublic && typeMatch && deptMatch;
+                }).length === 0 ? (
+                  <div className={`p-12 text-center rounded-2xl border ${cardBorder}`}>
+                    <BookOpen className="w-8 h-8 mx-auto mb-2 text-slate-500" />
+                    <p className="text-xs text-slate-500">No public resources match your filters.</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {resourcesList
+                      .filter((res) => {
+                        const isPublic = res.visibility === "public";
+                        const typeMatch = resourceTypeFilter === "All" || res.type === resourceTypeFilter;
+                        const deptMatch = resourceDeptFilter === "All" || res.department === resourceDeptFilter;
+                        return isPublic && typeMatch && deptMatch;
+                      })
+                      .map((res) => (
+                        <div
+                          key={res.id}
+                          className={`p-5 rounded-xl border flex flex-col justify-between gap-4 ${cardBorder}`}
+                        >
+                          <div className="space-y-3">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="space-y-1 min-w-0">
+                                <h4 className={`font-bold text-sm leading-snug break-words ${textColor}`}>
+                                  {res.title}
+                                </h4>
+                                <p className="text-[10px] text-purple-400 font-semibold uppercase tracking-wider">
+                                  {res.type} · Dept: {res.department}
+                                </p>
+                              </div>
+                              <span className="px-2.5 py-0.5 rounded-full text-[9px] font-extrabold bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 flex items-center gap-1">
+                                <Globe className="w-2.5 h-2.5" />
+                                Public
+                              </span>
+                            </div>
+
+                            {res.description && (
+                              <p className={`text-xs leading-relaxed italic ${subColor}`}>
+                                "{res.description}"
+                              </p>
+                            )}
+
+                            <div className="flex items-center gap-2 text-xs text-emerald-400 bg-emerald-500/5 px-3 py-1.5 rounded-lg w-fit max-w-full">
+                              <FileText className="w-4 h-4 flex-shrink-0" />
+                              <span className="truncate text-[11px]">{res.file_name}</span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between pt-3 border-t border-[#2f3336]/10 mt-1">
+                            <div className="min-w-0">
+                              <p className={`text-[10px] font-semibold truncate ${textColor}`}>
+                                Author: {alumniNames[res.alumni_id] || "Verified Alumni"}
+                              </p>
+                              <span className={`text-[9px] flex items-center gap-1 ${subColor} mt-0.5`}>
+                                <Calendar className="w-3 h-3" />
+                                {new Date(res.created_at).toLocaleDateString()}
+                              </span>
+                            </div>
+
+                            <button
+                              onClick={() => window.open(res.file_url, "_blank")}
+                              className="px-3 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/25 transition-all text-xs font-bold flex items-center gap-1 cursor-pointer"
+                            >
+                              <Download className="w-3.5 h-3.5" />
+                              Get File
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </div>
             </div>
           )
         )}
