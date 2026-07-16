@@ -9,17 +9,15 @@ import {
   Sun, 
   Moon, 
   LogOut, 
-  Home, 
-  Users, 
-  Compass, 
-  BookOpen, 
+  Home,
+  Users,
+  BookOpen,
   LogIn,
   MessageSquare
 } from "lucide-react";
 import { AlumniNavHeader } from "../ui/nav-header";
 import AlumniHomePage from "./pages/AlumniHomePage";
 import AlumniNetworkPage from "./pages/AlumniNetworkPage";
-import AlumniTeamsPage from "./pages/AlumniTeamsPage";
 import AlumniResourcesPage from "./pages/AlumniResourcesPage";
 import AlumniProfilePage from "./pages/AlumniProfilePage";
 import AlumniMessagesPage from "./pages/AlumniMessagesPage";
@@ -173,8 +171,6 @@ export default function AlumniDashboard({
         return <AlumniHomePage isDarkMode={isDarkMode} userProfile={userProfile} authSession={authSession} />;
       case "network":
         return <AlumniNetworkPage isDarkMode={isDarkMode} authSession={authSession} userProfile={userProfile} />;
-      case "teams":
-        return <AlumniTeamsPage isDarkMode={isDarkMode} />;
       case "resources":
         return <AlumniResourcesPage isDarkMode={isDarkMode} authSession={authSession} userProfile={userProfile} />;
       case "messages":
@@ -487,17 +483,6 @@ export default function AlumniDashboard({
                 >
                   <Users className="w-5 h-5 text-slate-400" />
                   <span className="font-semibold text-sm">Network</span>
-                </button>
-
-                {/* Teams */}
-                <button
-                  onClick={() => { setCurrentView("teams"); setShowMobileMenu(false); }}
-                  className={`w-full flex items-center gap-3 p-3.5 rounded-lg border text-left ${
-                    isDarkMode ? "hover:bg-[#16181c]/50 border-[#2f3336]/50" : "hover:bg-slate-100/50 border-gray-200/50"
-                  } ${currentView === "teams" ? (isDarkMode ? "bg-[#16181c]" : "bg-slate-100") : ""}`}
-                >
-                  <Compass className="w-5 h-5 text-slate-400" />
-                  <span className="font-semibold text-sm">Teams</span>
                 </button>
 
                 {/* Resources */}

@@ -21,6 +21,11 @@ export const MOCK_ALUMNI: AlumniProfile[] = [
     is_available_for_mentorship: true,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
+    skills: ["React", "TypeScript", "System Design"],
+    achievements: [],
+    portfolio_url: null,
+    social_links: {},
+    contact_mode: "website",
   },
   {
     id: "mock-alumni-2",
@@ -39,6 +44,11 @@ export const MOCK_ALUMNI: AlumniProfile[] = [
     is_available_for_mentorship: true,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
+    skills: ["Verilog", "FPGA", "Embedded Systems"],
+    achievements: [],
+    portfolio_url: null,
+    social_links: {},
+    contact_mode: "website",
   },
   {
     id: "mock-alumni-3",
@@ -57,10 +67,24 @@ export const MOCK_ALUMNI: AlumniProfile[] = [
     is_available_for_mentorship: false,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
+    skills: ["Product Strategy", "Analytics"],
+    achievements: [],
+    portfolio_url: null,
+    social_links: {},
+    contact_mode: "website",
   }
 ];
 
-export function useAlumni(filters?: { major?: string; search?: string; mentorshipOnly?: boolean }) {
+export interface AlumniFilters {
+  major?: string;
+  search?: string;
+  mentorshipOnly?: boolean;
+  graduationYear?: number;
+  company?: string;
+  skills?: string[];
+}
+
+export function useAlumni(filters?: AlumniFilters) {
   const [alumni, setAlumni] = useState<AlumniProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -83,6 +107,17 @@ export function useAlumni(filters?: { major?: string; search?: string; mentorshi
           if (filters.mentorshipOnly) {
             data = data.filter((a) => a.is_available_for_mentorship);
           }
+          if (filters.graduationYear) {
+            data = data.filter((a) => a.graduation_year === filters.graduationYear);
+          }
+          if (filters.company && filters.company.trim()) {
+            const companyLower = filters.company.trim().toLowerCase();
+            data = data.filter((a) => a.company_name && a.company_name.toLowerCase().includes(companyLower));
+          }
+          if (filters.skills && filters.skills.length > 0) {
+            const wanted = filters.skills.map((s) => s.toLowerCase());
+            data = data.filter((a) => a.skills?.some((s) => wanted.includes(s.toLowerCase())));
+          }
           if (filters.search) {
             const searchLower = filters.search.toLowerCase();
             data = data.filter(
@@ -99,7 +134,7 @@ export function useAlumni(filters?: { major?: string; search?: string; mentorshi
         // Supabase DB fetch
         let query = supabase
           .from('alumni_profiles')
-          .select('id, full_name, email, avatar_url, graduation_year, major, job_title, company_name, city, linkedin_url, bio, career_tips, is_verified, is_available_for_mentorship, created_at, updated_at')
+          .select('id, full_name, email, avatar_url, graduation_year, major, job_title, company_name, city, linkedin_url, bio, career_tips, is_verified, is_available_for_mentorship, created_at, updated_at, skills, achievements, portfolio_url, social_links, contact_mode')
           .eq('is_verified', true);
 
         if (filters) {
@@ -112,6 +147,16 @@ export function useAlumni(filters?: { major?: string; search?: string; mentorshi
           }
           if (filters.mentorshipOnly) {
             query = query.eq('is_available_for_mentorship', true);
+          }
+          if (filters.graduationYear) {
+            query = query.eq('graduation_year', filters.graduationYear);
+          }
+          if (filters.company && filters.company.trim()) {
+            const companyVal = sanitizeIlikeTerm(filters.company.trim());
+            query = query.ilike('company_name', `%${companyVal}%`);
+          }
+          if (filters.skills && filters.skills.length > 0) {
+            query = query.overlaps('skills', filters.skills);
           }
           if (filters.search && filters.search.trim()) {
             const searchVal = sanitizeIlikeTerm(filters.search.trim());
@@ -133,7 +178,14 @@ export function useAlumni(filters?: { major?: string; search?: string; mentorshi
     } finally {
       setLoading(false);
     }
-  }, [filters?.major, filters?.search, filters?.mentorshipOnly]);
+  }, [
+    filters?.major,
+    filters?.search,
+    filters?.mentorshipOnly,
+    filters?.graduationYear,
+    filters?.company,
+    filters?.skills?.join(','),
+  ]);
 
   useEffect(() => {
     fetchAlumni();
@@ -160,7 +212,7 @@ export function useAlumniById(id: string) {
         } else {
           const { data, error: fetchErr } = await supabase
             .from('alumni_profiles')
-            .select('id, full_name, email, avatar_url, graduation_year, major, job_title, company_name, city, linkedin_url, bio, career_tips, is_verified, is_available_for_mentorship, created_at, updated_at')
+            .select('id, full_name, email, avatar_url, graduation_year, major, job_title, company_name, city, linkedin_url, bio, career_tips, is_verified, is_available_for_mentorship, created_at, updated_at, skills, achievements, portfolio_url, social_links, contact_mode')
             .eq('id', id)
             .single();
           if (fetchErr) throw fetchErr;

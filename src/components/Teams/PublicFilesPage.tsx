@@ -1,8 +1,8 @@
-﻿import React, { useEffect, useState, useMemo } from 'react';
-import { FileText, FileSpreadsheet, ImageIcon, Download, Globe, Search, Users, Eye } from 'lucide-react';
+﻿import React, { useEffect, useState, useMemo, useRef } from 'react';
+import { FileText, FileSpreadsheet, ImageIcon, Download, Globe, Search, Users, Eye, ArrowUpDown, Check } from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { TeamFile } from '../../types/social';
-import { listPublicFiles, formatFileSize, fileTypeLabel } from '../../lib/api/filesApi';
+import { listPublicFiles, formatFileSize, fileTypeLabel, PublicFilesSort } from '../../lib/api/filesApi';
 
 type FileFilter = 'all' | 'pdf' | 'doc' | 'sheet' | 'image';
 
@@ -59,6 +59,13 @@ function mimeMatchesFilter(mime: string, filter: FileFilter): boolean {
 
 const PAGE_SIZE = 40;
 
+const SORT_OPTIONS: { key: PublicFilesSort; label: string }[] = [
+  { key: 'recent', label: 'Recently Uploaded' },
+  { key: 'oldest', label: 'Oldest First' },
+  { key: 'name_asc', label: 'Name (A–Z)' },
+  { key: 'name_desc', label: 'Name (Z–A)' },
+];
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function PublicFilesPage({ isDarkMode, onViewTeam, onViewPreview }: Props) {
@@ -66,14 +73,22 @@ export default function PublicFilesPage({ isDarkMode, onViewTeam, onViewPreview 
   const [loading, setLoading] = useState(true);
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
+  const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<FileFilter>('all');
+  const [sort, setSort] = useState<PublicFilesSort>('recent');
+  const [sortMenuOpen, setSortMenuOpen] = useState(false);
 
+  // Debounce the search box so we don't re-query on every keystroke.
+  useEffect(() => {
+    const t = setTimeout(() => setSearch(searchInput), 300);
+    return () => clearTimeout(t);
+  }, [searchInput]);
 
   async function load(reset = false) {
     setLoading(true);
     const start = reset ? 0 : offset;
-    const data = await listPublicFiles(PAGE_SIZE, start);
+    const data = await listPublicFiles(PAGE_SIZE, start, { search, sort });
     if (reset) {
       setFiles(data);
       setOffset(data.length);
@@ -85,22 +100,13 @@ export default function PublicFilesPage({ isDarkMode, onViewTeam, onViewPreview 
     setLoading(false);
   }
 
-  useEffect(() => { load(true); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // Re-fetch from the server (searches/sorts across ALL public files, not just
+  // whatever page happened to be loaded already) whenever search or sort changes.
+  useEffect(() => { load(true); }, [search, sort]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const displayed = useMemo(() => {
-    return files.filter(f => {
-      if (!mimeMatchesFilter(f.file_type, filter)) return false;
-      if (search.trim()) {
-        const q = search.toLowerCase();
-        return (
-          f.name.toLowerCase().includes(q) ||
-          f.team?.name?.toLowerCase().includes(q) ||
-          f.uploader?.name?.toLowerCase().includes(q)
-        );
-      }
-      return true;
-    });
-  }, [files, filter, search]);
+    return files.filter(f => mimeMatchesFilter(f.file_type, filter));
+  }, [files, filter]);
 
   const base = isDarkMode ? 'bg-[#000000] text-[#e7e9ea]' : 'bg-slate-50 text-slate-900';
   const card = `rounded-2xl border ${isDarkMode ? 'border-[#2f3336] bg-[#17181c]' : 'border-slate-200 bg-white'}`;
@@ -134,9 +140,9 @@ export default function PublicFilesPage({ isDarkMode, onViewTeam, onViewPreview 
             <div className="relative flex-1">
               <Search size={14} className={`absolute left-3 top-1/2 -translate-y-1/2 ${isDarkMode ? 'text-slate-600' : 'text-[#71767b]'}`} />
               <input
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                placeholder="Search files, teams, or uploaders…"
+                value={searchInput}
+                onChange={e => setSearchInput(e.target.value)}
+                placeholder="Search files by name…"
                 className={inputCls}
               />
             </div>
@@ -154,6 +160,44 @@ export default function PublicFilesPage({ isDarkMode, onViewTeam, onViewPreview 
                   {label}
                 </button>
               ))}
+            </div>
+
+            {/* Sort */}
+            <div className="relative flex-shrink-0">
+              <button
+                onClick={() => setSortMenuOpen(v => !v)}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-bold transition-all h-full ${
+                  isDarkMode
+                    ? 'bg-[#17181c] border-[#2f3336] text-[#8b98a5] hover:text-[#e7e9ea]'
+                    : 'bg-white border-slate-200 text-[#71767b] hover:text-slate-800'
+                }`}
+              >
+                <ArrowUpDown size={14} />
+                <span className="hidden sm:inline">{SORT_OPTIONS.find(o => o.key === sort)?.label}</span>
+              </button>
+              {sortMenuOpen && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setSortMenuOpen(false)} />
+                  <div
+                    className={`absolute right-0 mt-1.5 w-48 rounded-xl border shadow-xl z-20 overflow-hidden ${
+                      isDarkMode ? 'bg-[#17181c] border-[#2f3336]' : 'bg-white border-slate-200'
+                    }`}
+                  >
+                    {SORT_OPTIONS.map(opt => (
+                      <button
+                        key={opt.key}
+                        onClick={() => { setSort(opt.key); setSortMenuOpen(false); }}
+                        className={`w-full flex items-center justify-between gap-2 px-3.5 py-2.5 text-xs font-semibold text-left transition-colors ${
+                          isDarkMode ? 'hover:bg-[#2f3336] text-[#e7e9ea]' : 'hover:bg-slate-50 text-slate-800'
+                        }`}
+                      >
+                        {opt.label}
+                        {sort === opt.key && <Check size={14} className="text-[#1e9df1]" />}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>

@@ -1,8 +1,29 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, Mail, Linkedin, MapPin, Calendar, BookOpen, Quote, ShieldCheck, MessageSquare } from "lucide-react";
+import {
+  ArrowLeft,
+  Mail,
+  Linkedin,
+  MapPin,
+  Calendar,
+  BookOpen,
+  Quote,
+  ShieldCheck,
+  MessageSquare,
+  Link as LinkIcon,
+  Facebook,
+  Instagram,
+  Twitter,
+  Send,
+  MessageCircle,
+} from "lucide-react";
 import { useAlumniById } from "../../hooks/useAlumni";
 import { supabase } from "../../lib/supabase";
 import MentorChat from "./MentorChat";
+import { checkMentorshipStatus } from "../../lib/api/mentorshipApi";
+import { listExperiences } from "../../lib/api/profileApi";
+import { Experience } from "../../types/social";
+import ExperienceSection from "../Profile/ExperienceSection";
+import { BadgeList } from "../Profile/SkillsEditor";
 
 interface Props {
   id: string;
@@ -23,45 +44,24 @@ export default function AlumniProfilePage({ id, isDarkMode, onBack, authSession,
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [experiences, setExperiences] = useState<Experience[]>([]);
 
   useEffect(() => {
-    const checkMentorshipStatus = async () => {
-      if (!authSession?.user?.id || !id) return;
-      try {
-        setCheckingRequest(true);
-        // 1. Check if connected
-        const { data: connData, error: connErr } = await supabase
-          .from("mentor_connections")
-          .select("id")
-          .eq("student_id", authSession.user.id)
-          .eq("alumni_id", id)
-          .maybeSingle();
-
-        if (!connErr && connData) {
-          setIsConnected(true);
-          return;
-        }
-
-        // 2. Check if pending request exists
-        const { data: reqData, error: reqErr } = await supabase
-          .from("mentorship_requests")
-          .select("status")
-          .eq("student_id", authSession.user.id)
-          .eq("alumni_id", id)
-          .eq("status", "pending")
-          .maybeSingle();
-
-        if (!reqErr && reqData) {
-          setHasPendingRequest(true);
-        }
-      } catch (err) {
-        console.error("Error checking mentorship status:", err);
-      } finally {
-        setCheckingRequest(false);
-      }
-    };
-    checkMentorshipStatus();
+    if (!authSession?.user?.id || !id) return;
+    setCheckingRequest(true);
+    checkMentorshipStatus(authSession.user.id, id)
+      .then(({ isConnected, hasPendingRequest }) => {
+        setIsConnected(isConnected);
+        setHasPendingRequest(hasPendingRequest);
+      })
+      .catch((err) => console.error("Error checking mentorship status:", err))
+      .finally(() => setCheckingRequest(false));
   }, [authSession, id]);
+
+  useEffect(() => {
+    if (!id) return;
+    listExperiences(id).then(setExperiences);
+  }, [id]);
 
   const handleSubmitRequest = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -117,6 +117,9 @@ export default function AlumniProfilePage({ id, isDarkMode, onBack, authSession,
   const textColor = isDarkMode ? "text-white" : "text-slate-900";
   const subColor = isDarkMode ? "text-slate-400" : "text-slate-500";
   const cardBg = isDarkMode ? "bg-[#17181c] border-[#2f3336]/50" : "bg-white border-slate-200 shadow-sm";
+  const actionBtnCls = `flex items-center gap-2 px-4 py-2 rounded-lg border text-xs font-semibold transition-colors shadow-sm ${
+    isDarkMode ? "bg-[#16181c] border-[#2f3336] text-white hover:bg-[#2f3336]" : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
+  }`;
 
   if (loading) {
     return (
@@ -222,17 +225,25 @@ export default function AlumniProfilePage({ id, isDarkMode, onBack, authSession,
                 href={alumni.linkedin_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#0077b5] text-white text-xs font-semibold hover:bg-[#006399] transition-colors shadow-sm"
+                className={actionBtnCls}
               >
-                <Linkedin className="h-4 w-4" />
-                Connect on LinkedIn
+                <Linkedin className="h-4 w-4 text-[#0A66C2]" />
+                LinkedIn
               </a>
             )}
-            <a
-              href={`mailto:${alumni.email}`}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-xs font-semibold hover:bg-slate-700 transition-colors shadow-sm"
-            >
-              <Mail className="h-4 w-4" />
+            {alumni.portfolio_url && (
+              <a
+                href={alumni.portfolio_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={actionBtnCls}
+              >
+                <LinkIcon className="h-4 w-4 text-[#1e9df1]" />
+                Portfolio
+              </a>
+            )}
+            <a href={`mailto:${alumni.email}`} className={actionBtnCls}>
+              <Mail className="h-4 w-4 text-[#1e9df1]" />
               Send Email
             </a>
             {alumni.is_available_for_mentorship && (
@@ -240,7 +251,7 @@ export default function AlumniProfilePage({ id, isDarkMode, onBack, authSession,
                 ✓ Available to Mentor Students
               </span>
             )}
-            {alumni.is_available_for_mentorship && authSession?.user && !userProfile?.isAlumni && (
+            {alumni.contact_mode !== "social" && alumni.is_available_for_mentorship && authSession?.user && !userProfile?.isAlumni && (
               isConnected ? (
                 <div className="flex items-center gap-2">
                   <span className="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
@@ -248,7 +259,7 @@ export default function AlumniProfilePage({ id, isDarkMode, onBack, authSession,
                   </span>
                   <button
                     onClick={() => setShowChat(true)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 text-xs font-bold transition-all cursor-pointer shadow-sm"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1e9df1]/10 text-[#1e9df1] border border-[#1e9df1]/20 hover:bg-[#1e9df1]/20 text-xs font-bold transition-all cursor-pointer shadow-sm"
                   >
                     <MessageSquare className="w-3.5 h-3.5" />
                     Message
@@ -268,6 +279,41 @@ export default function AlumniProfilePage({ id, isDarkMode, onBack, authSession,
               )
             )}
           </div>
+
+          {/* Connect via social media (alumni's chosen contact method) */}
+          {alumni.contact_mode !== "website" && (() => {
+            const links: Record<string, string> = alumni.social_links || {};
+            const socialIcons: { key: string; label: string; icon: JSX.Element }[] = [
+              { key: "whatsapp", label: "WhatsApp", icon: <MessageCircle className="h-4 w-4 text-[#25D366]" /> },
+              { key: "facebook", label: "Facebook", icon: <Facebook className="h-4 w-4 text-[#1877F2]" /> },
+              { key: "telegram", label: "Telegram", icon: <Send className="h-4 w-4 text-[#26A5E4]" /> },
+              { key: "x", label: "X", icon: <Twitter className="h-4 w-4" /> },
+              { key: "instagram", label: "Instagram", icon: <Instagram className="h-4 w-4 text-[#d62976]" /> },
+            ];
+            const active = socialIcons.filter((s) => links[s.key]);
+            if (active.length === 0) return null;
+            return (
+              <div className="border-b border-[#2f3336]/10 pb-4">
+                <h3 className={`text-xs font-bold uppercase tracking-wider mb-2.5 ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>
+                  Connect via
+                </h3>
+                <div className="flex flex-wrap gap-2.5">
+                  {active.map((s) => (
+                    <a
+                      key={s.key}
+                      href={links[s.key]}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={actionBtnCls}
+                    >
+                      {s.icon}
+                      {s.label}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Bio Section */}
           {alumni.bio && (
@@ -299,7 +345,40 @@ export default function AlumniProfilePage({ id, isDarkMode, onBack, authSession,
               </div>
             </div>
           )}
+
+          {/* Skills Section */}
+          {alumni.skills && alumni.skills.length > 0 && (
+            <div className="space-y-2">
+              <h3 className={`text-sm font-bold uppercase tracking-wider ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>
+                Skills
+              </h3>
+              <BadgeList items={alumni.skills} isDarkMode={isDarkMode} badgeColor="blue" />
+            </div>
+          )}
+
+          {/* Achievements Section */}
+          {alumni.achievements && alumni.achievements.length > 0 && (
+            <div className="space-y-2">
+              <h3 className={`text-sm font-bold uppercase tracking-wider ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>
+                Achievements / Certifications
+              </h3>
+              <BadgeList items={alumni.achievements} isDarkMode={isDarkMode} badgeColor="emerald" />
+            </div>
+          )}
         </div>
+
+        {/* Work Experience */}
+        {experiences.length > 0 && (
+          <div className="mt-6">
+            <ExperienceSection
+              userId={id}
+              experiences={experiences}
+              isOwn={false}
+              isDarkMode={isDarkMode}
+              onChanged={() => listExperiences(id).then(setExperiences)}
+            />
+          </div>
+        )}
       </div>
 
       {/* Mentorship Request Modal */}

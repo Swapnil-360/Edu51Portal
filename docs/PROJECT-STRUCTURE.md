@@ -185,24 +185,28 @@ Per-team file sharing with public/private visibility. Members upload; owner/admi
 
 ---
 
-## World Cup 2026 (Live Event)
+## Alumni Hub & Mentorship
 
-| What | File | Lines |
-|------|------|-------|
-| WC26 page (renders the hero banner + tab content below it) | `src/components/WorldCup/WorldCupPage.tsx` | — |
-| Page header (title, personal stats, refresh, Pick Team/Leaderboard/Matches tabs, live/countdown state, Ken Burns backdrop) — replaces the old plain sticky header, everything lives in one panel now | `src/components/WorldCup/WC26HeroBanner.tsx` | — |
-| Intro modal (one-time, post-login) | `src/components/WorldCup/WC26IntroModal.tsx` | — |
-| 48 teams data + logo helpers | `src/lib/wc26Teams.ts` | — |
-| Sync + leaderboard API | `src/lib/api/worldCupApi.ts` | — |
-| Edge function: sync matches from football-data.org | `supabase/functions/sync-wc26-matches/index.ts` | — |
-| App: intro modal trigger (SIGNED_IN) | `src/App.tsx` | 562, 645 |
-| App: render branch | `src/App.tsx` | 8600–8621 |
+Student-facing directory (`src/components/Alumni/AlumniDirectoryPage.tsx`, tabs: Directory/My Mentorship Requests/Messages/Resources) → `AlumniCard.tsx` → `AlumniProfilePage.tsx` (public view, request mentorship) → `MentorChat.tsx`. A separately-routed verified-alumni dashboard (`AlumniDashboard.tsx` → `pages/*.tsx`) is where an alumnus edits their own profile (`pages/AlumniProfilePage.tsx`).
 
-**Database:** `wc26_matches` table — home/away team TLA codes, scores, status, stage, group  
-**Scoring:** win = 3 pts, draw = 1 pt, +1 per goal scored by picked team  
-**Sync:** server-side `pg_cron` job (`sync-wc26-matches-every-minute`, migration `20260704040331_wc26_cron_and_realtime`) invokes the edge function every 60s via `pg_net`, independent of any client being open. Frontend no longer polls the edge function — it subscribes to Supabase Realtime (`postgres_changes` on `wc26_matches`) and refetches from the DB the instant a row changes. Manual refresh button still force-syncs via `syncWC26Matches(true)`.  
-**Stages:** `GROUP_STAGE` → `LAST_32` → `LAST_16` → `QUARTER_FINALS` → `SEMI_FINALS` → `THIRD_PLACE` → `FINAL` (must match football-data.org's stage enum exactly — `STAGE_ORDER`/`STAGE_LABEL` in `WorldCupPage.tsx`)  
-**Hero banner:** the entire page top is one flush panel (full-width, `border-b`, no rounded corners/gap) — title, personal stats line, refresh button, tabs, and a tagline/countdown row all rendered by `WC26HeroBanner`, not split across a separate header + card. Shows a live-match state (pulsing "Live Now" + score line, no countdown) when any match is `IN_PLAY`/`PAUSED`/`HALFTIME`; otherwise a DD:HH:MM:SS countdown to the next unplayed match's kickoff. No external image asset — backdrop is a radial gradient + a large low-opacity `/FIFA-World-Cup-Logo-2026.png` watermark with a slow Framer Motion zoom (Ken Burns). Not sticky (the previous plain header was; a ~260px hero pinned while scrolling read as broken, so tab access requires scrolling back up).
+| What | File |
+|------|------|
+| Directory search/filter (name/role/company, major, mentorship-only, grad year, company, skill tags) | `src/components/Alumni/AlumniFilter.tsx` |
+| Directory data hook (`useAlumni`/`useAlumniById`) | `src/hooks/useAlumni.ts` |
+| Mentorship connection/request/suggestion helpers | `src/lib/api/mentorshipApi.ts` |
+| Alumni self-edit screen (skills, achievements, portfolio, marital status, social links, contact mode, work experience) | `src/components/Alumni/pages/AlumniProfilePage.tsx` |
+| `AlumniProfile` type | `src/types/social.ts` |
+| **SQL:** `alumni_profiles` (+ `mentorship_requests`, `mentor_connections`, `mentor_messages`, `alumni_resources`; live-DB only, not in tracked migrations except ALTERs) | migration `20260705150000_alumni_signup_fields`, `20260718000000_alumni_profile_expansion` |
+
+**Skills & filtering:** `alumni_profiles.skills text[]` (GIN-indexed), edited via the shared `SkillsEditor`/`BadgeList` components (`src/components/Profile/SkillsEditor.tsx`, same ones used for student profiles). Directory filters on major, mentorship availability, graduation year, company (`ilike`, sanitized via `sanitizeIlikeTerm`), and skill overlap (`.overlaps()`).
+
+**Work experience:** alumni reuse the student `experiences` table/API/`ExperienceSection.tsx` component as-is (keyed by `auth.uid()`, same FK to `profiles`) — no alumni-specific schema needed.
+
+**Suggested Mentors:** `mentorshipApi.getSuggestedMentors(studentId)` scores available, unconnected alumni by major match + skills/interests overlap (capped, tie-broken by recency); shown as a horizontal row atop the Directory tab, only while no filters are active.
+
+**Contact mode (`alumni_profiles.contact_mode`: `website`/`social`/`both`):** alumni choose how students reach them. `website` (default) shows the existing in-app Request Mentorship → accept → `MentorChat` flow; `social` hides that flow and instead shows a "Connect via" row of clickable icons built from `social_links jsonb` (whatsapp/facebook/telegram/x/instagram) + the existing `linkedin_url`; `both` shows everything.
+
+**RLS note:** `20260718000000_alumni_profile_expansion` also dropped two leftover permissive duplicate policies on `alumni_profiles` (`with_check: true` / `qual: true`) that had neutralized the owner-scoped INSERT/UPDATE policies — self-insert/self-update by the owner remain fully covered by the stricter policies that were already in place.
 
 ---
 
@@ -335,6 +339,8 @@ All migrations in chronological order under `supabase/migrations/`. Key ones:
 | `20260701000000_ai_chat_usage` | `ai_chat_usage` table — per-user daily message counter for AI Assistant rate-limiting |
 | `20260702000000_user_routines` | `user_routines` table (auth-scoped, replaces anonymous device-UUID `custom_routines`) |
 | `20260704040331_wc26_cron_and_realtime` | Enables `pg_cron`/`pg_net`; schedules `sync-wc26-matches` every 60s server-side; adds `wc26_matches` to `supabase_realtime` publication (`REPLICA IDENTITY FULL`) |
+| `20260707211050_admin_ban_delete_alumni_tag` | `profiles.is_banned`/`banned_at`/`ban_reason`; `admin_actions` audit log; `is_app_banned()`, `admin_set_user_banned()`; extends `admin_list_users()` with alumni/verified/banned flags |
+| `20260717120000_remove_wc26_feature` | World Cup 2026 feature removed: unschedules `sync-wc26-matches-every-minute` cron job, drops `wc26_matches` table |
 
 ---
 
@@ -342,7 +348,6 @@ All migrations in chronological order under `supabase/migrations/`. Key ones:
 
 | Function | Trigger | Purpose |
 |----------|---------|---------|
-| `sync-wc26-matches` | On-demand (client throttled) | Fetch & upsert WC2026 matches from football-data.org |
 | `send-push-notification` | DB trigger / admin action | Send Web Push to subscribed users |
 | `send-email-notification` | Admin action | Send transactional/broadcast emails via Brevo |
 | `send-password-reset` | User action | Send password reset email |

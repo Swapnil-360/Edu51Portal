@@ -221,13 +221,6 @@ export function AppNavHeader({
       onClick: () => goToView("home"),
     },
     {
-      label: "WC '26",
-      view: "wc26",
-      badge: "live",
-      isActive: currentView === "wc26",
-      onClick: () => requireLogin("wc26", "the World Cup 2026 event"),
-    },
-    {
       label: "Semester",
       view: "semester",
       isActive: currentView === "semester",
@@ -311,13 +304,6 @@ export function AlumniNavHeader({
       isActive: currentView === "messages",
       onClick: () => goToView("messages"),
       hasRedDot: unreadMessagesCount > 0,
-    },
-    {
-      label: "Teams",
-      view: "teams",
-      badge: "new",
-      isActive: currentView === "teams" || currentView === "team",
-      onClick: () => goToView("teams"),
     },
     {
       label: "Resources",

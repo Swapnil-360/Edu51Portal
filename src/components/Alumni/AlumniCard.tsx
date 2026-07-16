@@ -12,7 +12,7 @@ export default function AlumniCard({ alumni, isDarkMode, onViewProfile }: Props)
 
   return (
     <div
-      className={`rounded-xl border p-4 flex flex-col justify-between transition-all duration-200 ${
+      className={`rounded-xl border p-4 flex flex-col justify-between overflow-hidden transition-all duration-200 ${
         isDarkMode
           ? "bg-[#17181c] border-[#2f3336]/50 hover:border-[#38444d] hover:shadow-lg hover:shadow-black/20"
           : "bg-white border-slate-200 hover:border-slate-300 hover:shadow-md hover:shadow-slate-100"
@@ -51,7 +51,29 @@ export default function AlumniCard({ alumni, isDarkMode, onViewProfile }: Props)
         </div>
       </div>
 
-      <div className="mt-4 pt-3 border-t border-[#2f3336]/10 flex items-center justify-between gap-2">
+      {alumni.skills && alumni.skills.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mt-3">
+          {alumni.skills.slice(0, 3).map((s) => (
+            <span
+              key={s}
+              className={`px-2 py-0.5 rounded-full text-[10px] font-medium border capitalize ${
+                isDarkMode
+                  ? "bg-[#061622] text-[#1e9df1] border-[#1e9df1]/30"
+                  : "bg-[#e8f4fd] text-[#1677cc] border-[#1e9df1]/30"
+              }`}
+            >
+              {s}
+            </span>
+          ))}
+          {alumni.skills.length > 3 && (
+            <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${sub}`}>
+              +{alumni.skills.length - 3} more
+            </span>
+          )}
+        </div>
+      )}
+
+      <div className="mt-4 pt-3 border-t border-[#2f3336]/10 flex flex-wrap items-center justify-between gap-2">
         {/* Available for Mentorship Badge */}
         {alumni.is_available_for_mentorship ? (
           <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-green-500/10 text-green-400 border border-green-500/20 whitespace-nowrap">
@@ -63,7 +85,7 @@ export default function AlumniCard({ alumni, isDarkMode, onViewProfile }: Props)
 
         <button
           onClick={() => onViewProfile(alumni.id)}
-          className="px-3.5 py-1.5 rounded-lg bg-[#1e9df1] text-white text-xs font-semibold hover:bg-[#1677cc] transition-colors whitespace-nowrap shadow-sm"
+          className="px-3.5 py-1.5 rounded-lg bg-[#1e9df1] text-white text-xs font-semibold hover:bg-[#1677cc] transition-colors whitespace-nowrap shadow-sm ml-auto"
         >
           View Profile
         </button>

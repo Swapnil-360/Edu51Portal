@@ -56,7 +56,6 @@ export interface ProfileUpdatePayload {
   section?: string;
   major?: string;
   phone?: string;
-  wc26_team?: string | null;
 }
 
 export async function updateProfile(

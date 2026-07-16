@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { X, Send, Check, CheckCheck, Loader2 } from "lucide-react";
 import { supabase } from "../../lib/supabase";
+import { resolveConnectionId } from "../../lib/api/mentorshipApi";
 
 interface MentorChatProps {
   isDarkMode: boolean;
@@ -37,29 +38,13 @@ export default function MentorChat({
 
   // 1. Resolve connection ID
   useEffect(() => {
-    const fetchConnection = async () => {
-      try {
-        setLoading(true);
-        const studentId = isTargetAlumni ? currentUserId : targetUserId;
-        const alumniId = isTargetAlumni ? targetUserId : currentUserId;
-
-        const { data, error } = await supabase
-          .from("mentor_connections")
-          .select("id")
-          .eq("student_id", studentId)
-          .eq("alumni_id", alumniId)
-          .maybeSingle();
-
-        if (!error && data) {
-          setConnectionId(data.id);
-        }
-      } catch (err) {
-        console.error("Error finding connection:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchConnection();
+    const studentId = isTargetAlumni ? currentUserId : targetUserId;
+    const alumniId = isTargetAlumni ? targetUserId : currentUserId;
+    setLoading(true);
+    resolveConnectionId(studentId, alumniId)
+      .then((id) => setConnectionId(id))
+      .catch((err) => console.error("Error finding connection:", err))
+      .finally(() => setLoading(false));
   }, [currentUserId, targetUserId, isTargetAlumni]);
 
   // Scroll to bottom helper

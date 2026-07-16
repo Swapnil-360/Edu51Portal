@@ -89,7 +89,6 @@ import {
   UserPlus,
   Users,
   GraduationCap,
-  Trophy,
   User,
   Settings,
   ArrowLeft,
@@ -107,8 +106,6 @@ const NetworkPage = lazy(() => import("./components/Network/NetworkPage"));
 const TeamsPage = lazy(() => import("./components/Teams/TeamsPage"));
 const TeamPage = lazy(() => import("./components/Teams/TeamPage"));
 const PublicFilesPage = lazy(() => import("./components/Teams/PublicFilesPage"));
-const WorldCupPage = lazy(() => import("./components/WorldCup/WorldCupPage").then(m => ({ default: m.WorldCupPage })));
-const WC26IntroModal = lazy(() => import("./components/WorldCup/WC26IntroModal").then(m => ({ default: m.WC26IntroModal })));
 const AlumniDirectoryPage = lazy(() => import("./components/Alumni/AlumniDirectoryPage"));
 const AlumniProfilePage = lazy(() => import("./components/Alumni/AlumniProfilePage"));
 const AlumniRegisterForm = lazy(() => import("./components/Alumni/AlumniRegisterForm"));
@@ -179,7 +176,6 @@ function App() {
     | "teams"
     | "team"
     | "alumni"
-    | "wc26"
     | "shared-resources"
   >(() => {
     const path = window.location.pathname;
@@ -196,7 +192,6 @@ function App() {
     if (path.startsWith("/teams/")) return "team";
     if (path === "/teams") return "teams";
     if (path === "/alumni") return "alumni";
-    if (path === "/wc26") return "wc26";
     if (path === "/shared-resources") return "shared-resources";
     // Always treat root, /home, or empty as home
     if (path === "/" || path === "/home" || path === "" || !path) return "home";
@@ -237,7 +232,6 @@ function App() {
         | "teams"
         | "team"
         | "alumni"
-        | "wc26"
         | "shared-resources",
       extra?: string | null,
     ) => {
@@ -263,7 +257,6 @@ function App() {
         setAlumniSubView("directory");
         setSelectedAlumniId(null);
       }
-      else if (view === "wc26") path = "/wc26";
       else if (view === "shared-resources") path = "/shared-resources";
       else if (view === "home") path = "/home";
       window.history.pushState({}, "", path);
@@ -318,7 +311,6 @@ function App() {
           setSelectedAlumniId(null);
           setCurrentView("alumni");
         }
-        else if (path === "/wc26") setCurrentView("wc26");
         else if (path === "/" || path === "/home" || path === "" || !path)
           setCurrentView("home");
         else setCurrentView("home");
@@ -397,7 +389,6 @@ function App() {
   const [authLoading, setAuthLoading] = useState(true);
   const [authSession, setAuthSession] = useState<any>(null);
   const [unreadNotices, setUnreadNotices] = useState<string[]>([]);
-  const [showWC26Intro, setShowWC26Intro] = useState(false);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const userDropdownRef = useRef<HTMLDivElement>(null);
 
@@ -525,7 +516,7 @@ function App() {
   // Redirect guest users trying to access login-only views directly via URL/history
   useEffect(() => {
     if (!authLoading && !isLoggedIn) {
-      const loginRequiredViews = ["semester", "custom", "network", "teams", "team", "alumni", "wc26", "shared-resources"];
+      const loginRequiredViews = ["semester", "custom", "network", "teams", "team", "alumni", "shared-resources"];
       if (loginRequiredViews.includes(currentView) || (currentView === "profile" && !viewedUsername)) {
         setCurrentView("home");
         window.history.replaceState({}, "", "/home");
@@ -775,11 +766,6 @@ function App() {
           setAuthSession(session);
           setIsLoggedIn(true);
 
-          // Show WC26 intro once per device if not dismissed before
-          if (!localStorage.getItem("wc26_intro_dismissed")) {
-            setTimeout(() => setShowWC26Intro(true), 2000);
-          }
-
           // Try loading profile by auth user id first, then fall back to email.
           // This handles both: tables where id = auth UUID, and tables where the
           // profile was created with a different id but bubt_email matches.
@@ -858,11 +844,6 @@ function App() {
         setAuthSession(session);
         setIsLoggedIn(true);
         setShowSignInModal(false); // Always close sign-in modal on successful auth
-
-        // Show WC26 intro once per device if not dismissed before
-        if (!localStorage.getItem("wc26_intro_dismissed")) {
-          setTimeout(() => setShowWC26Intro(true), 1500);
-        }
 
         // Secondary fallback for recovery redirect when SIGNED_IN is fired instead of PASSWORD_RECOVERY
         const isRecoveryRedirect = 
@@ -1688,10 +1669,12 @@ function App() {
     };
   }, [showMobileMenu, showNoticePanel]);
 
-  // Lock background scrolling when any overlay/modal/panel is open
+  // Lock background scrolling when any full-screen overlay/modal is open.
+  // showNoticePanel is excluded — it's a small anchored dropdown, not a
+  // full-screen overlay, and locking body scroll for it caused a jarring
+  // layout/scrollbar flicker on open and close.
   useEffect(() => {
     const overlaysOpen =
-      showNoticePanel ||
       showNoticeModal ||
       showCreateNotice ||
       showUploadFile ||
@@ -1716,7 +1699,6 @@ function App() {
     }
     return;
   }, [
-    showNoticePanel,
     showNoticeModal,
     showCreateNotice,
     showUploadFile,
@@ -3287,7 +3269,7 @@ For any queries, contact your course instructors or the department.`,
   };
 
   // Banned users are restricted to the Home view (Study Materials) — no Teams,
-  // Network, Alumni, Routine, WC26, or profile editing. Enforced here (redirect
+  // Network, Alumni, Routine, or profile editing. Enforced here (redirect
   // on navigation attempts) AND at the database/RLS level (see is_app_banned()),
   // so it can't be bypassed by calling the API directly.
   const isBanned = isLoggedIn && userProfile.isBanned && !isAdmin;
@@ -4004,42 +3986,6 @@ For any queries, contact your course instructors or the department.`,
                   nav item below is hidden, mirroring the desktop AppNavHeader gate. */}
               {!isBanned && (
               <>
-              {/* World Cup 2026 */}
-              <button
-                onClick={() => {
-                  if (!isLoggedIn) {
-                    showMajorAccessNotification(
-                      "error",
-                      "Please sign in to join the World Cup 2026 event",
-                    );
-                    setShowSignInModal(true);
-                    setShowMobileMenu(false);
-                    return;
-                  }
-                  goToView("wc26");
-                  setShowMobileMenu(false);
-                }}
-                className={`w-full flex items-center gap-3 p-3 sm:p-4 rounded-lg transition-all duration-300 border ${
-                  isDarkMode
-                    ? "hover:bg-green-900/30 border-[#2f3336]/50 hover:border-green-500/50 text-gray-100"
-                    : "hover:bg-green-50 border-gray-200/50 hover:border-green-300 text-gray-900"
-                } ${currentView === "wc26" ? (isDarkMode ? "bg-green-950/40 border-green-600/60" : "bg-green-100/50 border-green-300") : ""}`}
-              >
-                <div className={`p-2 rounded-lg flex-shrink-0 ${isDarkMode ? "bg-green-900/40" : "bg-green-100"}`}>
-                  <Trophy className={`w-5 h-5 ${isDarkMode ? "text-green-400" : "text-green-600"}`} />
-                </div>
-                <div className="text-left flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="font-semibold text-sm">World Cup '26</p>
-                    <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-green-500 text-white animate-pulse">
-                      LIVE
-                    </span>
-                  </div>
-                  <p className={`text-xs ${isDarkMode ? "text-[#71767b]" : "text-gray-600"}`}>
-                    Pick a team · earn points · leaderboard
-                  </p>
-                </div>
-              </button>
 
               {/* Semester Tracker */}
               <button
@@ -4621,7 +4567,7 @@ For any queries, contact your course instructors or the department.`,
 
       {/* Main Content - Enhanced Mobile Responsive Design */}
       {/* Also mounts when a modal is open in a feature view — modal is fixed inset-0 so home content stays hidden beneath it */}
-      {(!["semester","custom","profile","network","teams","team","alumni","wc26"].includes(currentView) || showNoticeModal || showMaterialViewer) && (
+      {(!["semester","custom","profile","network","teams","team","alumni"].includes(currentView) || showNoticeModal || showMaterialViewer) && (
         <main className="relative pt-[72px] lg:pt-20 min-h-screen [overflow-x:clip]">
           {currentView === "home" && isDarkMode && <Tiles isDarkMode={isDarkMode} />}
 
@@ -8914,32 +8860,6 @@ For any queries, contact your course instructors or the department.`,
           </Suspense>
         </main>
       )}
-
-      {/* ── World Cup 2026 ── */}
-      {currentView === "wc26" && authSession?.user?.id && (
-        <main className="fixed top-[72px] lg:top-20 inset-x-0 bottom-0 z-40 overflow-y-auto overscroll-y-contain">
-          <WorldCupPage
-            currentUserId={authSession.user.id}
-            onClose={() => goToView("home")}
-            isDarkMode={isDarkMode}
-          />
-        </main>
-      )}
-
-      {/* ── WC26 Intro Modal ── */}
-      <WC26IntroModal
-        isOpen={showWC26Intro}
-        isDarkMode={isDarkMode}
-        onPickTeam={() => {
-          setShowWC26Intro(false);
-          localStorage.setItem("wc26_intro_dismissed", "1");
-          if (authSession?.user?.id) goToView("wc26");
-        }}
-        onDismiss={() => {
-          setShowWC26Intro(false);
-          localStorage.setItem("wc26_intro_dismissed", "1");
-        }}
-      />
 
       {/* PDF Viewer */}
       <PDFViewer

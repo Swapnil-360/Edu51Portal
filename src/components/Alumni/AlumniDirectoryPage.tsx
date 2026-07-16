@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, GraduationCap, SearchX, Inbox, Calendar, MessageSquare, BookOpen, Globe, Lock, Download, FileText, Loader2 } from "lucide-react";
+import { ArrowLeft, GraduationCap, SearchX, Inbox, Calendar, MessageSquare, BookOpen, Globe, Lock, Download, FileText, Loader2, Sparkles, Eye, EyeOff, Search as SearchIcon } from "lucide-react";
 import { useAlumni } from "../../hooks/useAlumni";
 import AlumniFilter from "./AlumniFilter";
 import AlumniCard from "./AlumniCard";
 import { supabase } from "../../lib/supabase";
 import MentorChat from "./MentorChat";
+import { getSuggestedMentors } from "../../lib/api/mentorshipApi";
+import { AlumniProfile } from "../../types/social";
 
 interface Props {
   isDarkMode: boolean;
@@ -28,6 +30,20 @@ export default function AlumniDirectoryPage({
   const [search, setSearch] = useState("");
   const [major, setMajor] = useState("All");
   const [mentorshipOnly, setMentorshipOnly] = useState(false);
+  const [graduationYear, setGraduationYear] = useState<number | null>(null);
+  const [company, setCompany] = useState("");
+  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
+
+  const [suggestedMentors, setSuggestedMentors] = useState<AlumniProfile[]>([]);
+  const [showSuggested, setShowSuggested] = useState(true);
+  const filtersAtDefault =
+    search === "" && major === "All" && !mentorshipOnly && !graduationYear && company === "" && selectedSkills.length === 0;
+
+  useEffect(() => {
+    if (isLoggedIn && authSession?.user?.id) {
+      getSuggestedMentors(authSession.user.id).then(setSuggestedMentors);
+    }
+  }, [isLoggedIn, authSession?.user?.id]);
 
   const [activeTab, setActiveTab] = useState("directory");
 
@@ -38,6 +54,24 @@ export default function AlumniDirectoryPage({
   const [studentMentorIds, setStudentMentorIds] = useState<string[]>([]);
   const [resourceTypeFilter, setResourceTypeFilter] = useState("All");
   const [resourceDeptFilter, setResourceDeptFilter] = useState("All");
+  const [resourceSearch, setResourceSearch] = useState("");
+  const [resourceYearFilter, setResourceYearFilter] = useState("All");
+
+  const resourceMatchesFilters = (res: any) => {
+    const typeMatch = resourceTypeFilter === "All" || res.type === resourceTypeFilter;
+    const deptMatch = resourceDeptFilter === "All" || res.department === resourceDeptFilter;
+    const yearMatch =
+      resourceYearFilter === "All" || new Date(res.created_at).getFullYear().toString() === resourceYearFilter;
+    const searchMatch =
+      !resourceSearch.trim() ||
+      res.title?.toLowerCase().includes(resourceSearch.trim().toLowerCase()) ||
+      res.description?.toLowerCase().includes(resourceSearch.trim().toLowerCase());
+    return typeMatch && deptMatch && yearMatch && searchMatch;
+  };
+
+  const resourceYears = Array.from(
+    new Set(resourcesList.map((r) => new Date(r.created_at).getFullYear().toString()))
+  ).sort((a, b) => Number(b) - Number(a));
 
   const fetchResourcesData = async () => {
     if (!authSession?.user?.id) return;
@@ -226,6 +260,9 @@ export default function AlumniDirectoryPage({
     major,
     search,
     mentorshipOnly,
+    graduationYear: graduationYear ?? undefined,
+    company,
+    skills: selectedSkills,
   });
 
   const pageBg = isDarkMode ? "bg-[#000000]" : "bg-slate-50";
@@ -252,7 +289,7 @@ export default function AlumniDirectoryPage({
           <div className="flex border-b border-[#2f3336]/10 mb-6 gap-6 text-sm">
             <button
               onClick={() => setActiveTab("directory")}
-              className={`pb-3 font-semibold border-b-2 transition-all cursor-pointer outline-none focus:outline-none focus-visible:outline-none ${
+              className={`pb-3 font-semibold border-b-2 transition-all cursor-pointer ${
                 activeTab === "directory"
                   ? "border-[#1e9df1] text-[#1e9df1]"
                   : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
@@ -262,7 +299,7 @@ export default function AlumniDirectoryPage({
             </button>
             <button
               onClick={() => setActiveTab("requests")}
-              className={`pb-3 font-semibold border-b-2 transition-all cursor-pointer outline-none focus:outline-none focus-visible:outline-none ${
+              className={`pb-3 font-semibold border-b-2 transition-all cursor-pointer ${
                 activeTab === "requests"
                   ? "border-[#1e9df1] text-[#1e9df1]"
                   : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
@@ -272,7 +309,7 @@ export default function AlumniDirectoryPage({
             </button>
             <button
               onClick={() => setActiveTab("messages")}
-              className={`pb-3 font-semibold border-b-2 transition-all cursor-pointer flex items-center gap-1.5 outline-none focus:outline-none focus-visible:outline-none ${
+              className={`pb-3 font-semibold border-b-2 transition-all cursor-pointer flex items-center gap-1.5 ${
                 activeTab === "messages"
                   ? "border-[#1e9df1] text-[#1e9df1]"
                   : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
@@ -287,7 +324,7 @@ export default function AlumniDirectoryPage({
             </button>
             <button
               onClick={() => setActiveTab("resources")}
-              className={`pb-3 font-semibold border-b-2 transition-all cursor-pointer outline-none focus:outline-none focus-visible:outline-none ${
+              className={`pb-3 font-semibold border-b-2 transition-all cursor-pointer ${
                 activeTab === "resources"
                   ? "border-[#1e9df1] text-[#1e9df1]"
                   : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
@@ -300,6 +337,43 @@ export default function AlumniDirectoryPage({
 
         {activeTab === "directory" && (
           <>
+            {/* Suggested Mentors */}
+            {isLoggedIn && filtersAtDefault && suggestedMentors.length > 0 && (
+              <div
+                className={`mb-6 rounded-xl border p-4 sm:p-5 ${
+                  isDarkMode ? "bg-[#17181c] border-[#2f3336]/50" : "bg-white border-slate-200 shadow-sm"
+                }`}
+              >
+                <div className="flex items-center justify-between gap-2 mb-1">
+                  <div className="flex items-center gap-1.5">
+                    <Sparkles className="w-4 h-4 text-[#1e9df1]" />
+                    <h3 className={`text-sm font-bold ${textColor}`}>Suggested Mentors</h3>
+                  </div>
+                  <button
+                    onClick={() => setShowSuggested((v) => !v)}
+                    className={`flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-lg transition-colors ${
+                      isDarkMode ? "text-[#71767b] hover:text-[#e7e9ea] hover:bg-[#202327]" : "text-slate-500 hover:text-slate-800 hover:bg-slate-100"
+                    }`}
+                  >
+                    {showSuggested ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                    {showSuggested ? "Hide" : "Show"}
+                  </button>
+                </div>
+                {showSuggested && (
+                  <>
+                    <p className={`text-xs mb-4 ${subColor}`}>Based on your major and skills</p>
+                    <div className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory -mx-1 px-1">
+                      {suggestedMentors.map((a) => (
+                        <div key={a.id} className="w-[240px] sm:w-64 flex-shrink-0 snap-start">
+                          <AlumniCard alumni={a} isDarkMode={isDarkMode} onViewProfile={onViewProfile} />
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
             {/* Filters */}
             <div className="mb-6">
               <AlumniFilter
@@ -309,6 +383,12 @@ export default function AlumniDirectoryPage({
                 setMajor={setMajor}
                 mentorshipOnly={mentorshipOnly}
                 setMentorshipOnly={setMentorshipOnly}
+                graduationYear={graduationYear}
+                setGraduationYear={setGraduationYear}
+                company={company}
+                setCompany={setCompany}
+                selectedSkills={selectedSkills}
+                setSelectedSkills={setSelectedSkills}
                 isDarkMode={isDarkMode}
               />
             </div>
@@ -531,44 +611,78 @@ export default function AlumniDirectoryPage({
           ) : (
             <div className="space-y-8">
               {/* Filters Panel */}
-              <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
-                <span className={`text-xs font-semibold ${textColor}`}>
-                  Filter Shared Resources:
-                </span>
-                <div className="flex gap-2 w-full sm:w-auto">
-                  <select
-                    value={resourceTypeFilter}
-                    onChange={(e) => setResourceTypeFilter(e.target.value)}
-                    className={`px-3 py-2 rounded-lg text-xs font-semibold border outline-none cursor-pointer transition-all flex-1 sm:flex-none ${
+              <div className="flex flex-col gap-3">
+                <div className="relative">
+                  <SearchIcon className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 ${isDarkMode ? "text-[#71767b]" : "text-slate-400"}`} />
+                  <input
+                    type="text"
+                    value={resourceSearch}
+                    onChange={(e) => setResourceSearch(e.target.value)}
+                    placeholder="Search resources by title or description..."
+                    className={`w-full pl-9 pr-3 py-2.5 rounded-lg text-sm border outline-none transition-all ${
                       isDarkMode
-                        ? "bg-[#16181c] border-[#2f3336] text-white focus:border-[#1e9df1]"
-                        : "bg-white border-slate-300 text-slate-800 focus:border-[#1e9df1]"
+                        ? "bg-[#16181c] border-[#2f3336] text-white placeholder-[#71767b] focus:border-[#1e9df1]"
+                        : "bg-white border-slate-300 text-slate-900 placeholder-slate-400 focus:border-[#1e9df1]"
                     }`}
-                  >
-                    <option value="All">All Types</option>
-                    <option value="Career Tips">Career Tips</option>
-                    <option value="Job Guide">Job Guide</option>
-                    <option value="Study Material">Study Material</option>
-                    <option value="Industry Insight">Industry Insight</option>
-                  </select>
+                  />
+                </div>
 
-                  <select
-                    value={resourceDeptFilter}
-                    onChange={(e) => setResourceDeptFilter(e.target.value)}
-                    className={`px-3 py-2 rounded-lg text-xs font-semibold border outline-none cursor-pointer transition-all flex-1 sm:flex-none ${
-                      isDarkMode
-                        ? "bg-[#16181c] border-[#2f3336] text-white focus:border-[#1e9df1]"
-                        : "bg-white border-slate-300 text-slate-800 focus:border-[#1e9df1]"
-                    }`}
-                  >
-                    <option value="All">All Departments</option>
-                    <option value="CSE">CSE</option>
-                    <option value="EEE">EEE</option>
-                    <option value="BBA">BBA</option>
-                    <option value="Civil">Civil</option>
-                    <option value="Textile">Textile</option>
-                    <option value="Other">Other</option>
-                  </select>
+                <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
+                  <span className={`text-xs font-semibold ${textColor}`}>
+                    Filter Shared Resources:
+                  </span>
+                  <div className="flex gap-2 w-full sm:w-auto">
+                    <select
+                      value={resourceTypeFilter}
+                      onChange={(e) => setResourceTypeFilter(e.target.value)}
+                      className={`px-3 py-2 rounded-lg text-xs font-semibold border outline-none cursor-pointer transition-all flex-1 sm:flex-none ${
+                        isDarkMode
+                          ? "bg-[#16181c] border-[#2f3336] text-white focus:border-[#1e9df1]"
+                          : "bg-white border-slate-300 text-slate-800 focus:border-[#1e9df1]"
+                      }`}
+                    >
+                      <option value="All">All Types</option>
+                      <option value="Career Tips">Career Tips</option>
+                      <option value="Job Guide">Job Guide</option>
+                      <option value="Study Material">Study Material</option>
+                      <option value="Industry Insight">Industry Insight</option>
+                    </select>
+
+                    <select
+                      value={resourceDeptFilter}
+                      onChange={(e) => setResourceDeptFilter(e.target.value)}
+                      className={`px-3 py-2 rounded-lg text-xs font-semibold border outline-none cursor-pointer transition-all flex-1 sm:flex-none ${
+                        isDarkMode
+                          ? "bg-[#16181c] border-[#2f3336] text-white focus:border-[#1e9df1]"
+                          : "bg-white border-slate-300 text-slate-800 focus:border-[#1e9df1]"
+                      }`}
+                    >
+                      <option value="All">All Departments</option>
+                      <option value="CSE">CSE</option>
+                      <option value="EEE">EEE</option>
+                      <option value="BBA">BBA</option>
+                      <option value="Civil">Civil</option>
+                      <option value="Textile">Textile</option>
+                      <option value="Other">Other</option>
+                    </select>
+
+                    <select
+                      value={resourceYearFilter}
+                      onChange={(e) => setResourceYearFilter(e.target.value)}
+                      className={`px-3 py-2 rounded-lg text-xs font-semibold border outline-none cursor-pointer transition-all flex-1 sm:flex-none ${
+                        isDarkMode
+                          ? "bg-[#16181c] border-[#2f3336] text-white focus:border-[#1e9df1]"
+                          : "bg-white border-slate-300 text-slate-800 focus:border-[#1e9df1]"
+                      }`}
+                    >
+                      <option value="All">All Years</option>
+                      {resourceYears.map((y) => (
+                        <option key={y} value={y}>
+                          {y}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
               </div>
 
@@ -579,7 +693,7 @@ export default function AlumniDirectoryPage({
                   Shared by My Mentors
                 </h3>
                 
-                {resourcesList.filter(r => r.visibility === "private" && studentMentorIds.includes(r.alumni_id)).length === 0 ? (
+                {resourcesList.filter(r => r.visibility === "private" && studentMentorIds.includes(r.alumni_id) && resourceMatchesFilters(r)).length === 0 ? (
                   <div className={`p-6 text-center rounded-xl border border-dashed ${isDarkMode ? "border-[#2f3336]/60 bg-[#16181c]/30 text-slate-500" : "border-slate-200 bg-slate-50/50 text-slate-400"}`}>
                     <p className="text-xs">No private resources shared by your connected mentors yet.</p>
                   </div>
@@ -589,9 +703,7 @@ export default function AlumniDirectoryPage({
                       .filter((res) => {
                         const isPrivate = res.visibility === "private";
                         const isMentor = studentMentorIds.includes(res.alumni_id);
-                        const typeMatch = resourceTypeFilter === "All" || res.type === resourceTypeFilter;
-                        const deptMatch = resourceDeptFilter === "All" || res.department === resourceDeptFilter;
-                        return isPrivate && isMentor && typeMatch && deptMatch;
+                        return isPrivate && isMentor && resourceMatchesFilters(res);
                       })
                       .map((res) => (
                         <div
@@ -658,12 +770,7 @@ export default function AlumniDirectoryPage({
                   Public Resources
                 </h3>
 
-                {resourcesList.filter((res) => {
-                  const isPublic = res.visibility === "public";
-                  const typeMatch = resourceTypeFilter === "All" || res.type === resourceTypeFilter;
-                  const deptMatch = resourceDeptFilter === "All" || res.department === resourceDeptFilter;
-                  return isPublic && typeMatch && deptMatch;
-                }).length === 0 ? (
+                {resourcesList.filter((res) => res.visibility === "public" && resourceMatchesFilters(res)).length === 0 ? (
                   <div className={`p-12 text-center rounded-2xl border ${cardBorder}`}>
                     <BookOpen className="w-8 h-8 mx-auto mb-2 text-slate-500" />
                     <p className="text-xs text-slate-500">No public resources match your filters.</p>
@@ -671,12 +778,7 @@ export default function AlumniDirectoryPage({
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {resourcesList
-                      .filter((res) => {
-                        const isPublic = res.visibility === "public";
-                        const typeMatch = resourceTypeFilter === "All" || res.type === resourceTypeFilter;
-                        const deptMatch = resourceDeptFilter === "All" || res.department === resourceDeptFilter;
-                        return isPublic && typeMatch && deptMatch;
-                      })
+                      .filter((res) => res.visibility === "public" && resourceMatchesFilters(res))
                       .map((res) => (
                         <div
                           key={res.id}

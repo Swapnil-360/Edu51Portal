@@ -2,6 +2,7 @@ import { useState } from "react";
 import { X, Loader2 } from "lucide-react";
 import { SocialProfile, ProfileVisibility } from "../../types/social";
 import { updateProfile } from "../../lib/api/profileApi";
+import { validateAndSanitizeUrl } from "../../lib/sanitize";
 
 interface Props {
   profile: SocialProfile;
@@ -28,33 +29,6 @@ export default function EditBasicInfoModal({ profile, onClose, onSaved, isDarkMo
     // Helper to strip HTML tags to prevent HTML Injection / XSS
     const stripHtml = (text: string) => {
       return text.replace(/<\/?[^>]+(>|$)/g, "");
-    };
-
-    // Helper to validate and format URLs
-    const validateAndSanitizeUrl = (url: string, fieldName: string): { url: string; error?: string } => {
-      const trimmed = url.trim();
-      if (!trimmed) return { url: "" };
-      
-      const lower = trimmed.toLowerCase();
-      if (
-        lower.startsWith("javascript:") ||
-        lower.startsWith("data:") ||
-        lower.startsWith("vbscript:")
-      ) {
-        return { url: "", error: `${fieldName} contains an invalid protocol.` };
-      }
-      
-      let formatted = trimmed;
-      if (!/^https?:\/\//i.test(trimmed)) {
-        formatted = "https://" + trimmed;
-      }
-      
-      try {
-        new URL(formatted);
-        return { url: formatted };
-      } catch (e) {
-        return { url: "", error: `${fieldName} must be a valid URL.` };
-      }
     };
 
     const sanitizedName = stripHtml(name.trim());

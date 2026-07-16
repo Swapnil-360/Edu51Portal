@@ -1,5 +1,6 @@
 import { supabase } from '../supabase';
 import type { TeamFile } from '../../types/social';
+import { sanitizeIlikeTerm } from '../sanitize';
 
 const PROFILE_COLS = 'id,name,avatar_url,profile_pic';
 
@@ -17,20 +18,50 @@ export async function listTeamFiles(teamId: string): Promise<TeamFile[]> {
   return (data ?? []) as TeamFile[];
 }
 
-export async function listPublicFiles(limit = 40, offset = 0): Promise<TeamFile[]> {
-  // Serve from cache for first-page requests (avoids round-trip on tab revisit)
-  if (offset === 0 && _publicFilesCache && Date.now() - _publicFilesCache.ts < PUBLIC_FILES_TTL) {
+export type PublicFilesSort = 'recent' | 'oldest' | 'name_asc' | 'name_desc';
+
+export interface ListPublicFilesOptions {
+  search?: string;
+  sort?: PublicFilesSort;
+}
+
+const SORT_COLUMNS: Record<PublicFilesSort, { column: 'created_at' | 'name'; ascending: boolean }> = {
+  recent: { column: 'created_at', ascending: false },
+  oldest: { column: 'created_at', ascending: true },
+  name_asc: { column: 'name', ascending: true },
+  name_desc: { column: 'name', ascending: false },
+};
+
+export async function listPublicFiles(
+  limit = 40,
+  offset = 0,
+  options: ListPublicFilesOptions = {},
+): Promise<TeamFile[]> {
+  const search = options.search?.trim() || '';
+  const sort = options.sort ?? 'recent';
+  const isDefaultView = !search && sort === 'recent';
+
+  // Serve from cache for first-page requests of the default (unsearched, recent) view.
+  if (isDefaultView && offset === 0 && _publicFilesCache && Date.now() - _publicFilesCache.ts < PUBLIC_FILES_TTL) {
     return _publicFilesCache.data;
   }
-  const { data, error } = await supabase
+
+  let query = supabase
     .from('team_files')
     .select(`id,name,file_url,file_type,file_size,created_at,team_id,uploader_id,visibility,uploader:profiles!uploader_id(${PROFILE_COLS}),team:teams!team_id(id,name,logo_url)`)
-    .eq('visibility', 'public')
-    .order('created_at', { ascending: false })
-    .range(offset, offset + limit - 1);
+    .eq('visibility', 'public');
+
+  if (search) {
+    query = query.ilike('name', `%${sanitizeIlikeTerm(search)}%`);
+  }
+
+  const { column, ascending } = SORT_COLUMNS[sort];
+  query = query.order(column, { ascending }).range(offset, offset + limit - 1);
+
+  const { data, error } = await query;
   if (error) { console.error('listPublicFiles', error); return []; }
   const result = (data ?? []) as TeamFile[];
-  if (offset === 0) _publicFilesCache = { data: result, ts: Date.now() };
+  if (isDefaultView && offset === 0) _publicFilesCache = { data: result, ts: Date.now() };
   return result;
 }
 

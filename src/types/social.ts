@@ -26,7 +26,6 @@ export interface SocialProfile {
   bubt_email: string | null;
   phone: string | null;
   profile_pic: string | null; // legacy base64 — fallback when avatar_url is null
-  wc26_team: string | null;  // WC2026 supported team code e.g. "ARG"
   created_at: string;
 }
 
@@ -247,12 +246,17 @@ export interface AlumniProfile {
   marital_status?: string | null;
   id_card_url?: string | null;
   phone?: string | null;
+  skills: string[];
+  achievements: string[];
+  portfolio_url: string | null;
+  social_links: Record<string, string>;
+  contact_mode: "website" | "social" | "both";
 }
 
 // Columns selected for profile lists/cards (never select legacy base64 profile_pic in lists)
 export const SOCIAL_PROFILE_COLS =
-  "id,username,name,headline,about,location,website,social_links,avatar_url,cover_photo_url,skills,interests,visibility,is_alumni,is_admin,section,major,bubt_email,phone,wc26_team,created_at";
+  "id,username,name,headline,about,location,website,social_links,avatar_url,cover_photo_url,skills,interests,visibility,is_alumni,is_admin,section,major,bubt_email,phone,created_at";
 
 // Lighter selection for cards/search results
 export const PROFILE_CARD_COLS =
-  "id,username,name,headline,avatar_url,skills,section,major,is_alumni,wc26_team";
+  "id,username,name,headline,avatar_url,skills,section,major,is_alumni";

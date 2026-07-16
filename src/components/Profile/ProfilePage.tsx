@@ -33,7 +33,6 @@ import {
   listMyConnections,
 } from "../../lib/api/connectionsApi";
 import { uploadImage } from "../../lib/storage";
-import { getTeamByCode, teamLogoUrl } from "../../lib/wc26Teams";
 import EditBasicInfoModal from "./EditBasicInfoModal";
 import EducationSection from "./EducationSection";
 import ExperienceSection from "./ExperienceSection";
@@ -367,17 +366,6 @@ export default function ProfilePage({ username, currentUserId, initialAvatarUrl,
               <div className="min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h2 className={`text-xl font-bold ${titleCls}`}>{profile.name}</h2>
-                  {profile.wc26_team && (() => {
-                    const wct = getTeamByCode(profile.wc26_team);
-                    return wct ? (
-                      <img
-                        src={teamLogoUrl(wct.logo)}
-                        alt={wct.name}
-                        title={`⚽ Supporting ${wct.name} · FIFA World Cup 2026`}
-                        className="wc-logo w-10 h-8 object-contain drop-shadow-md flex-shrink-0"
-                      />
-                    ) : null;
-                  })()}
                 </div>
                 {profile.username && <p className={`text-sm ${sub}`}>@{profile.username}</p>}
                 {profile.headline && (

@@ -1,46 +1,39 @@
 import { useState, useEffect } from "react";
-import { 
-  Mail, 
-  Linkedin, 
-  MapPin, 
-  Calendar, 
-  BookOpen, 
-  Quote, 
-  ShieldCheck, 
-  Edit2, 
-  Save, 
-  Loader2, 
-  Briefcase, 
-  Phone 
+import {
+  Mail,
+  Linkedin,
+  Calendar,
+  BookOpen,
+  Quote,
+  ShieldCheck,
+  Edit2,
+  Save,
+  Loader2,
+  Phone,
+  Link as LinkIcon,
 } from "lucide-react";
 import { supabase } from "../../../lib/supabase";
+import { AlumniProfile, Experience } from "../../../types/social";
+import { listExperiences } from "../../../lib/api/profileApi";
+import { validateAndSanitizeUrl, normalizeWhatsAppLink } from "../../../lib/sanitize";
+import SkillsEditor, { BadgeList, CSE_SKILL_SUGGESTIONS } from "../../Profile/SkillsEditor";
+import ExperienceSection from "../../Profile/ExperienceSection";
 
 interface Props {
   isDarkMode: boolean;
   authSession: any;
 }
 
-interface AlumniProfile {
-  id: string;
-  full_name: string;
-  email: string;
-  major: string;
-  graduation_year: number;
-  job_title?: string;
-  company_name?: string;
-  bio?: string;
-  linkedin_url?: string;
-  phone?: string;
-  avatar_url?: string;
-  is_verified: boolean;
-}
+const MARITAL_STATUS_OPTIONS = ["Single", "Married", "Prefer not to say"];
 
 export default function AlumniProfilePage({ isDarkMode, authSession }: Props) {
   const [profile, setProfile] = useState<AlumniProfile | null>(null);
+  const [experiences, setExperiences] = useState<Experience[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
 
   // Form states
   const [fullName, setFullName] = useState("");
@@ -49,6 +42,16 @@ export default function AlumniProfilePage({ isDarkMode, authSession }: Props) {
   const [bio, setBio] = useState("");
   const [linkedinUrl, setLinkedinUrl] = useState("");
   const [phone, setPhone] = useState("");
+  const [maritalStatus, setMaritalStatus] = useState("");
+  const [portfolioUrl, setPortfolioUrl] = useState("");
+  const [skills, setSkills] = useState<string[]>([]);
+  const [achievements, setAchievements] = useState<string[]>([]);
+  const [contactMode, setContactMode] = useState<"website" | "social" | "both">("website");
+  const [whatsapp, setWhatsapp] = useState("");
+  const [facebook, setFacebook] = useState("");
+  const [telegram, setTelegram] = useState("");
+  const [xLink, setXLink] = useState("");
+  const [instagram, setInstagram] = useState("");
 
   const pageBg = isDarkMode ? "bg-[#000000]" : "bg-slate-50";
   const textColor = isDarkMode ? "text-white" : "text-slate-900";
@@ -78,6 +81,20 @@ export default function AlumniProfilePage({ isDarkMode, authSession }: Props) {
         setBio(data.bio || "");
         setLinkedinUrl(data.linkedin_url || "");
         setPhone(data.phone || "");
+        setMaritalStatus(data.marital_status || "");
+        setPortfolioUrl(data.portfolio_url || "");
+        setSkills(data.skills || []);
+        setAchievements(data.achievements || []);
+        setContactMode(data.contact_mode || "website");
+        const links: Record<string, string> = data.social_links || {};
+        setWhatsapp(links.whatsapp || "");
+        setFacebook(links.facebook || "");
+        setTelegram(links.telegram || "");
+        setXLink(links.x || "");
+        setInstagram(links.instagram || "");
+
+        const exp = await listExperiences(userId);
+        setExperiences(exp);
       } else {
         setError("Alumni profile not found.");
       }
@@ -95,6 +112,30 @@ export default function AlumniProfilePage({ isDarkMode, authSession }: Props) {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSaveError("");
+
+    const linkedinResult = validateAndSanitizeUrl(linkedinUrl, "LinkedIn");
+    if (linkedinResult.error) return setSaveError(linkedinResult.error);
+    const portfolioResult = validateAndSanitizeUrl(portfolioUrl, "Portfolio");
+    if (portfolioResult.error) return setSaveError(portfolioResult.error);
+    const whatsappResult = normalizeWhatsAppLink(whatsapp);
+    if (whatsappResult.error) return setSaveError(whatsappResult.error);
+    const facebookResult = validateAndSanitizeUrl(facebook, "Facebook");
+    if (facebookResult.error) return setSaveError(facebookResult.error);
+    const telegramResult = validateAndSanitizeUrl(telegram, "Telegram");
+    if (telegramResult.error) return setSaveError(telegramResult.error);
+    const xResult = validateAndSanitizeUrl(xLink, "X");
+    if (xResult.error) return setSaveError(xResult.error);
+    const instagramResult = validateAndSanitizeUrl(instagram, "Instagram");
+    if (instagramResult.error) return setSaveError(instagramResult.error);
+
+    const social_links: Record<string, string> = {};
+    if (whatsappResult.url) social_links.whatsapp = whatsappResult.url;
+    if (facebookResult.url) social_links.facebook = facebookResult.url;
+    if (telegramResult.url) social_links.telegram = telegramResult.url;
+    if (xResult.url) social_links.x = xResult.url;
+    if (instagramResult.url) social_links.instagram = instagramResult.url;
+
     try {
       setIsSaving(true);
       const userId = authSession?.user?.id;
@@ -105,8 +146,14 @@ export default function AlumniProfilePage({ isDarkMode, authSession }: Props) {
         job_title: jobTitle || null,
         company_name: companyName || null,
         bio: bio || null,
-        linkedin_url: linkedinUrl || null,
+        linkedin_url: linkedinResult.url || null,
         phone: phone || null,
+        marital_status: maritalStatus || null,
+        portfolio_url: portfolioResult.url || null,
+        skills,
+        achievements,
+        contact_mode: contactMode,
+        social_links,
       };
 
       // 1. Update alumni_profiles table
@@ -133,7 +180,7 @@ export default function AlumniProfilePage({ isDarkMode, authSession }: Props) {
       setIsEditing(false);
     } catch (err: any) {
       console.error("Error saving profile:", err);
-      alert(err.message || "Failed to save profile changes.");
+      setSaveError(err.message || "Failed to save profile changes.");
     } finally {
       setIsSaving(false);
     }
@@ -142,7 +189,7 @@ export default function AlumniProfilePage({ isDarkMode, authSession }: Props) {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-3">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#1e9df1]"></div>
         <span className={`text-xs ${subColor}`}>Loading profile...</span>
       </div>
     );
@@ -160,14 +207,14 @@ export default function AlumniProfilePage({ isDarkMode, authSession }: Props) {
     <div className="max-w-3xl mx-auto space-y-6">
       {/* Profile Card */}
       <div className={`rounded-2xl border p-6 md:p-8 flex flex-col gap-6 ${cardBg}`}>
-        
+
         {/* Header Action Row */}
         <div className="flex justify-between items-center pb-4 border-b border-[#2f3336]/10">
           <h2 className={`text-xl font-bold ${textColor}`}>My Alumni Profile</h2>
           {!isEditing && (
             <button
               onClick={() => setIsEditing(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-500 hover:bg-blue-600 text-white transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#1e9df1] hover:bg-[#1677cc] text-white transition-colors"
             >
               <Edit2 className="w-3.5 h-3.5" />
               Edit Profile
@@ -176,7 +223,13 @@ export default function AlumniProfilePage({ isDarkMode, authSession }: Props) {
         </div>
 
         {isEditing ? (
-          <form onSubmit={handleSave} className="space-y-4">
+          <form onSubmit={handleSave} className="space-y-5">
+            {saveError && (
+              <div className="px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/30 text-red-500 text-sm">
+                {saveError}
+              </div>
+            )}
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className={`block text-xs font-semibold mb-1.5 ${textColor}`}>Full Name</label>
@@ -220,6 +273,31 @@ export default function AlumniProfilePage({ isDarkMode, authSession }: Props) {
                   className={`w-full px-3.5 py-2.5 rounded-xl border text-sm ${inputBg}`}
                 />
               </div>
+
+              <div>
+                <label className={`block text-xs font-semibold mb-1.5 ${textColor}`}>Marital Status</label>
+                <select
+                  value={maritalStatus}
+                  onChange={(e) => setMaritalStatus(e.target.value)}
+                  className={`w-full px-3.5 py-2.5 rounded-xl border text-sm ${inputBg}`}
+                >
+                  <option value="">Prefer not to say</option>
+                  {MARITAL_STATUS_OPTIONS.map((m) => (
+                    <option key={m} value={m}>{m}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className={`block text-xs font-semibold mb-1.5 ${textColor}`}>Portfolio URL</label>
+                <input
+                  type="url"
+                  value={portfolioUrl}
+                  onChange={(e) => setPortfolioUrl(e.target.value)}
+                  placeholder="https://yourportfolio.com"
+                  className={`w-full px-3.5 py-2.5 rounded-xl border text-sm ${inputBg}`}
+                />
+              </div>
             </div>
 
             <div>
@@ -244,13 +322,129 @@ export default function AlumniProfilePage({ isDarkMode, authSession }: Props) {
               />
             </div>
 
+            <div>
+              <label className={`block text-xs font-semibold mb-1.5 ${textColor}`}>Skills</label>
+              <SkillsEditor
+                items={skills}
+                onChange={setSkills}
+                isDarkMode={isDarkMode}
+                badgeColor="blue"
+                suggestions={CSE_SKILL_SUGGESTIONS}
+                placeholder="Add a skill…"
+              />
+            </div>
+
+            <div>
+              <label className={`block text-xs font-semibold mb-1.5 ${textColor}`}>Achievements / Certifications</label>
+              <SkillsEditor
+                items={achievements}
+                onChange={setAchievements}
+                isDarkMode={isDarkMode}
+                badgeColor="emerald"
+                placeholder="e.g. AWS Certified Solutions Architect"
+              />
+            </div>
+
+            {/* Mentorship Contact Preference */}
+            <div className="pt-4 border-t border-[#2f3336]/10 space-y-3">
+              <div>
+                <label className={`block text-xs font-semibold mb-1.5 ${textColor}`}>Mentorship Contact Preference</label>
+                <p className={`text-[11px] mb-2 ${subColor}`}>
+                  Choose how students can reach you for mentorship.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  {([
+                    { value: "website", label: "Website chat only" },
+                    { value: "social", label: "Social media only" },
+                    { value: "both", label: "Both" },
+                  ] as const).map((opt) => (
+                    <label
+                      key={opt.value}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-medium cursor-pointer flex-1 ${
+                        contactMode === opt.value
+                          ? "border-[#1e9df1] bg-[#1e9df1]/10 text-[#1e9df1]"
+                          : isDarkMode
+                          ? "border-[#2f3336] text-[#8b98a5]"
+                          : "border-slate-200 text-slate-600"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="contactMode"
+                        value={opt.value}
+                        checked={contactMode === opt.value}
+                        onChange={() => setContactMode(opt.value)}
+                        className="sr-only"
+                      />
+                      {opt.label}
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {(contactMode === "social" || contactMode === "both") && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className={`block text-xs font-semibold mb-1.5 ${textColor}`}>WhatsApp</label>
+                    <input
+                      type="text"
+                      value={whatsapp}
+                      onChange={(e) => setWhatsapp(e.target.value)}
+                      placeholder="+8801XXXXXXXXX or wa.me link"
+                      className={`w-full px-3.5 py-2.5 rounded-xl border text-sm ${inputBg}`}
+                    />
+                  </div>
+                  <div>
+                    <label className={`block text-xs font-semibold mb-1.5 ${textColor}`}>Facebook</label>
+                    <input
+                      type="text"
+                      value={facebook}
+                      onChange={(e) => setFacebook(e.target.value)}
+                      placeholder="URL"
+                      className={`w-full px-3.5 py-2.5 rounded-xl border text-sm ${inputBg}`}
+                    />
+                  </div>
+                  <div>
+                    <label className={`block text-xs font-semibold mb-1.5 ${textColor}`}>Telegram</label>
+                    <input
+                      type="text"
+                      value={telegram}
+                      onChange={(e) => setTelegram(e.target.value)}
+                      placeholder="URL"
+                      className={`w-full px-3.5 py-2.5 rounded-xl border text-sm ${inputBg}`}
+                    />
+                  </div>
+                  <div>
+                    <label className={`block text-xs font-semibold mb-1.5 ${textColor}`}>X (Twitter)</label>
+                    <input
+                      type="text"
+                      value={xLink}
+                      onChange={(e) => setXLink(e.target.value)}
+                      placeholder="URL"
+                      className={`w-full px-3.5 py-2.5 rounded-xl border text-sm ${inputBg}`}
+                    />
+                  </div>
+                  <div>
+                    <label className={`block text-xs font-semibold mb-1.5 ${textColor}`}>Instagram</label>
+                    <input
+                      type="text"
+                      value={instagram}
+                      onChange={(e) => setInstagram(e.target.value)}
+                      placeholder="URL"
+                      className={`w-full px-3.5 py-2.5 rounded-xl border text-sm ${inputBg}`}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
             <div className="flex gap-2 justify-end pt-4">
               <button
                 type="button"
                 onClick={() => setIsEditing(false)}
                 className={`px-4 py-2 rounded-lg text-xs font-semibold border ${
-                  isDarkMode 
-                    ? "bg-[#16181c] border-[#2f3336] text-[#d9d9d9] hover:bg-[#2f3336]" 
+                  isDarkMode
+                    ? "bg-[#16181c] border-[#2f3336] text-[#d9d9d9] hover:bg-[#2f3336]"
                     : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
                 }`}
               >
@@ -282,7 +476,7 @@ export default function AlumniProfilePage({ isDarkMode, authSession }: Props) {
                 <div className="flex flex-col md:flex-row md:items-center gap-2 justify-center md:justify-start">
                   <h2 className={`text-2xl font-bold ${textColor}`}>{profile.full_name}</h2>
                   {profile.is_verified && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/10 text-blue-500 border border-blue-500/20 self-center">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#1e9df1]/10 text-[#1e9df1] border border-[#1e9df1]/20 self-center">
                       <ShieldCheck className="h-3 w-3" />
                       Verified Alumni
                     </span>
@@ -290,7 +484,7 @@ export default function AlumniProfilePage({ isDarkMode, authSession }: Props) {
                 </div>
 
                 {profile.job_title ? (
-                  <p className="text-base font-semibold text-blue-500">
+                  <p className="text-base font-semibold text-[#1e9df1]">
                     {profile.job_title}
                     {profile.company_name ? ` at ${profile.company_name}` : ""}
                   </p>
@@ -321,13 +515,29 @@ export default function AlumniProfilePage({ isDarkMode, authSession }: Props) {
               </div>
             )}
 
+            {/* Skills */}
+            {profile.skills && profile.skills.length > 0 && (
+              <div>
+                <h3 className={`text-xs font-bold uppercase tracking-wide mb-2 ${subColor}`}>Skills</h3>
+                <BadgeList items={profile.skills} isDarkMode={isDarkMode} badgeColor="blue" />
+              </div>
+            )}
+
+            {/* Achievements */}
+            {profile.achievements && profile.achievements.length > 0 && (
+              <div>
+                <h3 className={`text-xs font-bold uppercase tracking-wide mb-2 ${subColor}`}>Achievements / Certifications</h3>
+                <BadgeList items={profile.achievements} isDarkMode={isDarkMode} badgeColor="emerald" />
+              </div>
+            )}
+
             {/* Contact Details Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-[#2f3336]/10">
               <div className="flex items-center gap-3 text-xs">
                 <Mail className="h-4 w-4 text-slate-400 flex-shrink-0" />
                 <span className={subColor}>{profile.email}</span>
               </div>
-              
+
               {profile.phone && (
                 <div className="flex items-center gap-3 text-xs">
                   <Phone className="h-4 w-4 text-slate-400 flex-shrink-0" />
@@ -340,10 +550,22 @@ export default function AlumniProfilePage({ isDarkMode, authSession }: Props) {
                   href={profile.linkedin_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-3 text-xs text-blue-500 hover:underline"
+                  className="flex items-center gap-3 text-xs text-[#1e9df1] hover:underline"
                 >
                   <Linkedin className="h-4 w-4 flex-shrink-0" />
                   <span>LinkedIn Profile</span>
+                </a>
+              )}
+
+              {profile.portfolio_url && (
+                <a
+                  href={profile.portfolio_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-3 text-xs text-[#1e9df1] hover:underline"
+                >
+                  <LinkIcon className="h-4 w-4 flex-shrink-0" />
+                  <span>Portfolio</span>
                 </a>
               )}
             </div>
@@ -351,6 +573,16 @@ export default function AlumniProfilePage({ isDarkMode, authSession }: Props) {
           </div>
         )}
       </div>
+
+      {!isEditing && (
+        <ExperienceSection
+          userId={authSession.user.id}
+          experiences={experiences}
+          isOwn={true}
+          isDarkMode={isDarkMode}
+          onChanged={() => listExperiences(authSession.user.id).then(setExperiences)}
+        />
+      )}
     </div>
   );
 }

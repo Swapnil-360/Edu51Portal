@@ -1,6 +1,6 @@
 # Edu51Portal
 
-Academic portal for **BUBT Intake 51 – Section 5** students. Built as a fast, fullstack SPA with realtime features, social profiles, team collaboration, and a live FIFA World Cup 2026 tracking event.
+Academic portal for **BUBT Intake 51 – Section 5** students. Built as a fast, fullstack SPA with realtime features, social profiles, and team collaboration.
 
 **Live:** [edu51portal.live](https://edu51portal.live) · [edu51five.vercel.app](https://edu51five.vercel.app)
 
@@ -34,12 +34,6 @@ Academic portal for **BUBT Intake 51 – Section 5** students. Built as a fast, 
 - **Connections** — send / accept connection requests, discovery feed
 - **Team Building** — create and discover teams (2–7 members), roles, invitations, join requests, announcements
 - **Alumni Hub** — BUBT alumni directory (admin-verified)
-
-### World Cup 2026 (Live Event)
-- **Team Picker** — choose one of 48 WC2026 teams to support
-- **Live Leaderboard** — earn points (win = 3, draw = 1, +1 per goal) ranked against classmates
-- **Match Center** — all 104 matches with live scores, auto-refresh every 60 s during live play
-- **Intro Modal** — shown once on first login to guide new users into the event
 
 ### Platform
 - **Push Notifications** — service worker + VAPID, opt-in per user
