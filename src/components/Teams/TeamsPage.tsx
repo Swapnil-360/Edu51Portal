@@ -84,8 +84,8 @@ export default function TeamsPage({ currentUserId, onClose, onOpenTeam, isDarkMo
   const sub = isDarkMode ? "text-[#71767b]" : "text-[#71767b]";
   const inputCls = `px-3 py-2 rounded-lg text-sm border outline-none ${
     isDarkMode
-      ? "bg-[#16181c] border-[#38444d] text-[#e7e9ea] placeholder-[#71767b] focus:border-blue-500"
-      : "bg-white border-slate-300 text-slate-900 placeholder-[#71767b] focus:border-blue-500"
+      ? "bg-[#16181c] border-[#38444d] text-[#e7e9ea] placeholder-[#71767b] focus:border-[#1e9df1]"
+      : "bg-white border-slate-300 text-slate-900 placeholder-[#71767b] focus:border-[#1e9df1]"
   }`;
 
   const handleJoinAction = async (team: Team) => {
@@ -136,7 +136,7 @@ export default function TeamsPage({ currentUserId, onClose, onOpenTeam, isDarkMo
           <h1 className={`text-xl font-bold ${title}`}>Team Building</h1>
           <button
             onClick={() => setShowCreate(true)}
-            className="px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 flex items-center gap-1.5 shadow-sm"
+            className="px-4 py-2 rounded-xl bg-[#1e9df1] text-white text-sm font-semibold hover:bg-[#1677cc] flex items-center gap-1.5 shadow-sm"
           >
             <Plus className="w-4 h-4" /> Create Team
           </button>
@@ -146,9 +146,9 @@ export default function TeamsPage({ currentUserId, onClose, onOpenTeam, isDarkMo
       <div className="max-w-4xl mx-auto px-4">
         {/* Pending invitations strip */}
         {invitations.length > 0 && (
-          <div className={`rounded-xl border p-4 mb-5 ${isDarkMode ? "bg-blue-900/20 border-blue-700/40" : "bg-blue-50 border-blue-200"}`}>
+          <div className={`rounded-xl border p-4 mb-5 ${isDarkMode ? "bg-[#1e9df1]/10 border-[#1e9df1]/30" : "bg-[#e8f4fd] border-[#1e9df1]/30"}`}>
             <h3 className={`text-sm font-semibold mb-3 flex items-center gap-2 ${title}`}>
-              <Mail className="w-4 h-4 text-blue-500" /> Team Invitations ({invitations.length})
+              <Mail className="w-4 h-4 text-[#1e9df1]" /> Team Invitations ({invitations.length})
             </h3>
             <div className="space-y-2">
               {invitations.map((inv) => (
@@ -164,7 +164,7 @@ export default function TeamsPage({ currentUserId, onClose, onOpenTeam, isDarkMo
                     <button
                       onClick={() => handleInvitation(inv, true)}
                       disabled={busy === inv.id}
-                      className="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-medium hover:bg-blue-700"
+                      className="px-3 py-1.5 rounded-lg bg-[#1e9df1] text-white text-xs font-medium hover:bg-[#1677cc]"
                     >
                       {busy === inv.id ? <Loader2 className="w-3 h-3 animate-spin" /> : "Accept"}
                     </button>
@@ -225,7 +225,7 @@ export default function TeamsPage({ currentUserId, onClose, onOpenTeam, isDarkMo
               onKeyDown={(e) => e.key === "Enter" && runSearch()}
               placeholder="Skills (comma separated)"
             />
-            <button onClick={runSearch} className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 flex items-center gap-2 justify-center">
+            <button onClick={runSearch} className="px-4 py-2 rounded-lg bg-[#1e9df1] text-white text-sm font-medium hover:bg-[#1677cc] flex items-center gap-2 justify-center">
               <Search className="w-4 h-4" /> Search
             </button>
           </div>
@@ -233,7 +233,7 @@ export default function TeamsPage({ currentUserId, onClose, onOpenTeam, isDarkMo
 
         {loading ? (
           <div className="flex justify-center py-16">
-            <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+            <Loader2 className="w-8 h-8 animate-spin text-[#1e9df1]" />
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -259,7 +259,7 @@ export default function TeamsPage({ currentUserId, onClose, onOpenTeam, isDarkMo
                 {tab === "mine" && (
                   <button
                     onClick={() => setShowCreate(true)}
-                    className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-colors flex items-center gap-1.5"
+                    className="px-4 py-2 rounded-xl bg-[#1e9df1] hover:bg-[#1677cc] text-white text-xs font-bold transition-colors flex items-center gap-1.5"
                   >
                     <Plus size={13} /> Create Team
                   </button>
@@ -289,7 +289,7 @@ export default function TeamsPage({ currentUserId, onClose, onOpenTeam, isDarkMo
                           className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1 ${
                             pendingReq
                               ? isDarkMode ? "bg-[#16181c] text-[#71767b]" : "bg-slate-100 text-slate-500"
-                              : "bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+                              : "bg-[#1e9df1] text-white hover:bg-[#1677cc] disabled:opacity-50"
                           }`}
                         >
                           {busy === team.id ? <Loader2 className="w-3 h-3 animate-spin" /> : null}

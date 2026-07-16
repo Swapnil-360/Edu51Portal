@@ -58,8 +58,8 @@ export default function InviteMembersModal({ team, currentUserId, onClose, isDar
 
   const inputCls = `px-3 py-2 rounded-lg text-sm border outline-none ${
     isDarkMode
-      ? "bg-[#16181c] border-[#38444d] text-[#e7e9ea] placeholder-[#71767b] focus:border-blue-500"
-      : "bg-white border-slate-300 text-slate-900 placeholder-[#71767b] focus:border-blue-500"
+      ? "bg-[#16181c] border-[#38444d] text-[#e7e9ea] placeholder-[#71767b] focus:border-[#1e9df1]"
+      : "bg-white border-slate-300 text-slate-900 placeholder-[#71767b] focus:border-[#1e9df1]"
   }`;
 
   return (
@@ -88,7 +88,7 @@ export default function InviteMembersModal({ team, currentUserId, onClose, isDar
               onKeyDown={(e) => e.key === "Enter" && runSearch()}
               placeholder="Skills (comma separated)"
             />
-            <button onClick={runSearch} className="px-4 py-2 rounded-lg bg-blue-600 text-[#e7e9ea] text-sm font-medium hover:bg-blue-700 flex items-center gap-1.5">
+            <button onClick={runSearch} className="px-4 py-2 rounded-lg bg-[#1e9df1] text-[#e7e9ea] text-sm font-medium hover:bg-[#1677cc] flex items-center gap-1.5">
               <Search className="w-4 h-4" />
             </button>
           </div>
@@ -97,7 +97,7 @@ export default function InviteMembersModal({ team, currentUserId, onClose, isDar
         <div className="flex-1 overflow-y-auto px-5 pb-5 space-y-2">
           {searching ? (
             <div className="flex justify-center py-10">
-              <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
+              <Loader2 className="w-6 h-6 animate-spin text-[#1e9df1]" />
             </div>
           ) : results.length === 0 ? (
             <p className={`text-sm text-center py-8 ${isDarkMode ? "text-slate-500" : "text-[#71767b]"}`}>
@@ -118,7 +118,7 @@ export default function InviteMembersModal({ team, currentUserId, onClose, isDar
                     <button
                       onClick={() => sendInvite(p.id)}
                       disabled={busy === p.id}
-                      className="px-3 py-1.5 rounded-lg bg-blue-600 text-[#e7e9ea] text-xs font-medium hover:bg-blue-700 flex items-center gap-1"
+                      className="px-3 py-1.5 rounded-lg bg-[#1e9df1] text-[#e7e9ea] text-xs font-medium hover:bg-[#1677cc] flex items-center gap-1"
                     >
                       {busy === p.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
                       Invite

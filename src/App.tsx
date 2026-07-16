@@ -46,6 +46,7 @@ import {
   updateFeedbackStatus,
 } from "./lib/api/feedbackApi";
 import { uploadRoutineAttachment } from "./lib/storage";
+import { banUser, unbanUser, deleteUserAccount } from "./lib/api/adminApi";
 import type { Feedback, FeedbackStatus } from "./types";
 import MarqueeTicker from "./components/MarqueeTicker";
 import { MajorCardStack } from "./components/ui/MajorCardStack";
@@ -99,6 +100,7 @@ import {
   ToggleLeft,
   HelpCircle,
   Home,
+  Ban,
 } from "lucide-react";
 const ProfilePage = lazy(() => import("./components/Profile/ProfilePage"));
 const NetworkPage = lazy(() => import("./components/Network/NetworkPage"));
@@ -449,6 +451,8 @@ function App() {
     avatar_url: localStorage.getItem("userProfileAvatarUrl") || "",
     isAlumni: localStorage.getItem("userProfileIsAlumni") === "true",
     isVerified: localStorage.getItem("userProfileIsVerified") === "true",
+    isBanned: localStorage.getItem("userProfileIsBanned") === "true",
+    banReason: "",
   });
 
   const activeMajor = isLoggedIn ? userProfile.major : guestMajor;
@@ -550,7 +554,7 @@ function App() {
   // profile_pic is served from localStorage cache and refreshed in the background.
   // avatar_url (Storage URL) is short and included so it's cached immediately on login.
   const PROFILE_META_COLS =
-    "id,name,section,major,bubt_email,notification_email,phone,created_at,last_login_at,avatar_url,is_admin,is_alumni,is_verified";
+    "id,name,section,major,bubt_email,notification_email,phone,created_at,last_login_at,avatar_url,is_admin,is_alumni,is_verified,is_banned,ban_reason";
 
   const applyProfileData = (profileData: any, email: string, password: string) => {
     // NOTE: admin status is NOT set from this profile fetch — it's resolved
@@ -574,6 +578,8 @@ function App() {
       avatar_url: pic,
       isAlumni: profileData?.is_alumni || false,
       isVerified: profileData?.is_verified || false,
+      isBanned: profileData?.is_banned || false,
+      banReason: profileData?.ban_reason || "",
     };
     localStorage.setItem("userProfileBubtEmail", updatedProfile.bubtEmail);
     localStorage.setItem("userProfileName", updatedProfile.name);
@@ -583,6 +589,7 @@ function App() {
     localStorage.setItem("userProfilePhone", updatedProfile.phone);
     localStorage.setItem("userProfileIsAlumni", updatedProfile.isAlumni ? "true" : "false");
     localStorage.setItem("userProfileIsVerified", updatedProfile.isVerified ? "true" : "false");
+    localStorage.setItem("userProfileIsBanned", updatedProfile.isBanned ? "true" : "false");
     if (avatarUrl) {
       localStorage.setItem("userProfileAvatarUrl", avatarUrl);
       // Preload the image so it's in browser cache when the profile page opens
@@ -1870,6 +1877,39 @@ FOR ALL USING (true) WITH CHECK (true);
       console.error("Error updating admin status:", error);
       showMajorAccessNotification("error", "Could not update admin status.");
     }
+  };
+
+  // Ban a user — restricts them to materials-only access (UI + RLS enforced)
+  const handleBanUser = async (userId: string, reason: string) => {
+    const { error } = await banUser(userId, reason);
+    if (error) {
+      showMajorAccessNotification("error", `Could not ban user: ${error}`);
+      return { error };
+    }
+    setAdminUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, is_banned: true } : u)));
+    showMajorAccessNotification("success", "User banned.");
+    return { error: null };
+  };
+
+  const handleUnbanUser = async (userId: string) => {
+    const { error } = await unbanUser(userId);
+    if (error) {
+      showMajorAccessNotification("error", `Could not unban user: ${error}`);
+      return { error };
+    }
+    setAdminUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, is_banned: false } : u)));
+    showMajorAccessNotification("success", "User unbanned.");
+    return { error: null };
+  };
+
+  // Permanently delete a user account (edge function: transfers team ownership,
+  // cleans up unenforced-FK tables, deletes the profile + auth.users row)
+  const handleDeleteUser = async (userId: string) => {
+    const result = await deleteUserAccount(userId);
+    if (result.success) {
+      setAdminUsers((prev) => prev.filter((u) => u.id !== userId));
+    }
+    return result;
   };
 
   // Load feedback inbox (admin-only via RLS)
@@ -3246,6 +3286,19 @@ For any queries, contact your course instructors or the department.`,
     );
   };
 
+  // Banned users are restricted to the Home view (Study Materials) — no Teams,
+  // Network, Alumni, Routine, WC26, or profile editing. Enforced here (redirect
+  // on navigation attempts) AND at the database/RLS level (see is_app_banned()),
+  // so it can't be bypassed by calling the API directly.
+  const isBanned = isLoggedIn && userProfile.isBanned && !isAdmin;
+
+  useEffect(() => {
+    if (isBanned && currentView !== "home") {
+      goToView("home");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isBanned, currentView]);
+
   const isAlumniPending = isLoggedIn && userProfile.isAlumni && !userProfile.isVerified && !isAdmin;
 
   if (isAlumniPending) {
@@ -3266,7 +3319,7 @@ For any queries, contact your course instructors or the department.`,
           </div>
           <button
             onClick={handlePendingAlumniSignOut}
-            className="w-full py-2.5 rounded-lg bg-red-500 hover:bg-red-650 text-white text-sm font-semibold transition-colors shadow-lg"
+            className="w-full py-2.5 rounded-lg bg-red-500 hover:bg-red-600 text-white text-sm font-semibold transition-colors shadow-lg"
           >
             Sign Out
           </button>
@@ -3275,7 +3328,7 @@ For any queries, contact your course instructors or the department.`,
     );
   }
 
-  const isAlumniDashboardActive = isLoggedIn && userProfile.isAlumni && userProfile.isVerified && !isAdmin;
+  const isAlumniDashboardActive = isLoggedIn && userProfile.isAlumni && userProfile.isVerified && !isAdmin && !isBanned;
 
   if (isAlumniDashboardActive) {
     return (
@@ -3452,6 +3505,7 @@ For any queries, contact your course instructors or the department.`,
                   setShowSignInModal={setShowSignInModal}
                   pendingConnectionsCount={pendingConnectionsCount}
                   unreadMessagesCount={unreadMsgCount}
+                  isBanned={isBanned}
                 />
               </nav>
             </div>
@@ -3946,6 +4000,10 @@ For any queries, contact your course instructors or the department.`,
                 </div>
               </button>
 
+              {/* Banned users are restricted to Home (Study Materials) — every other
+                  nav item below is hidden, mirroring the desktop AppNavHeader gate. */}
+              {!isBanned && (
+              <>
               {/* World Cup 2026 */}
               <button
                 onClick={() => {
@@ -4235,6 +4293,8 @@ For any queries, contact your course instructors or the department.`,
                   </p>
                 </div>
               </button>
+              </>
+              )}
             </div>
 
             {/* Authentication Section - At Bottom */}
@@ -4564,6 +4624,19 @@ For any queries, contact your course instructors or the department.`,
       {(!["semester","custom","profile","network","teams","team","alumni","wc26"].includes(currentView) || showNoticeModal || showMaterialViewer) && (
         <main className="relative pt-[72px] lg:pt-20 min-h-screen [overflow-x:clip]">
           {currentView === "home" && isDarkMode && <Tiles isDarkMode={isDarkMode} />}
+
+          {/* ── Ban restriction banner ── */}
+          {isBanned && (
+            <div className={`relative z-10 w-full border-b ${isDarkMode ? "bg-red-950/40 border-red-900/40 text-red-200" : "bg-red-50 border-red-200 text-red-800"}`}>
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-start gap-3">
+                <Ban className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                <p className="text-sm leading-snug">
+                  <span className="font-bold">Your account is restricted</span> — you can only browse Study Materials.
+                  {userProfile.banReason ? ` Reason: ${userProfile.banReason}` : ""} Contact an admin if you think this is a mistake.
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* ── Announcement Banner ── */}
           {showAnnouncementBanner && (
@@ -5910,6 +5983,9 @@ For any queries, contact your course instructors or the department.`,
                 adminUsersLoading={adminUsersLoading}
                 currentUserId={authSession?.user?.id ?? null}
                 onToggleUserAdmin={handleToggleUserAdmin}
+                onBanUser={handleBanUser}
+                onUnbanUser={handleUnbanUser}
+                onDeleteUser={handleDeleteUser}
                 feedbackItems={feedbackItems}
                 feedbackLoading={feedbackLoading}
                 onUpdateFeedbackStatus={handleUpdateFeedbackStatus}

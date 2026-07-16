@@ -26,8 +26,8 @@ export default function CreateTeamModal({ currentUserId, onClose, onCreated, isD
 
   const inputCls = `w-full px-3 py-2 rounded-lg text-sm border outline-none ${
     isDarkMode
-      ? "bg-[#16181c] border-[#38444d] text-[#e7e9ea] placeholder-[#71767b] focus:border-blue-500"
-      : "bg-white border-slate-300 text-slate-900 placeholder-[#71767b] focus:border-blue-500"
+      ? "bg-[#16181c] border-[#38444d] text-[#e7e9ea] placeholder-[#71767b] focus:border-[#1e9df1]"
+      : "bg-white border-slate-300 text-slate-900 placeholder-[#71767b] focus:border-[#1e9df1]"
   }`;
   const labelCls = `block text-xs font-medium mb-1 ${isDarkMode ? "text-[#8b98a5]" : "text-slate-600"}`;
 
@@ -147,7 +147,7 @@ export default function CreateTeamModal({ currentUserId, onClose, onCreated, isD
           <button
             onClick={save}
             disabled={saving}
-            className="px-4 py-2 rounded-lg bg-blue-600 text-[#e7e9ea] text-sm font-medium hover:bg-blue-700 disabled:opacity-60 flex items-center gap-2"
+            className="px-4 py-2 rounded-lg bg-[#1e9df1] text-[#e7e9ea] text-sm font-medium hover:bg-[#1677cc] disabled:opacity-60 flex items-center gap-2"
           >
             {saving && <Loader2 className="w-4 h-4 animate-spin" />} Create Team
           </button>
@@ -193,8 +193,8 @@ function FilePick({
           sizeError
             ? "border-red-500 bg-red-500/5"
             : isDarkMode
-            ? "bg-[#16181c] border-[#38444d] text-[#71767b] hover:border-blue-500"
-            : "bg-white border-slate-300 text-slate-500 hover:border-blue-500"
+            ? "bg-[#16181c] border-[#38444d] text-[#71767b] hover:border-[#1e9df1]"
+            : "bg-white border-slate-300 text-slate-500 hover:border-[#1e9df1]"
         }`}
       >
         <Upload className="w-4 h-4 flex-shrink-0" />

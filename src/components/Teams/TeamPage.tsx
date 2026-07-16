@@ -174,14 +174,14 @@ export default function TeamPage({ teamId, currentUserId, onClose, onViewProfile
   const sub = isDarkMode ? "text-[#71767b]" : "text-slate-500";
   const inputCls = `w-full px-3 py-2 rounded-lg text-sm border outline-none ${
     isDarkMode
-      ? "bg-[#16181c] border-[#38444d] text-[#e7e9ea] placeholder-[#71767b] focus:border-blue-500"
-      : "bg-white border-slate-300 text-slate-900 placeholder-[#71767b] focus:border-blue-500"
+      ? "bg-[#16181c] border-[#38444d] text-[#e7e9ea] placeholder-[#71767b] focus:border-[#1e9df1]"
+      : "bg-white border-slate-300 text-slate-900 placeholder-[#71767b] focus:border-[#1e9df1]"
   }`;
 
   if (loading) {
     return (
       <div className={`min-h-screen flex items-center justify-center ${pageBg}`}>
-        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-[#1e9df1]" />
       </div>
     );
   }
@@ -190,7 +190,7 @@ export default function TeamPage({ teamId, currentUserId, onClose, onViewProfile
     return (
       <div className={`min-h-screen flex flex-col items-center justify-center gap-4 ${pageBg}`}>
         <p className={title}>Team not found.</p>
-        <button onClick={onClose} className="px-4 py-2 rounded-lg bg-blue-600 text-[#e7e9ea] text-sm">Go Back</button>
+        <button onClick={onClose} className="px-4 py-2 rounded-lg bg-[#1e9df1] text-[#e7e9ea] text-sm">Go Back</button>
       </div>
     );
   }
@@ -238,7 +238,7 @@ export default function TeamPage({ teamId, currentUserId, onClose, onViewProfile
         <Crown className="w-3 h-3" /> Owner
       </span>
     ) : role === "admin" ? (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/15 text-blue-500">
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#1e9df1]/15 text-[#1e9df1]">
         <Shield className="w-3 h-3" /> Admin
       </span>
     ) : (
@@ -253,7 +253,7 @@ export default function TeamPage({ teamId, currentUserId, onClose, onViewProfile
       <div className="max-w-3xl mx-auto px-3 sm:px-4 pt-3 sm:pt-4 space-y-3">
         <div className={`rounded-2xl border overflow-hidden ${card}`}>
           {/* Banner */}
-          <div className="relative h-28 sm:h-36 bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600">
+          <div className="relative h-28 sm:h-36 bg-gradient-to-r from-[#1e9df1] via-[#4d7ce0] to-[#7c3aed]">
             {team.banner_url && (
               <img src={team.banner_url} alt="" className="w-full h-full object-cover" />
             )}
@@ -361,7 +361,7 @@ export default function TeamPage({ teamId, currentUserId, onClose, onViewProfile
                     <button
                       onClick={() => handleJoinRequest(req, true)}
                       disabled={busy === req.id}
-                      className="px-3 py-1.5 rounded-lg bg-blue-600 text-[#e7e9ea] text-xs font-medium hover:bg-blue-700"
+                      className="px-3 py-1.5 rounded-lg bg-[#1e9df1] text-[#e7e9ea] text-xs font-medium hover:bg-[#1677cc]"
                     >
                       {busy === req.id ? <Loader2 className="w-3 h-3 animate-spin" /> : "Approve"}
                     </button>
@@ -505,7 +505,7 @@ export default function TeamPage({ teamId, currentUserId, onClose, onViewProfile
                         </div>
                         <div className="text-left min-w-0">
                           <p className={`text-xs font-semibold leading-tight truncate group-hover:underline ${title}`}>{m.profile?.name ?? "User"}</p>
-                          <p className={`text-[10px] leading-tight ${m.role === "owner" ? "text-amber-500" : "text-blue-400"}`}>
+                          <p className={`text-[10px] leading-tight ${m.role === "owner" ? "text-amber-500" : "text-[#1e9df1]"}`}>
                             {m.role === "owner" ? "Owner" : "Admin"}
                           </p>
                         </div>
@@ -523,7 +523,7 @@ export default function TeamPage({ teamId, currentUserId, onClose, onViewProfile
                   <Megaphone className="w-5 h-5 text-orange-500" /> Announcements
                 </h3>
                 {canManage && (
-                  <button onClick={() => setShowAnnForm(!showAnnForm)} className="p-1.5 rounded-lg text-blue-500 hover:bg-blue-500/10">
+                  <button onClick={() => setShowAnnForm(!showAnnForm)} className="p-1.5 rounded-lg text-[#1e9df1] hover:bg-[#1e9df1]/10">
                     {showAnnForm ? <X className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
                   </button>
                 )}
@@ -536,7 +536,7 @@ export default function TeamPage({ teamId, currentUserId, onClose, onViewProfile
                   <button
                     onClick={submitAnnouncement}
                     disabled={busy === "ann" || !annTitle.trim()}
-                    className="px-4 py-2 rounded-lg bg-blue-600 text-[#e7e9ea] text-sm font-medium hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
+                    className="px-4 py-2 rounded-lg bg-[#1e9df1] text-[#e7e9ea] text-sm font-medium hover:bg-[#1677cc] disabled:opacity-50 flex items-center gap-2"
                   >
                     {busy === "ann" && <Loader2 className="w-4 h-4 animate-spin" />} Post
                   </button>
@@ -624,7 +624,7 @@ export default function TeamPage({ teamId, currentUserId, onClose, onViewProfile
                         setBusy(null);
                       }}
                       disabled={busy === m.user_id}
-                      className={`px-2.5 py-1 rounded-lg text-[11px] font-medium ${isDarkMode ? "bg-[#16181c] text-blue-400 hover:bg-[#2f3336]" : "bg-slate-100 text-blue-600 hover:bg-blue-200"}`}
+                      className={`px-2.5 py-1 rounded-lg text-[11px] font-medium ${isDarkMode ? "bg-[#16181c] text-[#1e9df1] hover:bg-[#2f3336]" : "bg-slate-100 text-[#1677cc] hover:bg-[#e8f4fd]"}`}
                     >
                       {m.role === "admin" ? "Demote" : "Make Admin"}
                     </button>
@@ -735,8 +735,8 @@ function TeamSettingsModal({
 
   const inputCls = `w-full px-3 py-2 rounded-lg text-sm border outline-none ${
     isDarkMode
-      ? "bg-[#16181c] border-[#38444d] text-[#e7e9ea] placeholder-[#71767b] focus:border-blue-500"
-      : "bg-white border-slate-300 text-slate-900 placeholder-[#71767b] focus:border-blue-500"
+      ? "bg-[#16181c] border-[#38444d] text-[#e7e9ea] placeholder-[#71767b] focus:border-[#1e9df1]"
+      : "bg-white border-slate-300 text-slate-900 placeholder-[#71767b] focus:border-[#1e9df1]"
   }`;
   const labelCls = `block text-xs font-medium mb-1 ${isDarkMode ? "text-[#8b98a5]" : "text-slate-600"}`;
 
@@ -831,7 +831,7 @@ function TeamSettingsModal({
           <button onClick={onClose} className={`px-4 py-2 rounded-lg text-sm font-medium ${isDarkMode ? "bg-[#16181c] text-[#8b98a5]" : "bg-slate-100 text-slate-700"}`}>
             Cancel
           </button>
-          <button onClick={save} disabled={saving} className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-[#e7e9ea] text-sm font-medium disabled:opacity-60 flex items-center gap-2">
+          <button onClick={save} disabled={saving} className="px-4 py-2 rounded-lg bg-[#1e9df1] hover:bg-[#1677cc] text-[#e7e9ea] text-sm font-medium disabled:opacity-60 flex items-center gap-2">
             {saving && <Loader2 className="w-4 h-4 animate-spin" />} Save
           </button>
         </div>

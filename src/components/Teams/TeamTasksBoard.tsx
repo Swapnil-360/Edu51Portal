@@ -296,8 +296,8 @@ export default function TeamTasksBoard({
   const textSub = isDarkMode ? "text-[#71767b]" : "text-slate-500";
   const inputClass = `w-full px-3 py-2.5 rounded-xl text-sm border outline-none transition-all duration-200 ${
     isDarkMode
-      ? "bg-[#16181c] border-[#2f3336] text-[#e7e9ea] placeholder-[#71767b] focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-      : "bg-white border-slate-300 text-slate-900 placeholder-[#71767b] focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+      ? "bg-[#16181c] border-[#2f3336] text-[#e7e9ea] placeholder-[#71767b] focus:border-[#1e9df1] focus:ring-1 focus:ring-[#1e9df1]"
+      : "bg-white border-slate-300 text-slate-900 placeholder-[#71767b] focus:border-[#1e9df1] focus:ring-1 focus:ring-[#1e9df1]"
   }`;
   const labelClass = `block text-xs font-bold mb-1.5 ${isDarkMode ? "text-[#8b98a5]" : "text-slate-600"}`;
 
@@ -307,7 +307,7 @@ export default function TeamTasksBoard({
       <div className={`p-4 sm:p-5 rounded-2xl border ${bgCard}`}>
         <div className="flex items-start justify-between gap-3 mb-4">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center flex-shrink-0 shadow-sm">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#1e9df1] to-[#7c3aed] flex items-center justify-center flex-shrink-0 shadow-sm">
               <LayoutGrid className="w-5 h-5 text-[#e7e9ea]" />
             </div>
             <div className="min-w-0">
@@ -320,7 +320,7 @@ export default function TeamTasksBoard({
           </div>
           <button
             onClick={() => openCreate("todo")}
-            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-[#e7e9ea] text-sm font-semibold hover:from-blue-700 hover:to-indigo-700 shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-1.5 active:scale-95 flex-shrink-0"
+            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#1e9df1] to-[#7c3aed] text-[#e7e9ea] text-sm font-semibold hover:from-[#1677cc] hover:to-[#6d28d9] shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-1.5 active:scale-95 flex-shrink-0"
           >
             <Plus className="w-4 h-4" /> <span className="hidden sm:inline">Add Task</span>
           </button>
@@ -330,7 +330,7 @@ export default function TeamTasksBoard({
         {totalCount > 0 && (
           <div className={`h-1.5 rounded-full overflow-hidden mb-4 ${isDarkMode ? "bg-[#16181c]" : "bg-slate-100"}`}>
             <div
-              className="h-full rounded-full bg-gradient-to-r from-blue-500 to-emerald-500 transition-all duration-500"
+              className="h-full rounded-full bg-gradient-to-r from-[#1e9df1] to-emerald-500 transition-all duration-500"
               style={{ width: `${progressPct}%` }}
             />
           </div>
@@ -384,7 +384,7 @@ export default function TeamTasksBoard({
       {/* Kanban Board */}
       {loading ? (
         <div className="flex flex-col items-center justify-center py-24">
-          <Loader2 className="w-8 h-8 animate-spin text-blue-500 mb-2" />
+          <Loader2 className="w-8 h-8 animate-spin text-[#1e9df1] mb-2" />
           <p className={`text-sm ${textSub}`}>Loading task board...</p>
         </div>
       ) : (
@@ -408,7 +408,7 @@ export default function TeamTasksBoard({
             onUpdateStatus={handleUpdateStatus}
             dragOver={dragOverColumn.in_progress}
             setDragOver={(a) => setDragOverColumn((p) => ({ ...p, in_progress: a }))}
-            dotAccent="bg-indigo-500 animate-pulse" draggingTaskId={draggingTaskId} setDraggingTaskId={setDraggingTaskId}
+            dotAccent="bg-[#1e9df1] animate-pulse" draggingTaskId={draggingTaskId} setDraggingTaskId={setDraggingTaskId}
             filtersActive={filtersActive}
           />
           <TaskColumn
@@ -632,7 +632,7 @@ function TaskModal({
               ))}
             </select>
             {canManage && assignedTo && assignedTo !== currentUserId && (
-              <p className="text-[10px] text-blue-500/80 mt-1 flex items-center gap-1">
+              <p className="text-[10px] text-[#1e9df1]/80 mt-1 flex items-center gap-1">
                 <AlertCircle className="w-3 h-3 flex-shrink-0" /> Assigned member will receive a push notification.
               </p>
             )}
@@ -662,7 +662,7 @@ function TaskModal({
               <button
                 type="submit"
                 disabled={busy}
-                className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-[#e7e9ea] text-sm font-semibold disabled:opacity-60 flex items-center gap-1.5 shadow-md"
+                className="px-5 py-2 rounded-xl bg-[#1e9df1] hover:bg-[#1677cc] text-[#e7e9ea] text-sm font-semibold disabled:opacity-60 flex items-center gap-1.5 shadow-md"
               >
                 {busy && <Loader2 className="w-4 h-4 animate-spin" />}
                 {mode === "create" ? "Create Task" : "Save Changes"}
@@ -727,7 +727,7 @@ function TaskColumn({
         isDarkMode ? "bg-[#17181c]/50" : "bg-slate-50"
       } ${
         dragOver
-          ? "ring-2 ring-blue-500/60 ring-dashed bg-blue-500/5"
+          ? "ring-2 ring-[#1e9df1]/60 ring-dashed bg-[#1e9df1]/5"
           : `border ${isDarkMode ? "border-[#2f3336]/60" : "border-slate-200/80"}`
       }`}
     >
@@ -872,7 +872,7 @@ function TaskCard({
 
   const accent =
     task.status === "todo" ? "bg-slate-400" :
-    task.status === "in_progress" ? "bg-indigo-500" : "bg-emerald-500";
+    task.status === "in_progress" ? "bg-[#1e9df1]" : "bg-emerald-500";
 
   const priorityCfg = PRIORITY_CONFIG[task.priority ?? "medium"];
   const assignee = task.assigned_profile;
@@ -951,7 +951,7 @@ function TaskCard({
           <div className="min-w-0">{getDueDateBadge()}</div>
           {assignee ? (
             <div className="flex items-center gap-1.5 min-w-0" title={`Assigned to ${assignee.name}`}>
-              <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0 bg-blue-500 flex items-center justify-center text-[10px] font-bold text-[#e7e9ea] ring-2 ring-white dark:ring-slate-900">
+              <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0 bg-[#1e9df1] flex items-center justify-center text-[10px] font-bold text-[#e7e9ea] ring-2 ring-white dark:ring-slate-900">
                 {assignee.avatar_url || assignee.profile_pic ? (
                   <img src={assignee.avatar_url || assignee.profile_pic!} alt="" className="w-full h-full object-cover" />
                 ) : (

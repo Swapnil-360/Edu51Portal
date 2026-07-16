@@ -238,21 +238,12 @@ export default function AlumniDirectoryPage({
       <div className="max-w-5xl mx-auto px-4 pt-6">
         {/* Header Section */}
         <div className="flex items-center justify-between gap-4 mb-6">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={onClose}
-              className={`p-2 rounded-full hover:bg-slate-200/50 ${isDarkMode ? "hover:bg-[#16181c] text-white" : "text-slate-900"}`}
-              aria-label="Back"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </button>
-            <div>
-              <h1 className={`text-xl font-bold flex items-center gap-2 ${textColor}`}>
-                <GraduationCap className="h-6 w-6 text-[#1e9df1]" />
-                Alumni Hub
-              </h1>
-              <p className={`text-xs ${subColor}`}>Connect with BUBT alumni and find mentorship</p>
-            </div>
+          <div>
+            <h1 className={`text-xl font-bold flex items-center gap-2 ${textColor}`}>
+              <GraduationCap className="h-6 w-6 text-[#1e9df1]" />
+              Alumni Hub
+            </h1>
+            <p className={`text-xs ${subColor}`}>Connect with BUBT alumni and find mentorship</p>
           </div>
         </div>
 
@@ -261,7 +252,7 @@ export default function AlumniDirectoryPage({
           <div className="flex border-b border-[#2f3336]/10 mb-6 gap-6 text-sm">
             <button
               onClick={() => setActiveTab("directory")}
-              className={`pb-3 font-semibold border-b-2 transition-all cursor-pointer ${
+              className={`pb-3 font-semibold border-b-2 transition-all cursor-pointer outline-none focus:outline-none focus-visible:outline-none ${
                 activeTab === "directory"
                   ? "border-[#1e9df1] text-[#1e9df1]"
                   : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
@@ -271,7 +262,7 @@ export default function AlumniDirectoryPage({
             </button>
             <button
               onClick={() => setActiveTab("requests")}
-              className={`pb-3 font-semibold border-b-2 transition-all cursor-pointer ${
+              className={`pb-3 font-semibold border-b-2 transition-all cursor-pointer outline-none focus:outline-none focus-visible:outline-none ${
                 activeTab === "requests"
                   ? "border-[#1e9df1] text-[#1e9df1]"
                   : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
@@ -281,7 +272,7 @@ export default function AlumniDirectoryPage({
             </button>
             <button
               onClick={() => setActiveTab("messages")}
-              className={`pb-3 font-semibold border-b-2 transition-all cursor-pointer flex items-center gap-1.5 ${
+              className={`pb-3 font-semibold border-b-2 transition-all cursor-pointer flex items-center gap-1.5 outline-none focus:outline-none focus-visible:outline-none ${
                 activeTab === "messages"
                   ? "border-[#1e9df1] text-[#1e9df1]"
                   : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
@@ -296,7 +287,7 @@ export default function AlumniDirectoryPage({
             </button>
             <button
               onClick={() => setActiveTab("resources")}
-              className={`pb-3 font-semibold border-b-2 transition-all cursor-pointer ${
+              className={`pb-3 font-semibold border-b-2 transition-all cursor-pointer outline-none focus:outline-none focus-visible:outline-none ${
                 activeTab === "resources"
                   ? "border-[#1e9df1] text-[#1e9df1]"
                   : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"

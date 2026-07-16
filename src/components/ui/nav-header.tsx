@@ -175,6 +175,7 @@ interface AppNavHeaderProps {
   setShowSignInModal: (v: boolean) => void;
   pendingConnectionsCount?: number;
   unreadMessagesCount?: number;
+  isBanned?: boolean;
 }
 
 export function AppNavHeader({
@@ -186,6 +187,7 @@ export function AppNavHeader({
   setShowSignInModal,
   pendingConnectionsCount = 0,
   unreadMessagesCount = 0,
+  isBanned = false,
 }: AppNavHeaderProps) {
   const requireLogin = (view: string, label: string) => {
     if (!isLoggedIn) {
@@ -195,6 +197,20 @@ export function AppNavHeader({
     }
     goToView(view);
   };
+
+  // Banned users are restricted to Home (Study Materials) — hide every other tab
+  if (isBanned) {
+    const homeOnly: NavTab[] = [
+      {
+        label: "Home",
+        view: "home",
+        icon: <Home className="h-4 w-4" />,
+        isActive: currentView === "home",
+        onClick: () => goToView("home"),
+      },
+    ];
+    return <SlideNav tabs={homeOnly} isDarkMode={isDarkMode} />;
+  }
 
   const tabs: NavTab[] = [
     {

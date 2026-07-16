@@ -43,9 +43,20 @@ Admin is gated by `profiles.is_admin` (no public password page). `isAdmin` is de
 | Authoritative `isAdmin` resolver (session-bound `is_app_admin()` RPC) | `src/App.tsx` | ~356 |
 | Admin entry: profile-page button only (`onOpenAdmin`) | `src/components/Profile/ProfilePage.tsx` | — |
 | Exit-admin button (header) | `src/App.tsx` (`handleExitAdmin`) | — |
-| Admin Users promote/demote section | `src/components/Admin/AdminDashboard.tsx` | — |
-| Admin users load + toggle handlers | `src/App.tsx` (`loadAdminUsers`, `handleToggleUserAdmin`) | — |
-| **SQL:** `is_app_admin()`, `set_user_admin()`, `admin_list_users()` | migration `admin_auth` | — |
+| Admin Users promote/demote/ban/delete section (alumni + verified badges) | `src/components/Admin/AdminDashboard.tsx` | ~484–615 |
+| Admin users load + toggle/ban/delete handlers | `src/App.tsx` (`loadAdminUsers`, `handleToggleUserAdmin`, `handleBanUser`, `handleUnbanUser`, `handleDeleteUser`) | — |
+| Ban/delete client wrapper | `src/lib/api/adminApi.ts` | — |
+| **SQL:** `is_app_admin()`, `set_user_admin()`, `admin_list_users()` (extended with `is_alumni`/`is_verified`/`is_banned`) | migration `admin_auth`, `20260707211050_admin_ban_delete_alumni_tag` | — |
+
+### Ban user (materials-only restriction)
+
+`profiles.is_banned`/`banned_at`/`ban_reason` + `admin_set_user_banned(target, banned, reason)` RPC (owner-protected, logs to `admin_actions`). Enforced at **two** layers:
+- **UI**: `isBanned` in `src/App.tsx` forces `currentView` back to `"home"` on any navigation attempt, hides every nav tab except Home in `AppNavHeader` (`src/components/ui/nav-header.tsx`) and the mobile menu, and shows a persistent restriction banner with the ban reason.
+- **RLS**: `is_app_banned()` (`SECURITY DEFINER`, mirrors `is_app_admin()`) is added to the insert policies on `team_messages`, `team_message_reactions`, `connections`, `team_join_requests`, `team_invitations` — a banned user's direct API calls are rejected even if the UI is bypassed. Reads (including Study Materials) stay open by design.
+
+### Delete user (permanent)
+
+Edge function `supabase/functions/admin-delete-user/index.ts` (service-role, JWT + `is_app_admin()` verified). Refuses to delete the owner. If the target owns a team, ownership auto-transfers to another member (longest-standing admin, else longest-standing member) before deletion — the team is only removed if they're the sole member. Manually cleans up tables with no enforced FK to `profiles`/`auth.users` (`notifications`, `user_routines`, `ai_chat_usage`, `push_subscriptions`, `feedback`, `alumni_profiles`) before deleting the `profiles` row (cascades the rest) and calling `auth.admin.deleteUser()`. Logs to `admin_actions`.
 
 ---
 

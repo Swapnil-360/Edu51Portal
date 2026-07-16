@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Plus, ChevronDown, ChevronUp, AlertCircle, Link as LinkIcon, Trash2, Edit2, BarChart3, BookOpen, Files, Users, TrendingUp, HardDrive, UsersRound, ShieldCheck, MessageSquare, RefreshCw, Bug, Lightbulb, Sparkles } from 'lucide-react';
+import { Bell, Plus, ChevronDown, ChevronUp, AlertCircle, Link as LinkIcon, Trash2, Edit2, BarChart3, BookOpen, Files, Users, TrendingUp, HardDrive, UsersRound, ShieldCheck, MessageSquare, RefreshCw, Bug, Lightbulb, Sparkles, Ban, GraduationCap, BadgeCheck, X, Loader2 } from 'lucide-react';
 import MaterialManager from './MaterialManager';
 import { supabase, supabaseConfigured } from '../../lib/supabase';
+import { sendEmailNotification } from '../../lib/emailNotifications';
 
 interface Notice {
   id: string;
@@ -29,7 +30,10 @@ interface EmergencyLink {
 }
 
 interface BucketUsage { bucket: string; bytes: number; files: number; }
-interface AdminUser { id: string; name: string | null; bubt_email: string | null; is_admin: boolean; is_owner: boolean; }
+interface AdminUser {
+  id: string; name: string | null; bubt_email: string | null; is_admin: boolean; is_owner: boolean;
+  is_alumni?: boolean; is_verified?: boolean; is_banned?: boolean;
+}
 interface FeedbackItem {
   id: string;
   name: string | null;
@@ -59,6 +63,9 @@ interface AdminDashboardProps {
   adminUsersLoading?: boolean;
   currentUserId?: string | null;
   onToggleUserAdmin?: (userId: string, makeAdmin: boolean) => void;
+  onBanUser?: (userId: string, reason: string) => Promise<{ error: string | null }> | void;
+  onUnbanUser?: (userId: string) => Promise<{ error: string | null }> | void;
+  onDeleteUser?: (userId: string) => Promise<{ success: boolean; error?: string; teamsTransferred?: { teamId: string; newOwnerId: string }[] }>;
   // Feedback inbox
   feedbackItems?: FeedbackItem[];
   feedbackLoading?: boolean;
@@ -114,6 +121,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   adminUsersLoading = false,
   currentUserId = null,
   onToggleUserAdmin,
+  onBanUser,
+  onUnbanUser,
+  onDeleteUser,
   feedbackItems = [],
   feedbackLoading = false,
   onUpdateFeedbackStatus,
@@ -135,6 +145,54 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
   // Live email preview toggle for the broadcast composer
   const [showEmailPreview, setShowEmailPreview] = useState(true);
+
+  // Ban/unban + delete user state
+  const [banReasonOpenId, setBanReasonOpenId] = useState<string | null>(null);
+  const [banReasonText, setBanReasonText] = useState('');
+  const [banBusyId, setBanBusyId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<AdminUser | null>(null);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [deleteResult, setDeleteResult] = useState<string | null>(null);
+
+  const submitBan = async (userId: string) => {
+    setBanBusyId(userId);
+    await onBanUser?.(userId, banReasonText.trim());
+    setBanBusyId(null);
+    setBanReasonOpenId(null);
+    setBanReasonText('');
+  };
+
+  const submitUnban = async (userId: string) => {
+    setBanBusyId(userId);
+    await onUnbanUser?.(userId);
+    setBanBusyId(null);
+  };
+
+  const openDeleteConfirm = (u: AdminUser) => {
+    setDeleteTarget(u);
+    setDeleteConfirmText('');
+    setDeleteError(null);
+    setDeleteResult(null);
+  };
+
+  const submitDelete = async () => {
+    if (!deleteTarget || !onDeleteUser) return;
+    setDeleteBusy(true);
+    setDeleteError(null);
+    const res = await onDeleteUser(deleteTarget.id);
+    setDeleteBusy(false);
+    if (!res.success) {
+      setDeleteError(res.error || 'Failed to delete account.');
+      return;
+    }
+    setDeleteResult(
+      res.teamsTransferred?.length
+        ? `Account deleted. Ownership of ${res.teamsTransferred.length} team(s) was transferred to another member.`
+        : 'Account deleted.'
+    );
+  };
 
   // Alumni approval queue state
   const [pendingAlumni, setPendingAlumni] = useState<any[]>([]);
@@ -181,6 +239,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const approveAlumni = async (id: string) => {
     try {
       if (supabaseConfigured) {
+        const alumni = pendingAlumni.find(a => a.id === id);
+
         const { error: err1 } = await supabase
           .from('alumni_profiles')
           .update({ is_verified: true })
@@ -192,6 +252,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           .update({ is_verified: true, is_alumni: true })
           .eq('id', id);
         if (err2) throw err2;
+
+        // Notify the alumni by email now that they're approved and can sign in
+        if (alumni?.email) {
+          await sendEmailNotification({
+            recipientEmail: alumni.email,
+            subject: 'Your BUBT Alumni Account Has Been Approved',
+            title: 'Welcome to Edu51Portal!',
+            body: `Hi ${alumni.full_name || 'there'}, your alumni account has been verified by an administrator. You can now sign in and access the full Edu51Portal platform, including the Alumni Hub directory.`,
+            actionUrl: 'https://www.edu51portal.live/',
+            actionText: 'Sign In Now',
+          });
+        }
       } else {
         const updated = pendingAlumni.filter(a => a.id !== id);
         setPendingAlumni(updated);
@@ -488,48 +560,116 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             ) : adminUsers.length === 0 ? (
               <p className={`text-sm py-4 text-center ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>No users found.</p>
             ) : (
-              <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
+              <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
                 {adminUsers.map((u) => {
                   const isSelf = u.id === currentUserId;
                   const isProtected = u.is_owner || isSelf;
+                  const banReasonOpen = banReasonOpenId === u.id;
+                  const busy = banBusyId === u.id;
                   return (
                     <div
                       key={u.id}
-                      className={`flex items-center justify-between gap-3 p-3 rounded-lg border ${isDarkMode ? 'bg-[#16181c]/50 border-[#2f3336]/50' : 'bg-white/70 border-slate-200'}`}
+                      className={`p-3 rounded-lg border ${isDarkMode ? 'bg-[#16181c]/50 border-[#2f3336]/50' : 'bg-white/70 border-slate-200'} ${u.is_banned ? (isDarkMode ? 'border-red-500/30' : 'border-red-300') : ''}`}
                     >
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <p className={`text-sm font-semibold truncate ${isDarkMode ? 'text-gray-100' : 'text-gray-900'}`}>
-                            {u.name || 'Unnamed'}
-                          </p>
-                          {u.is_owner && (
-                            <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-purple-500 text-white">OWNER</span>
-                          )}
-                          {u.is_admin && !u.is_owner && (
-                            <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-amber-500 text-white">ADMIN</span>
-                          )}
-                          {isSelf && (
-                            <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold ${isDarkMode ? 'bg-[#2f3336] text-[#8b98a5]' : 'bg-slate-200 text-slate-600'}`}>YOU</span>
-                          )}
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <p className={`text-sm font-semibold truncate ${isDarkMode ? 'text-gray-100' : 'text-gray-900'}`}>
+                              {u.name || 'Unnamed'}
+                            </p>
+                            {u.is_owner && (
+                              <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-purple-500 text-white">OWNER</span>
+                            )}
+                            {u.is_admin && !u.is_owner && (
+                              <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-amber-500 text-white">ADMIN</span>
+                            )}
+                            {u.is_alumni && (
+                              <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold ${u.is_verified ? 'bg-[#1e9df1] text-white' : 'bg-slate-400 text-white'}`}>
+                                <GraduationCap className="w-2.5 h-2.5" /> ALUMNI{u.is_verified && <BadgeCheck className="w-2.5 h-2.5" />}
+                              </span>
+                            )}
+                            {u.is_banned && (
+                              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-red-500 text-white">
+                                <Ban className="w-2.5 h-2.5" /> BANNED
+                              </span>
+                            )}
+                            {isSelf && (
+                              <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold ${isDarkMode ? 'bg-[#2f3336] text-[#8b98a5]' : 'bg-slate-200 text-slate-600'}`}>YOU</span>
+                            )}
+                          </div>
+                          <p className={`text-xs truncate ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>{u.bubt_email || '—'}</p>
                         </div>
-                        <p className={`text-xs truncate ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>{u.bubt_email || '—'}</p>
+
+                        {isProtected ? (
+                          <span className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold opacity-40 cursor-not-allowed ${isDarkMode ? 'bg-[#2f3336] text-slate-400' : 'bg-slate-100 text-slate-500'}`}>
+                            {u.is_owner ? 'Protected' : 'You'}
+                          </span>
+                        ) : (
+                          <div className="flex items-center gap-1.5 flex-shrink-0">
+                            <button
+                              onClick={() => onToggleUserAdmin?.(u.id, !u.is_admin)}
+                              title={u.is_admin ? 'Remove admin access' : 'Promote to admin'}
+                              className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                                u.is_admin
+                                  ? isDarkMode ? 'bg-red-500/20 text-red-300 hover:bg-red-500/30' : 'bg-red-100 text-red-700 hover:bg-red-200'
+                                  : isDarkMode ? 'bg-green-500/20 text-green-300 hover:bg-green-500/30' : 'bg-green-100 text-green-700 hover:bg-green-200'
+                              }`}
+                            >
+                              {u.is_admin ? 'Revoke' : 'Make Admin'}
+                            </button>
+                            {u.is_banned ? (
+                              <button
+                                onClick={() => submitUnban(u.id)}
+                                disabled={busy}
+                                title="Unban user"
+                                className={`p-1.5 rounded-lg transition-all disabled:opacity-50 ${isDarkMode ? 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30' : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'}`}
+                              >
+                                {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Ban className="w-3.5 h-3.5" />}
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => { setBanReasonOpenId(banReasonOpen ? null : u.id); setBanReasonText(''); }}
+                                title="Ban user (materials-only access)"
+                                className={`p-1.5 rounded-lg transition-all ${isDarkMode ? 'bg-amber-500/20 text-amber-300 hover:bg-amber-500/30' : 'bg-amber-100 text-amber-700 hover:bg-amber-200'}`}
+                              >
+                                <Ban className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                            <button
+                              onClick={() => openDeleteConfirm(u)}
+                              title="Delete account permanently"
+                              className={`p-1.5 rounded-lg transition-all ${isDarkMode ? 'bg-red-500/20 text-red-300 hover:bg-red-500/30' : 'bg-red-100 text-red-700 hover:bg-red-200'}`}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        )}
                       </div>
-                      {isProtected ? (
-                        <span className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold opacity-40 cursor-not-allowed ${isDarkMode ? 'bg-[#2f3336] text-slate-400' : 'bg-slate-100 text-slate-500'}`}>
-                          {u.is_owner ? 'Protected' : 'You'}
-                        </span>
-                      ) : (
-                        <button
-                          onClick={() => onToggleUserAdmin?.(u.id, !u.is_admin)}
-                          title={u.is_admin ? 'Remove admin access' : 'Promote to admin'}
-                          className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                            u.is_admin
-                              ? isDarkMode ? 'bg-red-500/20 text-red-300 hover:bg-red-500/30' : 'bg-red-100 text-red-700 hover:bg-red-200'
-                              : isDarkMode ? 'bg-green-500/20 text-green-300 hover:bg-green-500/30' : 'bg-green-100 text-green-700 hover:bg-green-200'
-                          }`}
-                        >
-                          {u.is_admin ? 'Revoke' : 'Make Admin'}
-                        </button>
+
+                      {banReasonOpen && (
+                        <div className={`mt-2.5 pt-2.5 border-t flex items-center gap-2 ${isDarkMode ? 'border-[#2f3336]' : 'border-slate-200'}`}>
+                          <input
+                            autoFocus
+                            value={banReasonText}
+                            onChange={(e) => setBanReasonText(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && submitBan(u.id)}
+                            placeholder="Reason for ban (optional)…"
+                            className={`flex-1 px-2.5 py-1.5 rounded-lg text-xs border outline-none ${isDarkMode ? 'bg-[#16181c] border-[#2f3336] text-white placeholder-slate-500' : 'bg-white border-slate-300 text-slate-900 placeholder-slate-400'}`}
+                          />
+                          <button
+                            onClick={() => submitBan(u.id)}
+                            disabled={busy}
+                            className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-500 hover:bg-amber-600 text-white disabled:opacity-50 flex items-center gap-1"
+                          >
+                            {busy && <Loader2 className="w-3 h-3 animate-spin" />} Confirm Ban
+                          </button>
+                          <button
+                            onClick={() => setBanReasonOpenId(null)}
+                            className={`px-2.5 py-1.5 rounded-lg text-xs font-medium ${isDarkMode ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-800'}`}
+                          >
+                            Cancel
+                          </button>
+                        </div>
                       )}
                     </div>
                   );
@@ -544,7 +684,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           <div className="relative z-10 p-4 sm:p-5 lg:p-6">
             <div className="flex items-center justify-between gap-3 mb-5">
               <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-indigo-500/20 text-indigo-400' : 'bg-indigo-200 text-indigo-60'}`}>
+                <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-indigo-500/20 text-indigo-400' : 'bg-indigo-200 text-indigo-600'}`}>
                   <Users className="w-5 h-5" />
                 </div>
                 <div>
@@ -1220,6 +1360,79 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           />
         )}
       </div>
+
+      {/* Delete user confirmation modal */}
+      {deleteTarget && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => !deleteBusy && setDeleteTarget(null)}>
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className={`w-full max-w-sm rounded-2xl shadow-2xl border overflow-hidden ${isDarkMode ? 'bg-[#17181c] border-[#2f3336]' : 'bg-white border-slate-200'}`}
+          >
+            <div className={`flex items-center justify-between px-4 py-3 border-b ${isDarkMode ? 'border-[#2f3336]' : 'border-slate-100'}`}>
+              <h3 className={`text-sm font-bold flex items-center gap-1.5 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                <Trash2 className="w-4 h-4 text-red-500" /> Delete Account
+              </h3>
+              <button onClick={() => setDeleteTarget(null)} className={`p-1.5 rounded-lg ${isDarkMode ? 'hover:bg-[#16181c] text-slate-500' : 'hover:bg-slate-100 text-slate-400'}`}>
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            <div className="p-4 space-y-3">
+              {deleteResult ? (
+                <>
+                  <p className={`text-sm ${isDarkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>{deleteResult}</p>
+                  <button
+                    onClick={() => setDeleteTarget(null)}
+                    className="w-full py-2 rounded-lg bg-[#1e9df1] hover:bg-[#1677cc] text-white text-sm font-semibold"
+                  >
+                    Close
+                  </button>
+                </>
+              ) : (
+                <>
+                  <p className={`text-xs leading-relaxed ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                    This <strong>permanently</strong> deletes <strong>{deleteTarget.name || 'this user'}</strong>'s account —
+                    profile, connections, team memberships, chat messages sent, and login access. If they own a team,
+                    ownership is transferred to another member first. This cannot be undone.
+                  </p>
+                  <div>
+                    <label className={`block text-[10px] font-bold uppercase tracking-wider mb-1 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+                      Type "{deleteTarget.name || 'DELETE'}" to confirm
+                    </label>
+                    <input
+                      autoFocus
+                      value={deleteConfirmText}
+                      onChange={(e) => setDeleteConfirmText(e.target.value)}
+                      className={`w-full px-3 py-2 rounded-lg text-sm border outline-none ${isDarkMode ? 'bg-[#16181c] border-[#2f3336] text-white' : 'bg-white border-slate-300 text-slate-900'}`}
+                    />
+                  </div>
+                  {deleteError && (
+                    <div className={`flex items-start gap-1.5 px-2.5 py-2 rounded-lg text-xs border ${isDarkMode ? 'bg-red-900/20 text-red-300 border-red-800/40' : 'bg-red-50 text-red-800 border-red-200'}`}>
+                      <AlertCircle className="w-3 h-3 flex-shrink-0 mt-0.5" />
+                      {deleteError}
+                    </div>
+                  )}
+                  <div className="flex gap-2 pt-1">
+                    <button
+                      onClick={() => setDeleteTarget(null)}
+                      className={`flex-1 py-2 rounded-lg text-sm font-semibold ${isDarkMode ? 'bg-[#16181c] text-slate-300 hover:bg-[#2f3336]' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={submitDelete}
+                      disabled={deleteBusy || deleteConfirmText.trim() !== (deleteTarget.name || 'DELETE').trim()}
+                      className="flex-1 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white text-sm font-semibold disabled:opacity-40 flex items-center justify-center gap-1.5"
+                    >
+                      {deleteBusy && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Delete Forever
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

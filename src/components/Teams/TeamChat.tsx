@@ -20,7 +20,7 @@ function nameToColor(name: string): string {
 
 function AvatarCircle({ name, avatarUrl, isOwn }: { name: string; avatarUrl: string | null; isOwn: boolean }) {
   const [imgFailed, setImgFailed] = useState(false);
-  const color = isOwn ? "bg-blue-500" : nameToColor(name);
+  const color = isOwn ? "bg-[#1e9df1]" : nameToColor(name);
   const initial = name[0]?.toUpperCase() ?? "?";
 
   if (avatarUrl && !imgFailed) {
@@ -113,8 +113,8 @@ function renderMessageContent(
             : "bg-amber-100 text-amber-900 border border-amber-200/60 font-bold px-1.5 py-0.5 rounded";
         } else {
           mentionClass = dark
-            ? "bg-blue-500/10 text-blue-400 border border-blue-500/20 font-semibold px-1.5 py-0.5 rounded"
-            : "bg-blue-50 text-blue-700 border border-blue-100 font-semibold px-1.5 py-0.5 rounded";
+            ? "bg-[#1e9df1]/10 text-[#1e9df1] border border-[#1e9df1]/20 font-semibold px-1.5 py-0.5 rounded"
+            : "bg-[#e8f4fd] text-[#1677cc] border border-[#1e9df1]/20 font-semibold px-1.5 py-0.5 rounded";
         }
         nodes.push(
           <span key={`m${key++}`} className={mentionClass}>
@@ -221,7 +221,7 @@ export default function TeamChat({ teamId, teamName, currentUserId, isMember, is
   const card = dark ? "bg-[#17181c] border-[#2f3336]/50" : "bg-white border-slate-200";
   const inputBg = dark ? "bg-[#16181c] border-[#38444d] text-white placeholder-[#71767b]" : "bg-white border-slate-300 text-slate-900 placeholder-[#71767b]";
   const sub = dark ? "text-slate-400" : "text-slate-500";
-  const msgOwn = dark ? "bg-blue-600 text-white" : "bg-blue-600 text-white";
+  const msgOwn = "bg-[#1e9df1] text-white";
   const msgOther = dark ? "bg-[#16181c] text-[#e7e9ea] border border-[#2f3336]/50" : "bg-white text-slate-900 border border-slate-200";
   const replyBg = dark ? "bg-[#2f3336]/60" : "bg-slate-100";
 
@@ -588,8 +588,8 @@ export default function TeamChat({ teamId, teamName, currentUserId, isMember, is
 
                 {/* Reply quote */}
                 {msg.reply_to && (
-                  <div className={`text-[11px] px-2.5 py-1.5 rounded-lg mb-1 max-w-full border-l-2 border-blue-500 ${replyBg} ${sub} truncate`}>
-                    <span className="font-semibold text-blue-500 mr-1">{msg.reply_to.sender_name}</span>
+                  <div className={`text-[11px] px-2.5 py-1.5 rounded-lg mb-1 max-w-full border-l-2 border-[#1e9df1] ${replyBg} ${sub} truncate`}>
+                    <span className="font-semibold text-[#1e9df1] mr-1">{msg.reply_to.sender_name}</span>
                     {msg.reply_to.content.slice(0, 80)}{msg.reply_to.content.length > 80 ? "…" : ""}
                   </div>
                 )}
@@ -611,8 +611,8 @@ export default function TeamChat({ teamId, teamName, currentUserId, isMember, is
                           onClick={() => setReactionDetailFor(reactionDetailFor === msg.id ? null : msg.id)}
                           className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full shadow-sm transition-transform hover:scale-105 ${
                             dark
-                              ? `bg-[#16181c] border border-[#2f3336] ${iReacted ? "ring-1 ring-blue-500/50" : ""}`
-                              : `bg-white border border-slate-200 ${iReacted ? "ring-1 ring-blue-400" : ""}`
+                              ? `bg-[#16181c] border border-[#2f3336] ${iReacted ? "ring-1 ring-[#1e9df1]/50" : ""}`
+                              : `bg-white border border-slate-200 ${iReacted ? "ring-1 ring-[#1e9df1]" : ""}`
                           }`}
                           style={{ outline: dark ? "2px solid rgb(15 23 42)" : "2px solid white" }}
                         >
@@ -659,7 +659,7 @@ export default function TeamChat({ teamId, teamName, currentUserId, isMember, is
                       <button
                         key={emoji}
                         onClick={() => handleReact(msg.id, emoji)}
-                        className={`text-sm hover:scale-125 transition-transform px-0.5 rounded ${mineHere ? "bg-blue-500/20" : ""}`}
+                        className={`text-sm hover:scale-125 transition-transform px-0.5 rounded ${mineHere ? "bg-[#1e9df1]/20" : ""}`}
                         title={emoji}
                       >
                         {emoji}
@@ -694,9 +694,9 @@ export default function TeamChat({ teamId, teamName, currentUserId, isMember, is
       {/* Reply bar */}
       {replyingTo && (
         <div className={`flex items-center gap-2 px-3 py-2 border-t text-xs ${dark ? "border-[#2f3336]/50 bg-[#16181c]/50 text-[#8b98a5]" : "border-slate-200 bg-slate-50 text-slate-600"}`}>
-          <CornerDownLeft className="w-3 h-3 text-blue-500 flex-shrink-0" />
+          <CornerDownLeft className="w-3 h-3 text-[#1e9df1] flex-shrink-0" />
           <div className="flex-1 min-w-0">
-            <span className="font-semibold text-blue-500">{replyingTo.sender?.name ?? "Unknown"}: </span>
+            <span className="font-semibold text-[#1e9df1]">{replyingTo.sender?.name ?? "Unknown"}: </span>
             <span className="truncate">{replyingTo.content.slice(0, 80)}{replyingTo.content.length > 80 ? "…" : ""}</span>
           </div>
           <button onClick={() => setReplyingTo(null)} className="flex-shrink-0 hover:text-red-500">
@@ -722,13 +722,13 @@ export default function TeamChat({ teamId, teamName, currentUserId, isMember, is
                   }`}
                 >
                   {m.isEveryone ? (
-                    <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs ring-2 ring-[#2f3336]/30">
+                    <div className="w-8 h-8 rounded-full bg-[#1e9df1] flex items-center justify-center text-white text-xs ring-2 ring-[#2f3336]/30">
                       📣
                     </div>
                   ) : (
                     <AvatarCircle name={m.name} avatarUrl={m.avatarUrl} isOwn={false} />
                   )}
-                  <span className={`text-sm truncate ${m.isEveryone ? "font-bold text-blue-500" : (dark ? "text-[#d9d9d9]" : "text-slate-700")}`}>
+                  <span className={`text-sm truncate ${m.isEveryone ? "font-bold text-[#1e9df1]" : (dark ? "text-[#d9d9d9]" : "text-slate-700")}`}>
                     {m.isEveryone ? "@everyone" : m.name}
                   </span>
                 </button>
@@ -745,7 +745,7 @@ export default function TeamChat({ teamId, teamName, currentUserId, isMember, is
           onClick={(e) => detectMention(e.currentTarget.value, e.currentTarget.selectionStart ?? 0)}
           placeholder="Message…  (@ to mention, Enter to send)"
           rows={1}
-          className={`flex-1 resize-none px-3 py-2 rounded-xl text-sm border outline-none focus:border-blue-500 transition-colors ${inputBg}`}
+          className={`flex-1 resize-none px-3 py-2 rounded-xl text-sm border outline-none focus:border-[#1e9df1] transition-colors ${inputBg}`}
           style={{ maxHeight: 120, overflowY: "auto" }}
           onInput={(e) => {
             const el = e.currentTarget;
@@ -756,7 +756,7 @@ export default function TeamChat({ teamId, teamName, currentUserId, isMember, is
         <button
           onClick={handleSend}
           disabled={!input.trim() || sending}
-          className="flex-shrink-0 w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          className="flex-shrink-0 w-9 h-9 rounded-xl bg-[#1e9df1] text-white flex items-center justify-center hover:bg-[#1677cc] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
         >
           <CornerDownLeft className="w-4 h-4" />
         </button>

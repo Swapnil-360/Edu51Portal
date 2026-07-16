@@ -308,7 +308,7 @@ export default function TeamFiles({ teamId, currentUserId, isMember, canManage, 
                 onClick={() => setTypeFilter(key)}
                 className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all ${
                   typeFilter === key
-                    ? 'bg-blue-600 text-[#e7e9ea] shadow-sm'
+                    ? 'bg-[#1e9df1] text-[#e7e9ea] shadow-sm'
                     : isDarkMode ? 'text-slate-500 hover:text-[#8b98a5]' : 'text-[#71767b] hover:text-slate-700'
                 }`}
               >
@@ -342,7 +342,7 @@ export default function TeamFiles({ teamId, currentUserId, isMember, canManage, 
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-[#e7e9ea] text-xs font-bold transition-all shadow-sm"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#1e9df1] hover:bg-[#1677cc] disabled:opacity-50 text-[#e7e9ea] text-xs font-bold transition-all shadow-sm"
           >
             <Upload size={13} />
             {uploading ? 'Uploading…' : 'Upload'}
@@ -388,7 +388,7 @@ export default function TeamFiles({ teamId, currentUserId, isMember, canManage, 
                       transition={{ ease: 'linear' }}
                       className={`h-full rounded-full ${
                         item.status === 'error' ? 'bg-rose-500' :
-                        item.status === 'done' ? 'bg-emerald-500' : 'bg-blue-500'
+                        item.status === 'done' ? 'bg-emerald-500' : 'bg-[#1e9df1]'
                       }`}
                     />
                   </div>
@@ -408,7 +408,7 @@ export default function TeamFiles({ teamId, currentUserId, isMember, canManage, 
           onClick={() => fileInputRef.current?.click()}
           className={`flex flex-col items-center justify-center gap-3 py-14 rounded-2xl border-2 border-dashed cursor-pointer transition-colors ${
             dragging
-              ? isDarkMode ? 'border-blue-500 bg-blue-500/10' : 'border-blue-400 bg-blue-50'
+              ? isDarkMode ? 'border-[#1e9df1] bg-[#1e9df1]/10' : 'border-[#1e9df1] bg-[#e8f4fd]'
               : isDarkMode ? 'border-[#2f3336] hover:border-[#38444d]' : 'border-slate-200 hover:border-slate-300'
           }`}
         >
@@ -430,7 +430,7 @@ export default function TeamFiles({ teamId, currentUserId, isMember, canManage, 
           onDragOver={e => { e.preventDefault(); setDragging(true); }}
           onDragLeave={() => setDragging(false)}
           onDrop={e => { e.preventDefault(); setDragging(false); handleFiles(e.dataTransfer.files); }}
-          className={`relative transition-all ${dragging ? 'ring-2 ring-blue-500 ring-offset-2 rounded-2xl' : ''}`}
+          className={`relative transition-all ${dragging ? 'ring-2 ring-[#1e9df1] ring-offset-2 rounded-2xl' : ''}`}
         >
           {loading ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -565,7 +565,7 @@ export default function TeamFiles({ teamId, currentUserId, isMember, canManage, 
                     </div>
                     <button
                       onClick={() => downloadFile(previewFile.file_url, previewFile.name)}
-                      className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-[#e7e9ea] text-sm font-bold transition-colors"
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#1e9df1] hover:bg-[#1677cc] text-[#e7e9ea] text-sm font-bold transition-colors"
                     >
                       <Download size={14} /> Download
                     </button>
