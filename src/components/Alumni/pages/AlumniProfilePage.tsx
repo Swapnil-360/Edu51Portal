@@ -11,6 +11,7 @@ import {
   Loader2,
   Phone,
   Link as LinkIcon,
+  Camera,
 } from "lucide-react";
 import { supabase } from "../../../lib/supabase";
 import { AlumniProfile, Experience } from "../../../types/social";
@@ -18,6 +19,7 @@ import { listExperiences } from "../../../lib/api/profileApi";
 import { validateAndSanitizeUrl, normalizeWhatsAppLink } from "../../../lib/sanitize";
 import SkillsEditor, { BadgeList, CSE_SKILL_SUGGESTIONS } from "../../Profile/SkillsEditor";
 import ExperienceSection from "../../Profile/ExperienceSection";
+import { uploadImage, removeStorageFile } from "../../../lib/storage";
 
 interface Props {
   isDarkMode: boolean;
@@ -34,6 +36,7 @@ export default function AlumniProfilePage({ isDarkMode, authSession }: Props) {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const [avatarLoading, setAvatarLoading] = useState(false);
 
   // Form states
   const [fullName, setFullName] = useState("");
@@ -109,6 +112,95 @@ export default function AlumniProfilePage({ isDarkMode, authSession }: Props) {
   useEffect(() => {
     fetchProfile();
   }, [authSession]);
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setSaveError("Please upload an image file.");
+      return;
+    }
+    const MAX_SIZE = 2 * 1024 * 1024; // 2MB
+    if (file.size > MAX_SIZE) {
+      setSaveError("Image must be under 2MB.");
+      return;
+    }
+
+    setSaveError("");
+    setAvatarLoading(true);
+
+    try {
+      const userId = authSession?.user?.id;
+      if (!userId) throw new Error("No session found.");
+
+      const url = await uploadImage("avatars", userId, "avatar", file);
+
+      const { error: err1 } = await supabase
+        .from("alumni_profiles")
+        .update({ avatar_url: url })
+        .eq("id", userId);
+      if (err1) throw err1;
+
+      const { error: err2 } = await supabase
+        .from("profiles")
+        .update({ avatar_url: url })
+        .eq("id", userId);
+      if (err2) throw err2;
+
+      localStorage.setItem("userProfilePic", url);
+      localStorage.setItem("userProfileAvatarUrl", url);
+
+      setProfile((prev) => prev ? { ...prev, avatar_url: url } : null);
+      
+      window.dispatchEvent(new Event("storage"));
+    } catch (err: any) {
+      console.error("Error uploading avatar:", err);
+      setSaveError(err.message || "Failed to upload avatar.");
+    } finally {
+      setAvatarLoading(false);
+      e.target.value = "";
+    }
+  };
+
+  const handleRemoveAvatar = async () => {
+    setSaveError("");
+    setAvatarLoading(true);
+    try {
+      const userId = authSession?.user?.id;
+      if (!userId) throw new Error("No session found.");
+
+      const { error: err1 } = await supabase
+        .from("alumni_profiles")
+        .update({ avatar_url: null })
+        .eq("id", userId);
+      if (err1) throw err1;
+
+      const { error: err2 } = await supabase
+        .from("profiles")
+        .update({ avatar_url: null })
+        .eq("id", userId);
+      if (err2) throw err2;
+
+      try {
+        await removeStorageFile("avatars", `${userId}/avatar.webp`);
+      } catch (storageErr) {
+        console.warn("Storage deletion warning:", storageErr);
+      }
+
+      localStorage.removeItem("userProfilePic");
+      localStorage.removeItem("userProfileAvatarUrl");
+
+      setProfile((prev) => prev ? { ...prev, avatar_url: null } : null);
+
+      window.dispatchEvent(new Event("storage"));
+    } catch (err: any) {
+      console.error("Error removing avatar:", err);
+      setSaveError(err.message || "Failed to remove avatar.");
+    } finally {
+      setAvatarLoading(false);
+    }
+  };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -229,6 +321,50 @@ export default function AlumniProfilePage({ isDarkMode, authSession }: Props) {
                 {saveError}
               </div>
             )}
+
+            {/* Profile Photo Section */}
+            <div className="flex flex-col sm:flex-row items-center gap-5 pb-5 border-b border-[#2f3336]/10">
+              <div className="relative w-20 h-20 rounded-full overflow-hidden bg-gradient-to-br from-[#1e9df1] to-[#1677cc] flex items-center justify-center text-2xl font-bold text-white shadow-md flex-shrink-0">
+                {avatarLoading ? (
+                  <Loader2 className="w-8 h-8 animate-spin text-white" />
+                ) : profile.avatar_url ? (
+                  <img src={profile.avatar_url} alt={profile.full_name} className="w-full h-full object-cover" />
+                ) : (
+                  <span>{fullName?.charAt(0)?.toUpperCase() ?? "?"}</span>
+                )}
+              </div>
+              <div className="space-y-1.5 text-center sm:text-left">
+                <h4 className={`text-sm font-bold ${textColor}`}>Profile Picture</h4>
+                <p className={`text-xs ${subColor}`}>Clear image of your face (under 2MB, WEBP/PNG/JPG)</p>
+                <div className="flex flex-wrap justify-center sm:justify-start gap-2 pt-1">
+                  <button
+                    type="button"
+                    disabled={avatarLoading}
+                    onClick={() => document.getElementById("alumni-avatar-input")?.click()}
+                    className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#1e9df1]/10 text-[#1e9df1] hover:bg-[#1e9df1]/20 transition-colors cursor-pointer flex items-center gap-1"
+                  >
+                    {profile.avatar_url ? "Change Photo" : "Upload Photo"}
+                  </button>
+                  {profile.avatar_url && (
+                    <button
+                      type="button"
+                      disabled={avatarLoading}
+                      onClick={handleRemoveAvatar}
+                      className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-colors cursor-pointer"
+                    >
+                      Remove Photo
+                    </button>
+                  )}
+                </div>
+                <input
+                  type="file"
+                  id="alumni-avatar-input"
+                  accept="image/*"
+                  onChange={handleAvatarChange}
+                  className="hidden"
+                />
+              </div>
+            </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>

@@ -1,8 +1,9 @@
-﻿import React, { useEffect, useState, useMemo, useRef } from 'react';
-import { FileText, FileSpreadsheet, ImageIcon, Download, Globe, Search, Users, Eye, ArrowUpDown, Check } from 'lucide-react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
+import { FileText, FileSpreadsheet, ImageIcon, Download, Globe, Search, Users, Eye, ArrowUpDown, Check, GraduationCap } from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { TeamFile } from '../../types/social';
 import { listPublicFiles, formatFileSize, fileTypeLabel, PublicFilesSort } from '../../lib/api/filesApi';
+import { supabase } from '../../lib/supabase';
 
 type FileFilter = 'all' | 'pdf' | 'doc' | 'sheet' | 'image';
 
@@ -68,8 +69,12 @@ const SORT_OPTIONS: { key: PublicFilesSort; label: string }[] = [
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
+interface EnrichedFile extends TeamFile {
+  shared_by_name?: string;
+}
+
 export default function PublicFilesPage({ isDarkMode, onViewTeam, onViewPreview }: Props) {
-  const [files, setFiles] = useState<TeamFile[]>([]);
+  const [files, setFiles] = useState<EnrichedFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
@@ -89,11 +94,38 @@ export default function PublicFilesPage({ isDarkMode, onViewTeam, onViewPreview 
     setLoading(true);
     const start = reset ? 0 : offset;
     const data = await listPublicFiles(PAGE_SIZE, start, { search, sort });
+    
+    // Fetch alumni names for files where team_id is null
+    const alumniIds = data.filter(f => !f.team_id).map(f => f.uploader_id);
+    const alumniNamesMap: Record<string, string> = {};
+    if (alumniIds.length > 0) {
+      try {
+        const { data: alumniProfiles } = await supabase
+          .from('alumni_profiles')
+          .select('id, full_name')
+          .in('id', alumniIds);
+        if (alumniProfiles) {
+          alumniProfiles.forEach(p => {
+            alumniNamesMap[p.id] = p.full_name;
+          });
+        }
+      } catch (err) {
+        console.error('Error fetching alumni profiles names:', err);
+      }
+    }
+
+    const enriched: EnrichedFile[] = data.map(f => ({
+      ...f,
+      shared_by_name: !f.team_id 
+        ? (alumniNamesMap[f.uploader_id] || f.uploader?.name || 'Unknown Alumni') 
+        : (f.uploader?.name || 'Unknown')
+    }));
+
     if (reset) {
-      setFiles(data);
+      setFiles(enriched);
       setOffset(data.length);
     } else {
-      setFiles(prev => [...prev, ...data]);
+      setFiles(prev => [...prev, ...enriched]);
       setOffset(prev => prev + data.length);
     }
     setHasMore(data.length === PAGE_SIZE);
@@ -253,8 +285,23 @@ export default function PublicFilesPage({ isDarkMode, onViewTeam, onViewPreview 
                       </p>
                     </div>
 
-                    {/* Team badge */}
-                    {file.team && (
+                    {/* Team or Alumni badge */}
+                    {!file.team_id ? (
+                      <div
+                        className={`flex items-center gap-2 px-2.5 py-1.5 rounded-xl border w-full text-left ${
+                          isDarkMode
+                            ? 'border-purple-500/20 bg-purple-500/5'
+                            : 'border-purple-100 bg-purple-50'
+                        }`}
+                      >
+                        <div className={`w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 ${isDarkMode ? 'bg-purple-500/20' : 'bg-purple-100'}`}>
+                          <GraduationCap size={11} className="text-purple-400" />
+                        </div>
+                        <span className="text-[11px] font-bold truncate text-purple-400">
+                          Alumni Shared
+                        </span>
+                      </div>
+                    ) : file.team ? (
                       <button
                         onClick={() => onViewTeam(file.team!.id)}
                         className={`flex items-center gap-2 px-2.5 py-1.5 rounded-xl border transition-colors w-full text-left ${
@@ -274,7 +321,7 @@ export default function PublicFilesPage({ isDarkMode, onViewTeam, onViewPreview 
                           {file.team.name}
                         </span>
                       </button>
-                    )}
+                    ) : null}
 
                     {/* Uploader info row */}
                     <div className="flex items-center gap-2 mt-1">
@@ -284,7 +331,7 @@ export default function PublicFilesPage({ isDarkMode, onViewTeam, onViewPreview 
                         <div className={`w-5 h-5 rounded-full flex-shrink-0 ${isDarkMode ? 'bg-[#2f3336]' : 'bg-slate-200'}`} />
                       )}
                       <span className={`text-[11.5px] font-medium ${isDarkMode ? 'text-[#71767b]' : 'text-slate-600'}`}>
-                        Shared by: {file.uploader?.name ?? 'Unknown'}
+                        Shared by: {file.shared_by_name || file.uploader?.name || 'Unknown'}{!file.team_id && ' (Alumni)'}
                       </span>
                     </div>
 
