@@ -18,7 +18,7 @@ export interface EmailNotification {
 export function generateEmailHTML(notification: EmailNotification): string {
   const primaryColor = '#1e40af'; // Blue from your theme
   const accentColor = '#dc2626'; // Red accent
-  const logoUrl = 'https://edu51five.vercel.app/Edu_51_Logo.png';
+  const logoUrl = 'https://edu51five.vercel.app/Edu51Portal.png';
   const baseUrl = 'https://edu51five.vercel.app';
   const currentYear = new Date().getFullYear();
 

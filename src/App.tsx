@@ -4,12 +4,6 @@ import { motion, AnimatePresence } from "framer-motion";
 // import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from "./lib/supabase";
 import { Notice } from "./types";
-import {
-  getGoogleDriveLink,
-  getCourseCategories,
-  getCategoryInfo,
-  getCourseFiles,
-} from "./config/googleDrive";
 import { getCurrentSemesterStatus } from "./config/semester";
 const SemesterTracker = lazy(() => import("./components/SemesterTracker"));
 const CustomRoutine = lazy(() => import("./components/Student/CustomRoutine"));
@@ -49,13 +43,16 @@ import { uploadRoutineAttachment } from "./lib/storage";
 import { banUser, unbanUser, deleteUserAccount } from "./lib/api/adminApi";
 import type { Feedback, FeedbackStatus } from "./types";
 import MarqueeTicker from "./components/MarqueeTicker";
-import { MajorCardStack } from "./components/ui/MajorCardStack";
 import { Tiles } from "./components/ui/tiles";
 const PDFViewer = lazy(() => import("./components/PDFViewer"));
 const AdminDashboard = lazy(() => import("./components/Admin/AdminDashboard"));
 const AlumniDashboard = lazy(() => import("./components/Alumni/AlumniDashboard"));
 const GDriveFolderBrowser = lazy(() => import("./components/Student/GDriveFolderBrowser").then(m => ({ default: m.GDriveFolderBrowser })));
 const GDriveCourseView = lazy(() => import("./components/Student/GDriveCourseView").then(m => ({ default: m.GDriveCourseView })));
+const DepartmentCards = lazy(() => import("./components/Student/DepartmentCards").then(m => ({ default: m.DepartmentCards })));
+const SemesterFolderBrowser = lazy(() => import("./components/Student/SemesterFolderBrowser").then(m => ({ default: m.SemesterFolderBrowser })));
+import { getDriveConfigForMajor, getDriveConfigForDepartment } from "./lib/api/studyApi";
+import { DEPARTMENTS, getDepartment } from "./config/departments";
 const AIAssistant = lazy(() => import("./components/AIAssistant/AIAssistant").then(m => ({ default: m.AIAssistant })));
 import {
   FileText,
@@ -166,6 +163,8 @@ function App() {
     | "ai"
     | "software"
     | "networking"
+    | "study-department"
+    | "study-semester"
     | "course"
     | "home"
     | "semester"
@@ -183,6 +182,8 @@ function App() {
     if (path === "/section5" || path === "/ai") return "ai";
     if (path === "/software") return "software";
     if (path === "/networking") return "networking";
+    if (path === "/study-department") return "study-department";
+    if (path === "/study-semester") return "study-semester";
     if (path === "/semester") return "semester";
     if (path === "/custom-routine") return "custom";
     if (path === "/privacy") return "privacy";
@@ -221,6 +222,8 @@ function App() {
         | "ai"
         | "software"
         | "networking"
+        | "study-department"
+        | "study-semester"
         | "course"
         | "home"
         | "semester"
@@ -240,6 +243,8 @@ function App() {
       else if (view === "section5" || view === "ai") path = "/ai";
       else if (view === "software") path = "/software";
       else if (view === "networking") path = "/networking";
+      else if (view === "study-department") path = "/study-department";
+      else if (view === "study-semester") path = "/study-semester";
       else if (view === "semester") path = "/semester";
       else if (view === "privacy") path = "/privacy";
       else if (view === "custom") path = "/custom-routine";
@@ -291,6 +296,8 @@ function App() {
         else if (path === "/section5" || path === "/ai") setCurrentView("ai");
         else if (path === "/software") setCurrentView("software");
         else if (path === "/networking") setCurrentView("networking");
+        else if (path === "/study-department") setCurrentView("study-department");
+        else if (path === "/study-semester") setCurrentView("study-semester");
         else if (path === "/semester") setCurrentView("semester");
         else if (path === "/custom-routine") setCurrentView("custom");
         else if (path === "/privacy") setCurrentView("privacy");
@@ -361,6 +368,12 @@ function App() {
     folderId: string;
     folderLink: string;
   } | null>(null);
+  // Department -> Semester study materials flow (full-version)
+  const [selectedSemester, setSelectedSemester] = useState<{ id: string; name: string } | null>(null);
+  const [departmentComingSoon, setDepartmentComingSoon] = useState<string | null>(null);
+  // Legacy major-based Drive folder (still reachable via admin Course Management's
+  // back-navigation and old bookmarks) — resolved once per activeMajor.
+  const [legacyMajorFolderId, setLegacyMajorFolderId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showCreateCourse, setShowCreateCourse] = useState(false);
   const [semesterStatus, setSemesterStatus] = useState(
@@ -386,6 +399,7 @@ function App() {
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [guestMajor, setGuestMajor] = useState("");
+  const [guestDepartment, setGuestDepartment] = useState("");
   const [authLoading, setAuthLoading] = useState(true);
   const [authSession, setAuthSession] = useState<any>(null);
   const [unreadNotices, setUnreadNotices] = useState<string[]>([]);
@@ -433,6 +447,7 @@ function App() {
     section:
       localStorage.getItem("userProfileSection") || "Intake 51, Section 2 (AI)",
     major: localStorage.getItem("userProfileMajor") || "",
+    department: localStorage.getItem("userProfileDepartment") || "",
     bubtEmail: localStorage.getItem("userProfileBubtEmail") || "",
     notificationEmail:
       localStorage.getItem("userProfileNotificationEmail") || "",
@@ -447,6 +462,29 @@ function App() {
   });
 
   const activeMajor = isLoggedIn ? userProfile.major : guestMajor;
+  const activeDepartment = isLoggedIn ? userProfile.department : guestDepartment;
+
+  // Resolve the legacy major's Drive root folder (admin Course Management
+  // back-navigation still targets the ai/software/networking views).
+  useEffect(() => {
+    if (!activeMajor) { setLegacyMajorFolderId(null); return; }
+    let cancelled = false;
+    getDriveConfigForMajor(activeMajor as any).then((id) => {
+      if (!cancelled) setLegacyMajorFolderId(id);
+    });
+    return () => { cancelled = true; };
+  }, [activeMajor]);
+
+  // Resolve the active department's Drive root folder for the new study-department flow.
+  const [departmentFolderId, setDepartmentFolderId] = useState<string | null>(null);
+  useEffect(() => {
+    if (!activeDepartment) { setDepartmentFolderId(null); return; }
+    let cancelled = false;
+    getDriveConfigForDepartment(activeDepartment).then((id) => {
+      if (!cancelled) setDepartmentFolderId(id);
+    });
+    return () => { cancelled = true; };
+  }, [activeDepartment]);
 
   // Major access notification state
   const [majorAccessMessage, setMajorAccessMessage] = useState<{
@@ -545,7 +583,7 @@ function App() {
   // profile_pic is served from localStorage cache and refreshed in the background.
   // avatar_url (Storage URL) is short and included so it's cached immediately on login.
   const PROFILE_META_COLS =
-    "id,name,section,major,bubt_email,notification_email,phone,created_at,last_login_at,avatar_url,is_admin,is_alumni,is_verified,is_banned,ban_reason";
+    "id,name,section,major,department,bubt_email,notification_email,phone,created_at,last_login_at,avatar_url,is_admin,is_alumni,is_verified,is_banned,ban_reason";
 
   const applyProfileData = (profileData: any, email: string, password: string) => {
     // NOTE: admin status is NOT set from this profile fetch — it's resolved
@@ -561,6 +599,7 @@ function App() {
       name: profileData?.name || "Welcome Student",
       section: profileData?.section || "",
       major: profileData?.major || "",
+      department: profileData?.department || "",
       bubtEmail: profileData?.bubt_email || email,
       notificationEmail: profileData?.notification_email || "",
       phone: profileData?.phone || "",
@@ -576,6 +615,7 @@ function App() {
     localStorage.setItem("userProfileName", updatedProfile.name);
     localStorage.setItem("userProfileSection", updatedProfile.section);
     localStorage.setItem("userProfileMajor", updatedProfile.major);
+    localStorage.setItem("userProfileDepartment", updatedProfile.department);
     localStorage.setItem("userProfileNotificationEmail", updatedProfile.notificationEmail);
     localStorage.setItem("userProfilePhone", updatedProfile.phone);
     localStorage.setItem("userProfileIsAlumni", updatedProfile.isAlumni ? "true" : "false");
@@ -1358,6 +1398,8 @@ function App() {
       currentView === "ai" ||
       currentView === "software" ||
       currentView === "networking" ||
+      currentView === "study-department" ||
+      currentView === "study-semester" ||
       currentView === "course" ||
       currentView === "home" ||
       (currentView === "admin" && isAdmin)
@@ -3432,13 +3474,13 @@ For any queries, contact your course instructors or the department.`,
               {/* Logo — desktop only (left-aligned) */}
               <button
                 onClick={() => goToView("home")}
-                className="hidden lg:flex items-center gap-0.1 focus:outline-none group"
+                className="header-logo-btn hidden lg:flex items-center gap-0.1 focus:outline-none group"
                 title="Go to Home"
               >
                 <img
                   src="/Edu51Portal.png"
                   alt="Edu51Portal Logo"
-                  className="h-20 w-20 object-cover rounded-x1 flex-shrink-0 drop-shadow-sm"
+                  className="h-20 w-20 object-cover rounded-xl flex-shrink-0 drop-shadow-sm"
                   width="84"
                   height="84"
                   decoding="async"
@@ -3457,7 +3499,7 @@ For any queries, contact your course instructors or the department.`,
               {/* Mobile: centered logo */}
               <button
                 onClick={() => goToView("home")}
-                className="flex lg:hidden items-center gap-0.1 focus:outline-none"
+                className="header-logo-btn flex lg:hidden items-center gap-0.1 focus:outline-none"
                 title="Go to Home"
               >
                 <img
@@ -4672,7 +4714,7 @@ For any queries, contact your course instructors or the department.`,
                       className="w-16 h-16 sm:w-20 sm:h-20 object-contain mb-3 drop-shadow logo-glow-pulse"
                     />
                     <p className={`text-[11px] font-medium tracking-widest uppercase ${isDarkMode ? 'text-[#71767b]' : 'text-slate-400'}`}>
-                      BUBT · Intake 51 · CSE Department
+                      BUBT · All Departments
                     </p>
                   </motion.div>
 
@@ -4750,96 +4792,52 @@ For any queries, contact your course instructors or the department.`,
                       />
                     </div>
                     <p className={`text-lg sm:text-xl font-semibold ${isDarkMode ? 'text-[#e7e9ea]' : 'text-slate-800'}`}>
-                      Course materials by major
+                      Course materials by department
                     </p>
                   </div>
 
-                  {/* Card Stack — user's major on top; random for guests */}
-                  {(() => {
-                    const MAJOR_DEFS = [
-                      {
-                        id: "AI",
-                        title: "Artificial Intelligence",
-                        subtitle: "AI · Intake 51",
-                        imageSrc: "/Ai_Cover.jpg",
-                        accentGradient: "bg-gradient-to-r from-violet-600 via-fuchsia-600 to-pink-600",
-                        glowColor: "#a855f7",
-                        tags: [
-                          { label: "Machine Learning", color: "bg-purple-100 text-purple-700" },
-                          { label: "Deep Learning", color: "bg-pink-100 text-pink-700" },
-                        ],
-                        view: "ai" as const,
-                        majorKey: "AI",
-                      },
-                      {
-                        id: "SE",
-                        title: "Software Engineering",
-                        subtitle: "SE · Intake 51",
-                        imageSrc: "/SE_cover.jpg",
-                        accentGradient: "bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600",
-                        glowColor: "#6366f1",
-                        tags: [
-                          { label: "Web Development", color: "bg-blue-100 text-blue-700" },
-                          { label: "Database Systems", color: "bg-indigo-100 text-indigo-700" },
-                        ],
-                        view: "software" as const,
-                        majorKey: "Software Engineering",
-                      },
-                      {
-                        id: "NET",
-                        title: "Networking",
-                        subtitle: "NET · Intake 51",
-                        imageSrc: "/Networking_cover.jpg",
-                        accentGradient: "bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500",
-                        glowColor: "#10b981",
-                        tags: [
-                          { label: "Network Security", color: "bg-emerald-100 text-emerald-700" },
-                          { label: "Wireless Systems", color: "bg-[#1e9df1]/10 text-[#1e9df1]" },
-                        ],
-                        view: "networking" as const,
-                        majorKey: "Networking",
-                      },
-                    ];
-
-                    // Build ordered list — user's major first if logged in
-                    const userMajorKey = isLoggedIn ? userProfile.major : null;
-                    const userMajorIdx = MAJOR_DEFS.findIndex(m => m.majorKey === userMajorKey);
-
-                    const initialIdx = userMajorIdx >= 0 ? userMajorIdx : 0;
-
-                    const stackItems = MAJOR_DEFS.map(def => ({
-                      id: def.id,
-                      title: def.title,
-                      subtitle: def.subtitle,
-                      imageSrc: def.imageSrc,
-                      accentGradient: def.accentGradient,
-                      glowColor: def.glowColor,
-                      tags: def.tags,
-                      isUserMajor: def.majorKey === userMajorKey,
-                      locked: isLoggedIn && def.majorKey !== userMajorKey,
-                      onClick: () => {
-                        if (!isLoggedIn) {
-                          setGuestMajor(def.majorKey);
-                          showMajorAccessNotification("info", "Guest access enabled for this semester. Please create your profile before next semester.");
-                          goToView(def.view);
-                          return;
-                        }
-                        if (def.majorKey !== userProfile.major) {
-                          showMajorAccessNotification("error", `Access Denied: This section is for ${def.majorKey} students only. Your major: ${userProfile.major || "Not set"}`);
-                          return;
-                        }
-                        goToView(def.view);
-                      },
-                    }));
-
-                    return (
-                      <MajorCardStack
-                        items={stackItems}
-                        initialIndex={initialIdx}
-                        isDarkMode={isDarkMode}
-                      />
-                    );
-                  })()}
+                  {/* Department cards — all BUBT departments, only CSE functional today */}
+                  <Suspense fallback={
+                    <div className="flex justify-center py-16">
+                      <div className={`w-8 h-8 rounded-full border-4 border-t-[#1e9df1] animate-spin ${isDarkMode ? "border-[#2f3336]" : "border-slate-200"}`} />
+                    </div>
+                  }>
+                    <DepartmentCards
+                      isDarkMode={isDarkMode}
+                      initialIndex={Math.max(0, DEPARTMENTS.findIndex((d) => d.key === (isLoggedIn ? userProfile.department : "CSE")))}
+                      items={DEPARTMENTS.map((dept) => ({
+                        id: dept.key,
+                        title: dept.label,
+                        subtitle: "Undergraduate Program",
+                        icon: dept.icon,
+                        tags: [{ label: dept.category }],
+                        accentGradient: dept.accentGradient,
+                        glowColor: dept.glowColor,
+                        imageSrc: dept.imageSrc,
+                        videoSrc: dept.videoSrc,
+                        isOwn: isLoggedIn && userProfile.department === dept.key,
+                        locked: dept.active && isLoggedIn && userProfile.department !== dept.key,
+                        comingSoon: !dept.active,
+                        onClick: () => {
+                          if (!dept.active) {
+                            showMajorAccessNotification("info", `${dept.label} materials are coming soon.`);
+                            return;
+                          }
+                          if (!isLoggedIn) {
+                            setGuestDepartment(dept.key);
+                            showMajorAccessNotification("info", "Guest access enabled for this semester. Please create your profile before next semester.");
+                            goToView("study-department");
+                            return;
+                          }
+                          if (userProfile.department !== dept.key) {
+                            showMajorAccessNotification("error", `Access Denied: This section is for ${dept.label} students only.`);
+                            return;
+                          }
+                          goToView("study-department");
+                        },
+                      }))}
+                    />
+                  </Suspense>
 
                 </motion.div>
                 {/* New Version CTA moved above; removing duplicate here */}
@@ -4870,7 +4868,7 @@ For any queries, contact your course instructors or the department.`,
                       {/* Col 1 — Brand */}
                       <div className="sm:col-span-1">
                         <div className="flex items-center gap-2 mb-3">
-                          <img src="/Edu_51_Logo.png" alt="Edu51Portal Logo" className="w-8 h-8 rounded-lg object-contain" />
+                          <img src="/Edu51Portal.png" alt="Edu51Portal Logo" className="w-8 h-8 rounded-lg object-contain" />
                           <span
                             className={`text-base font-bold tracking-tight ${isDarkMode ? "text-white" : "text-slate-900"}`}
                             style={{ fontFamily: "'Exo 2', sans-serif" }}
@@ -4879,7 +4877,7 @@ For any queries, contact your course instructors or the department.`,
                           </span>
                         </div>
                         <p className={`text-xs leading-relaxed mb-4 ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                          BUBT Intake 51 Excellence Platform — your all-in-one academic hub for courses, routines, and campus resources.
+                          BUBT Academic Excellence Platform — your all-in-one academic hub for courses, routines, and campus resources.
                         </p>
                         <div className="flex items-center gap-2">
                           <a
@@ -4920,8 +4918,8 @@ For any queries, contact your course instructors or the department.`,
                       <div>
                         <h4 className={`text-xs font-semibold uppercase tracking-wider mb-3 ${isDarkMode ? "text-[#8b98a5]" : "text-slate-700"}`}>About</h4>
                         <ul className={`space-y-2 text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                          <li>BUBT · Dept. of CSE</li>
-                          <li>Intake 51 · All Sections</li>
+                          <li>BUBT University</li>
+                          <li>All Departments & Sections</li>
                           <li>Academic Resource Hub</li>
                           <li>Exam Routines & Notices</li>
                           <li>Course Materials & Tracker</li>
@@ -4962,7 +4960,7 @@ For any queries, contact your course instructors or the department.`,
                   {/* Bottom bar */}
                   <div className={`px-6 py-4 border-t flex flex-col sm:flex-row items-center justify-between gap-2 transition-colors duration-300 ${isDarkMode ? "border-[#2f3336]/50 bg-[#16181c]/40" : "border-slate-100 bg-slate-50"}`}>
                     <p className={`text-xs ${isDarkMode ? "text-slate-500" : "text-slate-400"}`}>
-                      © {new Date().getFullYear()} Edu<span className="text-[#ef4444]">51</span>Portal · BUBT Intake 51 · All rights reserved.
+                      © {new Date().getFullYear()} Edu<span className="text-[#ef4444]">51</span>Portal · BUBT · All rights reserved.
                     </p>
                     <div className="flex items-center gap-3">
                       <button onClick={() => goToView("terms")} className={`text-xs hover:underline underline-offset-2 transition-colors ${isDarkMode ? "text-slate-500 hover:text-[#8b98a5]" : "text-slate-400 hover:text-slate-600"}`}>
@@ -5065,7 +5063,8 @@ For any queries, contact your course instructors or the department.`,
                         </p>
                       </div>
                       <GDriveFolderBrowser
-                        userMajor={activeMajor}
+                        rootFolderId={legacyMajorFolderId || ""}
+                        sectionLabel={activeMajor || undefined}
                         isDarkMode={isDarkMode}
                         onCourseSelect={(course) => {
                           setSelectedDriveCourse({
@@ -5090,6 +5089,111 @@ For any queries, contact your course instructors or the department.`,
                   )}
                   </>
                 </Suspense>
+              </div>
+            )}
+
+            {/* Department -> Semester -> Course study materials (full-version) */}
+            {currentView === "study-department" && (
+              <div className="space-y-8">
+                {!isLoggedIn && (
+                  <div className={`rounded-2xl border p-6 text-center ${isDarkMode ? "border-blue-500/30 bg-blue-900/20 text-blue-100" : "border-blue-200 bg-blue-50 text-blue-900"}`}>
+                    <div className="text-3xl mb-3">👋</div>
+                    <h2 className="text-xl font-semibold mb-2">Guest access enabled for this semester</h2>
+                    <p className={`text-sm ${isDarkMode ? "text-blue-100/80" : "text-blue-900/80"}`}>
+                      You can access materials without creating an account for this semester, but please create your profile before next semester.
+                    </p>
+                  </div>
+                )}
+
+                {selectedDriveCourse ? (
+                  <Suspense fallback={
+                    <div className="flex justify-center py-16">
+                      <div className={`w-8 h-8 rounded-full border-4 border-t-[#1e9df1] animate-spin ${isDarkMode ? "border-[#2f3336]" : "border-slate-200"}`} />
+                    </div>
+                  }>
+                    <GDriveCourseView
+                      courseCode={selectedDriveCourse.courseCode}
+                      courseName={selectedDriveCourse.courseName}
+                      folderId={selectedDriveCourse.folderId}
+                      folderLink={selectedDriveCourse.folderLink}
+                      onBack={() => setSelectedDriveCourse(null)}
+                      onFileClick={(file) => {
+                        const material: Material = {
+                          id: file.id,
+                          title: file.name,
+                          description: `Size: ${formatBytes(file.size || 0)}`,
+                          file_url: file.webViewLink || file.webContentLink || "",
+                          video_url: null,
+                          type: getMimeTypeCategory(file.mimeType),
+                          course_code: selectedDriveCourse.courseCode,
+                          size: file.size ? formatBytes(file.size) : null,
+                          created_at: new Date().toISOString(),
+                        };
+                        openMaterialViewer(material);
+                      }}
+                      isDarkMode={isDarkMode}
+                    />
+                  </Suspense>
+                ) : selectedSemester ? (
+                  <>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => setSelectedSemester(null)}
+                        className={`flex items-center gap-1.5 text-sm font-semibold ${isDarkMode ? "text-slate-400 hover:text-white" : "text-slate-500 hover:text-slate-900"}`}
+                      >
+                        ← Back to Semesters
+                      </button>
+                    </div>
+                    <h2 className={`text-2xl font-bold ${isDarkMode ? "text-gray-100" : "text-gray-900"}`}>{selectedSemester.name}</h2>
+                    <Suspense fallback={
+                      <div className="flex justify-center py-16">
+                        <div className={`w-8 h-8 rounded-full border-4 border-t-[#1e9df1] animate-spin ${isDarkMode ? "border-[#2f3336]" : "border-slate-200"}`} />
+                      </div>
+                    }>
+                      <GDriveFolderBrowser
+                        rootFolderId={selectedSemester.id}
+                        sectionLabel={getDepartment(activeDepartment)?.key}
+                        isDarkMode={isDarkMode}
+                        onCourseSelect={(course) => {
+                          setSelectedDriveCourse({
+                            courseCode: course.code,
+                            courseName: course.name,
+                            folderId: course.folderId,
+                            folderLink: course.folderLink,
+                          });
+                        }}
+                      />
+                    </Suspense>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-center">
+                      <h2 className={`text-3xl font-bold mb-2 transition-colors duration-300 ${isDarkMode ? "text-gray-100" : "text-gray-900"}`}>
+                        {getDepartment(activeDepartment)?.label || "Department"}
+                      </h2>
+                      <p className={`text-lg transition-colors duration-300 ${isDarkMode ? "text-[#71767b]" : "text-gray-700"}`}>
+                        Choose your semester to browse course materials
+                      </p>
+                    </div>
+                    {departmentFolderId ? (
+                      <Suspense fallback={
+                        <div className="flex justify-center py-16">
+                          <div className={`w-8 h-8 rounded-full border-4 border-t-[#1e9df1] animate-spin ${isDarkMode ? "border-[#2f3336]" : "border-slate-200"}`} />
+                        </div>
+                      }>
+                        <SemesterFolderBrowser
+                          rootFolderId={departmentFolderId}
+                          isDarkMode={isDarkMode}
+                          onSemesterSelect={(sem) => setSelectedSemester({ id: sem.id, name: sem.name })}
+                        />
+                      </Suspense>
+                    ) : (
+                      <div className={`rounded-xl border p-10 text-center ${isDarkMode ? "bg-[#16181c]/40 border-[#2f3336] text-slate-400" : "bg-slate-50 border-slate-200 text-slate-500"}`}>
+                        Materials for this department haven't been set up yet. Please check back soon.
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
             )}
 
@@ -8957,6 +9061,7 @@ For any queries, contact your course instructors or the department.`,
             name: profile.name,
             section: profile.section,
             major: profile.major,
+            department: profile.department || "",
             bubtEmail: profile.bubtEmail,
             notificationEmail: profile.notificationEmail,
             phone: profile.phone,

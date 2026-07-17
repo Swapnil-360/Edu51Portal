@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { X, UserPlus, Image as ImageIcon, Mail, Eye, EyeOff, CheckCircle, Circle } from "lucide-react";
 import { supabase, supabaseConfigured } from "../lib/supabase";
+import { DEPARTMENTS } from "../config/departments";
 
 interface SignUpModalProps {
   isOpen: boolean;
@@ -10,6 +11,7 @@ interface SignUpModalProps {
     name: string;
     section: string;
     major: string;
+    department?: string;
     bubtEmail: string;
     notificationEmail: string;
     phone: string;
@@ -20,6 +22,7 @@ interface SignUpModalProps {
     name: string;
     section: string;
     major: string;
+    department?: string;
     bubtEmail: string;
     notificationEmail: string;
     phone: string;
@@ -47,6 +50,7 @@ export function SignUpModal({
   const [major, setMajor] = useState(
     initialProfile ? initialProfile.major : "",
   );
+  const [department, setDepartment] = useState("");
   const [bubtEmail, setBubtEmail] = useState(
     initialProfile ? initialProfile.bubtEmail : "",
   );
@@ -101,6 +105,7 @@ export function SignUpModal({
       setName(initialProfile.name || "");
       setSection(initialProfile.section || "");
       setMajor(initialProfile.major || "");
+      setDepartment(initialProfile.department || "");
       setBubtEmail(initialProfile.bubtEmail || "");
       setNotificationEmail(initialProfile.notificationEmail || "");
       setPhone(initialProfile.phone || "");
@@ -112,6 +117,7 @@ export function SignUpModal({
       setName("");
       setSection("");
       setMajor("");
+      setDepartment("");
       setBubtEmail("");
       setNotificationEmail("");
       setPhone("");
@@ -268,8 +274,8 @@ export function SignUpModal({
         setError("Section must be under 45 characters.");
         return;
       }
-      if (!major) {
-        setError("Please select your major");
+      if (!department) {
+        setError("Please select your department");
         return;
       }
       if (!bubtEmail.trim()) {
@@ -359,6 +365,7 @@ export function SignUpModal({
                 name: sanitizedName,
                 section: role === "student" ? sanitizedSection : "Alumni",
                 major: role === "student" ? major : "AI",
+                department: role === "student" ? department : null,
                 phone: sanitizedPhone,
                 notificationEmail,
                 profilePic,
@@ -481,6 +488,7 @@ export function SignUpModal({
                   name: sanitizedName,
                   section: role === "student" ? sanitizedSection : "Alumni",
                   major: role === "student" ? major : "AI",
+                  department: role === "student" ? department : null,
                   bubt_email: bubtEmail,
                   notification_email: notificationEmail,
                   phone: sanitizedPhone,
@@ -581,6 +589,7 @@ export function SignUpModal({
               name: sanitizedName,
               section: sanitizedSection,
               major,
+              department,
               notification_email: notificationEmail,
               phone: sanitizedPhone,
             };
@@ -616,6 +625,7 @@ export function SignUpModal({
       localStorage.setItem("userProfileName", sanitizedName);
       localStorage.setItem("userProfileSection", role === "student" ? sanitizedSection : "Alumni");
       localStorage.setItem("userProfileMajor", major);
+      localStorage.setItem("userProfileDepartment", department);
       localStorage.setItem("userProfileBubtEmail", bubtEmail);
       localStorage.setItem("userProfileNotificationEmail", notificationEmail);
       localStorage.setItem("userProfilePhone", sanitizedPhone);
@@ -632,6 +642,7 @@ export function SignUpModal({
         name: sanitizedName,
         section: role === "student" ? sanitizedSection : "Alumni",
         major,
+        department,
         bubtEmail,
         notificationEmail,
         phone: sanitizedPhone,
@@ -915,28 +926,28 @@ export function SignUpModal({
                       />
                     </div>
 
-                    {/* Major */}
+                    {/* Department */}
                     <div>
                       <label
-                        htmlFor="major"
+                        htmlFor="department"
                         className={`block text-sm font-semibold mb-2 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}
                       >
-                        Major *
+                        Department *
                       </label>
                       <select
-                        id="major"
-                        value={major}
-                        onChange={(e) => setMajor(e.target.value)}
+                        id="department"
+                        value={department}
+                        onChange={(e) => setDepartment(e.target.value)}
                         className={`w-full px-4 py-2.5 rounded-lg border transition-all focus:outline-none focus:ring-2 ${
                           isDarkMode
                             ? "bg-gray-800 border-gray-700 text-gray-100 focus:ring-blue-500 focus:border-blue-500"
                             : "bg-gray-50 border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500"
                         }`}
                       >
-                        <option value="">Select your major</option>
-                        <option value="AI">Artificial Intelligence</option>
-                        <option value="Software Engineering">Software Engineering</option>
-                        <option value="Networking">Computer Networking</option>
+                        <option value="">Select your department</option>
+                        {DEPARTMENTS.map((d) => (
+                          <option key={d.key} value={d.key}>{d.label}</option>
+                        ))}
                       </select>
                     </div>
 

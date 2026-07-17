@@ -455,13 +455,20 @@ html {
     color: var(--foreground);
   }
 
-  /* Make buttons and interactive elements non-selectable by default */
+  /* Make buttons and interactive elements non-selectable by default.
+     Also kills the default mobile Safari/Chrome tap-highlight flash
+     (a translucent white/gray overlay on tap) app-wide — previously only
+     applied to elements with .no-select/.ui-element, so plain <button>s
+     like the header logo still flashed it on every tap. */
   button,
+  a,
+  [role="button"],
   .cursor-pointer {
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
+    -webkit-tap-highlight-color: transparent;
     transition: all 0.2s ease-in-out;
   }
 
@@ -479,6 +486,19 @@ html {
   /* Remove focus outline for header navigation */
   header button:focus-visible {
     outline: none !important;
+  }
+
+  /* Header logo — kill outline/ring on every interaction state, with no
+     transition on the property, so a click can never produce a momentary
+     flash of the default/global focus ring before this rule takes over. */
+  .header-logo-btn,
+  .header-logo-btn:focus,
+  .header-logo-btn:focus-visible,
+  .header-logo-btn:active {
+    outline: none !important;
+    box-shadow: none !important;
+    -webkit-tap-highlight-color: transparent !important;
+    transition-property: color, background-color, border-color, opacity, transform !important;
   }
 
   /* Smooth hover states for interactive elements */

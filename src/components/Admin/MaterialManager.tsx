@@ -13,7 +13,9 @@ import {
   buildFolderTree, formatFileSize, fileIcon,
   MAJORS, FOLDER_COLORS,
   DriveConfig, listDriveConfigs, upsertDriveConfig,
+  DepartmentConfig, listDepartmentConfigs, upsertDepartmentConfig,
 } from '../../lib/api/studyApi';
+import { DEPARTMENTS } from '../../config/departments';
 
 interface Props {
   isDarkMode: boolean;
@@ -134,12 +136,17 @@ export default function MaterialManager({ isDarkMode, currentUserId, onPreviewFi
 
   // Tab
   const [activeMajor, setActiveMajor] = useState<StudyMajor>(null);
-  const [activeTab, setActiveTab] = useState<'folders' | 'drive'>('folders');
+  const [activeTab, setActiveTab] = useState<'folders' | 'drive' | 'departments'>('folders');
 
   // Drive config
   const [driveConfigs, setDriveConfigs] = useState<DriveConfig[]>([]);
   const [driveEditing, setDriveEditing] = useState<Record<string, { folderId: string; label: string }>>({});
   const [driveSaving, setDriveSaving] = useState<string | null>(null);
+
+  // Department Drive config (Department -> Semester -> Course hierarchy)
+  const [departmentConfigs, setDepartmentConfigs] = useState<DepartmentConfig[]>([]);
+  const [departmentEditing, setDepartmentEditing] = useState<Record<string, { folderId: string; label: string }>>({});
+  const [departmentSaving, setDepartmentSaving] = useState<string | null>(null);
 
   // Modals
   const [showCreateFolder, setShowCreateFolder] = useState(false);
@@ -192,7 +199,18 @@ export default function MaterialManager({ isDarkMode, currentUserId, onPreviewFi
     setDriveEditing(editing);
   }, []);
 
-  useEffect(() => { loadFolders(); loadDriveConfigs(); }, [loadFolders, loadDriveConfigs]);
+  const loadDepartmentConfigs = useCallback(async () => {
+    const configs = await listDepartmentConfigs();
+    setDepartmentConfigs(configs);
+    const editing: Record<string, { folderId: string; label: string }> = {};
+    for (const d of DEPARTMENTS) {
+      const found = configs.find(c => c.department === d.key);
+      editing[d.key] = { folderId: found?.folder_id ?? '', label: found?.label ?? d.label };
+    }
+    setDepartmentEditing(editing);
+  }, []);
+
+  useEffect(() => { loadFolders(); loadDriveConfigs(); loadDepartmentConfigs(); }, [loadFolders, loadDriveConfigs, loadDepartmentConfigs]);
 
   useEffect(() => {
     if (!selectedFolder) { setMaterials([]); return; }
@@ -304,7 +322,7 @@ export default function MaterialManager({ isDarkMode, currentUserId, onPreviewFi
 
       {/* Section tabs: Folders vs Drive Config */}
       <div className={cls('flex border-b', border, dk ? 'bg-[#16181c]/20' : 'bg-slate-50/40')}>
-        {(['folders', 'drive'] as const).map(tab => (
+        {(['folders', 'drive', 'departments'] as const).map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -315,7 +333,9 @@ export default function MaterialManager({ isDarkMode, currentUserId, onPreviewFi
                 : cls('border-transparent', dk ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-700'),
             )}
           >
-            {tab === 'folders' ? <><FolderOpen size={13} /> Folders & Files</> : <><Link size={13} /> Drive Config</>}
+            {tab === 'folders' ? <><FolderOpen size={13} /> Folders & Files</>
+              : tab === 'drive' ? <><Link size={13} /> Drive Config</>
+              : <><Link size={13} /> Department Config</>}
           </button>
         ))}
       </div>
@@ -375,6 +395,87 @@ export default function MaterialManager({ isDarkMode, currentUserId, onPreviewFi
                         await upsertDriveConfig(m.value, edit.folderId.trim(), edit.label || m.label, currentUserId);
                         await loadDriveConfigs();
                         setDriveSaving(null);
+                      }}
+                      className={cls(
+                        'flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors',
+                        edit.folderId.trim() && !isSaving
+                          ? 'bg-blue-600 text-white hover:bg-blue-700'
+                          : 'bg-slate-300 text-slate-500 cursor-not-allowed',
+                      )}
+                    >
+                      {isSaving ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
+                      Save
+                    </button>
+                  </div>
+                  {currentConfig && (
+                    <a
+                      href={`https://drive.google.com/drive/folders/${currentConfig.folder_id}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-xs text-blue-500 hover:underline flex items-center gap-1"
+                    >
+                      <Link size={11} /> Open in Drive
+                    </a>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Department Config panel (Department -> Semester -> Course hierarchy) */}
+      {activeTab === 'departments' && (
+        <div className="p-5 space-y-4">
+          <p className={cls('text-xs', sub)}>
+            Set the Google Drive root folder for each department. That folder should contain
+            Semester 1-12 subfolders, each containing course folders, each containing Mid-term/Final-term subfolders.
+            Copy the folder ID from the Drive URL: <code className="font-mono bg-slate-500/20 px-1 rounded">https://drive.google.com/drive/folders/<strong>FOLDER_ID</strong></code>
+          </p>
+
+          {DEPARTMENTS.map(d => {
+            const edit = departmentEditing[d.key] ?? { folderId: '', label: d.label };
+            const isSaving = departmentSaving === d.key;
+            const currentConfig = departmentConfigs.find(c => c.department === d.key);
+            return (
+              <div key={d.key} className={cls('rounded-xl border p-4 space-y-3', border, dk ? 'bg-[#16181c]/40' : 'bg-white')}>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold">{d.label}</span>
+                  {!d.active && (
+                    <span className={cls('text-xs px-2 py-0.5 rounded-full', dk ? 'bg-slate-700/50 text-slate-400' : 'bg-slate-100 text-slate-500')}>
+                      Coming Soon
+                    </span>
+                  )}
+                  {currentConfig && (
+                    <span className={cls('text-xs px-2 py-0.5 rounded-full ml-auto', dk ? 'bg-emerald-900/40 text-emerald-400' : 'bg-emerald-50 text-emerald-700')}>
+                      Configured
+                    </span>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <input
+                    type="text"
+                    placeholder="Drive Folder ID (e.g. 1lFktSbOz-voVmiSnYJzuHbtSfpeqsuAx)"
+                    value={edit.folderId}
+                    onChange={e => setDepartmentEditing(prev => ({ ...prev, [d.key]: { ...edit, folderId: e.target.value } }))}
+                    className={input}
+                  />
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      placeholder="Label (optional)"
+                      value={edit.label}
+                      onChange={e => setDepartmentEditing(prev => ({ ...prev, [d.key]: { ...edit, label: e.target.value } }))}
+                      className={cls(input, 'flex-1')}
+                    />
+                    <button
+                      disabled={!edit.folderId.trim() || isSaving}
+                      onClick={async () => {
+                        if (!edit.folderId.trim()) return;
+                        setDepartmentSaving(d.key);
+                        await upsertDepartmentConfig(d.key, edit.folderId.trim(), edit.label || d.label, currentUserId);
+                        await loadDepartmentConfigs();
+                        setDepartmentSaving(null);
                       }}
                       className={cls(
                         'flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors',

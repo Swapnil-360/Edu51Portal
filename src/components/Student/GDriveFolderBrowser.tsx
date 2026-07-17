@@ -1,6 +1,5 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AlertCircle, ChevronRight, Loader2, BookOpen } from 'lucide-react';
-import { COURSE_FOLDER_LINKS } from '../../config/courseFolders';
 
 interface GDriveCourse {
   id: string;
@@ -13,46 +12,36 @@ interface GDriveCourse {
 }
 
 interface GDriveFolderBrowserProps {
-  userMajor: string;
+  rootFolderId: string;
+  sectionLabel?: string;
+  accentColor?: string;
   isDarkMode?: boolean;
   onCourseSelect?: (course: GDriveCourse) => void;
   onReady?: () => void;
 }
 
 const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY || '';
-
-// Per-major accent colors for left border stripe and icon
-const MAJOR_ACCENT: Record<string, { color: string; label: string }> = {
-  'AI':                   { color: '#1e9df1', label: 'AI' },   // teal primary
-  'Software Engineering': { color: '#5c7d8a', label: 'SE' },   // muted blue-slate
-  'Networking':           { color: '#4a8c6e', label: 'NET' },  // muted forest green
-  'Common':               { color: '#8a7040', label: 'CSE' },  // warm sand
-};
+const DEFAULT_ACCENT = '#1e9df1';
 
 function cls(...a: (string | false | null | undefined)[]) { return a.filter(Boolean).join(' '); }
 
+/** Lists the direct Drive subfolders of `rootFolderId` as clickable course cards. */
 export const GDriveFolderBrowser: React.FC<GDriveFolderBrowserProps> = ({
-  userMajor, isDarkMode: dk = false, onCourseSelect, onReady,
+  rootFolderId, sectionLabel, accentColor = DEFAULT_ACCENT, isDarkMode: dk = false, onCourseSelect, onReady,
 }) => {
   const [courses, setCourses] = useState<GDriveCourse[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState<string | null>(null);
 
-  useEffect(() => { loadCourses(); }, [userMajor]);
+  useEffect(() => { loadCourses(); }, [rootFolderId]);
 
   const loadCourses = async () => {
     setLoading(true); setError(null);
     try {
-      const found: GDriveCourse[] = [];
-      const majorFolder = COURSE_FOLDER_LINKS[userMajor as keyof typeof COURSE_FOLDER_LINKS];
-      if (majorFolder?.folderId) found.push(...await listFolders(majorFolder.folderId, userMajor));
-      if (!(majorFolder as any)?.skipCommon) {
-        const common = COURSE_FOLDER_LINKS['Common'];
-        if (common?.folderId) found.push(...await listFolders(common.folderId, 'Common'));
-      }
+      const found = rootFolderId ? await listFolders(rootFolderId) : [];
       setCourses(found);
       if (found.length > 0) onReady?.();
-      if (found.length === 0) setError('No courses found in your Google Drive folder.');
+      if (found.length === 0) setError('No courses found in this Google Drive folder.');
     } catch {
       setError('Failed to load courses. Please check your connection.');
     } finally {
@@ -60,7 +49,7 @@ export const GDriveFolderBrowser: React.FC<GDriveFolderBrowserProps> = ({
     }
   };
 
-  const listFolders = async (parentId: string, source: string): Promise<GDriveCourse[]> => {
+  const listFolders = async (parentId: string): Promise<GDriveCourse[]> => {
     try {
       const q = encodeURIComponent(`'${parentId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`);
       const res = await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&key=${API_KEY}&fields=files(id,name,webViewLink)&pageSize=50`);
@@ -69,8 +58,8 @@ export const GDriveFolderBrowser: React.FC<GDriveFolderBrowserProps> = ({
       return files.map((f: any) => ({
         id: f.id, name: f.name,
         code: f.name.split('(')[0].trim(),
-        description: `${source} Course`,
-        folderId: f.id, folderLink: f.webViewLink, major: source,
+        description: sectionLabel ? `${sectionLabel} Course` : 'Course',
+        folderId: f.id, folderLink: f.webViewLink, major: sectionLabel ?? '',
       }));
     } catch { return []; }
   };
@@ -101,63 +90,57 @@ export const GDriveFolderBrowser: React.FC<GDriveFolderBrowserProps> = ({
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      {courses.map((course) => {
-        const accent = MAJOR_ACCENT[course.major] ?? MAJOR_ACCENT['Common'];
-        return (
-          <button
-            key={course.id}
-            onClick={() => onCourseSelect?.(course)}
-            className={cls(
-              'group relative text-left rounded-xl border overflow-hidden transition-all duration-200',
-              'focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1',
-              dk
-                ? 'bg-[#16181c]/70 border-[#2f3336]/80 hover:border-[#38444d] hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/30'
-                : 'bg-white border-slate-200 hover:border-slate-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-slate-200/80',
-            )}
-          >
-            {/* Left accent stripe */}
-            <div className="absolute left-0 top-0 bottom-0 w-[3px] rounded-l-xl" style={{ background: accent.color }} />
+      {courses.map((course) => (
+        <button
+          key={course.id}
+          onClick={() => onCourseSelect?.(course)}
+          className={cls(
+            'group relative text-left rounded-xl border overflow-hidden transition-all duration-200',
+            'focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1',
+            dk
+              ? 'bg-[#16181c]/70 border-[#2f3336]/80 hover:border-[#38444d] hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/30'
+              : 'bg-white border-slate-200 hover:border-slate-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-slate-200/80',
+          )}
+        >
+          {/* Left accent stripe */}
+          <div className="absolute left-0 top-0 bottom-0 w-[3px] rounded-l-xl" style={{ background: accentColor }} />
 
-            <div className="pl-5 pr-5 pt-5 pb-4">
-              {/* Top row: icon + badges */}
-              <div className="flex items-center justify-between mb-4">
-                <div
-                  className="flex items-center justify-center w-9 h-9 rounded-lg"
-                  style={{ background: `${accent.color}18` }}
-                >
-                  <BookOpen className="h-4 w-4" style={{ color: accent.color }} />
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className={cls('px-2 py-0.5 rounded-md text-[10px] font-semibold tracking-wide', dk ? 'bg-[#2f3336] text-slate-400' : 'bg-slate-100 text-slate-500')}>CSE</span>
-                  {course.major !== 'Common' && (
-                    <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold tracking-wide" style={{ background: `${accent.color}20`, color: accent.color }}>
-                      {accent.label}
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {/* Course name — plain, no gradient */}
-              <h3 className={cls('font-semibold text-[15px] leading-snug mb-1.5 group-hover:text-[var(--accent)] transition-colors duration-150', dk ? 'text-[#e7e9ea]' : 'text-slate-900')}
-                style={{ '--accent': accent.color } as React.CSSProperties}
+          <div className="pl-5 pr-5 pt-5 pb-4">
+            {/* Top row: icon + section badge */}
+            <div className="flex items-center justify-between mb-4">
+              <div
+                className="flex items-center justify-center w-9 h-9 rounded-lg"
+                style={{ background: `${accentColor}18` }}
               >
-                {course.name}
-              </h3>
-
-              <p className={cls('text-xs mb-4', dk ? 'text-slate-500' : 'text-slate-400')}>{course.description}</p>
-
-              {/* Divider */}
-              <div className={cls('h-px mb-3', dk ? 'bg-[#2f3336]/60' : 'bg-slate-100')} />
-
-              {/* CTA */}
-              <div className={cls('flex items-center justify-between text-xs font-medium', dk ? 'text-slate-400' : 'text-slate-500')}>
-                <span>View Materials</span>
-                <ChevronRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform duration-150" />
+                <BookOpen className="h-4 w-4" style={{ color: accentColor }} />
               </div>
+              {sectionLabel && (
+                <span className={cls('px-2 py-0.5 rounded-md text-[10px] font-semibold tracking-wide', dk ? 'bg-[#2f3336] text-slate-400' : 'bg-slate-100 text-slate-500')}>
+                  {sectionLabel}
+                </span>
+              )}
             </div>
-          </button>
-        );
-      })}
+
+            {/* Course name — plain, no gradient */}
+            <h3 className={cls('font-semibold text-[15px] leading-snug mb-1.5 group-hover:text-[var(--accent)] transition-colors duration-150', dk ? 'text-[#e7e9ea]' : 'text-slate-900')}
+              style={{ '--accent': accentColor } as React.CSSProperties}
+            >
+              {course.name}
+            </h3>
+
+            <p className={cls('text-xs mb-4', dk ? 'text-slate-500' : 'text-slate-400')}>{course.description}</p>
+
+            {/* Divider */}
+            <div className={cls('h-px mb-3', dk ? 'bg-[#2f3336]/60' : 'bg-slate-100')} />
+
+            {/* CTA */}
+            <div className={cls('flex items-center justify-between text-xs font-medium', dk ? 'text-slate-400' : 'text-slate-500')}>
+              <span>View Materials</span>
+              <ChevronRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform duration-150" />
+            </div>
+          </div>
+        </button>
+      ))}
     </div>
   );
 };

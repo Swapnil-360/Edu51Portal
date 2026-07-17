@@ -2,10 +2,10 @@
 // File: public/sw.js
 
 // Bump cache name on deploy to invalidate older cached index.html/assets
-const CACHE_NAME = 'edu51five-v3';
+const CACHE_NAME = 'edu51five-v4';
 // Only cache true static images — never JS/CSS (Vite handles those via HMR)
 const urlsToCache = [
-  '/Edu_51_Logo.png',
+  '/Edu51Portal.png',
   '/image.png',
 ];
 
@@ -137,8 +137,8 @@ self.addEventListener('push', (event) => {
         // Simplified notification options
         const options = {
           body: body,
-          icon: '/Edu_51_Logo.png',
-          badge: '/Edu_51_Logo.png',
+          icon: '/Edu51Portal.png',
+          badge: '/Edu51Portal.png',
           tag: 'edu51five',
           requireInteraction: true,
           vibrate: [200, 100, 200],

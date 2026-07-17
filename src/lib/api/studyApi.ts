@@ -234,3 +234,43 @@ export async function getDriveConfigForMajor(major: StudyMajor): Promise<string 
   ).maybeSingle();
   return data?.folder_id ?? null;
 }
+
+// ── Department Drive Config (Department -> Semester -> Course -> Mid/Final) ──
+
+export interface DepartmentConfig {
+  id: string;
+  department: string;
+  folder_id: string;
+  label: string | null;
+  updated_at: string;
+}
+
+export async function listDepartmentConfigs(): Promise<DepartmentConfig[]> {
+  const { data, error } = await supabase
+    .from('study_department_config')
+    .select('*')
+    .order('department', { ascending: true });
+  if (error || !data) return [];
+  return data as DepartmentConfig[];
+}
+
+export async function upsertDepartmentConfig(
+  department: string,
+  folderId: string,
+  label: string,
+  updatedBy: string,
+): Promise<boolean> {
+  const { error } = await supabase
+    .from('study_department_config')
+    .upsert({ department, folder_id: folderId, label, updated_by: updatedBy, updated_at: new Date().toISOString() }, { onConflict: 'department' });
+  return !error;
+}
+
+export async function getDriveConfigForDepartment(department: string): Promise<string | null> {
+  const { data } = await supabase
+    .from('study_department_config')
+    .select('folder_id')
+    .eq('department', department)
+    .maybeSingle();
+  return data?.folder_id ?? null;
+}
