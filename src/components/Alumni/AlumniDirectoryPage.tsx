@@ -87,12 +87,6 @@ export default function AlumniDirectoryPage({
       const mIds = conns?.map((c) => c.alumni_id) || [];
       setStudentMentorIds(mIds);
 
-      // 2. Fetch public resources
-      const { data: publicRes } = await supabase
-        .from("alumni_resources")
-        .select("*")
-        .eq("visibility", "public");
-
       // 3. Fetch private resources from connected mentors
       let privateRes: any[] = [];
       if (mIds.length > 0) {
@@ -104,13 +98,13 @@ export default function AlumniDirectoryPage({
         privateRes = priv || [];
       }
 
-      const combined = [...(publicRes || []), ...privateRes].sort(
+      const sorted = [...privateRes].sort(
         (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
-      setResourcesList(combined);
+      setResourcesList(sorted);
 
       // 4. Fetch uploader names
-      const uploaderIds = Array.from(new Set(combined.map((r) => r.alumni_id)));
+      const uploaderIds = Array.from(new Set(sorted.map((r) => r.alumni_id)));
       if (uploaderIds.length > 0) {
         const { data: alumniProfiles } = await supabase
           .from("alumni_profiles")
@@ -763,79 +757,7 @@ export default function AlumniDirectoryPage({
                 )}
               </div>
 
-              {/* Public Resources */}
-              <div className="space-y-3">
-                <h3 className={`text-sm font-extrabold flex items-center gap-2 ${textColor}`}>
-                  <Globe className="w-4 h-4 text-emerald-400" />
-                  Public Resources
-                </h3>
 
-                {resourcesList.filter((res) => res.visibility === "public" && resourceMatchesFilters(res)).length === 0 ? (
-                  <div className={`p-12 text-center rounded-2xl border ${cardBorder}`}>
-                    <BookOpen className="w-8 h-8 mx-auto mb-2 text-slate-500" />
-                    <p className="text-xs text-slate-500">No public resources match your filters.</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {resourcesList
-                      .filter((res) => res.visibility === "public" && resourceMatchesFilters(res))
-                      .map((res) => (
-                        <div
-                          key={res.id}
-                          className={`p-5 rounded-xl border flex flex-col justify-between gap-4 ${cardBorder}`}
-                        >
-                          <div className="space-y-3">
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="space-y-1 min-w-0">
-                                <h4 className={`font-bold text-sm leading-snug break-words ${textColor}`}>
-                                  {res.title}
-                                </h4>
-                                <p className="text-[10px] text-purple-400 font-semibold uppercase tracking-wider">
-                                  {res.type} · Dept: {res.department}
-                                </p>
-                              </div>
-                              <span className="px-2.5 py-0.5 rounded-full text-[9px] font-extrabold bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 flex items-center gap-1">
-                                <Globe className="w-2.5 h-2.5" />
-                                Public
-                              </span>
-                            </div>
-
-                            {res.description && (
-                              <p className={`text-xs leading-relaxed italic ${subColor}`}>
-                                "{res.description}"
-                              </p>
-                            )}
-
-                            <div className="flex items-center gap-2 text-xs text-emerald-400 bg-emerald-500/5 px-3 py-1.5 rounded-lg w-fit max-w-full">
-                              <FileText className="w-4 h-4 flex-shrink-0" />
-                              <span className="truncate text-[11px]">{res.file_name}</span>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center justify-between pt-3 border-t border-[#2f3336]/10 mt-1">
-                            <div className="min-w-0">
-                              <p className={`text-[10px] font-semibold truncate ${textColor}`}>
-                                Author: {alumniNames[res.alumni_id] || "Verified Alumni"}
-                              </p>
-                              <span className={`text-[9px] flex items-center gap-1 ${subColor} mt-0.5`}>
-                                <Calendar className="w-3 h-3" />
-                                {new Date(res.created_at).toLocaleDateString()}
-                              </span>
-                            </div>
-
-                            <button
-                              onClick={() => window.open(res.file_url, "_blank")}
-                              className="px-3 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/25 transition-all text-xs font-bold flex items-center gap-1 cursor-pointer"
-                            >
-                              <Download className="w-3.5 h-3.5" />
-                              Get File
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                  </div>
-                )}
-              </div>
             </div>
           )
         )}

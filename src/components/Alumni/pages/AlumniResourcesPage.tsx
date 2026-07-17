@@ -123,6 +123,25 @@ export default function AlumniResourcesPage({ isDarkMode, authSession, userProfi
 
       if (insertErr) throw insertErr;
 
+      // Sync insert to team_files (main shared resources table)
+      const { error: teamFileErr } = await supabase
+        .from("team_files")
+        .insert({
+          id: newResource.id,
+          team_id: null,
+          uploader_id: currentUserId,
+          name: selectedFile.name,
+          file_path: filePath,
+          file_url: fileUrl,
+          file_type: selectedFile.type,
+          file_size: selectedFile.size,
+          visibility,
+        });
+
+      if (teamFileErr) {
+        console.error("Error syncing resource to team_files:", teamFileErr);
+      }
+
       // Send notifications to connected mentees if resource is private
       if (visibility === "private") {
         const alumniName = userProfile?.name || "Your Mentor";
@@ -175,6 +194,13 @@ export default function AlumniResourcesPage({ isDarkMode, authSession, userProfi
         .eq("id", id);
 
       if (error) throw error;
+
+      // Sync visibility update to team_files
+      await supabase
+        .from("team_files")
+        .update({ visibility: nextVis })
+        .eq("id", id);
+
       setResources((prev) =>
         prev.map((r) => (r.id === id ? { ...r, visibility: nextVis } : r))
       );
@@ -195,6 +221,12 @@ export default function AlumniResourcesPage({ isDarkMode, authSession, userProfi
         .eq("id", resource.id);
 
       if (dbErr) throw dbErr;
+
+      // Sync deletion to team_files
+      await supabase
+        .from("team_files")
+        .delete()
+        .eq("id", resource.id);
 
       // 2. Extract path from file URL and delete from storage
       // e.g. publicUrl is of format: .../alumni-resources/auth_id/file_name.ext
