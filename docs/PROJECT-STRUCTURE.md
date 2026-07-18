@@ -1,6 +1,6 @@
 # Project Structure
 
-Feature → file → approximate line numbers.
+Feature → file → approximate line numbers. For *why* a feature works this way (theory, user flow, backend rationale, QNA) see [`PRD.md`](./PRD.md) — this doc is the "where," that one is the "why/how."
 
 ---
 
@@ -212,30 +212,31 @@ Student-facing directory (`src/components/Alumni/AlumniDirectoryPage.tsx`, tabs:
 
 ## Study Materials System
 
-Google Drive-backed study material management. Admin manages Drive directly; students browse live Drive content.
+Google Drive-backed study material management. Admin manages Drive directly; students browse live Drive content. **Two hierarchy flows coexist** — see note below.
 
 | What | File |
 |------|------|
 | Drive API — read (list, icon, size, preview) + write (upload, delete, create folder) | `src/lib/driveApi.ts` |
 | API (Drive config CRUD + Supabase folder/material helpers) | `src/lib/api/studyApi.ts` |
 | Admin panel shell (tabs: Folders & Files / Drive Config) | `src/components/Admin/MaterialManager.tsx` |
-| **Admin Drive panel** — browse & manage Drive: upload, delete, create folders, signed-in Google profile | `src/components/Admin/AdminDrivePanel.tsx` |
+| **Admin Drive panel** — browse & manage Drive: upload, delete, create folders, signed-in Google profile; department-aware tabs | `src/components/Admin/AdminDrivePanel.tsx` |
 | Google Drive OAuth hook (popup + postMessage, module-level token cache, auto profile fetch) | `src/hooks/useGoogleDriveAuth.ts` |
 | OAuth callback static page (sends postMessage → closes, never loads React/Supabase) | `public/oauth-callback.html` |
 | Admin-only raw Drive browser (full folder tree, used inside admin panel) | `src/components/Student/GDriveBrowser.tsx` |
-| **Student course list** — course cards per major, left-accent design, reads `courseFolders.ts` | `src/components/Student/GDriveFolderBrowser.tsx` |
+| **Department picker** — 3D card-stack, 9 depts, only `active: true` render live content | `src/components/Student/DepartmentCards.tsx`, `src/config/departments.ts` |
+| **Semester picker** — grid of 12 semester tiles per department | `src/components/Student/SemesterFolderBrowser.tsx` |
 | **Student course detail** — Mid/Final underline tabs, file list w/ preview & download | `src/components/Student/GDriveCourseView.tsx` |
-| Static major → Drive root folder ID map (incl. `skipCommon` flag for AI) | `src/config/courseFolders.ts` |
-| **DB:** `study_folders` + `study_materials` (Supabase uploads) | migration `20260626000000_study_materials` |
-| **DB:** `study_drive_config` (major → GDrive folder ID mapping) | applied via MCP |
+| **DB (Supabase-hosted upload path, built but 0 rows / unused today):** `study_folders` + `study_materials` | migration `20260626000000_study_materials` |
+| **DB (legacy major-based Drive mapping, still used on `main`):** `study_drive_config` | applied via MCP |
+| **DB (full-version dept-based Drive mapping):** `study_department_config` (dept → Drive root folder ID); `profiles.department` column | migration `20260718120000_department_study_hierarchy` |
 | **Storage:** `study-materials` bucket (50 MB, public) | migration `20260626000000_study_materials` |
 
+**Two parallel hierarchies — know which branch you're on:** `main` uses the older Major → Course → Mid/Final flow (`study_drive_config`, `profiles.major`). `full-version` uses the newer Department → Semester → Course → Mid/Final flow (`study_department_config`, `profiles.department`) — a department's Drive root folder contains semester subfolders, not courses directly, hence the separate config table rather than reusing `study_drive_config`. `study_drive_config` is left untouched so `main` stays unaffected.  
+**Departments:** 9 defined in `departments.ts` (CSE, EEE, Textile, Civil, DSE, BBA, English, Economics, LLB) — **only CSE is `active: true`**; the rest render "Coming Soon" until a `study_department_config` row + Drive folder exists for them.  
 **Admin OAuth:** implicit flow (`response_type=token`) using `window.open()` popup + `postMessage`. Redirect URI is `/oauth-callback.html` (static file) to avoid Supabase's `detectSessionFromUrl` overwriting the main session. Google's COOP header blocks `popup.closed`/`popup.close()` from parent — popup closes itself; parent only listens for `GDRIVE_OAUTH_SUCCESS` message. Scope: `drive openid profile email`.  
-**Admin Drive Config tab:** admin sets GDrive folder ID per major (AI / Software Eng / Networking). No code change needed to update root folders.  
-**Student flow:** `GDriveFolderBrowser` lists course folders for the student's major (+ Common unless `skipCommon`) → selecting a course opens `GDriveCourseView`, which finds Mid/Final subfolders and lists files with preview/download. Both fetch live from the Google Drive API (`VITE_GOOGLE_API_KEY`) on each navigation — no cache. `GDriveBrowser` (raw folder tree) is admin-only, reachable only from the admin panel.  
+**Student flow:** department card → semester tile → course → `GDriveCourseView`, which finds Mid/Final subfolders and lists files with preview/download. Fetches live from the Google Drive API (`VITE_GOOGLE_API_KEY`) on each navigation — no cache. `GDriveBrowser` (raw folder tree) is admin-only, reachable only from the admin panel.  
 **Error boundary:** `RootErrorBoundary` in `main.tsx` catches all React render crashes and displays the error + stack trace instead of a blank page.  
-**RLS:** authenticated read; `is_app_admin()` for all writes  
-**Majors:** `'AI'`, `'Software Engineering'`, `'Networking'` (Common removed from admin view)
+**RLS:** authenticated read; `is_app_admin()` for all writes
 
 ---
 
@@ -262,9 +263,12 @@ Google Drive-backed study material management. Admin manages Drive directly; stu
 |------|------|-------|
 | Admin dashboard | `src/components/Admin/AdminDashboard.tsx` | — |
 | Broadcast composer + live email preview | `src/components/Admin/AdminDashboard.tsx` | ~288–435 |
-| Broadcast send handler (push + email) | `src/App.tsx` | ~2442 |
+| Broadcast send handler (push + email, `broadcast: true`) | `src/App.tsx` (`handleSendBroadcastNotification`) | ~2752 |
+| **Alumni Approval Queue** — pending-count badge, approve/reject | `src/components/Admin/AdminDashboard.tsx` (`fetchPendingAlumni`, `approveAlumni`) | ~182–290, ~559 |
 | File upload | `src/components/Admin/FileUpload.tsx` | — |
 | Study material manager (admin CRUD) | `src/components/Admin/MaterialManager.tsx` | Major tabs, recursive folder tree, drag-and-drop file upload queue, inline rename/delete with confirm |
+
+**Alumni Approval:** new alumni sign-ups get `is_alumni = true`, `is_verified = false`. Queried via `profiles` where both hold. Approve sets `is_verified = true` + sends an approval email via `send-email-notification`; unverified alumni are gated from alumni-facing access until approved. **Broadcast:** distinct from targeted push (mentions/task-assignment) — fans out to every row in `push_subscriptions` (`broadcast: true`) + emails all students; every send is logged to `notification_logs` (recipient/success/failure counts).
 
 ---
 
@@ -341,6 +345,8 @@ All migrations in chronological order under `supabase/migrations/`. Key ones:
 | `20260704040331_wc26_cron_and_realtime` | Enables `pg_cron`/`pg_net`; schedules `sync-wc26-matches` every 60s server-side; adds `wc26_matches` to `supabase_realtime` publication (`REPLICA IDENTITY FULL`) |
 | `20260707211050_admin_ban_delete_alumni_tag` | `profiles.is_banned`/`banned_at`/`ban_reason`; `admin_actions` audit log; `is_app_banned()`, `admin_set_user_banned()`; extends `admin_list_users()` with alumni/verified/banned flags |
 | `20260717120000_remove_wc26_feature` | World Cup 2026 feature removed: unschedules `sync-wc26-matches-every-minute` cron job, drops `wc26_matches` table |
+| `20260718120000_department_study_hierarchy` | `study_department_config` table (dept → Drive root folder ID, RLS: public read, `is_app_admin()` write); adds `profiles.department`, backfills existing users to `'CSE'`. `study_drive_config` left untouched for `main` |
+| `20260718000000_alumni_profile_expansion` | Alumni profile fields (skills, achievements, portfolio, social_links, contact_mode); drops leftover permissive duplicate RLS policies on `alumni_profiles` |
 
 ---
 
@@ -348,11 +354,13 @@ All migrations in chronological order under `supabase/migrations/`. Key ones:
 
 | Function | Trigger | Purpose |
 |----------|---------|---------|
-| `send-push-notification` | DB trigger / admin action | Send Web Push to subscribed users |
+| `send-push-notification` | DB trigger / admin action | Send Web Push to subscribed users; targeted (`targetUserId`) or `broadcast: true`, logs to `notification_logs` |
 | `send-email-notification` | Admin action | Send transactional/broadcast emails via Brevo |
-| `send-password-reset` | User action | Send password reset email |
+| `send-password-reset` | User action | Send password reset email via Brevo (not Supabase's built-in template) |
 | `exam-reminder` | Scheduled / admin | Send exam reminder notifications |
-| `ai-chat` | On-demand (chat widget) | Verifies caller JWT, enforces 30 msg/day rate limit via `ai_chat_usage`, proxies to Gemini 2.5 Flash — current version: v5 |
+| `ai-chat` | On-demand (chat widget) | Verifies caller JWT, enforces 30 msg/day rate limit via `ai_chat_usage`, proxies to Gemini 2.5 Flash — current version: v6 |
+| `admin-delete-user` | Admin action | Service-role user deletion: refuses owner, transfers/cleans up owned team, deletes orphaned rows with no FK to `profiles`, logs to `admin_actions` |
+| `sync-wc26-matches` | — | **Dead code.** Leftover from the removed World Cup 2026 feature (table + cron dropped in `20260717120000_remove_wc26_feature`); still deployed ACTIVE with nothing left to sync. Safe to delete. |
 
 ---
 
