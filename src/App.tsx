@@ -7459,33 +7459,6 @@ For any queries, contact your course instructors or the department.`,
                               </div>
                             )}
 
-                            {/* Publish toggle */}
-                            <button
-                              type="button"
-                              role="switch"
-                              aria-checked={newNotice.is_active}
-                              onClick={() =>
-                                setNewNotice({ ...newNotice, is_active: !newNotice.is_active })
-                              }
-                              className={`w-full flex items-center gap-3 p-3 rounded-lg transition-colors ${isDarkMode ? "bg-[#2f3336]/50 hover:bg-[#2f3336]" : "bg-gray-50 hover:bg-gray-100"}`}
-                            >
-                              <Send className={`w-4 h-4 flex-shrink-0 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`} />
-                              <span className={`flex-1 text-left text-sm ${isDarkMode ? "text-gray-100" : "text-gray-900"}`}>
-                                Publish immediately
-                              </span>
-                              <span
-                                className={`relative flex-shrink-0 w-9 h-5 rounded-full transition-colors ${
-                                  newNotice.is_active ? (isDarkMode ? "bg-[#1e9df1]" : "bg-blue-600") : isDarkMode ? "bg-gray-600" : "bg-gray-300"
-                                }`}
-                              >
-                                <span
-                                  className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-transform ${
-                                    newNotice.is_active ? "translate-x-[18px]" : "translate-x-0.5"
-                                  }`}
-                                />
-                              </span>
-                            </button>
-
                             {/* Also email toggle */}
                             <button
                               type="button"
@@ -7504,8 +7477,8 @@ For any queries, contact your course instructors or the department.`,
                                 }`}
                               >
                                 <span
-                                  className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-transform ${
-                                    alsoSendEmail ? "translate-x-[18px]" : "translate-x-0.5"
+                                  className={`absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white transition-transform ${
+                                    alsoSendEmail ? "translate-x-[16px]" : "translate-x-0"
                                   }`}
                                 />
                               </span>
