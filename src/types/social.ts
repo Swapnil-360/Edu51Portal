@@ -23,6 +23,7 @@ export interface SocialProfile {
   // legacy Edu51Five fields (kept working)
   section: string | null;
   major: string | null;
+  department: string | null;
   bubt_email: string | null;
   phone: string | null;
   profile_pic: string | null; // legacy base64 — fallback when avatar_url is null
@@ -255,8 +256,8 @@ export interface AlumniProfile {
 
 // Columns selected for profile lists/cards (never select legacy base64 profile_pic in lists)
 export const SOCIAL_PROFILE_COLS =
-  "id,username,name,headline,about,location,website,social_links,avatar_url,cover_photo_url,skills,interests,visibility,is_alumni,is_admin,section,major,bubt_email,phone,created_at";
+  "id,username,name,headline,about,location,website,social_links,avatar_url,cover_photo_url,skills,interests,visibility,is_alumni,is_admin,section,major,department,bubt_email,phone,created_at";
 
 // Lighter selection for cards/search results
 export const PROFILE_CARD_COLS =
-  "id,username,name,headline,avatar_url,skills,section,major,is_alumni";
+  "id,username,name,headline,avatar_url,skills,section,major,department,is_alumni";

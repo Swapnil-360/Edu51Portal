@@ -344,20 +344,26 @@ export async function sendEmailNotification(notification: EmailNotification): Pr
 }
 
 /**
- * Send email notification to all registered students
+ * Send email notification to all registered students, or just those in one
+ * department when `department` is set (null/undefined = every student).
  */
 export async function sendEmailToAllStudents(
   subject: string,
   title: string,
   body: string,
-  actionUrl?: string
+  actionUrl?: string,
+  department?: string | null
 ): Promise<{ sent: number; failed: number }> {
   try {
-    // Get all registered users with notifications enabled
-    const { data: users, error } = await supabase
+    // Get registered users with notifications enabled, optionally scoped to one department
+    let query = supabase
       .from('profiles')
       .select('notification_email, name')
       .neq('notification_email', null);
+    if (department) {
+      query = query.eq('department', department);
+    }
+    const { data: users, error } = await query;
 
     if (error || !users) {
       console.error('Error fetching registered users:', error);

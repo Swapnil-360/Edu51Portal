@@ -20,6 +20,7 @@ interface PushPayload {
   url?: string;
   broadcast?: boolean;
   targetUserId?: string; // when set, only send to this user's subscriptions
+  targetDepartment?: string; // when set, only send to users in this department
 }
 
 serve(async (req) => {
@@ -71,8 +72,13 @@ serve(async (req) => {
     // Initialize Supabase client
     const supabaseClient = createClient(supabaseUrl, supabaseServiceKey)
 
-    // Fetch active subscriptions (optionally scoped to one user)
-    console.log('📡 Fetching push subscriptions...', payload.targetUserId ? `for user ${payload.targetUserId}` : 'broadcast')
+    // Fetch active subscriptions (optionally scoped to one user or one department)
+    console.log(
+      '📡 Fetching push subscriptions...',
+      payload.targetUserId ? `for user ${payload.targetUserId}`
+        : payload.targetDepartment ? `for department ${payload.targetDepartment}`
+        : 'broadcast'
+    )
 
     let subQuery = supabaseClient
       .from('push_subscriptions')
@@ -81,6 +87,26 @@ serve(async (req) => {
 
     if (payload.targetUserId) {
       subQuery = subQuery.eq('user_id', payload.targetUserId)
+    } else if (payload.targetDepartment) {
+      const { data: deptProfiles, error: deptError } = await supabaseClient
+        .from('profiles')
+        .select('id')
+        .eq('department', payload.targetDepartment)
+
+      if (deptError) {
+        console.error('❌ Failed to resolve department profiles:', deptError.message)
+        throw new Error(`Failed to resolve department: ${deptError.message}`)
+      }
+
+      const deptUserIds = (deptProfiles ?? []).map((p: { id: string }) => p.id)
+      if (deptUserIds.length === 0) {
+        console.log('⚠️ No profiles found for department', payload.targetDepartment)
+        return new Response(
+          JSON.stringify({ success: true, message: 'No users in target department', sent: 0, failed: 0, total: 0 }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+      subQuery = subQuery.in('user_id', deptUserIds)
     }
 
     const { data: subscriptions, error: subError } = await subQuery

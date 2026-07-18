@@ -42,7 +42,7 @@ export interface Notice {
   title: string;
   content: string;
   type: 'info' | 'warning' | 'success' | 'error';
-  category: 'random' | 'exam' | 'event' | 'information' | 'academic' | 'announcement';
+  category: 'general' | 'exam' | 'emergency' | 'important_link' | 'other';
   priority: 'low' | 'normal' | 'high' | 'urgent';
   exam_type?: 'midterm' | 'final' | null;
   event_date?: string | null;
@@ -51,6 +51,8 @@ export interface Notice {
   // Routine attachment (image or PDF) — used for exam notices
   attachment_url?: string | null;
   attachment_type?: 'image' | 'pdf' | null;
+  // Department this notice targets — null means all departments
+  target_department?: string | null;
 }
 
 export type FeedbackCategory = 'bug' | 'improvement' | 'feature' | 'custom';

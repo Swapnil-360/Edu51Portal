@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Plus, ChevronDown, ChevronUp, AlertCircle, Link as LinkIcon, Trash2, Edit2, BarChart3, BookOpen, Files, Users, TrendingUp, HardDrive, UsersRound, ShieldCheck, MessageSquare, RefreshCw, Bug, Lightbulb, Sparkles, Ban, GraduationCap, BadgeCheck, X, Loader2 } from 'lucide-react';
+import { Bell, Plus, ChevronDown, ChevronUp, AlertCircle, Trash2, Edit2, BarChart3, BookOpen, Files, Users, TrendingUp, HardDrive, UsersRound, ShieldCheck, MessageSquare, RefreshCw, Bug, Lightbulb, Sparkles, Ban, GraduationCap, BadgeCheck, X, Loader2 } from 'lucide-react';
 import MaterialManager from './MaterialManager';
 import { supabase, supabaseConfigured } from '../../lib/supabase';
 import { sendEmailNotification } from '../../lib/emailNotifications';
@@ -12,21 +12,6 @@ interface Notice {
   type?: string;
   category?: string;
   created_at?: string;
-}
-
-interface EmergencyAlert {
-  id: string;
-  message: string;
-  status: 'ACTIVE' | 'INACTIVE';
-  created_at: string;
-}
-
-interface EmergencyLink {
-  id: string;
-  title: string;
-  url: string;
-  status: 'ACTIVE' | 'INACTIVE';
-  created_at: string;
 }
 
 interface BucketUsage { bucket: string; bytes: number; files: number; }
@@ -72,7 +57,7 @@ interface AdminDashboardProps {
   onUpdateFeedbackStatus?: (id: string, status: 'new' | 'reviewed' | 'closed') => void;
   onRefreshFeedback?: () => void;
   notices?: Notice[];
-  onEditNotice: () => void;
+  onEditNotice: (notice: Notice) => void;
   onCreateNotice: () => void;
   onDeleteNotice?: (noticeId: string) => void;
   broadcastPush?: { title: string; body: string; url: string };
@@ -312,114 +297,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   }, []);
   // Feedback inbox filter
   const [feedbackFilter, setFeedbackFilter] = useState<'all' | 'new' | 'reviewed' | 'closed'>('all');
-
-  // Load emergency alerts and links from localStorage
-  const [emergencyAlerts, setEmergencyAlerts] = useState<EmergencyAlert[]>([]);
-  const [emergencyLinks, setEmergencyLinks] = useState<EmergencyLink[]>([]);
-  const [showAddAlert, setShowAddAlert] = useState(false);
-  const [showAddLink, setShowAddLink] = useState(false);
-  const [newAlertMessage, setNewAlertMessage] = useState('');
-  const [newLinkTitle, setNewLinkTitle] = useState('');
-  const [newLinkUrl, setNewLinkUrl] = useState('');
-
-  // Load data from localStorage on mount
-  useEffect(() => {
-    const savedAlerts = localStorage.getItem('emergency_alerts');
-    const savedLinks = localStorage.getItem('emergency_links');
-    
-    if (savedAlerts) {
-      try {
-        setEmergencyAlerts(JSON.parse(savedAlerts));
-      } catch (e) {
-        console.error('Failed to parse emergency alerts', e);
-      }
-    }
-    
-    if (savedLinks) {
-      try {
-        setEmergencyLinks(JSON.parse(savedLinks));
-      } catch (e) {
-        console.error('Failed to parse emergency links', e);
-      }
-    }
-  }, []);
-
-  // Save alerts to localStorage
-  const saveAlert = () => {
-    if (!newAlertMessage.trim()) return;
-    
-    const newAlert: EmergencyAlert = {
-      id: Date.now().toString(),
-      message: newAlertMessage,
-      status: 'ACTIVE',
-      created_at: new Date().toISOString(),
-    };
-    
-    const updated = [newAlert, ...emergencyAlerts];
-    setEmergencyAlerts(updated);
-    localStorage.setItem('emergency_alerts', JSON.stringify(updated));
-    // Dispatch custom event for instant UI update
-    window.dispatchEvent(new CustomEvent('edu51five-data-updated', { detail: { type: 'emergency_alerts' } }));
-    setNewAlertMessage('');
-    setShowAddAlert(false);
-  };
-
-  // Delete alert
-  const deleteAlert = (id: string) => {
-    const updated = emergencyAlerts.filter(a => a.id !== id);
-    setEmergencyAlerts(updated);
-    localStorage.setItem('emergency_alerts', JSON.stringify(updated));
-    window.dispatchEvent(new CustomEvent('edu51five-data-updated', { detail: { type: 'emergency_alerts' } }));
-  };
-
-  // Toggle alert status
-  const toggleAlertStatus = (id: string) => {
-    const updated = emergencyAlerts.map(a =>
-      a.id === id ? { ...a, status: a.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE' } : a
-    );
-    setEmergencyAlerts(updated);
-    localStorage.setItem('emergency_alerts', JSON.stringify(updated));
-    window.dispatchEvent(new CustomEvent('edu51five-data-updated', { detail: { type: 'emergency_alerts' } }));
-  };
-
-  // Save link to localStorage
-  const saveLink = () => {
-    if (!newLinkTitle.trim() || !newLinkUrl.trim()) return;
-    
-    const newLink: EmergencyLink = {
-      id: Date.now().toString(),
-      title: newLinkTitle,
-      url: newLinkUrl,
-      status: 'ACTIVE',
-      created_at: new Date().toISOString(),
-    };
-    
-    const updated = [newLink, ...emergencyLinks];
-    setEmergencyLinks(updated);
-    localStorage.setItem('emergency_links', JSON.stringify(updated));
-    window.dispatchEvent(new CustomEvent('edu51five-data-updated', { detail: { type: 'emergency_links' } }));
-    setNewLinkTitle('');
-    setNewLinkUrl('');
-    setShowAddLink(false);
-  };
-
-  // Delete link
-  const deleteLink = (id: string) => {
-    const updated = emergencyLinks.filter(l => l.id !== id);
-    setEmergencyLinks(updated);
-    localStorage.setItem('emergency_links', JSON.stringify(updated));
-    window.dispatchEvent(new CustomEvent('edu51five-data-updated', { detail: { type: 'emergency_links' } }));
-  };
-
-  // Toggle link status
-  const toggleLinkStatus = (id: string) => {
-    const updated = emergencyLinks.map(l =>
-      l.id === id ? { ...l, status: l.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE' } : l
-    );
-    setEmergencyLinks(updated);
-    localStorage.setItem('emergency_links', JSON.stringify(updated));
-    window.dispatchEvent(new CustomEvent('edu51five-data-updated', { detail: { type: 'emergency_links' } }));
-  }
 
   const toggleSection = (section: string) => {
     setExpandedSections(prev => ({
@@ -1100,7 +977,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     </div>
                     <div className="flex space-x-2 flex-shrink-0">
                       <button
-                        onClick={onEditNotice}
+                        onClick={() => onEditNotice(notice)}
                         className={`p-2.5 rounded-lg transition-all duration-300 group-hover/notice:scale-110 ${isDarkMode ? 'bg-blue-500/20 text-blue-400 hover:bg-blue-500/30' : 'bg-[#2B7CBF]/10 text-[#2B7CBF] hover:bg-[#2B7CBF]/20'}`}
                         title="Edit this notice"
                       >
@@ -1121,232 +998,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <p className={`text-sm text-center py-6 ${isDarkMode ? 'text-slate-400' : 'text-[#2B7CBF]/60'}`}>
                 No notices yet. Click "Add Notice" to create one.
               </p>
-            )}
-          </div>
-        </div>
-
-        {/* SECTION 3: Emergency Alerts */}
-        <div className={`group relative overflow-hidden rounded-xl lg:rounded-2xl transition-all duration-300 ${isDarkMode ? 'bg-gradient-to-br from-slate-700/40 to-slate-800/40 backdrop-blur-xl border border-red-500/20 hover:border-red-400/40 hover:from-slate-700/60 hover:to-slate-800/60 hover:shadow-lg hover:shadow-red-500/20' : 'bg-gradient-to-br from-red-50/80 to-red-100/80 backdrop-blur-xl border border-red-200/50 hover:border-red-300/80 hover:shadow-lg hover:shadow-red-200/50'}`}>
-          <div className={`absolute inset-0 ${isDarkMode ? 'bg-gradient-to-br from-red-500/5 to-transparent' : 'bg-gradient-to-br from-red-400/10 to-transparent'} opacity-0 group-hover:opacity-100 transition-opacity duration-300`}></div>
-          <div className="relative z-10 p-4 sm:p-5 lg:p-6">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-5 sm:mb-6">
-              <h2 className={`text-base sm:text-lg font-bold uppercase tracking-wider flex items-center ${isDarkMode ? 'text-red-300 group-hover:text-red-200' : 'text-red-600 group-hover:text-red-700'} transition-colors`}>
-                <div className={`p-2 rounded-lg mr-3 ${isDarkMode ? 'bg-red-500/20 text-red-400' : 'bg-red-200 text-red-600'}`}>
-                  <AlertCircle className="w-5 h-5" />
-                </div>
-                <span>Emergency Alerts</span>
-              </h2>
-              <button
-                onClick={() => setShowAddAlert(!showAddAlert)}
-                className={`flex items-center justify-center space-x-2 px-4 py-2.5 text-sm font-semibold rounded-lg transition-all duration-300 group/btn ${isDarkMode ? 'bg-red-500/30 text-red-200 hover:bg-red-500/50 border border-red-400/50 hover:border-red-300/80 hover:shadow-lg hover:shadow-red-500/30' : 'bg-red-500/20 text-red-700 hover:bg-red-500/30 border border-red-300/50 hover:border-red-400/80 hover:shadow-lg hover:shadow-red-200/50'} w-full sm:w-auto`}
-              >
-                <Plus className="w-4 h-4 flex-shrink-0 transition-transform group-hover/btn:rotate-90" />
-                <span>Add Alert</span>
-              </button>
-            </div>
-
-            {showAddAlert && (
-              <div className={`mb-4 p-4 rounded-lg transition-all duration-300 ${isDarkMode ? 'bg-[#16181c]/50 border border-red-500/30 backdrop-blur-sm' : 'bg-red-100/50 border border-red-200/80 backdrop-blur-sm'}`}>
-                <textarea
-                  value={newAlertMessage}
-                  onChange={(e) => setNewAlertMessage(e.target.value)}
-                  placeholder="Emergency alert message..."
-                  className={`w-full px-4 py-3 rounded-lg text-sm font-medium transition-all ${isDarkMode ? 'bg-[#2f3336]/60 text-white placeholder-[#71767b] border border-[#38444d]/50 focus:border-red-500/50 focus:ring-2 focus:ring-red-500/30' : 'bg-white text-gray-900 placeholder-gray-400 border border-red-200 focus:border-red-400 focus:ring-2 focus:ring-red-300/50'} focus:outline-none`}
-                  rows={3}
-                />
-                <div className="flex flex-col sm:flex-row gap-2 mt-4">
-                  <button
-                    onClick={saveAlert}
-                    disabled={!newAlertMessage.trim()}
-                    className={`flex-1 px-4 py-2.5 text-sm font-semibold rounded-lg transition-all duration-300 ${!newAlertMessage.trim() ? 'opacity-50 cursor-not-allowed' : ''} ${isDarkMode ? 'bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-green-500 hover:to-green-600 hover:shadow-lg hover:shadow-green-500/30' : 'bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-400 hover:to-green-500 hover:shadow-lg hover:shadow-green-300/50'}`}
-                  >
-                    Save Alert
-                  </button>
-                  <button
-                    onClick={() => {
-                      setShowAddAlert(false);
-                      setNewAlertMessage('');
-                    }}
-                    className={`flex-1 px-4 py-2.5 text-sm font-semibold rounded-lg transition-all duration-300 ${isDarkMode ? 'bg-[#2f3336]/50 hover:bg-[#38444d]/50 text-[#d9d9d9] hover:text-white border border-[#38444d]/50' : 'bg-gray-200/50 hover:bg-gray-300/50 text-gray-700 border border-gray-300/50'}`}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {emergencyAlerts.length === 0 ? (
-              <p className={`text-sm text-center py-6 ${isDarkMode ? 'text-slate-400' : 'text-red-600/60'}`}>
-                No active emergency alerts
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {emergencyAlerts.map(alert => (
-                  <div
-                    key={alert.id}
-                    className={`group/alert p-4 rounded-lg flex flex-col sm:flex-row justify-between sm:items-center gap-3 transition-all duration-300 backdrop-blur-sm ${
-                      alert.status === 'ACTIVE'
-                        ? isDarkMode
-                          ? 'bg-red-500/15 border border-red-500/40 hover:bg-red-500/25 hover:border-red-500/60 hover:shadow-lg hover:shadow-red-500/20'
-                          : 'bg-red-200/30 border border-red-300/60 hover:bg-red-200/50 hover:border-red-400/80 hover:shadow-lg hover:shadow-red-200/30'
-                        : isDarkMode
-                        ? 'bg-[#2f3336]/20 border border-[#38444d]/40 opacity-60 hover:opacity-80'
-                        : 'bg-gray-200/30 border border-gray-300/40 opacity-60 hover:opacity-80'
-                    }`}
-                  >
-                    <div className="flex-1 min-w-0">
-                      <p className={`text-sm font-medium break-words ${isDarkMode ? 'text-red-200' : 'text-red-700'}`}>{alert.message}</p>
-                      <div className="mt-2 flex items-center gap-2 flex-wrap">
-                        <span className={`inline-block text-[9px] font-bold px-2 py-0.5 rounded-full ${alert.status === 'ACTIVE' ? (isDarkMode ? 'bg-green-500/30 text-green-300' : 'bg-green-200 text-green-700') : (isDarkMode ? 'bg-gray-600 text-gray-300' : 'bg-gray-300 text-gray-600')}`}>
-                          <span className={`inline-block w-1.5 h-1.5 rounded-full ${alert.status === 'ACTIVE' ? 'bg-green-400 animate-pulse' : 'bg-gray-400'} mr-1`}></span>
-                          {alert.status === 'ACTIVE' ? 'LIVE' : 'INACTIVE'}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex space-x-2 flex-shrink-0">
-                      <button
-                        onClick={() => toggleAlertStatus(alert.id)}
-                        className={`p-2.5 rounded-lg transition-all duration-300 group-hover/alert:scale-110 ${
-                          isDarkMode 
-                            ? `${alert.status === 'ACTIVE' ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30' : 'bg-gray-600/50 text-gray-400 hover:bg-gray-600'}`
-                            : `${alert.status === 'ACTIVE' ? 'bg-green-200 text-green-600 hover:bg-green-300' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'}`
-                        }`}
-                        title={alert.status === 'ACTIVE' ? 'Deactivate' : 'Activate'}
-                      >
-                        {alert.status === 'ACTIVE' ? <AlertCircle className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
-                      </button>
-                      <button
-                        onClick={() => deleteAlert(alert.id)}
-                        className={`p-2.5 rounded-lg transition-all duration-300 group-hover/alert:scale-110 ${isDarkMode ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30' : 'bg-red-200/50 text-red-600 hover:bg-red-300/50'}`}
-                        title="Delete alert"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* SECTION 4: Emergency Links */}
-        <div className={`group relative overflow-hidden rounded-xl lg:rounded-2xl transition-all duration-300 ${isDarkMode ? 'bg-gradient-to-br from-slate-700/40 to-slate-800/40 backdrop-blur-xl border border-blue-500/20 hover:border-blue-400/40 hover:from-slate-700/60 hover:to-slate-800/60 hover:shadow-lg hover:shadow-blue-500/20' : 'bg-gradient-to-br from-blue-50/80 to-blue-100/80 backdrop-blur-xl border border-blue-200/50 hover:border-blue-300/80 hover:shadow-lg hover:shadow-blue-200/50'}`}>
-          <div className={`absolute inset-0 ${isDarkMode ? 'bg-gradient-to-br from-blue-500/5 to-transparent' : 'bg-gradient-to-br from-blue-400/10 to-transparent'} opacity-0 group-hover:opacity-100 transition-opacity duration-300`}></div>
-          <div className="relative z-10 p-4 sm:p-5 lg:p-6">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-5 sm:mb-6">
-              <h2 className={`text-base sm:text-lg font-bold uppercase tracking-wider flex items-center ${isDarkMode ? 'text-blue-300 group-hover:text-blue-200' : 'text-blue-600 group-hover:text-blue-700'} transition-colors`}>
-                <div className={`p-2 rounded-lg mr-3 ${isDarkMode ? 'bg-blue-500/20 text-blue-400' : 'bg-blue-200 text-blue-600'}`}>
-                  <LinkIcon className="w-5 h-5" />
-                </div>
-                <span>Important Links</span>
-              </h2>
-              <button
-                onClick={() => setShowAddLink(!showAddLink)}
-                className={`flex items-center justify-center space-x-2 px-4 py-2.5 text-sm font-semibold rounded-lg transition-all duration-300 group/btn ${isDarkMode ? 'bg-blue-500/30 text-blue-200 hover:bg-blue-500/50 border border-blue-400/50 hover:border-blue-300/80 hover:shadow-lg hover:shadow-blue-500/30' : 'bg-blue-500/20 text-blue-700 hover:bg-blue-500/30 border border-blue-300/50 hover:border-blue-400/80 hover:shadow-lg hover:shadow-blue-200/50'} w-full sm:w-auto`}
-              >
-                <Plus className="w-4 h-4 flex-shrink-0 transition-transform group-hover/btn:rotate-90" />
-                <span>Add Link</span>
-              </button>
-            </div>
-
-            {showAddLink && (
-              <div className={`mb-4 p-4 rounded-lg space-y-3 transition-all duration-300 ${isDarkMode ? 'bg-[#16181c]/50 border border-blue-500/30 backdrop-blur-sm' : 'bg-blue-100/50 border border-blue-200/80 backdrop-blur-sm'}`}>
-                <input
-                  type="text"
-                  value={newLinkTitle}
-                  onChange={(e) => setNewLinkTitle(e.target.value)}
-                  placeholder="Link title..."
-                  className={`w-full px-4 py-3 rounded-lg text-sm font-medium transition-all ${isDarkMode ? 'bg-[#2f3336]/60 text-white placeholder-[#71767b] border border-[#38444d]/50 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/30' : 'bg-white text-gray-900 placeholder-gray-400 border border-blue-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-300/50'} focus:outline-none`}
-                />
-                <input
-                  type="url"
-                  value={newLinkUrl}
-                  onChange={(e) => setNewLinkUrl(e.target.value)}
-                  placeholder="https://example.com"
-                  className={`w-full px-4 py-3 rounded-lg text-sm font-medium transition-all ${isDarkMode ? 'bg-[#2f3336]/60 text-white placeholder-[#71767b] border border-[#38444d]/50 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/30' : 'bg-white text-gray-900 placeholder-gray-400 border border-blue-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-300/50'} focus:outline-none`}
-                />
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <button
-                    onClick={saveLink}
-                    disabled={!newLinkTitle.trim() || !newLinkUrl.trim()}
-                    className={`flex-1 px-4 py-2.5 text-sm font-semibold rounded-lg transition-all duration-300 ${!newLinkTitle.trim() || !newLinkUrl.trim() ? 'opacity-50 cursor-not-allowed' : ''} ${isDarkMode ? 'bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-green-500 hover:to-green-600 hover:shadow-lg hover:shadow-green-500/30' : 'bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-400 hover:to-green-500 hover:shadow-lg hover:shadow-green-300/50'}`}
-                  >
-                    Save Link
-                  </button>
-                  <button
-                    onClick={() => {
-                      setShowAddLink(false);
-                      setNewLinkTitle('');
-                      setNewLinkUrl('');
-                    }}
-                    className={`flex-1 px-4 py-2.5 text-sm font-semibold rounded-lg transition-all duration-300 ${isDarkMode ? 'bg-[#2f3336]/50 hover:bg-[#38444d]/50 text-[#d9d9d9] hover:text-white border border-[#38444d]/50' : 'bg-gray-200/50 hover:bg-gray-300/50 text-gray-700 border border-gray-300/50'}`}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {emergencyLinks.length === 0 ? (
-              <p className={`text-sm text-center py-6 ${isDarkMode ? 'text-slate-400' : 'text-blue-600/60'}`}>
-                No emergency links
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {emergencyLinks.map(link => (
-                  <div
-                    key={link.id}
-                    className={`group/link p-4 rounded-lg flex flex-col sm:flex-row justify-between sm:items-start gap-3 transition-all duration-300 backdrop-blur-sm ${
-                      link.status === 'ACTIVE'
-                        ? isDarkMode
-                          ? 'bg-blue-500/15 border border-blue-500/40 hover:bg-blue-500/25 hover:border-blue-500/60 hover:shadow-lg hover:shadow-blue-500/20'
-                          : 'bg-blue-200/30 border border-blue-300/60 hover:bg-blue-200/50 hover:border-blue-400/80 hover:shadow-lg hover:shadow-blue-200/30'
-                        : isDarkMode
-                        ? 'bg-[#2f3336]/20 border border-[#38444d]/40 opacity-60 hover:opacity-80'
-                        : 'bg-gray-200/30 border border-gray-300/40 opacity-60 hover:opacity-80'
-                    }`}
-                  >
-                    <div className="flex-1 min-w-0">
-                      <p className={`font-medium text-sm break-words ${isDarkMode ? 'text-blue-200' : 'text-blue-700'}`}>{link.title}</p>
-                      <a
-                        href={link.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={`text-xs sm:text-sm font-medium hover:underline break-all block mt-2 transition-colors ${isDarkMode ? 'text-blue-300/80 hover:text-blue-200' : 'text-blue-600/80 hover:text-blue-700'}`}
-                      >
-                        {link.url}
-                      </a>
-                      <div className="mt-2 flex items-center gap-2 flex-wrap">
-                        <span className={`inline-block text-[9px] font-bold px-2 py-0.5 rounded-full ${link.status === 'ACTIVE' ? (isDarkMode ? 'bg-green-500/30 text-green-300' : 'bg-green-200 text-green-700') : (isDarkMode ? 'bg-gray-600 text-gray-300' : 'bg-gray-300 text-gray-600')}`}>
-                          <span className={`inline-block w-1.5 h-1.5 rounded-full ${link.status === 'ACTIVE' ? 'bg-green-400 animate-pulse' : 'bg-gray-400'} mr-1`}></span>
-                          {link.status === 'ACTIVE' ? 'LIVE' : 'INACTIVE'}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex space-x-2 flex-shrink-0">
-                      <button
-                        onClick={() => toggleLinkStatus(link.id)}
-                        className={`p-2.5 rounded-lg transition-all duration-300 group-hover/link:scale-110 ${
-                          isDarkMode 
-                            ? `${link.status === 'ACTIVE' ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30' : 'bg-gray-600/50 text-gray-400 hover:bg-gray-600'}`
-                            : `${link.status === 'ACTIVE' ? 'bg-green-200 text-green-600 hover:bg-green-300' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'}`
-                        }`}
-                        title={link.status === 'ACTIVE' ? 'Deactivate' : 'Activate'}
-                      >
-                        <LinkIcon className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => deleteLink(link.id)}
-                        className={`p-2.5 rounded-lg transition-all duration-300 group-hover/link:scale-110 ${isDarkMode ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30' : 'bg-red-200/50 text-red-600 hover:bg-red-300/50'}`}
-                        title="Delete link"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
             )}
           </div>
         </div>

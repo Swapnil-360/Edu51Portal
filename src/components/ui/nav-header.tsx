@@ -221,12 +221,6 @@ export function AppNavHeader({
       onClick: () => goToView("home"),
     },
     {
-      label: "Semester",
-      view: "semester",
-      isActive: currentView === "semester",
-      onClick: () => requireLogin("semester", "Semester Tracker"),
-    },
-    {
       label: "Teams",
       view: "teams",
       badge: "new",

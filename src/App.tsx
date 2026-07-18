@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "./lib/supabase";
 import { Notice } from "./types";
 import { getCurrentSemesterStatus } from "./config/semester";
-const SemesterTracker = lazy(() => import("./components/SemesterTracker"));
 const CustomRoutine = lazy(() => import("./components/Student/CustomRoutine"));
 import {
   registerServiceWorker,
@@ -97,6 +96,12 @@ import {
   HelpCircle,
   Home,
   Ban,
+  Megaphone,
+  AlertTriangle,
+  Link2,
+  MoreHorizontal,
+  Send,
+  Mail,
 } from "lucide-react";
 const ProfilePage = lazy(() => import("./components/Profile/ProfilePage"));
 const NetworkPage = lazy(() => import("./components/Network/NetworkPage"));
@@ -167,7 +172,6 @@ function App() {
     | "study-semester"
     | "course"
     | "home"
-    | "semester"
     | "privacy"
     | "custom"
     | "profile"
@@ -184,7 +188,6 @@ function App() {
     if (path === "/networking") return "networking";
     if (path === "/study-department") return "study-department";
     if (path === "/study-semester") return "study-semester";
-    if (path === "/semester") return "semester";
     if (path === "/custom-routine") return "custom";
     if (path === "/privacy") return "privacy";
     if (path.startsWith("/course/")) return "course";
@@ -226,7 +229,6 @@ function App() {
         | "study-semester"
         | "course"
         | "home"
-        | "semester"
         | "privacy"
         | "terms"
         | "custom"
@@ -245,7 +247,6 @@ function App() {
       else if (view === "networking") path = "/networking";
       else if (view === "study-department") path = "/study-department";
       else if (view === "study-semester") path = "/study-semester";
-      else if (view === "semester") path = "/semester";
       else if (view === "privacy") path = "/privacy";
       else if (view === "custom") path = "/custom-routine";
       else if (view === "course" && extra) path = `/course/${extra}`;
@@ -298,7 +299,6 @@ function App() {
         else if (path === "/networking") setCurrentView("networking");
         else if (path === "/study-department") setCurrentView("study-department");
         else if (path === "/study-semester") setCurrentView("study-semester");
-        else if (path === "/semester") setCurrentView("semester");
         else if (path === "/custom-routine") setCurrentView("custom");
         else if (path === "/privacy") setCurrentView("privacy");
         else if (path.startsWith("/course/")) setCurrentView("course");
@@ -349,18 +349,6 @@ function App() {
   const [isLoadingNotices, setIsLoadingNotices] = useState(false);
   const hasLoadedInitialNotices = useRef(false);
   const [notices, setNotices] = useState<Notice[]>([]);
-  const [emergencyAlerts, setEmergencyAlerts] = useState<
-    Array<{ id: string; message: string; status: string; created_at: string }>
-  >([]);
-  const [emergencyLinks, setEmergencyLinks] = useState<
-    Array<{
-      id: string;
-      title: string;
-      url: string;
-      status: string;
-      created_at: string;
-    }>
-  >([]);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [selectedDriveCourse, setSelectedDriveCourse] = useState<{
     courseCode: string;
@@ -554,7 +542,7 @@ function App() {
   // Redirect guest users trying to access login-only views directly via URL/history
   useEffect(() => {
     if (!authLoading && !isLoggedIn) {
-      const loginRequiredViews = ["semester", "custom", "network", "teams", "team", "alumni", "shared-resources"];
+      const loginRequiredViews = ["custom", "network", "teams", "team", "alumni", "shared-resources"];
       if (loginRequiredViews.includes(currentView) || (currentView === "profile" && !viewedUsername)) {
         setCurrentView("home");
         window.history.replaceState({}, "", "/home");
@@ -1048,10 +1036,16 @@ function App() {
     [materials, selectedExamPeriod],
   );
 
-  // Memoize active notices count
+  // Memoize active notices count — scoped to the viewer's department
+  // (null/undefined target_department means the notice targets everyone)
   const activeNotices = useMemo(
-    () => notices.filter((n) => n.is_active),
-    [notices],
+    () =>
+      notices.filter(
+        (n) =>
+          n.is_active &&
+          (n.target_department == null || n.target_department === activeDepartment),
+      ),
+    [notices, activeDepartment],
   );
 
   // Memoize unread notice count
@@ -1082,23 +1076,25 @@ function App() {
     title: "",
     content: "",
     type: "info" as "info" | "warning" | "success" | "error",
-    category: "announcement" as
-      | "random"
+    category: "general" as
+      | "general"
       | "exam"
-      | "event"
-      | "information"
-      | "academic"
-      | "announcement",
+      | "emergency"
+      | "important_link"
+      | "other",
     priority: "normal" as "low" | "normal" | "high" | "urgent",
     exam_type: null as "midterm" | "final" | null,
     event_date: "",
     is_active: true,
     attachment_url: null as string | null,
     attachment_type: null as "image" | "pdf" | null,
+    target_department: null as string | null,
   });
   // Pending routine attachment file (uploaded on save)
   const [routineFile, setRoutineFile] = useState<File | null>(null);
   const [routineUploading, setRoutineUploading] = useState(false);
+  // Whether creating/updating a notice also sends an email to its target audience
+  const [alsoSendEmail, setAlsoSendEmail] = useState(true);
 
   // Generate or get session ID
   const getSessionId = () => {
@@ -1303,6 +1299,7 @@ function App() {
             title: notice.title,
             body: notice.content.substring(0, 100),
             url: "/",
+            targetDepartment: notice.target_department || undefined,
           },
         },
       );
@@ -1342,7 +1339,6 @@ function App() {
     initializeDatabase();
     loadCourses();
     loadNotices();
-    loadEmergencyData();
   }, []); // Run only once on mount
 
   // Load materials when selectedCourse changes
@@ -1377,12 +1373,11 @@ function App() {
   // No longer auto-create welcome notice - Admin must manually create notices
   // useEffect removed to prevent automatic welcome notice spam
 
-  // Auto-refresh notices and emergency data every 2 minutes for real-time updates
+  // Auto-refresh notices every 2 minutes for real-time updates
   useEffect(() => {
     const interval = setInterval(() => {
-      console.log("🔄 Auto-refreshing notices and emergency data...");
+      console.log("🔄 Auto-refreshing notices...");
       loadNotices();
-      loadEmergencyData();
     }, 120000); // 2 minutes (reduced from 30s to minimize unnecessary calls)
 
     return () => clearInterval(interval);
@@ -1495,16 +1490,11 @@ function App() {
       if (debounceTimer) clearTimeout(debounceTimer);
       debounceTimer = setTimeout(() => {
         loadNotices();
-        loadEmergencyData();
       }, 500); // Wait 500ms before reloading to batch rapid changes
     };
 
     const handleStorageChange = (e: StorageEvent) => {
-      if (
-        e.key === "edu51five_notices" ||
-        e.key === "emergency_alerts" ||
-        e.key === "emergency_links"
-      ) {
+      if (e.key === "edu51five_notices") {
         console.log("📦 Storage changed, scheduling reload:", e.key);
         debouncedReload();
       }
@@ -2008,7 +1998,7 @@ This platform is your centralized hub for all Section 2 (AI) resources. Use it r
 Best of luck with your studies!
 - Edu51Portal Team`,
           type: "info",
-          category: "announcement",
+          category: "general",
           priority: "normal",
           exam_type: null,
           event_date: null,
@@ -2073,7 +2063,7 @@ Best of luck with your studies!
           title: "Welcome to Edu51Portal",
           content: "Welcome to Edu51Portal, your academic platform!",
           type: "info",
-          category: "announcement",
+          category: "general",
           priority: "normal",
           exam_type: null,
           event_date: "",
@@ -2174,26 +2164,6 @@ Best of luck with your studies!
     }
   };
 
-  // Load emergency alerts and links from localStorage
-  const loadEmergencyData = () => {
-    try {
-      const savedAlerts = localStorage.getItem("emergency_alerts");
-      const savedLinks = localStorage.getItem("emergency_links");
-
-      if (savedAlerts) {
-        const alerts = JSON.parse(savedAlerts);
-        setEmergencyAlerts(alerts.filter((a: any) => a.status === "ACTIVE"));
-      }
-
-      if (savedLinks) {
-        const links = JSON.parse(savedLinks);
-        setEmergencyLinks(links.filter((l: any) => l.status === "ACTIVE"));
-      }
-    } catch (err) {
-      console.error("Error loading emergency data:", err);
-    }
-  };
-
   // Handle course click - load materials and navigate (memoized)
   const handleCourseClick = useCallback(
     (course: Course) => {
@@ -2204,8 +2174,13 @@ Best of luck with your studies!
     [goToView],
   );
 
-  // Handle notice click to show full content
+  // Handle notice click — important links open their URL directly instead of
+  // showing the detail modal (matches how the old Emergency Links behaved)
   const handleNoticeClick = (notice: Notice) => {
+    if (notice.category === "important_link") {
+      if (notice.content) window.open(notice.content, "_blank", "noopener,noreferrer");
+      return;
+    }
     setSelectedNotice(notice);
     setShowNoticeModal(true);
   };
@@ -2588,7 +2563,7 @@ Best of luck with your studies!
           title: `New Material: ${newMaterial.title}`,
           content: `A new ${newMaterial.type} has been uploaded for ${selectedCourse?.name || newMaterial.course_id}${newMaterial.description ? ": " + newMaterial.description.substring(0, 100) : ""}`,
           type: "success",
-          category: "academic",
+          category: "general",
           priority: "normal",
           is_active: true,
           created_at: new Date().toISOString(),
@@ -2899,6 +2874,7 @@ Best of luck with your studies!
         is_active: newNotice.is_active,
         attachment_url: attachmentUrl || null,
         attachment_type: attachmentType || null,
+        target_department: newNotice.target_department || null,
       };
 
       console.log("Creating new notice:", noticeId);
@@ -2942,21 +2918,37 @@ Best of luck with your studies!
       // Reload notices from database to sync
       await loadNotices();
 
-      // Send push notification to all subscribers
+      // Send push notification to all subscribers (or just the target department)
       await sendNoticeNotification(notice);
+
+      // Optionally also email the same audience
+      if (alsoSendEmail) {
+        try {
+          await sendEmailToAllStudents(
+            notice.title,
+            notice.title,
+            notice.content,
+            "/",
+            notice.target_department,
+          );
+        } catch (emailError) {
+          console.warn("⚠️ Email notification (non-blocking):", emailError);
+        }
+      }
 
       // Reset form
       setNewNotice({
         title: "",
         content: "",
         type: "info",
-        category: "announcement",
+        category: "general",
         priority: "normal",
         exam_type: null,
         event_date: "",
         is_active: true,
         attachment_url: null,
         attachment_type: null,
+        target_department: null,
       });
       setRoutineFile(null);
       setShowCreateNotice(false);
@@ -3102,6 +3094,7 @@ Best of luck with your studies!
         is_active: newNotice.is_active,
         attachment_url: attachmentUrl || null,
         attachment_type: attachmentType || null,
+        target_department: newNotice.target_department || null,
       };
 
       console.log("Updating notice:", editingNoticeId);
@@ -3138,19 +3131,35 @@ Best of luck with your studies!
       // Reload notices to sync with database
       await loadNotices();
 
+      // Send push + (optionally) email to the updated notice's target audience
+      await sendNoticeNotification(updatedNotice);
+      if (alsoSendEmail) {
+        try {
+          await sendEmailToAllStudents(
+            updatedNotice.title,
+            updatedNotice.title,
+            updatedNotice.content,
+            "/",
+            updatedNotice.target_department,
+          );
+        } catch (emailError) {
+          console.warn("⚠️ Email notification (non-blocking):", emailError);
+        }
+      }
+
       // Reset form and close modal
       setNewNotice({
         title: "",
         content: "",
         type: "info",
-        category: "announcement",
-        border: "border-slate-200",
+        category: "general",
         priority: "normal",
         exam_type: null,
         event_date: "",
         is_active: true,
         attachment_url: null,
         attachment_type: null,
+        target_department: null,
       });
       setRoutineFile(null);
       setIsEditingNotice(false);
@@ -3827,7 +3836,7 @@ For any queries, contact your course instructors or the department.`,
                         </div>
 
                         {/* Content */}
-                        {notices.length === 0 && emergencyAlerts.length === 0 && emergencyLinks.length === 0 && mentionNotifications.length === 0 ? (
+                        {activeNotices.length === 0 && mentionNotifications.length === 0 ? (
                           <div className="flex flex-col items-center justify-center py-10 gap-3 px-6 text-center">
                             <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${isDarkMode ? "bg-[#16181c]" : "bg-slate-100"}`}>
                               <Bell className={`h-6 w-6 ${isDarkMode ? "text-[#71767b]" : "text-slate-400"}`} />
@@ -3890,28 +3899,14 @@ For any queries, contact your course instructors or the department.`,
                                 </div>
                               </motion.button>
                             ))}
-                            {emergencyAlerts.map((alert) => (
-                              <div key={alert.id} className={`flex gap-3 px-4 py-3.5 transition-colors ${isDarkMode ? "hover:bg-[#16181c]/60" : "hover:bg-red-50"}`}>
-                                <span className="text-base flex-shrink-0">🚨</span>
-                                <div className="min-w-0">
-                                  <p className="text-[9px] font-bold uppercase tracking-widest mb-0.5 text-red-500">Emergency</p>
-                                  <p className={`text-xs leading-snug ${isDarkMode ? "text-[#e7e9ea]" : "text-slate-800"}`}>{alert.message}</p>
-                                </div>
-                              </div>
-                            ))}
-                            {emergencyLinks.map((link) => (
-                              <div key={link.id} onClick={() => { if (link.url) window.open(link.url, "_blank"); }} className={`flex gap-3 px-4 py-3.5 cursor-pointer transition-colors ${isDarkMode ? "hover:bg-[#16181c]/60" : "hover:bg-purple-50"}`}>
-                                <span className="text-base flex-shrink-0">🔗</span>
-                                <div className="min-w-0">
-                                  <p className="text-[9px] font-bold uppercase tracking-widest mb-0.5 text-purple-500">Important Link</p>
-                                  <p className={`text-xs font-medium ${isDarkMode ? "text-[#e7e9ea]" : "text-slate-800"}`}>{link.title}</p>
-                                  {link.url && <p className={`text-xs mt-0.5 truncate ${isDarkMode ? "text-[#71767b]" : "text-slate-400"}`}>{link.url}</p>}
-                                </div>
-                              </div>
-                            ))}
                             {activeNotices.map((notice, idx) => {
                               const isUnread = !unreadNotices.includes(notice.id);
-                              const emoji = notice.category === "exam" ? "📚" : notice.category === "event" ? "🎉" : notice.category === "academic" ? "🎓" : notice.category === "information" ? "ℹ️" : notice.category === "random" ? "🎲" : "🔔";
+                              const emoji =
+                                notice.category === "exam" ? "📚"
+                                : notice.category === "emergency" ? "🚨"
+                                : notice.category === "important_link" ? "🔗"
+                                : notice.category === "other" ? "🎲"
+                                : "📢";
                               return (
                                 <motion.div
                                   key={notice.id}
@@ -4028,44 +4023,6 @@ For any queries, contact your course instructors or the department.`,
                   nav item below is hidden, mirroring the desktop AppNavHeader gate. */}
               {!isBanned && (
               <>
-
-              {/* Semester Tracker */}
-              <button
-                onClick={() => {
-                  if (!isLoggedIn) {
-                    showMajorAccessNotification(
-                      "error",
-                      "Please sign in to access Semester Tracker",
-                    );
-                    setShowSignInModal(true);
-                    setShowMobileMenu(false);
-                    return;
-                  }
-                  goToView("semester");
-                  setShowMobileMenu(false);
-                }}
-                className={`w-full flex items-center gap-3 p-3 sm:p-4 rounded-lg transition-all duration-300 border ${
-                  isDarkMode
-                    ? "hover:bg-blue-900/30 border-[#2f3336]/50 hover:border-blue-500/50 text-gray-100"
-                    : "hover:bg-blue-50 border-gray-200/50 hover:border-blue-300 text-gray-900"
-                } ${!isLoggedIn ? "opacity-60" : ""} ${currentView === "semester" ? (isDarkMode ? "bg-blue-950/40 border-[#1e9df1]/60" : "bg-blue-100/50 border-blue-300") : ""}`}
-              >
-                <div
-                  className={`p-2 rounded-lg flex-shrink-0 ${isDarkMode ? "bg-blue-900/40" : "bg-blue-100"}`}
-                >
-                  <Clock
-                    className={`w-5 h-5 ${isDarkMode ? "text-blue-400" : "text-blue-600"}`}
-                  />
-                </div>
-                <div className="text-left flex-1 min-w-0">
-                  <p className="font-semibold text-sm">Semester Tracker</p>
-                  <p
-                    className={`text-xs ${isDarkMode ? "text-[#71767b]" : "text-gray-600"}`}
-                  >
-                    View progress
-                  </p>
-                </div>
-              </button>
 
               {/* Team Building */}
               <button
@@ -4440,7 +4397,7 @@ For any queries, contact your course instructors or the department.`,
 
             {/* List */}
             <div className="flex-1 overflow-y-auto">
-              {notices.length === 0 && emergencyAlerts.length === 0 && emergencyLinks.length === 0 && mentionNotifications.length === 0 ? (
+              {activeNotices.length === 0 && mentionNotifications.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full gap-3 px-6 text-center">
                   <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${isDarkMode ? "bg-[#16181c]" : "bg-slate-100"}`}>
                     <Bell className={`h-7 w-7 ${isDarkMode ? "text-slate-500" : "text-slate-400"}`} />
@@ -4514,43 +4471,15 @@ For any queries, contact your course instructors or the department.`,
                     </button>
                   ))}
 
-                  {/* Emergency Alerts */}
-                  {emergencyAlerts.map((alert) => (
-                    <div key={alert.id} className={`flex gap-3 px-5 py-4 ${isDarkMode ? "hover:bg-[#16181c]/60" : "hover:bg-red-50"} transition-colors cursor-default`}>
-                      <span className="text-xl flex-shrink-0 mt-0.5">🚨</span>
-                      <div className="min-w-0">
-                        <p className={`text-[10px] font-bold uppercase tracking-widest mb-1 text-red-500`}>Emergency</p>
-                        <p className={`text-sm leading-snug ${isDarkMode ? "text-[#d9d9d9]" : "text-slate-800"}`}>{alert.message}</p>
-                      </div>
-                    </div>
-                  ))}
-
-                  {/* Emergency Links */}
-                  {emergencyLinks.map((link) => (
-                    <div
-                      key={link.id}
-                      className={`flex gap-3 px-5 py-4 ${isDarkMode ? "hover:bg-[#16181c]/60" : "hover:bg-purple-50"} transition-colors cursor-pointer`}
-                      onClick={() => { if (link.url) window.open(link.url, "_blank"); }}
-                    >
-                      <span className="text-xl flex-shrink-0 mt-0.5">🔗</span>
-                      <div className="min-w-0">
-                        <p className={`text-[10px] font-bold uppercase tracking-widest mb-1 text-purple-500`}>Important Link</p>
-                        <p className={`text-sm font-medium ${isDarkMode ? "text-[#d9d9d9]" : "text-slate-800"}`}>{link.title}</p>
-                        {link.url && <p className={`text-xs mt-0.5 truncate ${isDarkMode ? "text-slate-500" : "text-slate-400"}`}>{link.url}</p>}
-                      </div>
-                    </div>
-                  ))}
-
-                  {/* Regular Notices */}
+                  {/* Notices */}
                   {activeNotices.map((notice) => {
                     const isUnread = !unreadNotices.includes(notice.id);
                     const emoji =
                       notice.category === "exam" ? "📚"
-                      : notice.category === "event" ? "🎉"
-                      : notice.category === "academic" ? "🎓"
-                      : notice.category === "information" ? "ℹ️"
-                      : notice.category === "random" ? "🎲"
-                      : "🔔";
+                      : notice.category === "emergency" ? "🚨"
+                      : notice.category === "important_link" ? "🔗"
+                      : notice.category === "other" ? "🎲"
+                      : "📢";
                     return (
                       <div
                         key={notice.id}
@@ -4590,11 +4519,6 @@ For any queries, contact your course instructors or the department.`,
                                 📎 {notice.attachment_type === "pdf" ? "PDF" : "File"}
                               </span>
                             )}
-                            {notice.category === "event" && notice.event_date && (
-                              <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${isDarkMode ? "bg-purple-900/40 text-purple-400" : "bg-purple-100 text-purple-700"}`}>
-                                📅 {new Date(notice.event_date).toLocaleDateString("en-BD", { month: "short", day: "numeric" })}
-                              </span>
-                            )}
                           </div>
                         </div>
                       </div>
@@ -4609,7 +4533,7 @@ For any queries, contact your course instructors or the department.`,
 
       {/* Main Content - Enhanced Mobile Responsive Design */}
       {/* Also mounts when a modal is open in a feature view — modal is fixed inset-0 so home content stays hidden beneath it */}
-      {(!["semester","custom","profile","network","teams","team","alumni"].includes(currentView) || showNoticeModal || showMaterialViewer) && (
+      {(!["custom","profile","network","teams","team","alumni"].includes(currentView) || showNoticeModal || showMaterialViewer) && (
         <main className="relative pt-[72px] lg:pt-20 min-h-screen [overflow-x:clip]">
           {currentView === "home" && isDarkMode && <Tiles isDarkMode={isDarkMode} />}
 
@@ -6041,30 +5965,25 @@ For any queries, contact your course instructors or the department.`,
                 onUpdateFeedbackStatus={handleUpdateFeedbackStatus}
                 onRefreshFeedback={loadFeedback}
                 notices={notices}
-                onEditNotice={() => {
-                  if (notices.length > 0) {
-                    // Set the first active notice for editing
-                    const firstNotice = notices[0];
-                    setSelectedNotice(firstNotice);
-                    setNewNotice({
-                      title: firstNotice.title,
-                      content: firstNotice.content,
-                      type: firstNotice.type,
-                      category: firstNotice.category,
-                      priority: firstNotice.priority,
-                      exam_type: firstNotice.exam_type || null,
-                      event_date: firstNotice.event_date || "",
-                      is_active: firstNotice.is_active,
-                      attachment_url: firstNotice.attachment_url || null,
-                      attachment_type: firstNotice.attachment_type || null,
-                    });
-                    setRoutineFile(null);
-                    setIsEditingNotice(true);
-                    setEditingNoticeId(firstNotice.id);
-                    setShowCreateNotice(true);
-                  } else {
-                    alert("No notices to edit. Create one first.");
-                  }
+                onEditNotice={(notice: Notice) => {
+                  setSelectedNotice(notice);
+                  setNewNotice({
+                    title: notice.title,
+                    content: notice.content,
+                    type: notice.type,
+                    category: notice.category,
+                    priority: notice.priority,
+                    exam_type: notice.exam_type || null,
+                    event_date: notice.event_date || "",
+                    is_active: notice.is_active,
+                    attachment_url: notice.attachment_url || null,
+                    attachment_type: notice.attachment_type || null,
+                    target_department: notice.target_department || null,
+                  });
+                  setRoutineFile(null);
+                  setIsEditingNotice(true);
+                  setEditingNoticeId(notice.id);
+                  setShowCreateNotice(true);
                 }}
                 onCreateNotice={() => setShowCreateNotice(true)}
                 onDeleteNotice={handleDeleteNotice}
@@ -7187,20 +7106,23 @@ For any queries, contact your course instructors or the department.`,
                           : "bg-white/95 border-gray-200"
                       }`}
                     >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1 pr-4">
-                          <h2
-                            className={`text-lg sm:text-xl font-bold flex items-center ${isDarkMode ? "text-gray-100" : "text-gray-900"}`}
-                          >
-                            <span className="text-xl sm:text-2xl mr-2">📢</span>
-                            <span>Create Smart Notice</span>
-                          </h2>
-                          <p
-                            className={`text-xs sm:text-sm mt-1 ${isDarkMode ? "text-[#71767b]" : "text-gray-600"}`}
-                          >
-                            Choose a category and let the system help you create
-                            targeted notices
-                          </p>
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className={`flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center ${isDarkMode ? "bg-[#1e9df1]/15 text-[#1e9df1]" : "bg-blue-50 text-blue-600"}`}>
+                            <Megaphone className="h-4 w-4" />
+                          </div>
+                          <div className="min-w-0">
+                            <h2
+                              className={`text-base sm:text-lg font-bold ${isDarkMode ? "text-gray-100" : "text-gray-900"}`}
+                            >
+                              {isEditingNotice ? "Edit Notice" : "New Notice"}
+                            </h2>
+                            <p
+                              className={`text-xs mt-0.5 ${isDarkMode ? "text-[#71767b]" : "text-gray-500"}`}
+                            >
+                              Pick a type and audience, then publish
+                            </p>
+                          </div>
                         </div>
                         <button
                           onClick={() => {
@@ -7210,127 +7132,121 @@ For any queries, contact your course instructors or the department.`,
                               title: "",
                               content: "",
                               type: "info",
-                              category: "announcement",
+                              category: "general",
                               priority: "normal",
                               exam_type: null,
                               event_date: "",
                               is_active: true,
                               attachment_url: null,
                               attachment_type: null,
+                              target_department: null,
                             });
                           }}
-                          className={`flex-shrink-0 p-2 rounded-xl transition-all duration-300 ${
+                          className={`flex-shrink-0 p-2 rounded-lg transition-colors ${
                             isDarkMode
                               ? "text-[#71767b] hover:text-gray-200 hover:bg-[#2f3336]"
                               : "text-[#71767b] hover:text-gray-600 hover:bg-gray-100"
                           }`}
                         >
-                          <X className="h-5 w-5 sm:h-6 sm:w-6" />
+                          <X className="h-4 w-4" />
                         </button>
                       </div>
                     </div>
 
                     {/* Modal Body - Scrollable */}
                     <div className="flex-1 overflow-y-auto p-4 sm:p-5 lg:p-6">
-                      {/* Section: Category Selection */}
-                      <div className="mb-8">
-                        <div className="flex items-center mb-4">
-                          <div
-                            className={`h-8 w-1 rounded-full mr-3 ${isDarkMode ? "bg-blue-400" : "bg-blue-600"}`}
-                          ></div>
-                          <h3
-                            className={`text-base font-semibold ${isDarkMode ? "text-gray-100" : "text-gray-900"}`}
-                          >
-                            Select Notice Category
-                          </h3>
+                      {/* Section: Category */}
+                      <div className="mb-6">
+                        <p className={`text-xs font-semibold uppercase tracking-wide mb-2.5 ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>
+                          Type
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {([
+                            { value: "general", icon: Megaphone, label: "General", accent: "blue" },
+                            { value: "exam", icon: BookOpen, label: "Exam", accent: "violet" },
+                            { value: "emergency", icon: AlertTriangle, label: "Emergency Alert", accent: "red" },
+                            { value: "important_link", icon: Link2, label: "Important Link", accent: "teal" },
+                            { value: "other", icon: MoreHorizontal, label: "Other", accent: "slate" },
+                          ] as const).map((category) => {
+                            const active = newNotice.category === category.value;
+                            const ACCENTS: Record<string, { activeLight: string; activeDark: string }> = {
+                              blue: { activeLight: "bg-blue-600 text-white border-blue-600", activeDark: "bg-[#1e9df1] text-white border-[#1e9df1]" },
+                              violet: { activeLight: "bg-violet-600 text-white border-violet-600", activeDark: "bg-violet-500 text-white border-violet-500" },
+                              red: { activeLight: "bg-red-600 text-white border-red-600", activeDark: "bg-red-500 text-white border-red-500" },
+                              teal: { activeLight: "bg-teal-600 text-white border-teal-600", activeDark: "bg-teal-500 text-white border-teal-500" },
+                              slate: { activeLight: "bg-slate-700 text-white border-slate-700", activeDark: "bg-slate-500 text-white border-slate-500" },
+                            };
+                            const Icon = category.icon;
+                            return (
+                              <button
+                                key={category.value}
+                                onClick={() =>
+                                  setNewNotice({
+                                    ...newNotice,
+                                    category: category.value,
+                                  })
+                                }
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors ${
+                                  active
+                                    ? isDarkMode ? ACCENTS[category.accent].activeDark : ACCENTS[category.accent].activeLight
+                                    : isDarkMode
+                                      ? "border-gray-700 text-gray-300 hover:border-gray-600 hover:bg-[#2f3336]/50"
+                                      : "border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50"
+                                }`}
+                              >
+                                <Icon className="h-3.5 w-3.5" />
+                                {category.label}
+                              </button>
+                            );
+                          })}
                         </div>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                          {[
-                            {
-                              value: "announcement",
-                              icon: "📢",
-                              label: "General",
-                              desc: "Regular announcements",
-                            },
-                            {
-                              value: "exam",
-                              icon: "📚",
-                              label: "Exam",
-                              desc: "Exam schedules & updates",
-                            },
-                            {
-                              value: "event",
-                              icon: "🎉",
-                              label: "Event",
-                              desc: "Events & activities",
-                            },
-                            {
-                              value: "information",
-                              icon: "ℹ️",
-                              label: "Information",
-                              desc: "Important information",
-                            },
-                            {
-                              value: "academic",
-                              icon: "🎓",
-                              label: "Academic",
-                              desc: "Academic calendar",
-                            },
-                            {
-                              value: "random",
-                              icon: "🎲",
-                              label: "Other",
-                              desc: "Miscellaneous",
-                            },
-                          ].map((category) => (
+                      </div>
+
+                      {/* Section: Send To (department targeting) */}
+                      <div className="mb-6">
+                        <p className={`text-xs font-semibold uppercase tracking-wide mb-2.5 ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>
+                          Send To
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            onClick={() =>
+                              setNewNotice({ ...newNotice, target_department: null })
+                            }
+                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors border ${
+                              newNotice.target_department === null
+                                ? isDarkMode ? "bg-[#1e9df1] text-white border-[#1e9df1]" : "bg-blue-600 text-white border-blue-600"
+                                : isDarkMode
+                                  ? "border-gray-700 text-gray-300 hover:border-gray-600 hover:bg-[#2f3336]/50"
+                                  : "border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50"
+                            }`}
+                          >
+                            All Departments
+                          </button>
+                          {DEPARTMENTS.map((dept) => (
                             <button
-                              key={category.value}
+                              key={dept.key}
                               onClick={() =>
-                                setNewNotice({
-                                  ...newNotice,
-                                  category: category.value as any,
-                                })
+                                setNewNotice({ ...newNotice, target_department: dept.key })
                               }
-                              className={`p-3 rounded-lg border-2 transition-all duration-200 text-left ${
-                                newNotice.category === category.value
-                                  ? isDarkMode
-                                    ? "border-[#1e9df1] bg-blue-900/50 shadow-md"
-                                    : "border-blue-500 bg-blue-50 shadow-md"
+                              className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors border ${
+                                newNotice.target_department === dept.key
+                                  ? isDarkMode ? "bg-[#1e9df1] text-white border-[#1e9df1]" : "bg-blue-600 text-white border-blue-600"
                                   : isDarkMode
-                                    ? "border-gray-600 hover:border-gray-500 hover:bg-[#2f3336]/50"
-                                    : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                                    ? "border-gray-700 text-gray-300 hover:border-gray-600 hover:bg-[#2f3336]/50"
+                                    : "border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50"
                               }`}
                             >
-                              <div className="flex items-center space-x-2 mb-1">
-                                <span className="text-lg">{category.icon}</span>
-                                <span
-                                  className={`font-semibold ${isDarkMode ? "text-gray-100" : "text-gray-900"}`}
-                                >
-                                  {category.label}
-                                </span>
-                              </div>
-                              <p
-                                className={`text-xs ${isDarkMode ? "text-[#71767b]" : "text-gray-600"}`}
-                              >
-                                {category.desc}
-                              </p>
+                              {dept.label}
                             </button>
                           ))}
                         </div>
                       </div>
 
                       {/* Section: Basic Information */}
-                      <div className="mb-8">
-                        <div className="flex items-center mb-4">
-                          <div
-                            className={`h-8 w-1 rounded-full mr-3 ${isDarkMode ? "bg-purple-400" : "bg-purple-600"}`}
-                          ></div>
-                          <h3
-                            className={`text-base font-semibold ${isDarkMode ? "text-gray-100" : "text-gray-900"}`}
-                          >
-                            Basic Information
-                          </h3>
-                        </div>
+                      <div className="mb-6">
+                        <p className={`text-xs font-semibold uppercase tracking-wide mb-2.5 ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>
+                          Details
+                        </p>
 
                         <div className="grid md:grid-cols-2 gap-6">
                           <div className="space-y-4">
@@ -7359,13 +7275,11 @@ For any queries, contact your course instructors or the department.`,
                                 placeholder={
                                   newNotice.category === "exam"
                                     ? "Mid-term Exam Schedule Update"
-                                    : newNotice.category === "event"
-                                      ? "Upcoming Cultural Event"
-                                      : newNotice.category === "academic"
-                                        ? "Academic Calendar Update"
-                                        : newNotice.category === "information"
-                                          ? "Important Class Information"
-                                          : "Enter notice title..."
+                                    : newNotice.category === "emergency"
+                                      ? "Urgent: Campus Closure"
+                                      : newNotice.category === "important_link"
+                                        ? "Result Portal"
+                                        : "Enter notice title..."
                                 }
                               />
                             </div>
@@ -7375,59 +7289,35 @@ For any queries, contact your course instructors or the department.`,
                               <label
                                 className={`block text-sm font-medium mb-2 ${isDarkMode ? "text-gray-200" : "text-gray-700"}`}
                               >
-                                Priority Level
+                                Priority
                               </label>
-                              <div className="grid grid-cols-2 gap-2">
-                                {[
-                                  {
-                                    value: "low",
-                                    icon: "🟢",
-                                    label: "Low",
-                                    color: "text-green-600",
-                                  },
-                                  {
-                                    value: "normal",
-                                    icon: "🔵",
-                                    label: "Normal",
-                                    color: "text-blue-600",
-                                  },
-                                  {
-                                    value: "high",
-                                    icon: "🟡",
-                                    label: "High",
-                                    color: "text-yellow-600",
-                                  },
-                                  {
-                                    value: "urgent",
-                                    icon: "🔴",
-                                    label: "Urgent",
-                                    color: "text-red-600",
-                                  },
-                                ].map((priority) => (
+                              <div className="flex flex-wrap gap-1.5">
+                                {([
+                                  { value: "low", label: "Low", dot: "bg-emerald-500" },
+                                  { value: "normal", label: "Normal", dot: "bg-blue-500" },
+                                  { value: "high", label: "High", dot: "bg-amber-500" },
+                                  { value: "urgent", label: "Urgent", dot: "bg-red-500" },
+                                ] as const).map((priority) => (
                                   <button
                                     key={priority.value}
                                     onClick={() =>
                                       setNewNotice({
                                         ...newNotice,
-                                        priority: priority.value as any,
+                                        priority: priority.value,
                                       })
                                     }
-                                    className={`p-2 rounded-lg border text-sm transition-all ${
+                                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-colors ${
                                       newNotice.priority === priority.value
                                         ? isDarkMode
-                                          ? "border-[#1e9df1] bg-blue-900/50"
-                                          : "border-blue-500 bg-blue-50"
+                                          ? "border-[#1e9df1] bg-[#1e9df1]/10 text-gray-100"
+                                          : "border-blue-500 bg-blue-50 text-gray-900"
                                         : isDarkMode
-                                          ? "border-gray-600 hover:border-gray-500 hover:bg-[#2f3336]/50"
-                                          : "border-gray-200 hover:border-gray-300"
+                                          ? "border-gray-700 text-gray-300 hover:border-gray-600"
+                                          : "border-gray-200 text-gray-600 hover:border-gray-300"
                                     }`}
                                   >
-                                    <span className="mr-1">
-                                      {priority.icon}
-                                    </span>
-                                    <span className={priority.color}>
-                                      {priority.label}
-                                    </span>
+                                    <span className={`w-1.5 h-1.5 rounded-full ${priority.dot}`} />
+                                    {priority.label}
                                   </button>
                                 ))}
                               </div>
@@ -7440,25 +7330,36 @@ For any queries, contact your course instructors or the department.`,
                               >
                                 Visual Style
                               </label>
-                              <select
-                                value={newNotice.type}
-                                onChange={(e) =>
-                                  setNewNotice({
-                                    ...newNotice,
-                                    type: e.target.value as any,
-                                  })
-                                }
-                                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${isDarkMode ? "bg-[#2f3336] border-gray-600 text-gray-100" : "bg-white border-gray-300 text-gray-900 focus:border-blue-500"}`}
-                              >
-                                <option value="info">🔵 Info (Blue)</option>
-                                <option value="success">
-                                  🟢 Success (Green)
-                                </option>
-                                <option value="warning">
-                                  🟡 Warning (Yellow)
-                                </option>
-                                <option value="error">🔴 Error (Red)</option>
-                              </select>
+                              <div className="flex flex-wrap gap-1.5">
+                                {([
+                                  { value: "info", label: "Info", dot: "bg-blue-500" },
+                                  { value: "success", label: "Success", dot: "bg-emerald-500" },
+                                  { value: "warning", label: "Warning", dot: "bg-amber-500" },
+                                  { value: "error", label: "Error", dot: "bg-red-500" },
+                                ] as const).map((style) => (
+                                  <button
+                                    key={style.value}
+                                    onClick={() =>
+                                      setNewNotice({
+                                        ...newNotice,
+                                        type: style.value,
+                                      })
+                                    }
+                                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-colors ${
+                                      newNotice.type === style.value
+                                        ? isDarkMode
+                                          ? "border-[#1e9df1] bg-[#1e9df1]/10 text-gray-100"
+                                          : "border-blue-500 bg-blue-50 text-gray-900"
+                                        : isDarkMode
+                                          ? "border-gray-700 text-gray-300 hover:border-gray-600"
+                                          : "border-gray-200 text-gray-600 hover:border-gray-300"
+                                    }`}
+                                  >
+                                    <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`} />
+                                    {style.label}
+                                  </button>
+                                ))}
+                              </div>
                             </div>
                           </div>
 
@@ -7474,8 +7375,8 @@ For any queries, contact your course instructors or the department.`,
                                   </label>
                                   <div className="grid grid-cols-2 gap-2">
                                     {[
-                                      { value: "midterm", label: "Mid-term", icon: "📝" },
-                                      { value: "final", label: "Final", icon: "🎯" },
+                                      { value: "midterm", label: "Mid-term" },
+                                      { value: "final", label: "Final" },
                                     ].map((examType) => (
                                       <button
                                         key={examType.value}
@@ -7485,17 +7386,16 @@ For any queries, contact your course instructors or the department.`,
                                             exam_type: examType.value as any,
                                           })
                                         }
-                                        className={`p-2 rounded-lg border text-sm transition-all ${
+                                        className={`p-2 rounded-lg border text-sm font-medium transition-colors ${
                                           newNotice.exam_type === examType.value
                                             ? isDarkMode
-                                              ? "border-orange-400 bg-orange-900/50 text-gray-100"
-                                              : "border-orange-500 bg-orange-50"
+                                              ? "border-violet-400 bg-violet-900/30 text-gray-100"
+                                              : "border-violet-500 bg-violet-50 text-gray-900"
                                             : isDarkMode
-                                              ? "border-gray-600 hover:border-gray-500 hover:bg-[#2f3336]/50 text-gray-200"
-                                              : "border-gray-200 hover:border-gray-300"
+                                              ? "border-gray-700 hover:border-gray-600 text-gray-300"
+                                              : "border-gray-200 hover:border-gray-300 text-gray-600"
                                         }`}
                                       >
-                                        <span className="mr-1">{examType.icon}</span>
                                         {examType.label}
                                       </button>
                                     ))}
@@ -7510,8 +7410,9 @@ For any queries, contact your course instructors or the department.`,
                                     </label>
                                     {newNotice.attachment_url && !routineFile ? (
                                       <div className={`flex items-center justify-between gap-2 p-2.5 rounded-lg border ${isDarkMode ? "border-gray-600 bg-[#2f3336]/40" : "border-gray-200 bg-gray-50"}`}>
-                                        <a href={newNotice.attachment_url} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-500 hover:underline truncate">
-                                          {newNotice.attachment_type === "pdf" ? "📄 Current routine (PDF)" : "🖼️ Current routine (image)"}
+                                        <a href={newNotice.attachment_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-blue-500 hover:underline truncate">
+                                          {newNotice.attachment_type === "pdf" ? <FileText className="w-3.5 h-3.5 flex-shrink-0" /> : <ImageIcon className="w-3.5 h-3.5 flex-shrink-0" />}
+                                          Current routine ({newNotice.attachment_type === "pdf" ? "PDF" : "image"})
                                         </a>
                                         <button
                                           type="button"
@@ -7522,9 +7423,10 @@ For any queries, contact your course instructors or the department.`,
                                         </button>
                                       </div>
                                     ) : routineFile ? (
-                                      <div className={`flex items-center justify-between gap-2 p-2.5 rounded-lg border ${isDarkMode ? "border-orange-500/50 bg-orange-900/20" : "border-orange-300 bg-orange-50"}`}>
-                                        <span className={`text-sm truncate ${isDarkMode ? "text-gray-200" : "text-gray-700"}`}>
-                                          {routineFile.type === "application/pdf" ? "📄" : "🖼️"} {routineFile.name}
+                                      <div className={`flex items-center justify-between gap-2 p-2.5 rounded-lg border ${isDarkMode ? "border-violet-500/50 bg-violet-900/20" : "border-violet-300 bg-violet-50"}`}>
+                                        <span className={`flex items-center gap-1.5 text-sm truncate ${isDarkMode ? "text-gray-200" : "text-gray-700"}`}>
+                                          {routineFile.type === "application/pdf" ? <FileText className="w-3.5 h-3.5 flex-shrink-0" /> : <ImageIcon className="w-3.5 h-3.5 flex-shrink-0" />}
+                                          {routineFile.name}
                                         </span>
                                         <button
                                           type="button"
@@ -7535,7 +7437,7 @@ For any queries, contact your course instructors or the department.`,
                                         </button>
                                       </div>
                                     ) : (
-                                      <label className={`flex items-center justify-center gap-2 p-3 rounded-lg border-2 border-dashed cursor-pointer transition-all ${isDarkMode ? "border-gray-600 hover:border-orange-500 text-[#8b98a5]" : "border-gray-300 hover:border-orange-400 text-gray-600"}`}>
+                                      <label className={`flex items-center justify-center gap-2 p-3 rounded-lg border-2 border-dashed cursor-pointer transition-colors ${isDarkMode ? "border-gray-700 hover:border-violet-500 text-[#8b98a5]" : "border-gray-300 hover:border-violet-400 text-gray-600"}`}>
                                         <Upload className="w-4 h-4" />
                                         <span className="text-sm">Upload routine image or PDF</span>
                                         <input
@@ -7557,102 +7459,110 @@ For any queries, contact your course instructors or the department.`,
                               </div>
                             )}
 
-                            {/* Event-specific fields */}
-                            {newNotice.category === "event" && (
-                              <div>
-                                <label
-                                  className={`block text-sm font-medium mb-2 ${isDarkMode ? "text-gray-200" : "text-gray-700"}`}
-                                >
-                                  Event Date
-                                </label>
-                                <input
-                                  type="date"
-                                  value={newNotice.event_date || ""}
-                                  onChange={(e) =>
-                                    setNewNotice({
-                                      ...newNotice,
-                                      event_date: e.target.value,
-                                    })
-                                  }
-                                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${isDarkMode ? "bg-[#2f3336] border-gray-600 text-gray-100" : "bg-white border-gray-300 text-gray-900 focus:border-blue-500"}`}
-                                />
-                              </div>
-                            )}
-
-                            {/* Active toggle */}
-                            <div
-                              className={`flex items-center p-3 rounded-lg ${isDarkMode ? "bg-[#2f3336]/50" : "bg-gray-50"}`}
+                            {/* Publish toggle */}
+                            <button
+                              type="button"
+                              role="switch"
+                              aria-checked={newNotice.is_active}
+                              onClick={() =>
+                                setNewNotice({ ...newNotice, is_active: !newNotice.is_active })
+                              }
+                              className={`w-full flex items-center gap-3 p-3 rounded-lg transition-colors ${isDarkMode ? "bg-[#2f3336]/50 hover:bg-[#2f3336]" : "bg-gray-50 hover:bg-gray-100"}`}
                             >
-                              <input
-                                type="checkbox"
-                                id="is_active"
-                                checked={newNotice.is_active}
-                                onChange={(e) =>
-                                  setNewNotice({
-                                    ...newNotice,
-                                    is_active: e.target.checked,
-                                  })
-                                }
-                                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                              />
-                              <label
-                                htmlFor="is_active"
-                                className={`ml-2 block text-sm ${isDarkMode ? "text-gray-100" : "text-gray-900"}`}
+                              <Send className={`w-4 h-4 flex-shrink-0 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`} />
+                              <span className={`flex-1 text-left text-sm ${isDarkMode ? "text-gray-100" : "text-gray-900"}`}>
+                                Publish immediately
+                              </span>
+                              <span
+                                className={`relative flex-shrink-0 w-9 h-5 rounded-full transition-colors ${
+                                  newNotice.is_active ? (isDarkMode ? "bg-[#1e9df1]" : "bg-blue-600") : isDarkMode ? "bg-gray-600" : "bg-gray-300"
+                                }`}
                               >
-                                📢 Publish immediately (visible to all students)
-                              </label>
-                            </div>
+                                <span
+                                  className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-transform ${
+                                    newNotice.is_active ? "translate-x-[18px]" : "translate-x-0.5"
+                                  }`}
+                                />
+                              </span>
+                            </button>
+
+                            {/* Also email toggle */}
+                            <button
+                              type="button"
+                              role="switch"
+                              aria-checked={alsoSendEmail}
+                              onClick={() => setAlsoSendEmail(!alsoSendEmail)}
+                              className={`w-full flex items-center gap-3 p-3 rounded-lg transition-colors ${isDarkMode ? "bg-[#2f3336]/50 hover:bg-[#2f3336]" : "bg-gray-50 hover:bg-gray-100"}`}
+                            >
+                              <Mail className={`w-4 h-4 flex-shrink-0 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`} />
+                              <span className={`flex-1 text-left text-sm ${isDarkMode ? "text-gray-100" : "text-gray-900"}`}>
+                                Also email the target audience
+                              </span>
+                              <span
+                                className={`relative flex-shrink-0 w-9 h-5 rounded-full transition-colors ${
+                                  alsoSendEmail ? (isDarkMode ? "bg-[#1e9df1]" : "bg-blue-600") : isDarkMode ? "bg-gray-600" : "bg-gray-300"
+                                }`}
+                              >
+                                <span
+                                  className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-transform ${
+                                    alsoSendEmail ? "translate-x-[18px]" : "translate-x-0.5"
+                                  }`}
+                                />
+                              </span>
+                            </button>
                           </div>
                         </div>
                       </div>
 
                       {/* Section: Content */}
-                      <div className="mb-8">
-                        <div className="flex items-center mb-4">
-                          <div
-                            className={`h-8 w-1 rounded-full mr-3 ${isDarkMode ? "bg-green-400" : "bg-green-600"}`}
-                          ></div>
-                          <h3
-                            className={`text-base font-semibold ${isDarkMode ? "text-gray-100" : "text-gray-900"}`}
-                          >
-                            Notice Content
-                          </h3>
-                          {newNotice.category === "exam" &&
-                            newNotice.exam_type && (
-                              <span
-                                className={`ml-auto text-xs px-2.5 py-1 rounded-full font-medium ${isDarkMode ? "bg-green-900/50 text-green-300 border border-green-700" : "bg-green-100 text-green-700 border border-green-300"}`}
-                              >
-                                ✅ Template loaded
-                              </span>
-                            )}
+                      <div className="mb-6">
+                        <div className="flex items-center justify-between mb-2.5">
+                          <p className={`text-xs font-semibold uppercase tracking-wide ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>
+                            Content
+                          </p>
                         </div>
                         <div>
                           <label
                             className={`block text-sm font-medium mb-2 ${isDarkMode ? "text-gray-200" : "text-gray-700"}`}
                           >
-                            Notice Content
+                            {newNotice.category === "important_link" ? "Link URL" : "Notice Content"}
                           </label>
-                          <textarea
-                            value={newNotice.content}
-                            onChange={(e) =>
-                              setNewNotice({
-                                ...newNotice,
-                                content: e.target.value,
-                              })
-                            }
-                            className={`w-full px-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${isDarkMode ? "bg-[#2f3336] border-gray-600 text-gray-100 placeholder-gray-400" : "bg-white border-gray-300 text-gray-900 focus:border-blue-500"}`}
-                            rows={6}
-                            placeholder={
-                              newNotice.category === "exam" &&
-                              newNotice.exam_type
-                                ? `(Auto-filled - feel free to edit)`
-                                : newNotice.category === "exam"
-                                  ? "Select exam type above to auto-fill content, or enter custom content here"
-                                  : newNotice.category === "event"
-                                    ? "Join us for an exciting event! More details will be shared soon."
-                                    : "Enter the detailed content of your notice here..."
-                            }
-                          />
+                          {newNotice.category === "important_link" ? (
+                            <input
+                              type="url"
+                              value={newNotice.content}
+                              onChange={(e) =>
+                                setNewNotice({
+                                  ...newNotice,
+                                  content: e.target.value,
+                                })
+                              }
+                              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${isDarkMode ? "bg-[#2f3336] border-gray-600 text-gray-100 placeholder-gray-400" : "bg-white border-gray-300 text-gray-900 focus:border-blue-500"}`}
+                              placeholder="https://example.com/result-portal"
+                            />
+                          ) : (
+                            <textarea
+                              value={newNotice.content}
+                              onChange={(e) =>
+                                setNewNotice({
+                                  ...newNotice,
+                                  content: e.target.value,
+                                })
+                              }
+                              className={`w-full px-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${isDarkMode ? "bg-[#2f3336] border-gray-600 text-gray-100 placeholder-gray-400" : "bg-white border-gray-300 text-gray-900 focus:border-blue-500"}`}
+                              rows={6}
+                              placeholder={
+                                newNotice.category === "exam" &&
+                                newNotice.exam_type
+                                  ? `(Auto-filled - feel free to edit)`
+                                  : newNotice.category === "exam"
+                                    ? "Select exam type above to auto-fill content, or enter custom content here"
+                                    : newNotice.category === "emergency"
+                                      ? "Describe the emergency and any action students should take."
+                                      : "Enter the detailed content of your notice here..."
+                              }
+                            />
+                          )}
                           <div className="flex justify-between items-center mt-2">
                             <span
                               className={`text-xs ${isDarkMode ? "text-[#71767b]" : "text-gray-500"}`}
@@ -7662,13 +7572,9 @@ For any queries, contact your course instructors or the department.`,
                             {newNotice.category === "exam" &&
                               newNotice.exam_type && (
                                 <span
-                                  className={`text-xs px-2 py-1 rounded ${isDarkMode ? "bg-orange-900/50 text-orange-300" : "bg-orange-100 text-orange-800"}`}
+                                  className={`text-xs px-2 py-1 rounded-md font-medium ${isDarkMode ? "bg-violet-900/40 text-violet-300" : "bg-violet-100 text-violet-700"}`}
                                 >
-                                  🎯{" "}
-                                  {newNotice.exam_type === "midterm"
-                                    ? "Mid-term"
-                                    : "Final"}{" "}
-                                  Exam Notice
+                                  {newNotice.exam_type === "midterm" ? "Mid-term" : "Final"} exam
                                 </span>
                               )}
                           </div>
@@ -7693,13 +7599,14 @@ For any queries, contact your course instructors or the department.`,
                               title: "",
                               content: "",
                               type: "info",
-                              category: "announcement",
+                              category: "general",
                               priority: "normal",
                               exam_type: null,
                               event_date: "",
                               is_active: true,
                               attachment_url: null,
                               attachment_type: null,
+                              target_department: null,
                             });
                             setIsEditingNotice(false);
                             setEditingNoticeId(null);
@@ -7719,21 +7626,10 @@ For any queries, contact your course instructors or the department.`,
                               : handleCreateNotice
                           }
                           disabled={!newNotice.title || !newNotice.content || routineUploading}
-                          className="flex-1 px-6 py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm font-medium rounded-lg hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg"
+                          className={`flex-1 flex items-center justify-center gap-2 px-6 py-2.5 text-white text-sm font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${isDarkMode ? "bg-[#1e9df1] hover:bg-[#1a8cd8]" : "bg-blue-600 hover:bg-blue-700"}`}
                         >
-                          {isEditingNotice ? (
-                            <>✏️ Update Notice</>
-                          ) : (
-                            <>
-                              🚀 Create{" "}
-                              {newNotice.priority === "urgent"
-                                ? "Urgent"
-                                : newNotice.category === "exam"
-                                  ? "Exam"
-                                  : "Smart"}{" "}
-                              Notice
-                            </>
-                          )}
+                          <Send className="w-4 h-4" />
+                          {isEditingNotice ? "Update Notice" : "Create Notice"}
                         </button>
                       </div>
                     </div>
@@ -7776,7 +7672,9 @@ For any queries, contact your course instructors or the department.`,
                                 ? isDarkMode ? "bg-amber-900/40 text-amber-400" : "bg-amber-100 text-amber-700"
                                 : isDarkMode ? "bg-blue-900/40 text-blue-400" : "bg-blue-100 text-blue-700"
                             }`}>
-                              {selectedNotice.category || selectedNotice.type}
+                              {selectedNotice.category
+                                ? selectedNotice.category.replace(/_/g, " ")
+                                : selectedNotice.type}
                             </span>
                             <span className={`text-xs ${isDarkMode ? "text-slate-500" : "text-slate-400"}`}>
                               {new Date(selectedNotice.created_at).toLocaleDateString("en-BD", { year: "numeric", month: "short", day: "numeric" })}
@@ -8809,16 +8707,6 @@ For any queries, contact your course instructors or the department.`,
           <div className={`w-10 h-10 rounded-full border-4 border-t-[#1e9df1] animate-spin ${isDarkMode ? "border-[#2f3336]" : "border-slate-200"}`} />
         </div>
       }>
-
-      {/* Semester Tracker Page */}
-      {currentView === "semester" && (
-        <main className="fixed top-[72px] lg:top-20 inset-x-0 bottom-0 z-40 overflow-hidden">
-          <SemesterTracker
-            onClose={() => goToView("home")}
-            isDarkMode={isDarkMode}
-          />
-        </main>
-      )}
 
       {/* Custom Routine Page */}
       {currentView === "custom" && (
