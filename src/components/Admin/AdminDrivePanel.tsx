@@ -9,7 +9,8 @@ import {
   drivePreviewUrl, DriveItem, FOLDER_MIME,
   uploadFileToDrive, deleteFromDrive, createDriveFolder,
 } from '../../lib/driveApi';
-import { MAJORS, StudyMajor, listDriveConfigs, DriveConfig } from '../../lib/api/studyApi';
+import { listDepartmentConfigs, DepartmentConfig } from '../../lib/api/studyApi';
+import { DEPARTMENTS } from '../../config/departments';
 import { useGoogleDriveAuth } from '../../hooks/useGoogleDriveAuth';
 
 interface Props {
@@ -25,8 +26,8 @@ function cls(...a: (string | false | undefined | null)[]) { return a.filter(Bool
 export default function AdminDrivePanel({ isDarkMode: dk, onPreviewFile }: Props) {
   const { token, profile, loading: authLoading, getToken, signOut } = useGoogleDriveAuth();
 
-  const [activeMajor, setActiveMajor] = useState<StudyMajor>('AI');
-  const [configs, setConfigs] = useState<DriveConfig[]>([]);
+  const [activeDepartment, setActiveDepartment] = useState<string>('CSE');
+  const [configs, setConfigs] = useState<DepartmentConfig[]>([]);
   const [configLoading, setConfigLoading] = useState(true);
 
   const [stack, setStack] = useState<Crumb[]>([]);
@@ -48,17 +49,17 @@ export default function AdminDrivePanel({ isDarkMode: dk, onPreviewFile }: Props
 
   const [actionError, setActionError] = useState<string | null>(null);
 
-  const rootFolderId = configs.find(c => c.major === activeMajor)?.folder_id ?? null;
+  const rootFolderId = configs.find(c => c.department === activeDepartment)?.folder_id ?? null;
   const currentFolderId = stack.length > 0 ? stack[stack.length - 1].id : rootFolderId;
 
   useEffect(() => {
-    listDriveConfigs().then(c => { setConfigs(c); setConfigLoading(false); });
+    listDepartmentConfigs().then(c => { setConfigs(c); setConfigLoading(false); });
   }, []);
 
   useEffect(() => {
     setStack([]); setItems([]); setListError(null); setActionError(null);
     setShowNewFolder(false); setNewFolderName('');
-  }, [activeMajor]);
+  }, [activeDepartment]);
 
   useEffect(() => {
     if (!currentFolderId) return;
@@ -77,8 +78,11 @@ export default function AdminDrivePanel({ isDarkMode: dk, onPreviewFile }: Props
   const goHome = () => setStack([]);
   const goTo = (i: number) => setStack(p => p.slice(0, i + 1));
 
-  const folders = useMemo(() => items.filter(isFolder), [items]);
-  const files = useMemo(() => items.filter(i => !isFolder(i)), [items]);
+  const naturalSort = (a: DriveItem, b: DriveItem) =>
+    a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' });
+
+  const folders = useMemo(() => items.filter(isFolder).sort(naturalSort), [items]);
+  const files = useMemo(() => items.filter(i => !isFolder(i)).sort(naturalSort), [items]);
   const inRoot = stack.length === 0;
 
   // Clear folder input and error on success/cancel
@@ -179,21 +183,21 @@ export default function AdminDrivePanel({ isDarkMode: dk, onPreviewFile }: Props
   return (
     <div className="flex flex-col">
 
-      {/* ── Row 1: Major tabs (scrollable) ── */}
+      {/* ── Row 1: Department tabs (scrollable) ── */}
       <div className={cls('flex gap-1.5 px-3 py-2.5 border-b overflow-x-auto scrollbar-none', border, surfaceAlt)}>
-        {MAJORS.filter(m => m.value !== null).map(m => (
+        {DEPARTMENTS.map(d => (
           <button
-            key={String(m.value)}
-            onClick={() => setActiveMajor(m.value)}
+            key={d.key}
+            onClick={() => setActiveDepartment(d.key)}
             className={cls(
               'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all border flex-shrink-0',
-              activeMajor === m.value
-                ? 'text-white border-transparent shadow-sm'
+              activeDepartment === d.key
+                ? 'bg-blue-600 text-white border-transparent shadow-sm'
                 : dk ? 'border-[#38444d] text-slate-400 hover:text-white' : 'border-slate-200 text-slate-500 hover:text-slate-700',
             )}
-            style={activeMajor === m.value ? { background: m.color } : {}}
           >
-            {m.emoji} {m.label}
+            {d.label}
+            {!d.active && <span className="opacity-60"> · Coming Soon</span>}
           </button>
         ))}
       </div>
@@ -271,8 +275,8 @@ export default function AdminDrivePanel({ isDarkMode: dk, onPreviewFile }: Props
       {!rootFolderId ? (
         <div className={cls('flex flex-col items-center justify-center py-16 text-center px-4', sub)}>
           <Folder size={36} className="opacity-30 mb-3" />
-          <p className="text-sm font-medium">No Drive folder configured for this major</p>
-          <p className="text-xs mt-1 opacity-70">Go to the Drive Config tab to set a folder ID</p>
+          <p className="text-sm font-medium">No Drive folder configured for this department</p>
+          <p className="text-xs mt-1 opacity-70">Go to the Department Config tab to set a folder ID</p>
         </div>
       ) : (
         <>

@@ -313,7 +313,7 @@ export default function MaterialManager({ isDarkMode, currentUserId, onPreviewFi
       <div className={cls('flex items-center justify-between px-5 py-4 border-b', border, dk ? 'bg-[#16181c]/50' : 'bg-slate-50')}>
         <div>
           <h2 className="text-base font-bold">Study Materials</h2>
-          <p className={cls('text-xs mt-0.5', sub)}>Full folder & file management for all majors</p>
+          <p className={cls('text-xs mt-0.5', sub)}>Full folder & file management for every department</p>
         </div>
         <button onClick={loadFolders} className={cls('p-2 rounded-lg border', border, dk ? 'hover:bg-[#2f3336]' : 'hover:bg-slate-100')} title="Refresh">
           <RefreshCw size={14} />

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { AlertCircle, ChevronRight, Loader2, FolderOpen } from 'lucide-react';
+import { AlertCircle, Loader2, FolderOpen } from 'lucide-react';
+import { FolderCard } from '../ui/folder-card';
 
 export interface SemesterFolder {
   id: string;
@@ -88,49 +89,35 @@ export const SemesterFolderBrowser: React.FC<SemesterFolderBrowserProps> = ({
     </div>
   );
 
+  const VARIANTS: Array<'default' | 'project' | 'system'> = ['default', 'project', 'system'];
+  const ICON_COLORS: Record<typeof VARIANTS[number], string> = {
+    default: 'text-purple-600 dark:text-purple-400',
+    project: 'text-fuchsia-600 dark:text-fuchsia-400',
+    system: 'text-cyan-600 dark:text-cyan-400',
+  };
+
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-      {semesters.map((sem) => (
-        <button
+      {semesters.map((sem, i) => {
+        const variant = VARIANTS[Math.floor(i / 4) % VARIANTS.length];
+        return (
+        <FolderCard
           key={sem.id}
+          variant={variant}
+          icon={<FolderOpen className={cls('h-8 w-8', ICON_COLORS[variant])} strokeWidth={1.75} />}
+          title={sem.semesterNumber != null ? `Semester ${String(sem.semesterNumber).padStart(2, '0')}` : displayLabel(sem)}
+          size="Browse course materials"
+          role="button"
+          tabIndex={0}
           onClick={() => onSemesterSelect(sem)}
-          className={cls(
-            'group relative text-left rounded-2xl border overflow-hidden transition-all duration-200',
-            'focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1',
-            dk
-              ? 'bg-[#16181c]/70 border-[#2f3336]/80 hover:border-[#38444d] hover:-translate-y-1 hover:shadow-xl hover:shadow-black/30'
-              : 'bg-white border-slate-200 hover:border-slate-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-slate-200/80',
-          )}
-        >
-          {/* Top accent stripe */}
-          <div className="h-1 w-full bg-gradient-to-r from-[#1e9df1] to-[#1677cc]" />
-
-          <div className="p-4 sm:p-5 flex flex-col items-center text-center gap-2.5">
-            <div
-              className={cls(
-                'w-12 h-12 rounded-xl flex items-center justify-center transition-transform duration-200 group-hover:scale-105',
-                dk ? 'bg-[#1e9df1]/10' : 'bg-[#e8f4fd]',
-              )}
-            >
-              <FolderOpen className={cls('h-6 w-6', dk ? 'text-[#1e9df1]' : 'text-[#1677cc]')} strokeWidth={1.75} />
-            </div>
-
-            <div>
-              <p className={cls('text-[10px] font-bold uppercase tracking-widest', dk ? 'text-slate-500' : 'text-slate-400')}>
-                Semester
-              </p>
-              <p className={cls('text-2xl font-black leading-tight', dk ? 'text-[#e7e9ea]' : 'text-slate-900')}>
-                {sem.semesterNumber != null ? String(sem.semesterNumber).padStart(2, '0') : displayLabel(sem)}
-              </p>
-            </div>
-
-            <div className={cls('flex items-center gap-1 text-[11px] font-medium mt-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200', dk ? 'text-[#1e9df1]' : 'text-[#1677cc]')}>
-              Browse
-              <ChevronRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform duration-150" />
-            </div>
-          </div>
-        </button>
-      ))}
+          onKeyDown={(e: React.KeyboardEvent) => {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSemesterSelect(sem); }
+          }}
+          transition={{ duration: 0.35, ease: 'easeOut', delay: Math.min(i * 0.04, 0.4) }}
+          className="cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1"
+        />
+        );
+      })}
     </div>
   );
 };
