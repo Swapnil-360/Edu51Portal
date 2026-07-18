@@ -53,23 +53,27 @@ CREATE POLICY team_files_alumni_delete ON public.team_files
     AND uploader_id = auth.uid()
   );
 
--- BACK-SYNC: Copy all existing public resources from alumni_resources to team_files
+-- BACK-SYNC: Copy all existing public resources from alumni_resources to team_files with correct file sizes
 INSERT INTO public.team_files (id, uploader_id, name, file_path, file_url, file_type, file_size, visibility, created_at)
 SELECT 
-  id, 
-  alumni_id, 
-  file_name, 
-  substring(file_url from '/alumni-resources/(.*)$'), 
-  file_url, 
+  r.id, 
+  r.alumni_id, 
+  r.file_name, 
+  substring(r.file_url from '/alumni-resources/(.*)$') as fpath, 
+  r.file_url, 
   case 
-    when file_name like '%.pdf' then 'application/pdf'
-    when file_name like '%.docx' then 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-    when file_name like '%.xlsx' then 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    when r.file_name like '%.pdf' then 'application/pdf'
+    when r.file_name like '%.docx' then 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    when r.file_name like '%.xlsx' then 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     else 'application/octet-stream'
   end,
-  0, -- default size
-  visibility,
-  created_at
-FROM public.alumni_resources
-WHERE visibility = 'public'
-ON CONFLICT (id) DO NOTHING;
+  coalesce((o.metadata->>'size')::bigint, 0), 
+  r.visibility,
+  r.created_at
+FROM public.alumni_resources r
+LEFT JOIN storage.objects o 
+  ON o.bucket_id = 'alumni-resources' 
+  AND o.name = substring(r.file_url from '/alumni-resources/(.*)$')
+WHERE r.visibility = 'public'
+ON CONFLICT (id) DO UPDATE 
+SET file_size = EXCLUDED.file_size;

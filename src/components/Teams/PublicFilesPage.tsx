@@ -281,7 +281,7 @@ export default function PublicFilesPage({ isDarkMode, onViewTeam, onViewPreview 
                         {file.name}
                       </p>
                       <p className={`text-xs mt-0.5 ${isDarkMode ? 'text-slate-500' : 'text-[#71767b]'}`}>
-                        {!file.team_id ? relativeDate(file.created_at) : `${formatFileSize(file.file_size)} · ${relativeDate(file.created_at)}`}
+                        {formatFileSize(file.file_size)} · {relativeDate(file.created_at)}
                       </p>
                     </div>
 
