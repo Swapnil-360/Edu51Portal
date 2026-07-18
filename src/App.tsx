@@ -8832,6 +8832,11 @@ For any queries, contact your course instructors or the department.`,
                 onClose={() => goToView("home")}
                 authSession={authSession}
                 unreadMsgCount={unreadMsgCount}
+                onViewPreview={(url, name) => {
+                  setCurrentFileUrl(url);
+                  setCurrentFileName(name);
+                  setShowFileViewer(true);
+                }}
               />
             )}
             {alumniSubView === "profile" && selectedAlumniId && (

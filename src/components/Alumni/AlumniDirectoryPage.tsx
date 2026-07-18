@@ -16,6 +16,7 @@ interface Props {
   onClose: () => void;
   authSession: any;
   unreadMsgCount?: number;
+  onViewPreview?: (url: string, name: string) => void;
 }
 
 export default function AlumniDirectoryPage({
@@ -26,6 +27,7 @@ export default function AlumniDirectoryPage({
   onClose,
   authSession,
   unreadMsgCount = 0,
+  onViewPreview,
 }: Props) {
   const [search, setSearch] = useState("");
   const [major, setMajor] = useState("All");
@@ -743,13 +745,30 @@ export default function AlumniDirectoryPage({
                               </span>
                             </div>
 
-                            <button
-                              onClick={() => window.open(res.file_url, "_blank")}
-                              className="px-3 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/25 transition-all text-xs font-bold flex items-center gap-1 cursor-pointer"
-                            >
-                              <Download className="w-3.5 h-3.5" />
-                              Get File
-                            </button>
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              {onViewPreview && (
+                                <button
+                                  type="button"
+                                  onClick={() => onViewPreview(res.file_url, res.file_name)}
+                                  className={`px-3 py-1.5 rounded-lg border text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
+                                    isDarkMode
+                                      ? "bg-[#16181c] border-[#2f3336] text-[#e7e9ea] hover:bg-[#202327]"
+                                      : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
+                                  }`}
+                                >
+                                  <Eye className="w-3.5 h-3.5" />
+                                  Preview
+                                </button>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => window.open(res.file_url, "_blank")}
+                                className="px-3 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/25 transition-all text-xs font-bold flex items-center gap-1 cursor-pointer"
+                              >
+                                <Download className="w-3.5 h-3.5" />
+                                Get File
+                              </button>
+                            </div>
                           </div>
                         </div>
                       ))}
