@@ -8,7 +8,7 @@ const TEAM: CardItem[] = [
     title: "Md. Miftahur Rahman Swapnil",
     meta: "ID: 22235103183 · Intake 51",
     description: "Project Manager & Overall Project Lead — Project roadmap, team coordination, and core frontend development.",
-    imgSrc: "/team/member-1.svg",
+    imgSrc: "/team/member-1.jpg",
     icon: <Crown size={24} />,
     linkHref: "#",
   },
