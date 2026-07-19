@@ -198,7 +198,7 @@ export default function AdminDrivePanel({ isDarkMode: dk, onPreviewFile }: Props
             )}
           >
             {d.label}
-            {!d.active && <span className="opacity-60"> · Coming Soon</span>}
+            {!configs.find(c => c.department === d.key)?.active && <span className="opacity-60"> · Coming Soon</span>}
           </button>
         ))}
       </div>

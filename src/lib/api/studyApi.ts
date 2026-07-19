@@ -242,6 +242,7 @@ export interface DepartmentConfig {
   department: string;
   folder_id: string;
   label: string | null;
+  active: boolean;
   updated_at: string;
 }
 
@@ -263,6 +264,20 @@ export async function upsertDepartmentConfig(
   const { error } = await supabase
     .from('study_department_config')
     .upsert({ department, folder_id: folderId, label, updated_by: updatedBy, updated_at: new Date().toISOString() }, { onConflict: 'department' });
+  return !error;
+}
+
+/** Flip a department's public "active" state — separate from configuring its
+ * Drive folder link, so an admin can stage a link before going live with it. */
+export async function setDepartmentActive(
+  department: string,
+  active: boolean,
+  updatedBy: string,
+): Promise<boolean> {
+  const { error } = await supabase
+    .from('study_department_config')
+    .update({ active, updated_by: updatedBy, updated_at: new Date().toISOString() })
+    .eq('department', department);
   return !error;
 }
 

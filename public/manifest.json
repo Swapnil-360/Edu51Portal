@@ -1,0 +1,26 @@
+{
+  "name": "Edu51Portal",
+  "short_name": "Edu51Portal",
+  "description": "Academic hub for BUBT students — course materials, exam routines, teams, network, and alumni mentorship.",
+  "start_url": "/home",
+  "id": "/home",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#1e9df1",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/Edu51Portal.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/Edu51Portal.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

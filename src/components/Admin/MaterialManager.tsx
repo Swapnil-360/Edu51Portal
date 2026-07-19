@@ -14,7 +14,7 @@ import {
   buildFolderTree, formatFileSize, fileIcon,
   MAJORS, FOLDER_COLORS,
   DriveConfig, listDriveConfigs, upsertDriveConfig,
-  DepartmentConfig, listDepartmentConfigs, upsertDepartmentConfig,
+  DepartmentConfig, listDepartmentConfigs, upsertDepartmentConfig, setDepartmentActive,
 } from '../../lib/api/studyApi';
 import { DEPARTMENTS } from '../../config/departments';
 
@@ -148,6 +148,7 @@ export default function MaterialManager({ isDarkMode, currentUserId, onPreviewFi
   const [departmentConfigs, setDepartmentConfigs] = useState<DepartmentConfig[]>([]);
   const [departmentEditing, setDepartmentEditing] = useState<Record<string, { folderId: string; label: string }>>({});
   const [departmentSaving, setDepartmentSaving] = useState<string | null>(null);
+  const [departmentTogglingActive, setDepartmentTogglingActive] = useState<string | null>(null);
 
   // Modals
   const [showCreateFolder, setShowCreateFolder] = useState(false);
@@ -438,20 +439,44 @@ export default function MaterialManager({ isDarkMode, currentUserId, onPreviewFi
             const edit = departmentEditing[d.key] ?? { folderId: '', label: d.label };
             const isSaving = departmentSaving === d.key;
             const currentConfig = departmentConfigs.find(c => c.department === d.key);
+            const isTogglingActive = departmentTogglingActive === d.key;
             return (
               <div key={d.key} className={cls('rounded-xl border p-4 space-y-3', border, dk ? 'bg-[#16181c]/40' : 'bg-white')}>
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-semibold">{d.label}</span>
-                  {!d.active && (
+                  {!currentConfig?.active && (
                     <span className={cls('text-xs px-2 py-0.5 rounded-full', dk ? 'bg-slate-700/50 text-slate-400' : 'bg-slate-100 text-slate-500')}>
                       Coming Soon
                     </span>
                   )}
-                  {currentConfig && (
-                    <span className={cls('text-xs px-2 py-0.5 rounded-full ml-auto', dk ? 'bg-emerald-900/40 text-emerald-400' : 'bg-emerald-50 text-emerald-700')}>
-                      Configured
-                    </span>
-                  )}
+                  <div className="ml-auto flex items-center gap-2">
+                    {currentConfig && (
+                      <span className={cls('text-xs px-2 py-0.5 rounded-full', dk ? 'bg-emerald-900/40 text-emerald-400' : 'bg-emerald-50 text-emerald-700')}>
+                        Configured
+                      </span>
+                    )}
+                    {currentConfig && (
+                      <button
+                        disabled={isTogglingActive}
+                        onClick={async () => {
+                          setDepartmentTogglingActive(d.key);
+                          await setDepartmentActive(d.key, !currentConfig.active, currentUserId);
+                          await loadDepartmentConfigs();
+                          setDepartmentTogglingActive(null);
+                        }}
+                        title={currentConfig.active ? 'Click to take this department offline (shows Coming Soon again)' : 'Click to make this department publicly active'}
+                        className={cls(
+                          'flex items-center gap-1.5 text-xs px-2.5 py-0.5 rounded-full font-semibold transition-colors disabled:opacity-50',
+                          currentConfig.active
+                            ? dk ? 'bg-blue-500/20 text-blue-300 hover:bg-blue-500/30' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                            : dk ? 'bg-slate-700/50 text-slate-300 hover:bg-slate-700' : 'bg-slate-200 text-slate-600 hover:bg-slate-300',
+                        )}
+                      >
+                        {isTogglingActive ? <Loader2 size={11} className="animate-spin" /> : null}
+                        {currentConfig.active ? 'Active' : 'Inactive'}
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <input

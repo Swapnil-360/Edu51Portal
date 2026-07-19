@@ -32,6 +32,8 @@ import { ResetPasswordModal } from "./components/ResetPasswordModal";
 import { SetNewPasswordModal } from "./components/SetNewPasswordModal";
 import { ChangeEmailModal } from "./components/ChangeEmailModal";
 import { SignInModal } from "./components/SignInModal";
+import GlobalSearchModal from "./components/ui/GlobalSearchModal";
+import OnboardingTour, { ONBOARDING_SEEN_KEY } from "./components/ui/OnboardingTour";
 import { FeedbackModal } from "./components/FeedbackModal";
 import {
   listFeedback,
@@ -50,7 +52,7 @@ const GDriveFolderBrowser = lazy(() => import("./components/Student/GDriveFolder
 const GDriveCourseView = lazy(() => import("./components/Student/GDriveCourseView").then(m => ({ default: m.GDriveCourseView })));
 const DepartmentCards = lazy(() => import("./components/Student/DepartmentCards").then(m => ({ default: m.DepartmentCards })));
 const SemesterFolderBrowser = lazy(() => import("./components/Student/SemesterFolderBrowser").then(m => ({ default: m.SemesterFolderBrowser })));
-import { getDriveConfigForMajor, getDriveConfigForDepartment } from "./lib/api/studyApi";
+import { getDriveConfigForMajor, getDriveConfigForDepartment, DepartmentConfig, listDepartmentConfigs } from "./lib/api/studyApi";
 import { DEPARTMENTS, getDepartment } from "./config/departments";
 const AIAssistant = lazy(() => import("./components/AIAssistant/AIAssistant").then(m => ({ default: m.AIAssistant })));
 import {
@@ -102,6 +104,7 @@ import {
   MoreHorizontal,
   Send,
   Mail,
+  Search,
 } from "lucide-react";
 const ProfilePage = lazy(() => import("./components/Profile/ProfilePage"));
 const NetworkPage = lazy(() => import("./components/Network/NetworkPage"));
@@ -292,6 +295,30 @@ function App() {
   // Admin status is DB-driven (profiles.is_admin), applied after the profile loads.
   const [isAdmin, setIsAdmin] = useState(false);
 
+  // Department "active" state is DB-driven (study_department_config.active) —
+  // an admin can configure a Drive folder link and separately flip a
+  // department live, instead of a hardcoded flag requiring a redeploy.
+  const [departmentConfigs, setDepartmentConfigs] = useState<DepartmentConfig[]>([]);
+  useEffect(() => {
+    listDepartmentConfigs().then(setDepartmentConfigs);
+  }, []);
+  const isDeptActive = useCallback(
+    (key: string) => departmentConfigs.some((c) => c.department === key && c.active),
+    [departmentConfigs],
+  );
+
+  // Cmd/Ctrl+K opens global search from anywhere.
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setShowGlobalSearch(true);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
   // Route guard: non-admins can never sit on the admin view. Covers direct
   // /admin deep-links and live demotion — there is no public admin page anymore.
   useEffect(() => {
@@ -392,6 +419,23 @@ function App() {
   const [selectedNotice, setSelectedNotice] = useState<Notice | null>(null);
   const [showNoticeModal, setShowNoticeModal] = useState(false);
   const [showNoticePanel, setShowNoticePanel] = useState(false);
+  const [showNoticePrefs, setShowNoticePrefs] = useState(false);
+  // Per-browser mute list for notice categories. "emergency" is intentionally
+  // never mutable here — safety notices should always get through.
+  const [mutedCategories, setMutedCategories] = useState<string[]>(() => {
+    try {
+      return JSON.parse(localStorage.getItem("edu51_muted_categories") || "[]");
+    } catch {
+      return [];
+    }
+  });
+  const toggleMutedCategory = (category: string) => {
+    setMutedCategories((prev) => {
+      const next = prev.includes(category) ? prev.filter((c) => c !== category) : [...prev, category];
+      try { localStorage.setItem("edu51_muted_categories", JSON.stringify(next)); } catch { /* ignore */ }
+      return next;
+    });
+  };
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showSignUpModal, setShowSignUpModal] = useState(false);
   const [showResetPasswordModal, setShowResetPasswordModal] = useState(false);
@@ -404,6 +448,20 @@ function App() {
   const [isEditingNotice, setIsEditingNotice] = useState(false);
   const [editingNoticeId, setEditingNoticeId] = useState<string | null>(null);
   const [showSignInModal, setShowSignInModal] = useState(false);
+  const [showGlobalSearch, setShowGlobalSearch] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  // First-ever visit (any user, guest or logged in) gets a one-time feature tour on Home.
+  useEffect(() => {
+    if (currentView !== "home") return;
+    try {
+      if (localStorage.getItem(ONBOARDING_SEEN_KEY)) return;
+    } catch {
+      return;
+    }
+    const id = window.setTimeout(() => setShowOnboarding(true), 900);
+    return () => window.clearTimeout(id);
+  }, [currentView]);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [guestMajor, setGuestMajor] = useState("");
@@ -1063,9 +1121,10 @@ function App() {
       notices.filter(
         (n) =>
           n.is_active &&
-          (n.target_department == null || n.target_department === activeDepartment),
+          (n.target_department == null || n.target_department === activeDepartment) &&
+          (n.category === "emergency" || !mutedCategories.includes(n.category)),
       ),
-    [notices, activeDepartment],
+    [notices, activeDepartment, mutedCategories],
   );
 
   // Memoize unread notice count
@@ -3795,6 +3854,19 @@ For any queries, contact your course instructors or the department.`,
                 </div>
               )}
 
+              {/* Global Search */}
+              <button
+                onClick={() => setShowGlobalSearch(true)}
+                title="Search (Ctrl+K)"
+                className={`flex items-center justify-center w-9 h-9 rounded-full border transition-all duration-200 ${
+                  isDarkMode
+                    ? "bg-[#16181c] border-[#2f3336] text-[#8b98a5] hover:bg-[#2f3336] hover:text-white"
+                    : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50 shadow-sm"
+                }`}
+              >
+                <Search className="h-4 w-4" />
+              </button>
+
               {/* Notification Bell + Popover */}
               {isLoggedIn && (
                 <div className="relative">
@@ -3848,6 +3920,13 @@ For any queries, contact your course instructors or the department.`,
                               </button>
                             )}
                             <button
+                              onClick={() => setShowNoticePrefs((v) => !v)}
+                              title="Notification preferences"
+                              className={`w-7 h-7 flex items-center justify-center rounded-lg transition-colors ${isDarkMode ? "text-[#71767b] hover:bg-[#16181c] hover:text-[#e7e9ea]" : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"}`}
+                            >
+                              <Settings className="h-3.5 w-3.5" />
+                            </button>
+                            <button
                               onClick={() => setShowNoticePanel(false)}
                               className={`w-7 h-7 flex items-center justify-center rounded-lg transition-colors ${isDarkMode ? "text-[#71767b] hover:bg-[#16181c] hover:text-[#e7e9ea]" : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"}`}
                             >
@@ -3855,6 +3934,40 @@ For any queries, contact your course instructors or the department.`,
                             </button>
                           </div>
                         </div>
+
+                        {/* Category mute preferences */}
+                        {showNoticePrefs && (
+                          <div className={`px-4 py-3 border-b space-y-2 ${isDarkMode ? "border-[#2f3336] bg-[#0a0a0a]" : "border-slate-100 bg-slate-50"}`}>
+                            <p className={`text-[10px] font-bold uppercase tracking-wider ${isDarkMode ? "text-slate-500" : "text-slate-400"}`}>
+                              Mute categories (Emergency can't be muted)
+                            </p>
+                            {([
+                              { value: "general", label: "General" },
+                              { value: "exam", label: "Exam" },
+                              { value: "important_link", label: "Important Link" },
+                              { value: "other", label: "Other" },
+                            ] as const).map((cat) => {
+                              const muted = mutedCategories.includes(cat.value);
+                              return (
+                                <label key={cat.value} className="flex items-center justify-between gap-2 cursor-pointer">
+                                  <span className={`text-xs ${isDarkMode ? "text-slate-300" : "text-slate-700"}`}>{cat.label}</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => toggleMutedCategory(cat.value)}
+                                    role="switch"
+                                    aria-checked={!muted}
+                                    className={`relative w-8 h-[18px] rounded-full transition-colors flex-shrink-0 ${muted ? (isDarkMode ? "bg-[#2f3336]" : "bg-slate-300") : "bg-[#1e9df1]"}`}
+                                  >
+                                    <span
+                                      className="absolute top-[2px] w-[14px] h-[14px] rounded-full bg-white transition-all"
+                                      style={{ left: muted ? 2 : 16 }}
+                                    />
+                                  </button>
+                                </label>
+                              );
+                            })}
+                          </div>
+                        )}
 
                         {/* Content */}
                         {activeNotices.length === 0 && mentionNotifications.length === 0 ? (
@@ -4763,10 +4876,10 @@ For any queries, contact your course instructors or the department.`,
                         imageSrc: dept.imageSrc,
                         videoSrc: dept.videoSrc,
                         isOwn: isLoggedIn && userProfile.department === dept.key,
-                        locked: dept.active && isLoggedIn && userProfile.department !== dept.key,
-                        comingSoon: !dept.active,
+                        locked: isDeptActive(dept.key) && isLoggedIn && userProfile.department !== dept.key,
+                        comingSoon: !isDeptActive(dept.key),
                         onClick: () => {
-                          if (!dept.active) {
+                          if (!isDeptActive(dept.key)) {
                             showMajorAccessNotification("info", `${dept.label} materials are coming soon.`);
                             return;
                           }
@@ -9119,6 +9232,26 @@ For any queries, contact your course instructors or the department.`,
           setShowSignUpModal(true);
         }}
       />
+
+      {/* First-visit onboarding tour */}
+      {showOnboarding && (
+        <OnboardingTour isDarkMode={isDarkMode} onClose={() => setShowOnboarding(false)} />
+      )}
+
+      {/* Global Search */}
+      {showGlobalSearch && (
+        <GlobalSearchModal
+          isDarkMode={isDarkMode}
+          onClose={() => setShowGlobalSearch(false)}
+          onOpenMaterial={(fileUrl, title) => {
+            setCurrentFileUrl(fileUrl);
+            setCurrentFileName(title);
+            setShowFileViewer(true);
+          }}
+          onOpenNotices={() => goToView("home")}
+          onOpenProfile={(username) => goToView("profile", username)}
+        />
+      )}
 
       <ResetPasswordModal
         isOpen={showResetPasswordModal}
