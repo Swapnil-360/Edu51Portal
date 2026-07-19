@@ -23,6 +23,22 @@ export default function GlobalSearchModal({ isDarkMode, onClose, onOpenMaterial,
     inputRef.current?.focus();
   }, []);
 
+  // Lock body scroll while open — see OnboardingTour.tsx for why plain
+  // overflow:hidden isn't enough on mobile.
+  useEffect(() => {
+    const y = window.scrollY, x = window.scrollX;
+    const prev = { overflow: document.body.style.overflow, position: document.body.style.position, top: document.body.style.top, left: document.body.style.left, right: document.body.style.right };
+    document.body.style.overflow = "hidden";
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${y}px`;
+    document.body.style.left = "0";
+    document.body.style.right = "0";
+    return () => {
+      Object.assign(document.body.style, prev);
+      window.scrollTo({ top: y, left: x, behavior: "instant" });
+    };
+  }, []);
+
   useEffect(() => {
     const trimmed = query.trim();
     if (trimmed.length < 2) {

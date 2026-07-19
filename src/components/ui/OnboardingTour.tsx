@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { GraduationCap, Users, Network, CalendarClock, Bot, Rocket, ChevronRight, ChevronLeft, X } from "lucide-react";
 
 export const ONBOARDING_SEEN_KEY = "edu51_onboarding_seen_v1";
@@ -58,6 +58,23 @@ export default function OnboardingTour({ isDarkMode, onClose }: Props) {
   const [step, setStep] = useState(0);
   const isLast = step === STEPS.length - 1;
   const current = STEPS[step];
+
+  // Lock body scroll while open — plain overflow:hidden isn't enough on
+  // mobile (iOS in particular still lets the page drift/rubber-band behind
+  // a `fixed` overlay), so pin the body in place and restore scroll on close.
+  useEffect(() => {
+    const y = window.scrollY, x = window.scrollX;
+    const prev = { overflow: document.body.style.overflow, position: document.body.style.position, top: document.body.style.top, left: document.body.style.left, right: document.body.style.right };
+    document.body.style.overflow = "hidden";
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${y}px`;
+    document.body.style.left = "0";
+    document.body.style.right = "0";
+    return () => {
+      Object.assign(document.body.style, prev);
+      window.scrollTo({ top: y, left: x, behavior: "instant" });
+    };
+  }, []);
 
   const finish = () => {
     try { localStorage.setItem(ONBOARDING_SEEN_KEY, "1"); } catch { /* ignore */ }
