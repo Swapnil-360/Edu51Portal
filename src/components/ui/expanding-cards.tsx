@@ -25,32 +25,13 @@ export const ExpandingCards = React.forwardRef<
     defaultActiveIndex,
   );
 
-  const [isDesktop, setIsDesktop] = React.useState(false);
-
-  React.useEffect(() => {
-    const handleResize = () => {
-      setIsDesktop(window.innerWidth >= 768);
-    };
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
   const gridStyle = React.useMemo(() => {
     if (activeIndex === null) return {};
-
-    if (isDesktop) {
-      const columns = items
-        .map((_, index) => (index === activeIndex ? "5fr" : "1fr"))
-        .join(" ");
-      return { gridTemplateColumns: columns };
-    } else {
-      const rows = items
-        .map((_, index) => (index === activeIndex ? "5fr" : "1fr"))
-        .join(" ");
-      return { gridTemplateRows: rows };
-    }
-  }, [activeIndex, items.length, isDesktop]);
+    const columns = items
+      .map((_, index) => (index === activeIndex ? "5fr" : "1fr"))
+      .join(" ");
+    return { gridTemplateColumns: columns };
+  }, [activeIndex, items.length]);
 
   const handleInteraction = (index: number) => {
     setActiveIndex(index);
@@ -59,18 +40,15 @@ export const ExpandingCards = React.forwardRef<
   return (
     <ul
       className={cn(
-        "w-full max-w-6xl gap-2",
-        "grid",
-        "h-[600px] md:h-[500px]",
-        "transition-[grid-template-columns,grid-template-rows] duration-500 ease-out",
+        "w-full max-w-6xl gap-1.5 sm:gap-2",
+        "grid grid-flow-col",
+        "h-[380px] sm:h-[460px] md:h-[500px]",
+        "transition-[grid-template-columns] duration-500 ease-out",
         className,
       )}
       style={{
         ...gridStyle,
-        ...(isDesktop
-          ? { gridTemplateRows: '1fr' }
-          : { gridTemplateColumns: '1fr' }
-        )
+        gridTemplateRows: '1fr',
       }}
       ref={ref}
       {...props}
@@ -80,8 +58,8 @@ export const ExpandingCards = React.forwardRef<
           key={item.id}
           className={cn(
             "group relative cursor-pointer overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm",
-            "md:min-w-[80px]",
-            "min-h-0 min-w-0"
+            "min-w-[44px] sm:min-w-[56px] md:min-w-[80px]",
+            "min-h-0"
           )}
           onMouseEnter={() => handleInteraction(index)}
           onFocus={() => handleInteraction(index)}
@@ -99,7 +77,7 @@ export const ExpandingCards = React.forwardRef<
           <article
             className="absolute inset-0 flex flex-col justify-end gap-2 p-4"
           >
-            <h3 className="hidden origin-left rotate-90 text-sm font-light uppercase tracking-wider text-white/80 opacity-100 transition-all duration-300 ease-out md:block group-data-[active=true]:opacity-0">
+            <h3 className="origin-left rotate-90 whitespace-nowrap text-[10px] sm:text-sm font-light uppercase tracking-wider text-white/80 opacity-100 transition-all duration-300 ease-out group-data-[active=true]:opacity-0">
               {item.title}
             </h3>
 
