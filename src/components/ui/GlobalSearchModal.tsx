@@ -92,7 +92,7 @@ export default function GlobalSearchModal({ isDarkMode, onClose, onOpenMaterial,
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search materials, notices, people..."
-            className={`flex-1 bg-transparent outline-none text-sm ${isDarkMode ? "text-white placeholder-slate-500" : "text-slate-900 placeholder-slate-400"}`}
+            className={`flex-1 bg-transparent text-sm rounded-md focus:outline-none focus:ring-2 focus:ring-[#1e9df1]/30 ${isDarkMode ? "text-white placeholder-slate-500" : "text-slate-900 placeholder-slate-400"}`}
           />
           <button onClick={onClose} className={`p-1 rounded-md ${isDarkMode ? "text-slate-500 hover:text-white hover:bg-[#2f3336]" : "text-slate-400 hover:text-slate-700 hover:bg-slate-100"}`}>
             <X className="w-4 h-4" />
