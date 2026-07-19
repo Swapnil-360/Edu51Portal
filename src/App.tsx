@@ -9233,13 +9233,17 @@ For any queries, contact your course instructors or the department.`,
         }}
       />
 
-      {/* First-visit onboarding tour */}
-      {showOnboarding && (
-        <OnboardingTour isDarkMode={isDarkMode} onClose={() => setShowOnboarding(false)} />
+      {/* First-visit onboarding tour — portaled to <body> so its `fixed`
+          positioning is always relative to the real viewport, not whatever
+          transformed ancestor (framer-motion applies inline transforms)
+          happens to be above it in the tree. Same reason the toast above uses createPortal. */}
+      {showOnboarding && createPortal(
+        <OnboardingTour isDarkMode={isDarkMode} onClose={() => setShowOnboarding(false)} />,
+        document.body,
       )}
 
-      {/* Global Search */}
-      {showGlobalSearch && (
+      {/* Global Search — portaled for the same reason. */}
+      {showGlobalSearch && createPortal(
         <GlobalSearchModal
           isDarkMode={isDarkMode}
           onClose={() => setShowGlobalSearch(false)}
@@ -9250,7 +9254,8 @@ For any queries, contact your course instructors or the department.`,
           }}
           onOpenNotices={() => goToView("home")}
           onOpenProfile={(username) => goToView("profile", username)}
-        />
+        />,
+        document.body,
       )}
 
       <ResetPasswordModal
