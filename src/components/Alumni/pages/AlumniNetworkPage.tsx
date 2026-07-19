@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
-import { Users, User, Compass, MessageSquare, Briefcase, GraduationCap, Inbox, Loader2 } from "lucide-react";
+import { Users, User, Compass, MessageSquare, Briefcase, GraduationCap, Inbox } from "lucide-react";
 import { supabase } from "../../../lib/supabase";
 import MentorChat from "../MentorChat";
+import ChipLoader from "../../ui/ChipLoader";
 
 interface Props {
   isDarkMode: boolean;
@@ -169,8 +170,8 @@ export default function AlumniNetworkPage({ isDarkMode, authSession, userProfile
         {/* SECTION 1: MENTEES */}
         {activeTab === "mentees" && (
           loadingMentees ? (
-            <div className="flex items-center gap-2 text-xs text-slate-500 py-10 justify-center">
-              <Loader2 className="w-5 h-5 animate-spin text-[#1e9df1]" />
+            <div className="flex flex-col items-center gap-1 text-xs text-slate-500 py-10 justify-center">
+              <ChipLoader size="md" />
               Loading mentees...
             </div>
           ) : mentees.length === 0 ? (
@@ -226,8 +227,8 @@ export default function AlumniNetworkPage({ isDarkMode, authSession, userProfile
         {/* SECTION 2: FELLOW ALUMNI */}
         {activeTab === "fellows" && (
           loadingFellows ? (
-            <div className="flex items-center gap-2 text-xs text-slate-500 py-10 justify-center">
-              <Loader2 className="w-5 h-5 animate-spin text-[#1e9df1]" />
+            <div className="flex flex-col items-center gap-1 text-xs text-slate-500 py-10 justify-center">
+              <ChipLoader size="md" />
               Loading fellow alumni...
             </div>
           ) : fellows.length === 0 ? (
@@ -275,8 +276,8 @@ export default function AlumniNetworkPage({ isDarkMode, authSession, userProfile
         {/* SECTION 3: EXPLORE STUDENTS */}
         {activeTab === "students" && (
           loadingStudents ? (
-            <div className="flex items-center gap-2 text-xs text-slate-500 py-10 justify-center">
-              <Loader2 className="w-5 h-5 animate-spin text-[#1e9df1]" />
+            <div className="flex flex-col items-center gap-1 text-xs text-slate-500 py-10 justify-center">
+              <ChipLoader size="md" />
               Loading students...
             </div>
           ) : students.length === 0 ? (

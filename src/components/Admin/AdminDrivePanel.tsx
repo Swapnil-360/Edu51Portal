@@ -12,6 +12,7 @@ import {
 import { listDepartmentConfigs, DepartmentConfig } from '../../lib/api/studyApi';
 import { DEPARTMENTS } from '../../config/departments';
 import { useGoogleDriveAuth } from '../../hooks/useGoogleDriveAuth';
+import ChipLoader from '../ui/ChipLoader';
 
 interface Props {
   isDarkMode: boolean;
@@ -177,7 +178,7 @@ export default function AdminDrivePanel({ isDarkMode: dk, onPreviewFile }: Props
   );
 
   if (configLoading) {
-    return <div className="flex justify-center py-16"><Loader2 size={22} className="animate-spin text-blue-500" /></div>;
+    return <div className="flex justify-center py-16"><ChipLoader size="lg" /></div>;
   }
 
   return (
@@ -394,7 +395,7 @@ export default function AdminDrivePanel({ isDarkMode: dk, onPreviewFile }: Props
                 <button onClick={refresh} className="px-4 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold">Retry</button>
               </div>
             ) : listLoading ? (
-              <div className="flex justify-center py-12"><Loader2 size={20} className="animate-spin text-blue-500" /></div>
+              <div className="flex justify-center py-12"><ChipLoader size="md" /></div>
             ) : (
               <>
                 {stack.length > 0 && (

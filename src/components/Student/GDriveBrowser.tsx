@@ -8,6 +8,7 @@ import {
   drivePreviewUrl, DriveItem,
 } from '../../lib/driveApi';
 import { getDriveConfigForMajor, MAJORS, StudyMajor } from '../../lib/api/studyApi';
+import ChipLoader from '../ui/ChipLoader';
 
 interface Props {
   userMajor: string | null;
@@ -175,7 +176,7 @@ export default function GDriveBrowser({ userMajor, isDarkMode: dk, onPreviewFile
       <div className="p-4 min-h-[300px]">
         {configLoading ? (
           <div className="flex justify-center py-16">
-            <Loader2 size={22} className="animate-spin text-blue-500" />
+            <ChipLoader size="lg" />
           </div>
         ) : !rootFolderId ? (
           <div className={cls('flex flex-col items-center justify-center py-16 text-center', sub)}>
@@ -214,7 +215,7 @@ export default function GDriveBrowser({ userMajor, isDarkMode: dk, onPreviewFile
           </div>
         ) : loading ? (
           <div className="flex justify-center py-16">
-            <Loader2 size={22} className="animate-spin text-blue-500" />
+            <ChipLoader size="lg" />
           </div>
         ) : (
           <>

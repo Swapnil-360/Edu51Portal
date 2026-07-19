@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../../lib/supabase';
+import ChipLoader from '../ui/ChipLoader';
 import type { TeamFile } from '../../types/social';
 import {
   listTeamFiles, uploadTeamFile, deleteTeamFile,
@@ -433,10 +434,8 @@ export default function TeamFiles({ teamId, currentUserId, isMember, canManage, 
           className={`relative transition-all ${dragging ? 'ring-2 ring-[#1e9df1] ring-offset-2 rounded-2xl' : ''}`}
         >
           {loading ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className={`h-44 rounded-2xl animate-pulse ${isDarkMode ? 'bg-[#16181c]' : 'bg-slate-100'}`} />
-              ))}
+            <div className="flex justify-center py-12">
+              <ChipLoader size="md" />
             </div>
           ) : displayed.length === 0 ? (
             <div className={`py-12 rounded-2xl border text-center ${isDarkMode ? 'border-[#2f3336]' : 'border-slate-200'}`}>
@@ -464,12 +463,10 @@ export default function TeamFiles({ teamId, currentUserId, isMember, canManage, 
         </div>
       )}
 
-      {/* Loading skeleton when first load */}
+      {/* Loading on first load */}
       {loading && files.length === 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className={`h-44 rounded-2xl animate-pulse ${isDarkMode ? 'bg-[#16181c]' : 'bg-slate-100'}`} />
-          ))}
+        <div className="flex justify-center py-16">
+          <ChipLoader size="lg" />
         </div>
       )}
 

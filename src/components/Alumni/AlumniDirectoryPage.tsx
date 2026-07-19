@@ -7,6 +7,7 @@ import { supabase } from "../../lib/supabase";
 import MentorChat from "./MentorChat";
 import { getSuggestedMentors } from "../../lib/api/mentorshipApi";
 import { AlumniProfile } from "../../types/social";
+import ChipLoader from "../ui/ChipLoader";
 
 interface Props {
   isDarkMode: boolean;
@@ -396,26 +397,8 @@ export default function AlumniDirectoryPage({
 
             {/* Main Grid / Loading / Empty State */}
             {loading ? (
-              /* Loading Skeletons */
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className={`rounded-xl border p-4 flex flex-col gap-4 animate-pulse ${cardBorder}`}
-                  >
-                    <div className="flex gap-3 items-center">
-                      <div className="w-12 h-12 rounded-full bg-slate-800" />
-                      <div className="space-y-2 flex-1">
-                        <div className="h-4 bg-slate-800 rounded w-2/3" />
-                        <div className="h-3 bg-slate-800 rounded w-1/2" />
-                      </div>
-                    </div>
-                    <div className="space-y-1">
-                      <div className="h-3 bg-slate-800 rounded w-3/4" />
-                      <div className="h-3 bg-slate-800 rounded w-5/6" />
-                    </div>
-                  </div>
-                ))}
+              <div className="flex justify-center py-20">
+                <ChipLoader size="lg" />
               </div>
             ) : alumni.length === 0 ? (
               /* Empty State */
@@ -449,7 +432,7 @@ export default function AlumniDirectoryPage({
         {activeTab === "requests" && (
           myRequestsLoading ? (
             <div className="flex flex-col items-center justify-center py-20 gap-3">
-              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+              <ChipLoader size="lg" />
               <span className={`text-xs ${subColor}`}>Loading requests...</span>
             </div>
           ) : myRequests.length === 0 ? (
@@ -521,8 +504,8 @@ export default function AlumniDirectoryPage({
 
         {activeTab === "messages" && (
           loadingConvs ? (
-            <div className="flex items-center gap-2 text-xs text-slate-500 py-10 justify-center">
-              <span className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-[#1e9df1]"></span>
+            <div className="flex flex-col items-center gap-1 text-xs text-slate-500 py-10 justify-center">
+              <ChipLoader size="md" />
               Loading conversations...
             </div>
           ) : conversations.length === 0 ? (
@@ -598,8 +581,8 @@ export default function AlumniDirectoryPage({
 
         {activeTab === "resources" && (
           resourcesLoading ? (
-            <div className="flex items-center gap-2 text-xs text-slate-500 py-10 justify-center">
-              <span className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-[#1e9df1]"></span>
+            <div className="flex flex-col items-center gap-1 text-xs text-slate-500 py-10 justify-center">
+              <ChipLoader size="md" />
               Loading resources...
             </div>
           ) : (

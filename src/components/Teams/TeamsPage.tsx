@@ -19,6 +19,7 @@ import {
 } from "../../lib/api/teamsApi";
 import TeamCard from "./TeamCard";
 import CreateTeamModal from "./CreateTeamModal";
+import ChipLoader from "../ui/ChipLoader";
 
 type Tab = "discover" | "mine";
 
@@ -233,7 +234,7 @@ export default function TeamsPage({ currentUserId, onClose, onOpenTeam, isDarkMo
 
         {loading ? (
           <div className="flex justify-center py-16">
-            <Loader2 className="w-8 h-8 animate-spin text-[#1e9df1]" />
+            <ChipLoader size="lg" />
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

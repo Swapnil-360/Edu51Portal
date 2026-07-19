@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState, useRef, useCallback } from 'react'
 import { Plus, Trash2, AlertTriangle, Save, Clock, MapPin, Download, X, Layers } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase, supabaseConfigured } from '../../lib/supabase';
+import ChipLoader from '../ui/ChipLoader';
 
 export type RoutineType = 'regular' | 'improvement' | 'retake';
 
@@ -657,7 +658,12 @@ ${slots.map(s => `<tr>
       </div>
 
       {/* ── Body ── */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden relative">
+        {isLoadingFromDb && entries.length === 0 && (
+          <div className={`absolute inset-0 z-20 flex items-center justify-center ${dk ? 'bg-[#0a0f0e]' : 'bg-slate-100'}`}>
+            <ChipLoader size="lg" />
+          </div>
+        )}
 
         {/* ── Desktop: colorful weekly grid ── */}
         <div className="hidden lg:flex flex-1 overflow-x-auto overflow-y-auto flex-col min-w-0 p-4">

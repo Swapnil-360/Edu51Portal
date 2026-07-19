@@ -44,6 +44,7 @@ import TeamTasksBoard from "./TeamTasksBoard";
 import TeamFiles from "./TeamFiles";
 import { uploadImage } from "../../lib/storage";
 import { supabase } from "../../lib/supabase";
+import ChipLoader from "../ui/ChipLoader";
 
 type Tab = "overview" | "members" | "chat" | "tasks" | "files";
 
@@ -181,7 +182,7 @@ export default function TeamPage({ teamId, currentUserId, onClose, onViewProfile
   if (loading) {
     return (
       <div className={`min-h-screen flex items-center justify-center ${pageBg}`}>
-        <Loader2 className="w-8 h-8 animate-spin text-[#1e9df1]" />
+        <ChipLoader size="xl" />
       </div>
     );
   }

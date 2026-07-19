@@ -37,6 +37,7 @@ import EditBasicInfoModal from "./EditBasicInfoModal";
 import EducationSection from "./EducationSection";
 import ExperienceSection from "./ExperienceSection";
 import SkillsEditor, { BadgeList, CSE_SKILL_SUGGESTIONS, INTEREST_SUGGESTIONS } from "./SkillsEditor";
+import ChipLoader from "../ui/ChipLoader";
 
 interface Props {
   /** username when viewing someone else via /u/:username; null = own profile */
@@ -225,39 +226,9 @@ export default function ProfilePage({ username, currentUserId, initialAvatarUrl,
   const sub = isDarkMode ? "text-[#71767b]" : "text-slate-500";
 
   if (loading) {
-    const skBg = isDarkMode ? "bg-[#16181c]/60" : "bg-slate-200/70";
     return (
-      <div className={`min-h-screen ${pageBg}`}>
-        {/* Cover skeleton */}
-        <div className={`relative h-48 animate-pulse ${isDarkMode ? "bg-[#16181c]" : "bg-slate-200"}`} />
-        {/* Avatar + content skeleton */}
-        <div className="max-w-3xl mx-auto px-4 -mt-12 pb-12">
-          {/* Avatar row */}
-          <div className="flex items-end gap-4 mb-6">
-            <div className={`w-24 h-24 rounded-full border-4 flex-shrink-0 overflow-hidden animate-pulse ${isDarkMode ? "border-[#000000] bg-[#2f3336]" : "border-slate-100 bg-slate-300"}`}>
-              {initialAvatarUrl && (
-                <img src={initialAvatarUrl} alt="" className="w-full h-full object-cover" fetchpriority="high" decoding="async" />
-              )}
-            </div>
-            <div className="mb-2 flex-1 space-y-2.5">
-              <div className={`h-5 w-44 rounded-lg animate-pulse ${skBg}`} />
-              <div className={`h-3 w-28 rounded animate-pulse ${skBg}`} />
-              <div className={`h-3 w-36 rounded animate-pulse ${skBg}`} />
-            </div>
-          </div>
-          {/* Stats row skeleton */}
-          <div className="flex gap-3 mb-5">
-            {[80, 96, 72].map((w, i) => (
-              <div key={i} className={`h-16 rounded-xl flex-1 animate-pulse ${skBg}`} />
-            ))}
-          </div>
-          {/* Bio skeleton */}
-          <div className={`h-24 rounded-2xl animate-pulse mb-4 ${skBg}`} />
-          {/* Skills skeleton */}
-          <div className={`h-20 rounded-2xl animate-pulse mb-4 ${skBg}`} />
-          {/* Education skeleton */}
-          <div className={`h-28 rounded-2xl animate-pulse ${skBg}`} />
-        </div>
+      <div className={`min-h-screen flex items-center justify-center ${pageBg}`}>
+        <ChipLoader size="xl" />
       </div>
     );
   }

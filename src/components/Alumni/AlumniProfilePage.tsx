@@ -24,6 +24,7 @@ import { listExperiences } from "../../lib/api/profileApi";
 import { Experience } from "../../types/social";
 import ExperienceSection from "../Profile/ExperienceSection";
 import { BadgeList } from "../Profile/SkillsEditor";
+import ChipLoader from "../ui/ChipLoader";
 
 interface Props {
   id: string;
@@ -125,7 +126,7 @@ export default function AlumniProfilePage({ id, isDarkMode, onBack, authSession,
     return (
       <div className={`min-h-screen flex items-center justify-center ${pageBg}`}>
         <div className="flex flex-col items-center gap-3">
-          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#1e9df1]"></div>
+          <ChipLoader size="lg" />
           <span className={`text-xs ${subColor}`}>Loading profile...</span>
         </div>
       </div>

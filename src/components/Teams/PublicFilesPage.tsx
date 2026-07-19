@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import type { TeamFile } from '../../types/social';
 import { listPublicFiles, formatFileSize, fileTypeLabel, PublicFilesSort } from '../../lib/api/filesApi';
 import { supabase } from '../../lib/supabase';
+import ChipLoader from '../ui/ChipLoader';
 
 type FileFilter = 'all' | 'pdf' | 'doc' | 'sheet' | 'image';
 
@@ -238,10 +239,8 @@ export default function PublicFilesPage({ isDarkMode, onViewTeam, onViewPreview 
       {/* File grid */}
       <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-5">
         {loading && files.length === 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className={`h-48 rounded-2xl animate-pulse ${isDarkMode ? 'bg-[#17181c]' : 'bg-white border border-slate-200'}`} />
-            ))}
+          <div className="flex justify-center py-20">
+            <ChipLoader size="lg" />
           </div>
         ) : displayed.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">

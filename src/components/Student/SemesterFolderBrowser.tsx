@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { AlertCircle, Loader2, FolderOpen } from 'lucide-react';
+import { AlertCircle, FolderOpen } from 'lucide-react';
 import { FolderCard } from '../ui/folder-card';
+import ChipLoader from '../ui/ChipLoader';
 
 export interface SemesterFolder {
   id: string;
@@ -74,7 +75,7 @@ export const SemesterFolderBrowser: React.FC<SemesterFolderBrowserProps> = ({
 
   if (loading) return (
     <div className="flex flex-col items-center justify-center py-20 gap-3">
-      <Loader2 className={cls('h-6 w-6 animate-spin', dk ? 'text-slate-500' : 'text-slate-400')} />
+      <ChipLoader size="lg" />
       <p className={cls('text-sm', dk ? 'text-slate-500' : 'text-slate-400')}>Loading semesters…</p>
     </div>
   );

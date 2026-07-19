@@ -43,6 +43,7 @@ import { banUser, unbanUser, deleteUserAccount } from "./lib/api/adminApi";
 import type { Feedback, FeedbackStatus } from "./types";
 import MarqueeTicker from "./components/MarqueeTicker";
 import { Tiles } from "./components/ui/tiles";
+import ChipLoader from "./components/ui/ChipLoader";
 const PDFViewer = lazy(() => import("./components/PDFViewer"));
 const AdminDashboard = lazy(() => import("./components/Admin/AdminDashboard"));
 const AlumniDashboard = lazy(() => import("./components/Alumni/AlumniDashboard"));
@@ -3365,6 +3366,7 @@ For any queries, contact your course instructors or the department.`,
 
   if (isAlumniDashboardActive) {
     return (
+      // Plain spinner — first paint after boot skeleton for alumni users, must not look like a second splash.
       <Suspense fallback={
         <div className={`min-h-screen flex items-center justify-center ${isDarkMode ? "bg-black" : "bg-slate-50"}`}>
           <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
@@ -4721,6 +4723,8 @@ For any queries, contact your course instructors or the department.`,
                   </div>
 
                   {/* Department cards — all BUBT departments, only CSE functional today */}
+                  {/* Plain spinner here, not ChipLoader — this fires on every first Home paint
+                      right after the index.html boot skeleton, so it must not look like a second splash. */}
                   <Suspense fallback={
                     <div className="flex justify-center py-16">
                       <div className={`w-8 h-8 rounded-full border-4 border-t-[#1e9df1] animate-spin ${isDarkMode ? "border-[#2f3336]" : "border-slate-200"}`} />
@@ -4937,7 +4941,7 @@ For any queries, contact your course instructors or the department.`,
                 )}
                 <Suspense fallback={
                   <div className="flex justify-center py-16">
-                    <div className={`w-8 h-8 rounded-full border-4 border-t-[#1e9df1] animate-spin ${isDarkMode ? "border-[#2f3336]" : "border-slate-200"}`} />
+                    <ChipLoader size="lg" />
                   </div>
                 }>
                   <>
@@ -5027,7 +5031,7 @@ For any queries, contact your course instructors or the department.`,
                 {selectedDriveCourse ? (
                   <Suspense fallback={
                     <div className="flex justify-center py-16">
-                      <div className={`w-8 h-8 rounded-full border-4 border-t-[#1e9df1] animate-spin ${isDarkMode ? "border-[#2f3336]" : "border-slate-200"}`} />
+                      <ChipLoader size="lg" />
                     </div>
                   }>
                     <GDriveCourseView
@@ -5066,7 +5070,7 @@ For any queries, contact your course instructors or the department.`,
                     <h2 className={`text-2xl font-bold ${isDarkMode ? "text-gray-100" : "text-gray-900"}`}>{selectedSemester.name}</h2>
                     <Suspense fallback={
                       <div className="flex justify-center py-16">
-                        <div className={`w-8 h-8 rounded-full border-4 border-t-[#1e9df1] animate-spin ${isDarkMode ? "border-[#2f3336]" : "border-slate-200"}`} />
+                        <ChipLoader size="lg" />
                       </div>
                     }>
                       <GDriveFolderBrowser
@@ -5097,7 +5101,7 @@ For any queries, contact your course instructors or the department.`,
                     {departmentFolderId ? (
                       <Suspense fallback={
                         <div className="flex justify-center py-16">
-                          <div className={`w-8 h-8 rounded-full border-4 border-t-[#1e9df1] animate-spin ${isDarkMode ? "border-[#2f3336]" : "border-slate-200"}`} />
+                          <ChipLoader size="lg" />
                         </div>
                       }>
                         <SemesterFolderBrowser
@@ -5229,9 +5233,7 @@ For any queries, contact your course instructors or the department.`,
 
                 {loading ? (
                   <div className="text-center py-8">
-                    <div
-                      className={`animate-spin rounded-full h-8 w-8 border-b-2 mx-auto border-[#1e9df1]`}
-                    ></div>
+                    <ChipLoader size="lg" />
                     <p
                       className={`mt-2 transition-colors duration-300 ${
                         isDarkMode ? "text-[#71767b]" : "text-gray-600"
@@ -8384,26 +8386,8 @@ For any queries, contact your course instructors or the department.`,
                   <div className={`flex-1 overflow-hidden min-h-0 flex flex-col relative ${isDarkMode ? "bg-[#000000]" : "bg-slate-100"}`}>
                     {/* Loading overlay */}
                     {isViewerLoading && (
-                      <div className={`absolute inset-0 flex flex-col items-center justify-center z-20 ${isDarkMode ? "bg-[#000000]/95" : "bg-white/95"}`}>
-                        <div className="flex flex-col items-center gap-5 w-52">
-                          {/* Animated doc icon */}
-                          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${isDarkMode ? "bg-[#16181c]" : "bg-slate-100"}`}>
-                            <div className={`w-6 h-6 rounded-full border-2 border-transparent border-t-blue-500 animate-spin`} style={{ animationDuration: "0.7s" }} />
-                          </div>
-                          {/* Skeleton lines mimicking document content */}
-                          <div className="w-full space-y-2">
-                            {[90, 78, 88, 65, 82].map((w, i) => (
-                              <div
-                                key={i}
-                                className={`h-2 rounded-full animate-pulse ${isDarkMode ? "bg-[#16181c]" : "bg-slate-100"}`}
-                                style={{ width: `${w}%`, animationDelay: `${i * 80}ms` }}
-                              />
-                            ))}
-                          </div>
-                          <p className={`text-xs font-medium tracking-wide ${isDarkMode ? "text-slate-500" : "text-slate-400"}`}>
-                            Loading document…
-                          </p>
-                        </div>
+                      <div className={`absolute inset-0 flex items-center justify-center z-20 ${isDarkMode ? "bg-[#000000]/95" : "bg-white/95"}`}>
+                        <ChipLoader size="md" />
                       </div>
                     )}
 
@@ -8672,7 +8656,7 @@ For any queries, contact your course instructors or the department.`,
       {/* ── Lazy-loaded views — Suspense ensures a spinner while chunks download ── */}
       <Suspense fallback={
         <div className="fixed top-[72px] lg:top-20 inset-x-0 bottom-0 z-40 flex items-center justify-center">
-          <div className={`w-10 h-10 rounded-full border-4 border-t-[#1e9df1] animate-spin ${isDarkMode ? "border-[#2f3336]" : "border-slate-200"}`} />
+          <ChipLoader size="xl" />
         </div>
       }>
 
@@ -8770,7 +8754,7 @@ For any queries, contact your course instructors or the department.`,
         <main className="fixed top-[72px] lg:top-20 inset-x-0 bottom-0 z-40 overflow-y-auto overscroll-y-contain">
           <Suspense fallback={
             <div className={`h-full flex items-center justify-center p-4 ${isDarkMode ? "bg-[#000000]" : "bg-slate-50"}`}>
-              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#1e9df1]"></div>
+              <ChipLoader size="xl" />
             </div>
           }>
             {alumniSubView === "directory" && (

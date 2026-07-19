@@ -4,6 +4,7 @@ import {
   ChevronLeft, Folder, Loader2, BookOpen, Zap,
 } from 'lucide-react';
 import { getCurrentSemesterStatus } from '../../config/semester';
+import ChipLoader from '../ui/ChipLoader';
 
 interface DriveFile {
   id: string;
@@ -126,7 +127,7 @@ export const GDriveCourseView: React.FC<GDriveCourseViewProps> = ({
 
   if (loading) return (
     <div className="flex flex-col items-center justify-center py-20 gap-3">
-      <Loader2 className={cls('h-6 w-6 animate-spin', dk ? 'text-slate-500' : 'text-slate-400')} />
+      <ChipLoader size="lg" />
       <p className={cls('text-xs', dk ? 'text-slate-500' : 'text-slate-400')}>Loading materials…</p>
     </div>
   );

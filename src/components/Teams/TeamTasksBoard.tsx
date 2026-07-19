@@ -27,6 +27,7 @@ import {
   notifyTaskAssignment,
 } from "../../lib/api/teamsApi";
 import { supabase } from "../../lib/supabase";
+import ChipLoader from "../ui/ChipLoader";
 
 interface Props {
   teamId: string;
@@ -384,8 +385,8 @@ export default function TeamTasksBoard({
       {/* Kanban Board */}
       {loading ? (
         <div className="flex flex-col items-center justify-center py-24">
-          <Loader2 className="w-8 h-8 animate-spin text-[#1e9df1] mb-2" />
-          <p className={`text-sm ${textSub}`}>Loading task board...</p>
+          <ChipLoader size="lg" />
+          <p className={`text-sm ${textSub} mt-2`}>Loading task board...</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">

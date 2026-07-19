@@ -12,6 +12,7 @@ import {
 import UserCard from "./UserCard";
 import { supabase } from "../../lib/supabase";
 import MentorChat from "../Alumni/MentorChat";
+import ChipLoader from "../ui/ChipLoader";
 
 type Tab = "connections" | "requests" | "discover";
 
@@ -189,8 +190,8 @@ export default function NetworkPage({
           </h2>
 
           {loadingMentors ? (
-            <div className="flex items-center gap-2 text-xs text-slate-500 py-6 justify-center">
-              <Loader2 className="w-4 h-4 animate-spin text-[#1e9df1]" />
+            <div className="flex flex-col items-center gap-1 text-xs text-slate-500 py-6 justify-center">
+              <ChipLoader size="sm" />
               Loading mentors...
             </div>
           ) : mentors.length === 0 ? (
@@ -290,7 +291,7 @@ export default function NetworkPage({
 
         {loading ? (
           <div className="flex justify-center py-16">
-            <Loader2 className="w-8 h-8 animate-spin text-[#1e9df1]" />
+            <ChipLoader size="lg" />
           </div>
         ) : tab === "connections" ? (
           <div className="space-y-3">
@@ -443,7 +444,7 @@ export default function NetworkPage({
 
             {searching ? (
               <div className="flex justify-center py-16">
-                <Loader2 className="w-8 h-8 animate-spin text-[#1e9df1]" />
+                <ChipLoader size="lg" />
               </div>
             ) : (
               <div className="space-y-3">

@@ -1,0 +1,68 @@
+.chip-loader-main {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.chip-loader-svg {
+  width: 100%;
+}
+
+.chip-loader-sm {
+  max-width: clamp(150px, 30vw, 240px);
+}
+
+.chip-loader-md {
+  max-width: clamp(200px, 38vw, 320px);
+}
+
+.chip-loader-lg {
+  max-width: clamp(260px, 46vw, 460px);
+}
+
+.chip-loader-xl {
+  max-width: clamp(320px, 55vw, 560px);
+}
+
+.chip-loader-svg .trace-bg {
+  stroke: #333;
+  stroke-width: 1.8;
+  fill: none;
+}
+
+.chip-loader-svg .trace-flow {
+  stroke-width: 1.8;
+  fill: none;
+  stroke-dasharray: 40 400;
+  stroke-dashoffset: 438;
+  filter: drop-shadow(0 0 6px currentColor);
+  animation: chip-loader-flow 3s cubic-bezier(0.5, 0, 0.9, 1) infinite;
+}
+
+.chip-loader-svg .yellow {
+  stroke: #ffea00;
+  color: #ffea00;
+}
+.chip-loader-svg .blue {
+  stroke: #00ccff;
+  color: #00ccff;
+}
+.chip-loader-svg .green {
+  stroke: #00ff15;
+  color: #00ff15;
+}
+.chip-loader-svg .purple {
+  stroke: #9900ff;
+  color: #9900ff;
+}
+.chip-loader-svg .red {
+  stroke: #ff3300;
+  color: #ff3300;
+}
+
+@keyframes chip-loader-flow {
+  to {
+    stroke-dashoffset: 0;
+  }
+}

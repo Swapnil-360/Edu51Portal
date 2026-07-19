@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { AlertCircle, ChevronRight, Loader2, BookOpen } from 'lucide-react';
+import { AlertCircle, ChevronRight, BookOpen } from 'lucide-react';
+import ChipLoader from '../ui/ChipLoader';
 
 interface GDriveCourse {
   id: string;
@@ -66,7 +67,7 @@ export const GDriveFolderBrowser: React.FC<GDriveFolderBrowserProps> = ({
 
   if (loading) return (
     <div className="flex flex-col items-center justify-center py-20 gap-3">
-      <Loader2 className={cls('h-6 w-6 animate-spin', dk ? 'text-slate-500' : 'text-slate-400')} />
+      <ChipLoader size="lg" />
       <p className={cls('text-sm', dk ? 'text-slate-500' : 'text-slate-400')}>Loading courses…</p>
     </div>
   );
