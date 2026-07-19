@@ -78,7 +78,7 @@ export default function GlobalSearchModal({ isDarkMode, onClose, onOpenMaterial,
   }`;
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-start justify-center pt-[10vh] px-4" role="dialog" aria-modal="true">
+    <div className="fixed inset-x-0 top-0 h-dvh z-[200] flex items-start justify-center pt-[10vh] px-4" role="dialog" aria-modal="true">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
       <div
         className={`relative w-full max-w-xl rounded-2xl shadow-2xl border overflow-hidden ${

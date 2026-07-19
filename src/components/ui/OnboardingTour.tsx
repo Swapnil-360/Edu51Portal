@@ -82,7 +82,7 @@ export default function OnboardingTour({ isDarkMode, onClose }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center px-4" role="dialog" aria-modal="true">
+    <div className="fixed inset-x-0 top-0 h-dvh z-[200] flex items-center justify-center px-4" role="dialog" aria-modal="true">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={finish} />
       <div className={`relative w-full max-w-sm rounded-2xl shadow-2xl border overflow-hidden ${isDarkMode ? "bg-[#16181c] border-[#2f3336]" : "bg-white border-slate-200"}`}>
         <button
