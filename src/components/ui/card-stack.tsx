@@ -179,6 +179,33 @@ export function CardStack<T extends CardStackItem>({
     if (e.key === "ArrowRight") next();
   };
 
+  // Desktop mouse-wheel support — scrolling up/down over the stack swaps
+  // cards left/right instead of scrolling the page, so PC users don't need
+  // to reach for the arrow buttons. React's onWheel prop attaches a passive
+  // listener (preventDefault is silently ignored), so this needs a real
+  // native listener with { passive: false } to actually stop page scroll.
+  const stageRef = React.useRef<HTMLDivElement>(null);
+  const lastWheelRef = React.useRef(0);
+
+  React.useEffect(() => {
+    const el = stageRef.current;
+    if (!el) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      if (Math.abs(e.deltaY) < Math.abs(e.deltaX)) return; // let horizontal trackpad scroll pass through
+      e.preventDefault();
+      if (Math.abs(e.deltaY) < 8) return;
+      const now = Date.now();
+      if (now - lastWheelRef.current < 350) return;
+      lastWheelRef.current = now;
+      if (e.deltaY > 0) next();
+      else prev();
+    };
+
+    el.addEventListener("wheel", handleWheel, { passive: false });
+    return () => el.removeEventListener("wheel", handleWheel);
+  }, [next, prev]);
+
   React.useEffect(() => {
     if (!autoAdvance || reduceMotion || !len) return;
     if (pauseOnHover && hovering) return;
@@ -198,6 +225,7 @@ export function CardStack<T extends CardStackItem>({
     <div className={cn("w-full", className)} onMouseEnter={() => setHovering(true)} onMouseLeave={() => setHovering(false)}>
       {/* Stage */}
       <div
+        ref={stageRef}
         className="relative w-full"
         style={{ height: Math.max(300, effectiveCardHeight + 96) }}
         tabIndex={0}

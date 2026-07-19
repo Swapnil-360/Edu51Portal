@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspense, startTransition } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-// import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from "./lib/supabase";
 import { Notice } from "./types";
 import { getCurrentSemesterStatus } from "./config/semester";

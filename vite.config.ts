@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [react()],
   resolve: {
     alias: {
@@ -11,6 +11,10 @@ export default defineConfig({
     },
   },
   base: '/',
+  esbuild: {
+    // Strip console/debugger from production builds; keep them in dev.
+    drop: mode === 'production' ? ['console', 'debugger'] : [],
+  },
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
@@ -43,4 +47,4 @@ export default defineConfig({
   optimizeDeps: {
     include: ['react', 'react-dom', '@supabase/supabase-js'],
   },
-});
+}));
