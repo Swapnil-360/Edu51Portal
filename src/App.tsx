@@ -4851,7 +4851,7 @@ For any queries, contact your course instructors or the department.`,
                           <li>Course Materials & Tracker</li>
                           <li>AI Study Assistant</li>
                           <li>
-                            <button onClick={() => goToView("meet-team")} className={`hover:underline underline-offset-2 transition-colors ${isDarkMode ? "hover:text-blue-400" : "hover:text-blue-600"}`}>
+                            <button onClick={() => goToView("meet-team")} className="font-semibold text-[#ef4444] hover:underline underline-offset-2 transition-colors hover:text-red-600">
                               Meet Our Team
                             </button>
                           </li>
