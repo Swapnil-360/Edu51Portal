@@ -112,6 +112,7 @@ const PublicFilesPage = lazy(() => import("./components/Teams/PublicFilesPage"))
 const AlumniDirectoryPage = lazy(() => import("./components/Alumni/AlumniDirectoryPage"));
 const AlumniProfilePage = lazy(() => import("./components/Alumni/AlumniProfilePage"));
 const AlumniRegisterForm = lazy(() => import("./components/Alumni/AlumniRegisterForm"));
+const MeetTeamPage = lazy(() => import("./components/Team/MeetTeamPage"));
 
 interface Course {
   id: string;
@@ -181,6 +182,7 @@ function App() {
     | "team"
     | "alumni"
     | "shared-resources"
+    | "meet-team"
   >(() => {
     const path = window.location.pathname;
     if (path === "/admin") return "admin";
@@ -198,6 +200,7 @@ function App() {
     if (path === "/teams") return "teams";
     if (path === "/alumni") return "alumni";
     if (path === "/shared-resources") return "shared-resources";
+    if (path === "/meet-team") return "meet-team";
     // Always treat root, /home, or empty as home
     if (path === "/" || path === "/home" || path === "" || !path) return "home";
     // Fallback: if path is not recognized, force home view
@@ -238,7 +241,8 @@ function App() {
         | "teams"
         | "team"
         | "alumni"
-        | "shared-resources",
+        | "shared-resources"
+        | "meet-team",
       extra?: string | null,
     ) => {
       let path = "/";
@@ -265,6 +269,7 @@ function App() {
         setSelectedAlumniId(null);
       }
       else if (view === "shared-resources") path = "/shared-resources";
+      else if (view === "meet-team") path = "/meet-team";
       else if (view === "home") path = "/home";
       window.history.pushState({}, "", path);
       // Dismiss any lingering toast when navigating away
@@ -319,6 +324,7 @@ function App() {
           setSelectedAlumniId(null);
           setCurrentView("alumni");
         }
+        else if (path === "/meet-team") setCurrentView("meet-team");
         else if (path === "/" || path === "/home" || path === "" || !path)
           setCurrentView("home");
         else setCurrentView("home");
@@ -4844,6 +4850,11 @@ For any queries, contact your course instructors or the department.`,
                           <li>Exam Routines & Notices</li>
                           <li>Course Materials & Tracker</li>
                           <li>AI Study Assistant</li>
+                          <li>
+                            <button onClick={() => goToView("meet-team")} className={`hover:underline underline-offset-2 transition-colors ${isDarkMode ? "hover:text-blue-400" : "hover:text-blue-600"}`}>
+                              Meet Our Team
+                            </button>
+                          </li>
                         </ul>
                       </div>
 
@@ -8746,6 +8757,19 @@ For any queries, contact your course instructors or the department.`,
               setShowFileViewer(true);
             }}
           />
+        </main>
+      )}
+
+      {/* ── Meet Our Team ── */}
+      {currentView === "meet-team" && (
+        <main className="fixed top-[72px] lg:top-20 inset-x-0 bottom-0 z-40 overflow-y-auto overscroll-y-contain">
+          <Suspense fallback={
+            <div className={`h-full flex items-center justify-center p-4 ${isDarkMode ? "bg-[#000000]" : "bg-slate-50"}`}>
+              <ChipLoader size="xl" />
+            </div>
+          }>
+            <MeetTeamPage isDarkMode={isDarkMode} onClose={() => goToView("home")} />
+          </Suspense>
         </main>
       )}
 
