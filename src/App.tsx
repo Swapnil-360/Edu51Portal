@@ -175,6 +175,9 @@ function App() {
     | "course"
     | "home"
     | "privacy"
+    | "terms"
+    | "cookie-policy"
+    | "disclaimer"
     | "custom"
     | "profile"
     | "network"
@@ -193,6 +196,9 @@ function App() {
     if (path === "/study-semester") return "study-semester";
     if (path === "/custom-routine") return "custom";
     if (path === "/privacy") return "privacy";
+    if (path === "/terms") return "terms";
+    if (path === "/cookie-policy") return "cookie-policy";
+    if (path === "/disclaimer") return "disclaimer";
     if (path.startsWith("/course/")) return "course";
     if (path === "/profile" || path.startsWith("/u/")) return "profile";
     if (path === "/network") return "network";
@@ -235,6 +241,8 @@ function App() {
         | "home"
         | "privacy"
         | "terms"
+        | "cookie-policy"
+        | "disclaimer"
         | "custom"
         | "profile"
         | "network"
@@ -253,6 +261,9 @@ function App() {
       else if (view === "study-department") path = "/study-department";
       else if (view === "study-semester") path = "/study-semester";
       else if (view === "privacy") path = "/privacy";
+      else if (view === "terms") path = "/terms";
+      else if (view === "cookie-policy") path = "/cookie-policy";
+      else if (view === "disclaimer") path = "/disclaimer";
       else if (view === "custom") path = "/custom-routine";
       else if (view === "course" && extra) path = `/course/${extra}`;
       else if (view === "profile") {
@@ -307,6 +318,9 @@ function App() {
         else if (path === "/study-semester") setCurrentView("study-semester");
         else if (path === "/custom-routine") setCurrentView("custom");
         else if (path === "/privacy") setCurrentView("privacy");
+        else if (path === "/terms") setCurrentView("terms");
+        else if (path === "/cookie-policy") setCurrentView("cookie-policy");
+        else if (path === "/disclaimer") setCurrentView("disclaimer");
         else if (path.startsWith("/course/")) setCurrentView("course");
         else if (path === "/profile") {
           setViewedUsername(null);
@@ -4797,10 +4811,10 @@ For any queries, contact your course instructors or the department.`,
                   }`}
                 >
                   <div className="px-6 pt-8 pb-6">
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
 
                       {/* Col 1 — Brand */}
-                      <div className="sm:col-span-1">
+                      <div className="sm:col-span-2 lg:col-span-1">
                         <div className="flex items-center gap-2 mb-3">
                           <img src="/Edu51Portal.png" alt="Edu51Portal Logo" className="w-8 h-8 rounded-lg object-contain" />
                           <span
@@ -4875,6 +4889,13 @@ For any queries, contact your course instructors or the department.`,
                               Contact Support
                             </button>
                           </li>
+                        </ul>
+                      </div>
+
+                      {/* Col 4 — Legal */}
+                      <div>
+                        <h4 className={`text-xs font-semibold uppercase tracking-wider mb-3 ${isDarkMode ? "text-[#8b98a5]" : "text-slate-700"}`}>Legal</h4>
+                        <ul className="space-y-2">
                           <li>
                             <button onClick={() => goToView("terms")} className={`text-xs hover:underline underline-offset-2 transition-colors ${isDarkMode ? "text-slate-400 hover:text-blue-400" : "text-slate-500 hover:text-blue-600"}`}>
                               Terms &amp; Conditions
@@ -4883,6 +4904,16 @@ For any queries, contact your course instructors or the department.`,
                           <li>
                             <button onClick={() => goToView("privacy")} className={`text-xs hover:underline underline-offset-2 transition-colors ${isDarkMode ? "text-slate-400 hover:text-blue-400" : "text-slate-500 hover:text-blue-600"}`}>
                               Privacy Policy
+                            </button>
+                          </li>
+                          <li>
+                            <button onClick={() => goToView("cookie-policy")} className={`text-xs hover:underline underline-offset-2 transition-colors ${isDarkMode ? "text-slate-400 hover:text-blue-400" : "text-slate-500 hover:text-blue-600"}`}>
+                              Cookie Policy
+                            </button>
+                          </li>
+                          <li>
+                            <button onClick={() => goToView("disclaimer")} className={`text-xs hover:underline underline-offset-2 transition-colors ${isDarkMode ? "text-slate-400 hover:text-blue-400" : "text-slate-500 hover:text-blue-600"}`}>
+                              Disclaimer
                             </button>
                           </li>
                         </ul>
@@ -4903,6 +4934,14 @@ For any queries, contact your course instructors or the department.`,
                       <span className={`text-xs ${isDarkMode ? "text-slate-600" : "text-[#8b98a5]"}`}>·</span>
                       <button onClick={() => goToView("privacy")} className={`text-xs hover:underline underline-offset-2 transition-colors ${isDarkMode ? "text-slate-500 hover:text-[#8b98a5]" : "text-slate-400 hover:text-slate-600"}`}>
                         Privacy
+                      </button>
+                      <span className={`text-xs ${isDarkMode ? "text-slate-600" : "text-[#8b98a5]"}`}>·</span>
+                      <button onClick={() => goToView("cookie-policy")} className={`text-xs hover:underline underline-offset-2 transition-colors ${isDarkMode ? "text-slate-500 hover:text-[#8b98a5]" : "text-slate-400 hover:text-slate-600"}`}>
+                        Cookies
+                      </button>
+                      <span className={`text-xs ${isDarkMode ? "text-slate-600" : "text-[#8b98a5]"}`}>·</span>
+                      <button onClick={() => goToView("disclaimer")} className={`text-xs hover:underline underline-offset-2 transition-colors ${isDarkMode ? "text-slate-500 hover:text-[#8b98a5]" : "text-slate-400 hover:text-slate-600"}`}>
+                        Disclaimer
                       </button>
                     </div>
                   </div>
@@ -5531,9 +5570,9 @@ For any queries, contact your course instructors or the department.`,
                         <span className="text-[#ef4444] font-bold">51</span>Portal.
                         This Privacy Policy explains how we collect, use,
                         disclose, and safeguard your information when you use
-                        our academic portal designed for BUBT (Bangladesh
-                        University of Business & Technology) Intake 51, Section
-                        5, CSE students.
+                        our academic portal designed for students, faculty,
+                        and staff of BUBT (Bangladesh University of Business &
+                        Technology) across all departments.
                       </p>
                     </section>
 
@@ -5683,7 +5722,10 @@ For any queries, contact your course instructors or the department.`,
                           delivery
                         </li>
                         <li>
-                          <strong>Resend:</strong> Email notification delivery
+                          <strong>Brevo:</strong> Email notification delivery
+                        </li>
+                        <li>
+                          <strong>Google Gemini:</strong> Powers the in-app AI study assistant; messages you send to it are processed by Google's API to generate responses
                         </li>
                         <li>
                           <strong>Vercel:</strong> Hosting and deployment
@@ -5770,10 +5812,10 @@ For any queries, contact your course instructors or the department.`,
                         >
                           Email:{" "}
                           <a
-                            href="mailto:edu51five@gmail.com"
+                            href="mailto:edu51portal.noreply@gmail.com"
                             className="text-blue-500 hover:underline inline-block px-2 py-1 min-h-[24px]"
                           >
-                            edu51five@gmail.com
+                            edu51portal.noreply@gmail.com
                           </a>
                         </p>
                         <p
@@ -5847,7 +5889,7 @@ For any queries, contact your course instructors or the department.`,
                     <section>
                       <h2 className={`text-xl font-bold mb-3 ${isDarkMode ? "text-gray-100" : "text-gray-900"}`}>1. Acceptance of Terms</h2>
                       <p className={`leading-relaxed ${isDarkMode ? "text-[#8b98a5]" : "text-gray-700"}`}>
-                        By accessing and using Edu51Portal, you accept and agree to be bound by these Terms &amp; Conditions. This platform is exclusively for students, faculty, and staff of BUBT Intake 51, CSE Department. If you do not agree to these terms, please do not use this platform.
+                        By accessing and using Edu51Portal, you accept and agree to be bound by these Terms &amp; Conditions. This platform is intended for students, faculty, and staff of Bangladesh University of Business &amp; Technology (BUBT), across all departments. If you do not agree to these terms, please do not use this platform.
                       </p>
                     </section>
 
@@ -5855,8 +5897,8 @@ For any queries, contact your course instructors or the department.`,
                       <h2 className={`text-xl font-bold mb-3 ${isDarkMode ? "text-gray-100" : "text-gray-900"}`}>2. Eligibility</h2>
                       <p className={`leading-relaxed mb-3 ${isDarkMode ? "text-[#8b98a5]" : "text-gray-700"}`}>To use Edu51Portal, you must:</p>
                       <ul className={`list-disc list-inside space-y-2 ml-4 ${isDarkMode ? "text-[#8b98a5]" : "text-gray-700"}`}>
-                        <li>Be enrolled as a student in BUBT Intake 51 (CSE Department) or be affiliated faculty/staff</li>
-                        <li>Provide accurate registration information including your student ID, section, and major</li>
+                        <li>Be enrolled as a student at BUBT, in any department, or be affiliated faculty/staff</li>
+                        <li>Provide accurate registration information including your student ID, department, and section</li>
                         <li>Maintain the confidentiality of your account credentials</li>
                         <li>Be at least 17 years of age</li>
                       </ul>
@@ -5897,7 +5939,7 @@ For any queries, contact your course instructors or the department.`,
                     <section>
                       <h2 className={`text-xl font-bold mb-3 ${isDarkMode ? "text-gray-100" : "text-gray-900"}`}>6. Account Termination</h2>
                       <p className={`leading-relaxed ${isDarkMode ? "text-[#8b98a5]" : "text-gray-700"}`}>
-                        We reserve the right to suspend or terminate your account if you violate these terms, engage in misconduct, or if you are no longer affiliated with BUBT Intake 51. You may request account deletion at any time by contacting support.
+                        We reserve the right to suspend or terminate your account if you violate these terms, engage in misconduct, or if you are no longer affiliated with BUBT. You may request account deletion at any time by contacting support.
                       </p>
                     </section>
 
@@ -5923,10 +5965,197 @@ For any queries, contact your course instructors or the department.`,
                       <div className={`p-4 rounded-lg ${isDarkMode ? "bg-[#2f3336]" : "bg-gray-100"}`}>
                         <p className={isDarkMode ? "text-[#8b98a5]" : "text-gray-700"}>
                           Email:{" "}
-                          <a href="mailto:edu51five@gmail.com" className="text-blue-500 hover:underline">edu51five@gmail.com</a>
+                          <a href="mailto:edu51portal.noreply@gmail.com" className="text-blue-500 hover:underline">edu51portal.noreply@gmail.com</a>
                         </p>
                         <p className={`mt-2 ${isDarkMode ? "text-[#8b98a5]" : "text-gray-700"}`}>
                           Organization: BUBT · Intake 51, Section 2 (AI)
+                        </p>
+                      </div>
+                    </section>
+                  </div>
+                </div>
+
+                <div className="flex justify-center pb-8">
+                  <button
+                    onClick={() => goToView("home")}
+                    className={`px-6 py-3 rounded-xl font-medium transition-all duration-300 ${
+                      isDarkMode
+                        ? "bg-blue-600 hover:bg-blue-700 text-white"
+                        : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
+                    } shadow-lg hover:shadow-xl transform hover:-translate-y-1`}
+                  >
+                    Back to Home
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Cookie Policy Page */}
+            {currentView === "cookie-policy" && (
+              <div className="space-y-8 max-w-4xl mx-auto">
+                <div className="text-center">
+                  <div className="flex justify-center mb-6">
+                    <div className={`rounded-3xl shadow-xl p-4 transition-colors duration-300 ${isDarkMode ? "bg-[#16181c]" : "bg-white"}`}>
+                      <img src="/image.png" alt="BUBT Logo" className="h-16 w-16 object-contain" />
+                    </div>
+                  </div>
+                  <h1 className={`text-3xl sm:text-4xl font-bold mb-4 transition-colors duration-300 ${isDarkMode ? "text-gray-100" : "text-gray-900"}`}>
+                    Cookie Policy
+                  </h1>
+                  <p className={`text-sm transition-colors duration-300 ${isDarkMode ? "text-[#71767b]" : "text-gray-600"}`}>
+                    Last updated: {new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
+                  </p>
+                </div>
+
+                <div className={`rounded-2xl border shadow-sm transition-colors duration-300 ${isDarkMode ? "bg-[#16181c]/50 border-[#2f3336]" : "bg-white border-gray-200"}`}>
+                  <div className="space-y-8 p-6 sm:p-8">
+                    <section>
+                      <h2 className={`text-xl font-bold mb-3 ${isDarkMode ? "text-gray-100" : "text-gray-900"}`}>1. What This Policy Covers</h2>
+                      <p className={`leading-relaxed ${isDarkMode ? "text-[#8b98a5]" : "text-gray-700"}`}>
+                        Edu51Portal does not use third-party advertising or tracking cookies. We use your browser's local storage and session storage to run the platform itself — this policy explains what's stored and why.
+                      </p>
+                    </section>
+
+                    <section>
+                      <h2 className={`text-xl font-bold mb-3 ${isDarkMode ? "text-gray-100" : "text-gray-900"}`}>2. Essential Storage</h2>
+                      <p className={`leading-relaxed mb-3 ${isDarkMode ? "text-[#8b98a5]" : "text-gray-700"}`}>Required for the platform to function — you cannot opt out without losing access to your account:</p>
+                      <ul className={`list-disc list-inside space-y-2 ml-4 ${isDarkMode ? "text-[#8b98a5]" : "text-gray-700"}`}>
+                        <li>Your authentication session (managed by Supabase), so you stay signed in between visits</li>
+                        <li>Security tokens used to protect your account and validate requests</li>
+                      </ul>
+                    </section>
+
+                    <section>
+                      <h2 className={`text-xl font-bold mb-3 ${isDarkMode ? "text-gray-100" : "text-gray-900"}`}>3. Preference Storage</h2>
+                      <p className={`leading-relaxed mb-3 ${isDarkMode ? "text-[#8b98a5]" : "text-gray-700"}`}>Used to remember your settings across visits:</p>
+                      <ul className={`list-disc list-inside space-y-2 ml-4 ${isDarkMode ? "text-[#8b98a5]" : "text-gray-700"}`}>
+                        <li>Dark mode / light mode preference</li>
+                        <li>Your department, section, and routine settings for the Custom Routine tool</li>
+                        <li>Dismissed announcement banners, so you don't see the same notice repeatedly</li>
+                      </ul>
+                    </section>
+
+                    <section>
+                      <h2 className={`text-xl font-bold mb-3 ${isDarkMode ? "text-gray-100" : "text-gray-900"}`}>4. Third-Party Cookies</h2>
+                      <p className={`leading-relaxed ${isDarkMode ? "text-[#8b98a5]" : "text-gray-700"}`}>
+                        If you sign in with Google or use the Google Drive integration, Google may set its own cookies as part of that sign-in flow, governed by Google's own privacy and cookie policies — Edu51Portal does not control these.
+                      </p>
+                    </section>
+
+                    <section>
+                      <h2 className={`text-xl font-bold mb-3 ${isDarkMode ? "text-gray-100" : "text-gray-900"}`}>5. Managing Storage</h2>
+                      <p className={`leading-relaxed ${isDarkMode ? "text-[#8b98a5]" : "text-gray-700"}`}>
+                        You can clear local storage/cookies for this site at any time through your browser settings. Doing so will sign you out and reset your saved preferences.
+                      </p>
+                    </section>
+
+                    <section>
+                      <h2 className={`text-xl font-bold mb-3 ${isDarkMode ? "text-gray-100" : "text-gray-900"}`}>6. Changes to This Policy</h2>
+                      <p className={`leading-relaxed ${isDarkMode ? "text-[#8b98a5]" : "text-gray-700"}`}>
+                        We may update this Cookie Policy as the platform evolves. Continued use after changes constitutes acceptance of the updated policy.
+                      </p>
+                    </section>
+
+                    <section>
+                      <h2 className={`text-xl font-bold mb-3 ${isDarkMode ? "text-gray-100" : "text-gray-900"}`}>7. Contact</h2>
+                      <p className={`leading-relaxed mb-3 ${isDarkMode ? "text-[#8b98a5]" : "text-gray-700"}`}>
+                        Questions about this Cookie Policy:
+                      </p>
+                      <div className={`p-4 rounded-lg ${isDarkMode ? "bg-[#2f3336]" : "bg-gray-100"}`}>
+                        <p className={isDarkMode ? "text-[#8b98a5]" : "text-gray-700"}>
+                          Email:{" "}
+                          <a href="mailto:edu51portal.noreply@gmail.com" className="text-blue-500 hover:underline">edu51portal.noreply@gmail.com</a>
+                        </p>
+                      </div>
+                    </section>
+                  </div>
+                </div>
+
+                <div className="flex justify-center pb-8">
+                  <button
+                    onClick={() => goToView("home")}
+                    className={`px-6 py-3 rounded-xl font-medium transition-all duration-300 ${
+                      isDarkMode
+                        ? "bg-blue-600 hover:bg-blue-700 text-white"
+                        : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
+                    } shadow-lg hover:shadow-xl transform hover:-translate-y-1`}
+                  >
+                    Back to Home
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Disclaimer Page */}
+            {currentView === "disclaimer" && (
+              <div className="space-y-8 max-w-4xl mx-auto">
+                <div className="text-center">
+                  <div className="flex justify-center mb-6">
+                    <div className={`rounded-3xl shadow-xl p-4 transition-colors duration-300 ${isDarkMode ? "bg-[#16181c]" : "bg-white"}`}>
+                      <img src="/image.png" alt="BUBT Logo" className="h-16 w-16 object-contain" />
+                    </div>
+                  </div>
+                  <h1 className={`text-3xl sm:text-4xl font-bold mb-4 transition-colors duration-300 ${isDarkMode ? "text-gray-100" : "text-gray-900"}`}>
+                    Disclaimer
+                  </h1>
+                  <p className={`text-sm transition-colors duration-300 ${isDarkMode ? "text-[#71767b]" : "text-gray-600"}`}>
+                    Last updated: {new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
+                  </p>
+                </div>
+
+                <div className={`rounded-2xl border shadow-sm transition-colors duration-300 ${isDarkMode ? "bg-[#16181c]/50 border-[#2f3336]" : "bg-white border-gray-200"}`}>
+                  <div className="space-y-8 p-6 sm:p-8">
+                    <section>
+                      <h2 className={`text-xl font-bold mb-3 ${isDarkMode ? "text-gray-100" : "text-gray-900"}`}>1. Independent Student Project</h2>
+                      <p className={`leading-relaxed ${isDarkMode ? "text-[#8b98a5]" : "text-gray-700"}`}>
+                        Edu51Portal is an independent platform built and maintained by BUBT students. It is not an official system of Bangladesh University of Business &amp; Technology (BUBT) and is not operated, endorsed, or guaranteed by the university administration.
+                      </p>
+                    </section>
+
+                    <section>
+                      <h2 className={`text-xl font-bold mb-3 ${isDarkMode ? "text-gray-100" : "text-gray-900"}`}>2. Academic Information</h2>
+                      <p className={`leading-relaxed ${isDarkMode ? "text-[#8b98a5]" : "text-gray-700"}`}>
+                        Exam routines, notices, course materials, and semester information on this platform are provided for convenience only. Always confirm critical academic information — exam dates, results, deadlines — through official BUBT channels before relying on it.
+                      </p>
+                    </section>
+
+                    <section>
+                      <h2 className={`text-xl font-bold mb-3 ${isDarkMode ? "text-gray-100" : "text-gray-900"}`}>3. AI Study Assistant</h2>
+                      <p className={`leading-relaxed ${isDarkMode ? "text-[#8b98a5]" : "text-gray-700"}`}>
+                        The AI Study Assistant is powered by Google Gemini and may occasionally produce inaccurate, incomplete, or outdated answers. It is a study aid, not an authoritative source — verify anything important yourself before relying on it academically.
+                      </p>
+                    </section>
+
+                    <section>
+                      <h2 className={`text-xl font-bold mb-3 ${isDarkMode ? "text-gray-100" : "text-gray-900"}`}>4. User-Uploaded Content</h2>
+                      <p className={`leading-relaxed ${isDarkMode ? "text-[#8b98a5]" : "text-gray-700"}`}>
+                        Study materials, resources, and files shared by students, faculty, or alumni are not independently verified by Edu51Portal for accuracy or completeness. Use your own judgment before relying on user-uploaded content.
+                      </p>
+                    </section>
+
+                    <section>
+                      <h2 className={`text-xl font-bold mb-3 ${isDarkMode ? "text-gray-100" : "text-gray-900"}`}>5. Third-Party Links</h2>
+                      <p className={`leading-relaxed ${isDarkMode ? "text-[#8b98a5]" : "text-gray-700"}`}>
+                        Edu51Portal may link to or integrate with third-party services (Google Drive, external resources shared by users). We are not responsible for the content, accuracy, or availability of external sites.
+                      </p>
+                    </section>
+
+                    <section>
+                      <h2 className={`text-xl font-bold mb-3 ${isDarkMode ? "text-gray-100" : "text-gray-900"}`}>6. No Liability</h2>
+                      <p className={`leading-relaxed ${isDarkMode ? "text-[#8b98a5]" : "text-gray-700"}`}>
+                        Edu51Portal and its developers are not liable for academic outcomes, data loss, missed deadlines, or any decisions made based on information found on this platform.
+                      </p>
+                    </section>
+
+                    <section>
+                      <h2 className={`text-xl font-bold mb-3 ${isDarkMode ? "text-gray-100" : "text-gray-900"}`}>7. Contact</h2>
+                      <p className={`leading-relaxed mb-3 ${isDarkMode ? "text-[#8b98a5]" : "text-gray-700"}`}>
+                        Questions about this Disclaimer:
+                      </p>
+                      <div className={`p-4 rounded-lg ${isDarkMode ? "bg-[#2f3336]" : "bg-gray-100"}`}>
+                        <p className={isDarkMode ? "text-[#8b98a5]" : "text-gray-700"}>
+                          Email:{" "}
+                          <a href="mailto:edu51portal.noreply@gmail.com" className="text-blue-500 hover:underline">edu51portal.noreply@gmail.com</a>
                         </p>
                       </div>
                     </section>

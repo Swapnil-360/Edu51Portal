@@ -305,11 +305,18 @@ Note: hardcoded midterm/final routine templates and prebuilt insert functions we
 
 ## Legal Pages
 
+Scope covers all BUBT departments (not just CSE Intake 51) — updated 2026-07-19 after the platform expanded beyond the original single-section pilot.
+
 | What | File | Lines |
 |------|------|-------|
 | Terms & Conditions page | `src/App.tsx` | `currentView === "terms"` branch |
 | Privacy Policy page | `src/App.tsx` | `currentView === "privacy"` branch |
-| Footer links (Terms · Privacy) | `src/App.tsx` | footer bottom bar + Support column |
+| Cookie Policy page | `src/App.tsx` | `currentView === "cookie-policy"` branch |
+| Disclaimer page | `src/App.tsx` | `currentView === "disclaimer"` branch |
+| Footer links | `src/App.tsx` | footer "Legal" column + bottom bar |
+| Static SEO copies (crawlers, pre-JS) | `public/terms.html`, `public/privacy-policy.html`, `public/cookie-policy.html`, `public/disclaimer.html` | linked from `sitemap.xml` |
+| Legacy/unused, not linked anywhere | `public/privacy.html` | kept for reference only |
+| Support/contact email used across legal pages | — | `edu51portal.noreply@gmail.com` |
 
 ---
 
