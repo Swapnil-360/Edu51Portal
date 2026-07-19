@@ -10,6 +10,8 @@ export interface CardItem {
   imgSrc: string;
   icon: React.ReactNode;
   linkHref: string;
+  /** Optional small meta line rendered between the title and description (e.g. an ID). */
+  meta?: string;
 }
 
 interface ExpandingCardsProps extends React.HTMLAttributes<HTMLUListElement> {
@@ -88,6 +90,12 @@ export const ExpandingCards = React.forwardRef<
             <h3 className="text-xl font-bold text-white opacity-0 transition-all duration-300 delay-150 ease-out group-data-[active=true]:opacity-100">
               {item.title}
             </h3>
+
+            {item.meta && (
+              <p className="text-xs font-medium uppercase tracking-wide text-white/60 opacity-0 transition-all duration-300 delay-[187ms] ease-out group-data-[active=true]:opacity-100">
+                {item.meta}
+              </p>
+            )}
 
             <p className="w-full max-w-xs text-sm text-white/80 opacity-0 transition-all duration-300 delay-225 ease-out group-data-[active=true]:opacity-100">
               {item.description}

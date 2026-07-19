@@ -6,6 +6,7 @@ const TEAM: CardItem[] = [
   {
     id: "swapnil",
     title: "Md. Miftahur Rahman Swapnil",
+    meta: "ID: 22235103183 · Intake 51",
     description: "Project Manager & Overall Project Lead — Project roadmap, team coordination, and core frontend development.",
     imgSrc: "/team/member-1.svg",
     icon: <Crown size={24} />,
@@ -14,6 +15,7 @@ const TEAM: CardItem[] = [
   {
     id: "nila",
     title: "Sheikh Shamia Hassan Nila",
+    meta: "ID: 22235103635 · Intake 51",
     description: "UI/UX, System Architect & Documentation — System architecture, visual design, and all project documentation.",
     imgSrc: "/team/member-2.svg",
     icon: <Palette size={24} />,
@@ -22,6 +24,7 @@ const TEAM: CardItem[] = [
   {
     id: "asif-ali",
     title: "Md Asif Ali",
+    meta: "ID: 22235103194 · Intake 51",
     description: "Backend Developer & Database — Server-side logic, API endpoints, and authentication/user validation systems.",
     imgSrc: "/team/member-3.svg",
     icon: <Server size={24} />,
@@ -30,6 +33,7 @@ const TEAM: CardItem[] = [
   {
     id: "jahidul",
     title: "Md Jahidul Kamal Islam",
+    meta: "ID: 22235103214 · Intake 51",
     description: "AI Integration & Frontend Developer — AI (Gemini) chatbot logic and frontend component development.",
     imgSrc: "/team/member-4.svg",
     icon: <Sparkles size={24} />,
@@ -38,6 +42,7 @@ const TEAM: CardItem[] = [
   {
     id: "sara",
     title: "Nishat Anjum Sara",
+    meta: "ID: 21225103465 · Intake 49",
     description: "QA, Tester & Database — Database maintenance, quality assurance, and end-to-end testing.",
     imgSrc: "/team/member-5.svg",
     icon: <ClipboardCheck size={24} />,
@@ -71,6 +76,35 @@ export default function MeetTeamPage({ isDarkMode, onClose }: Props) {
         </div>
 
         <ExpandingCards items={TEAM} defaultActiveIndex={0} />
+
+        <div className="w-full max-w-4xl mt-16 space-y-10">
+          <section>
+            <h2 className={`text-xl sm:text-2xl font-bold mb-3 ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+              Project Goal
+            </h2>
+            <p className={`leading-relaxed ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>
+              Edu<span className="text-[#ef4444] font-semibold">51</span>Portal exists to solve a problem we lived through ourselves — not having one reliable place for class notes and study materials. What started as a fix for our own section has grown into a bigger goal: give every BUBT student, across every department, a single structured hub for academic resources.
+            </p>
+          </section>
+
+          <section>
+            <h2 className={`text-xl sm:text-2xl font-bold mb-3 ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+              Description
+            </h2>
+            <p className={`leading-relaxed ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>
+              It began when our section kept facing the same problem — study materials and resources scattered across group chats and Drive links with no central place to find them. We built a simple tool just for our own section to maintain class notes, and used it for about a year. Seeing how much it helped, we expanded it to cover our entire intake. Then, in our final year, as our Software Development Project (SDP) under our course teacher, we decided to rebuild it into a platform for all departments at BUBT — so it could help students well beyond our own batch. Today Edu<span className="text-[#ef4444] font-semibold">51</span>Portal combines study materials organized by department and semester, real-time notices, a team collaboration suite (tasks, chat, shared files), a student network, a custom routine planner, and an AI study assistant — all built and maintained entirely by students.
+            </p>
+          </section>
+
+          <section>
+            <h2 className={`text-xl sm:text-2xl font-bold mb-3 ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+              Future Plan
+            </h2>
+            <p className={`leading-relaxed ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>
+              We're continuing to expand department coverage, add more AI-assisted study tools, and — pending university approval — build a verified Alumni Connection network linking current students with BUBT graduates for mentorship and guidance. Feedback from students directly shapes what gets built next — use the Feedback button in the footer to help steer the roadmap.
+            </p>
+          </section>
+        </div>
       </div>
     </div>
   );
