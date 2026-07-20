@@ -12,6 +12,10 @@ export interface CardItem {
   linkHref: string;
   /** Optional small meta line rendered between the title and description (e.g. an ID). */
   meta?: string;
+  /** Optional short label shown on the collapsed/rotated card instead of the full title. */
+  shortTitle?: string;
+  /** Optional short skill/tag pills shown on the expanded card. */
+  skills?: string[];
 }
 
 interface ExpandingCardsProps extends React.HTMLAttributes<HTMLUListElement> {
@@ -80,7 +84,7 @@ export const ExpandingCards = React.forwardRef<
             className="absolute inset-0 flex flex-col justify-end gap-2 p-4"
           >
             <h3 className="origin-left rotate-90 whitespace-nowrap text-[10px] sm:text-sm font-light uppercase tracking-wider text-white/80 opacity-100 transition-all duration-300 ease-out group-data-[active=true]:opacity-0">
-              {item.title}
+              {item.shortTitle ?? item.title}
             </h3>
 
             <div className="text-white/90 opacity-0 transition-all duration-300 delay-75 ease-out group-data-[active=true]:opacity-100">
@@ -100,6 +104,16 @@ export const ExpandingCards = React.forwardRef<
             <p className="w-full max-w-xs text-sm text-white/80 opacity-0 transition-all duration-300 delay-225 ease-out group-data-[active=true]:opacity-100">
               {item.description}
             </p>
+
+            {item.skills && item.skills.length > 0 && (
+              <div className="flex flex-wrap gap-1 opacity-0 transition-all duration-300 delay-[275ms] ease-out group-data-[active=true]:opacity-100">
+                {item.skills.slice(0, 4).map((skill) => (
+                  <span key={skill} className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-white/15 text-white/85 whitespace-nowrap">
+                    {skill}
+                  </span>
+                ))}
+              </div>
+            )}
           </article>
         </li>
       ))}
