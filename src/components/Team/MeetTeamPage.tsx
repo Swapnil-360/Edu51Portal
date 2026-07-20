@@ -1,13 +1,17 @@
 import { ArrowLeft, Crown, Server, Palette, Sparkles, ClipboardCheck } from "lucide-react";
 import { ExpandingCards, CardItem } from "../ui/expanding-cards";
 
-// TODO: replace /public/team/member-*.svg placeholders with real photos
+// TODO: replace /public/team/member-*.svg placeholders with real photos.
+// TODO: skills below are inferred from each member's stated responsibilities,
+// not confirmed by them — check with each person before treating as final.
 const TEAM: CardItem[] = [
   {
     id: "swapnil",
     title: "Md. Miftahur Rahman Swapnil",
+    shortTitle: "Swapnil",
     meta: "ID: 22235103183 · Intake 51",
     description: "Project Manager & Overall Project Lead — Project roadmap, team coordination, and core frontend development.",
+    skills: ["React", "TypeScript", "Project Management", "Supabase"],
     imgSrc: "/team/member-1.jpg",
     icon: <Crown size={24} />,
     linkHref: "#",
@@ -15,8 +19,10 @@ const TEAM: CardItem[] = [
   {
     id: "nila",
     title: "Sheikh Shamia Hassan Nila",
+    shortTitle: "Nila",
     meta: "ID: 22235103635 · Intake 51",
-    description: "UI/UX, System Architect & Documentation — System architecture, visual design, and all project documentation.",
+    description: "UI/UX, System Architect & Documentation — Visual design, UI/UX decisions, and all project documentation.",
+    skills: ["UI/UX Design", "Figma", "System Architecture", "Documentation"],
     imgSrc: "/team/member-2.svg",
     icon: <Palette size={24} />,
     linkHref: "#",
@@ -24,8 +30,10 @@ const TEAM: CardItem[] = [
   {
     id: "asif-ali",
     title: "Md Asif Ali",
+    shortTitle: "Asif",
     meta: "ID: 22235103194 · Intake 51",
     description: "Backend Developer & Database — Server-side logic, API endpoints, and authentication/user validation systems.",
+    skills: ["Node.js", "PostgreSQL", "API Design", "Authentication"],
     imgSrc: "/team/member-3.svg",
     icon: <Server size={24} />,
     linkHref: "#",
@@ -33,8 +41,10 @@ const TEAM: CardItem[] = [
   {
     id: "jahidul",
     title: "Md Jahidul Kamal Islam",
+    shortTitle: "Jahid",
     meta: "ID: 22235103214 · Intake 51",
     description: "AI Integration & Frontend Developer — AI (Gemini) chatbot logic and frontend component development.",
+    skills: ["Gemini AI", "React", "Prompt Engineering", "Frontend"],
     imgSrc: "/team/member-4.svg",
     icon: <Sparkles size={24} />,
     linkHref: "#",
@@ -42,8 +52,10 @@ const TEAM: CardItem[] = [
   {
     id: "sara",
     title: "Nishat Anjum Sara",
+    shortTitle: "Sara",
     meta: "ID: 21225103465 · Intake 49",
     description: "QA, Tester & Database — Database maintenance, quality assurance, and end-to-end testing.",
+    skills: ["QA Testing", "SQL", "Database Maintenance", "Test Planning"],
     imgSrc: "/team/member-5.svg",
     icon: <ClipboardCheck size={24} />,
     linkHref: "#",
