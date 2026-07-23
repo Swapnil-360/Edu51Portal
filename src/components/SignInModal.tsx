@@ -99,7 +99,7 @@ export function SignInModal({
     setError('');
 
     if (!identifier.trim()) {
-      setError('Please enter your email or phone number');
+      setError('Please enter your email address');
       return;
     }
 
@@ -322,7 +322,7 @@ export function SignInModal({
         onClose();
         onSignIn(identifier, password, profile);
       } else {
-        setError('Invalid credentials. Please check your email/phone and password.');
+        setError('Invalid credentials. Please check your email and password.');
       }
     } catch (err) {
       if (isStale()) return;
@@ -519,7 +519,7 @@ export function SignInModal({
             <label className={`text-sm font-medium transition-colors duration-300 ${
               isDarkMode ? 'text-gray-300' : 'text-gray-700'
             }`}>
-              Email or Phone <span className="text-red-500">*</span>
+              Email Address <span className="text-red-500">*</span>
             </label>
             <div className="relative">
               <div className={`absolute left-3 top-1/2 -translate-y-1/2 transition-colors duration-300 ${
@@ -536,7 +536,7 @@ export function SignInModal({
                     ? 'bg-gray-700/50 border-gray-600/50 text-gray-100 placeholder-gray-400 focus:border-blue-500'
                     : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400 focus:border-blue-500'
                 } focus:outline-none focus:ring-2 focus:ring-blue-500/50`}
-                placeholder={role === 'student' ? "your.email@cse.bubt.edu.bd or 01XXXXXXXXX" : "your.email@example.com or 01XXXXXXXXX"}
+                placeholder={role === 'student' ? "your.email@cse.bubt.edu.bd" : "your.email@example.com"}
                 disabled={isSubmitting}
               />
             </div>

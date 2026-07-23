@@ -1043,7 +1043,7 @@ export function SignUpModal({
                       )}
                     </div>
 
-                    {/* Phone Number (Optional, can be used for login) */}
+                    {/* Phone Number (Optional) */}
                     <div>
                       <label
                         htmlFor="phone"
