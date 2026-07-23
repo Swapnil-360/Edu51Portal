@@ -321,6 +321,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     return nameMatch || emailMatch || idMatch;
   });
 
+  const totalAlumniCount = (adminUsers || []).filter((u) => u.is_alumni).length;
+  const totalStudentsCount = (adminUsers || []).filter((u) => !u.is_alumni).length;
+
   return (
     <div className={`min-h-screen ${isDarkMode ? 'bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900' : 'bg-gradient-to-br from-slate-50 to-blue-50'}`}>
       {/* Header Section */}
@@ -349,7 +352,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </h2>
           </div>
           
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3">
             {/* Storage Used Card (spans 2 cols on mobile for the gauge) */}
             <div title={storageTooltip} className={`col-span-2 group relative overflow-hidden rounded-xl transition-all duration-300 ${isDarkMode ? 'bg-gradient-to-br from-slate-700/40 to-slate-800/40 backdrop-blur-xl border border-cyan-500/20 hover:border-cyan-400/40' : 'bg-gradient-to-br from-cyan-50/80 to-cyan-100/80 backdrop-blur-xl border border-cyan-200/50 hover:border-cyan-300/80'}`}>
               <div className="relative z-10 p-3 sm:p-4">
@@ -375,17 +378,31 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               </div>
             </div>
 
-            {/* Registered Users Card */}
+            {/* Students Card */}
             <div className={`group relative overflow-hidden rounded-xl transition-all duration-300 ${isDarkMode ? 'bg-gradient-to-br from-slate-700/40 to-slate-800/40 backdrop-blur-xl border border-blue-500/20 hover:border-blue-400/40' : 'bg-gradient-to-br from-blue-50/80 to-blue-100/80 backdrop-blur-xl border border-blue-200/50 hover:border-blue-300/80'}`}>
               <div className="relative z-10 p-3 sm:p-4">
                 <div className="flex items-start justify-between mb-3">
-                  <p className={`text-xs font-semibold uppercase tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Users</p>
+                  <p className={`text-xs font-semibold uppercase tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Students</p>
                   <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-blue-500/20 text-blue-400 group-hover:bg-blue-500/30' : 'bg-blue-200 text-blue-600 group-hover:bg-blue-300'} transition-all group-hover:scale-110`}>
                     <Users className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
                 </div>
-                <p className={`text-2xl sm:text-3xl font-black ${isDarkMode ? 'text-blue-300' : 'text-blue-600'}`}>{usersCount}</p>
+                <p className={`text-2xl sm:text-3xl font-black ${isDarkMode ? 'text-blue-300' : 'text-blue-600'}`}>{totalStudentsCount}</p>
                 <div className={`mt-2 h-1 w-8 rounded-full ${isDarkMode ? 'bg-gradient-to-r from-blue-500 to-blue-400' : 'bg-gradient-to-r from-blue-500 to-blue-600'}`}></div>
+              </div>
+            </div>
+
+            {/* Alumni Card */}
+            <div className={`group relative overflow-hidden rounded-xl transition-all duration-300 ${isDarkMode ? 'bg-gradient-to-br from-slate-700/40 to-slate-800/40 backdrop-blur-xl border border-violet-500/20 hover:border-violet-400/40' : 'bg-gradient-to-br from-violet-50/80 to-violet-100/80 backdrop-blur-xl border border-violet-200/50 hover:border-violet-300/80'}`}>
+              <div className="relative z-10 p-3 sm:p-4">
+                <div className="flex items-start justify-between mb-3">
+                  <p className={`text-xs font-semibold uppercase tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Alumni</p>
+                  <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-violet-500/20 text-violet-400 group-hover:bg-violet-500/30' : 'bg-violet-200 text-violet-600 group-hover:bg-violet-300'} transition-all group-hover:scale-110`}>
+                    <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </div>
+                </div>
+                <p className={`text-2xl sm:text-3xl font-black ${isDarkMode ? 'text-violet-300' : 'text-violet-600'}`}>{totalAlumniCount}</p>
+                <div className={`mt-2 h-1 w-8 rounded-full ${isDarkMode ? 'bg-gradient-to-r from-violet-500 to-violet-400' : 'bg-gradient-to-r from-violet-500 to-violet-600'}`}></div>
               </div>
             </div>
 
