@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Loader2, Search, UserCheck, UserPlus, UserX, X, Users, Inbox, SearchX, GraduationCap, MessageSquare } from "lucide-react";
+import { Loader2, Search, UserCheck, UserPlus, UserX, X, Users, Inbox, SearchX } from "lucide-react";
 import { motion } from "framer-motion";
 import { Connection, SocialProfile } from "../../types/social";
 import {
@@ -11,7 +11,6 @@ import {
 } from "../../lib/api/connectionsApi";
 import UserCard from "./UserCard";
 import { supabase } from "../../lib/supabase";
-import MentorChat from "../Alumni/MentorChat";
 import ChipLoader from "../ui/ChipLoader";
 
 type Tab = "connections" | "requests" | "discover";
@@ -47,56 +46,6 @@ export default function NetworkPage({
   const [results, setResults] = useState<SocialProfile[]>([]);
   const [searching, setSearching] = useState(false);
 
-  // Mentors state
-  const [mentors, setMentors] = useState<any[]>([]);
-  const [loadingMentors, setLoadingMentors] = useState(false);
-  const [chatTarget, setChatTarget] = useState<any | null>(null);
-  const [currentUserProfile, setCurrentUserProfile] = useState<any | null>(null);
-
-  const fetchMentors = async () => {
-    try {
-      setLoadingMentors(true);
-      const { data: conns, error: connErr } = await supabase
-        .from("mentor_connections")
-        .select("id, alumni_id")
-        .eq("student_id", currentUserId);
-
-      if (connErr) throw connErr;
-
-      if (conns && conns.length > 0) {
-        const alumniIds = conns.map((c) => c.alumni_id);
-        const { data: profiles, error: profileErr } = await supabase
-          .from("alumni_profiles")
-          .select("id, full_name, job_title, company_name, major, graduation_year, avatar_url")
-          .in("id", alumniIds);
-
-        if (profileErr) throw profileErr;
-        setMentors(profiles || []);
-      } else {
-        setMentors([]);
-      }
-    } catch (err) {
-      console.error("Error fetching mentors:", err);
-    } finally {
-      setLoadingMentors(false);
-    }
-  };
-
-  const fetchStudentProfile = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("name, avatar_url, profile_pic")
-        .eq("id", currentUserId)
-        .single();
-      if (!error && data) {
-        setCurrentUserProfile(data);
-      }
-    } catch (err) {
-      console.error("Error fetching student profile:", err);
-    }
-  };
-
   const load = async (silent = false) => {
     if (!silent) setLoading(true);
     const conns = await listMyConnections(currentUserId);
@@ -108,8 +57,6 @@ export default function NetworkPage({
 
   useEffect(() => {
     load();
-    fetchMentors();
-    fetchStudentProfile();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUserId]);
 
@@ -182,94 +129,7 @@ export default function NetworkPage({
     <div className={`min-h-screen pb-12 ${pageBg}`}>
 
       <div className="max-w-3xl mx-auto px-4 pt-6">
-        {/* SECTION — "My Mentors" */}
-        <div className="mb-8">
-          <h2 className={`text-base font-bold mb-4 flex items-center gap-2 ${title}`}>
-            <GraduationCap className="w-5 h-5 text-emerald-400" />
-            My Mentors
-          </h2>
 
-          {loadingMentors ? (
-            <div className="flex flex-col items-center gap-1 text-xs text-slate-500 py-6 justify-center">
-              <ChipLoader size="sm" />
-              Loading mentors...
-            </div>
-          ) : mentors.length === 0 ? (
-            <div className={`p-6 rounded-xl border flex flex-col sm:flex-row items-center justify-between gap-4 ${
-              isDarkMode ? "bg-[#17181c] border-[#2f3336]/60" : "bg-white border-slate-200 shadow-sm"
-            }`}>
-              <div className="text-center sm:text-left">
-                <p className={`text-sm font-semibold ${title}`}>No mentors yet</p>
-                <p className={`text-xs ${sub} mt-0.5`}>Browse BUBT alumni directory to connect and get guidance!</p>
-              </div>
-              <button
-                onClick={goToAlumniHub}
-                className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold transition-all shadow-sm cursor-pointer"
-              >
-                Find a Mentor
-              </button>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {mentors.map((mentor) => (
-                <div
-                  key={mentor.id}
-                  className={`p-5 rounded-xl border flex flex-col justify-between gap-4 ${
-                    isDarkMode ? "bg-[#17181c] border-[#2f3336]/60" : "bg-white border-slate-200 shadow-sm"
-                  }`}
-                >
-                  <div className="space-y-3">
-                    <div className="flex gap-3 items-center">
-                      <div className="w-12 h-12 rounded-full overflow-hidden border border-emerald-500/30 bg-slate-800 flex-shrink-0">
-                        {mentor.avatar_url ? (
-                          <img src={mentor.avatar_url} alt={mentor.full_name} className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-sm font-bold text-white bg-emerald-600">
-                            {mentor.full_name?.charAt(0)?.toUpperCase()}
-                          </div>
-                        )}
-                      </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <p className={`font-bold text-sm truncate ${title}`}>{mentor.full_name}</p>
-                          <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/25">
-                            Verified Alumni
-                          </span>
-                        </div>
-                        <p className={`text-xs text-purple-400 font-semibold truncate`}>{mentor.major} {mentor.graduation_year ? `(${mentor.graduation_year})` : ""}</p>
-                        <p className={`text-xs text-slate-400 truncate mt-0.5`}>
-                          {mentor.job_title} {mentor.company_name ? `@ ${mentor.company_name}` : ""}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-2 border-t border-[#2f3336]/10 pt-3 mt-1">
-                    <button
-                      onClick={() => setChatTarget(mentor)}
-                      className="flex-1 py-2 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20 transition-all font-semibold text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
-                    >
-                      <MessageSquare className="w-3.5 h-3.5" />
-                      Message
-                    </button>
-                    <button
-                      onClick={() => onViewAlumniProfile?.(mentor.id)}
-                      className={`flex-1 py-2 rounded-lg transition-all font-semibold text-xs border cursor-pointer ${
-                        isDarkMode
-                          ? "bg-transparent text-slate-300 border-[#2f3336] hover:bg-[#1f2226]"
-                          : "bg-transparent text-slate-600 border-slate-200 hover:bg-slate-50"
-                      }`}
-                    >
-                      View Profile
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <hr className="border-[#2f3336]/10 mb-8" />
 
         {/* Pill tab row — matches navbar style */}
         <div className={`inline-flex items-center rounded-full p-1.5 gap-0.5 border mb-6 ${
@@ -519,21 +379,7 @@ export default function NetworkPage({
         )}
       </div>
 
-      {chatTarget && (
-        <MentorChat
-          isDarkMode={isDarkMode}
-          currentUserId={currentUserId}
-          currentUserProfile={currentUserProfile}
-          targetUserId={chatTarget.id}
-          targetUserName={chatTarget.full_name}
-          targetUserAvatar={chatTarget.avatar_url}
-          isTargetAlumni={true}
-          onClose={() => {
-            setChatTarget(null);
-            fetchMentors();
-          }}
-        />
-      )}
+
     </div>
   );
 }
