@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Plus, ChevronDown, ChevronUp, AlertCircle, Trash2, Edit2, BarChart3, BookOpen, Files, Users, TrendingUp, HardDrive, UsersRound, ShieldCheck, MessageSquare, RefreshCw, Bug, Lightbulb, Sparkles, Ban, GraduationCap, BadgeCheck, X, Loader2 } from 'lucide-react';
+import { Bell, Plus, ChevronDown, ChevronUp, AlertCircle, Trash2, Edit2, BarChart3, BookOpen, Files, Users, TrendingUp, HardDrive, UsersRound, ShieldCheck, MessageSquare, RefreshCw, Bug, Lightbulb, Sparkles, Ban, GraduationCap, BadgeCheck, X, Loader2, Search } from 'lucide-react';
 import MaterialManager from './MaterialManager';
 import { supabase, supabaseConfigured } from '../../lib/supabase';
 import { sendEmailNotification } from '../../lib/emailNotifications';
@@ -140,6 +140,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [deleteResult, setDeleteResult] = useState<string | null>(null);
+  const [userSearchQuery, setUserSearchQuery] = useState('');
 
   const submitBan = async (userId: string) => {
     setBanBusyId(userId);
@@ -311,6 +312,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     ? storageByBucket.map((b) => `${b.bucket}: ${formatBytes(b.bytes)} (${b.files})`).join('\n')
     : 'No files uploaded yet';
 
+  const filteredUsers = (adminUsers || []).filter((u) => {
+    const query = userSearchQuery.toLowerCase().trim();
+    if (!query) return true;
+    const nameMatch = (u.name || '').toLowerCase().includes(query);
+    const emailMatch = (u.bubt_email || '').toLowerCase().includes(query);
+    const idMatch = (u.id || '').toLowerCase().includes(query);
+    return nameMatch || emailMatch || idMatch;
+  });
+
   return (
     <div className={`min-h-screen ${isDarkMode ? 'bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900' : 'bg-gradient-to-br from-slate-50 to-blue-50'}`}>
       {/* Header Section */}
@@ -432,13 +442,41 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               </div>
             </div>
 
+            {/* Search Box */}
+            <div className="mb-4 relative">
+              <div className={`absolute left-3 top-1/2 -translate-y-1/2 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                <Search className="w-4 h-4" />
+              </div>
+              <input
+                type="text"
+                value={userSearchQuery}
+                onChange={(e) => setUserSearchQuery(e.target.value)}
+                placeholder="Search users by name, email, or ID..."
+                className={`w-full pl-10 pr-10 py-2 text-sm rounded-xl border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-amber-500/50 ${
+                  isDarkMode
+                    ? 'bg-[#16181c] border-[#2f3336] text-gray-100 placeholder-slate-500 focus:border-amber-500'
+                    : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:border-amber-500'
+                }`}
+              />
+              {userSearchQuery && (
+                <button
+                  onClick={() => setUserSearchQuery('')}
+                  className={`absolute right-3 top-1/2 -translate-y-1/2 ${isDarkMode ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-800'}`}
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+
             {adminUsersLoading ? (
               <p className={`text-sm py-4 text-center ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Loading users…</p>
-            ) : adminUsers.length === 0 ? (
-              <p className={`text-sm py-4 text-center ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>No users found.</p>
+            ) : filteredUsers.length === 0 ? (
+              <p className={`text-sm py-4 text-center ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                {userSearchQuery ? 'No users matching your search.' : 'No users found.'}
+              </p>
             ) : (
               <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
-                {adminUsers.map((u) => {
+                {filteredUsers.map((u) => {
                   const isSelf = u.id === currentUserId;
                   const isProtected = u.is_owner || isSelf;
                   const banReasonOpen = banReasonOpenId === u.id;
