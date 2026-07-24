@@ -45,6 +45,8 @@ import type { Feedback, FeedbackStatus } from "./types";
 import MarqueeTicker from "./components/MarqueeTicker";
 import { Tiles } from "./components/ui/tiles";
 import ChipLoader from "./components/ui/ChipLoader";
+import AnimatedLoadingSkeleton from "./components/ui/animated-loading-skeleton";
+import LottieLoader from "./components/ui/LottieLoader";
 const PDFViewer = lazy(() => import("./components/PDFViewer"));
 const AdminDashboard = lazy(() => import("./components/Admin/AdminDashboard"));
 const AlumniDashboard = lazy(() => import("./components/Alumni/AlumniDashboard"));
@@ -8351,8 +8353,8 @@ For any queries, contact your course instructors or the department.`,
 
       {/* ── Lazy-loaded views — Suspense ensures a spinner while chunks download ── */}
       <Suspense fallback={
-        <div className="fixed top-[72px] lg:top-20 inset-x-0 bottom-0 z-40 flex items-center justify-center">
-          <ChipLoader size="xl" />
+        <div className="fixed top-[72px] lg:top-20 inset-x-0 bottom-0 z-40 flex items-center justify-center p-6 overflow-y-auto bg-slate-50 dark:bg-[#0b0f19]">
+          <LottieLoader />
         </div>
       }>
 
@@ -8449,8 +8451,8 @@ For any queries, contact your course instructors or the department.`,
       {currentView === "meet-team" && (
         <main className="fixed top-[72px] lg:top-20 inset-x-0 bottom-0 z-40 overflow-y-auto overscroll-y-contain">
           <Suspense fallback={
-            <div className={`h-full flex items-center justify-center p-4 ${isDarkMode ? "bg-[#000000]" : "bg-slate-50"}`}>
-              <ChipLoader size="xl" />
+            <div className={`h-full flex items-center justify-center p-6 ${isDarkMode ? "bg-[#000000]" : "bg-slate-50"}`}>
+              <LottieLoader />
             </div>
           }>
             <MeetTeamPage isDarkMode={isDarkMode} onClose={() => goToView("home")} />
@@ -8462,8 +8464,8 @@ For any queries, contact your course instructors or the department.`,
       {currentView === "alumni" && authSession?.user?.id && (
         <main className="fixed top-[72px] lg:top-20 inset-x-0 bottom-0 z-40 overflow-y-auto overscroll-y-contain">
           <Suspense fallback={
-            <div className={`h-full flex items-center justify-center p-4 ${isDarkMode ? "bg-[#000000]" : "bg-slate-50"}`}>
-              <ChipLoader size="xl" />
+            <div className={`h-full flex items-center justify-center p-6 ${isDarkMode ? "bg-[#000000]" : "bg-slate-50"}`}>
+              <LottieLoader />
             </div>
           }>
             {alumniSubView === "directory" && (

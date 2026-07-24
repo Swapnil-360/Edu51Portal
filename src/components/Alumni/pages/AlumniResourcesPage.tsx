@@ -437,14 +437,39 @@ export default function AlumniResourcesPage({ isDarkMode, authSession, userProfi
 
               <div className="space-y-1.5">
                 <label className={`text-xs font-bold ${textColor}`}>Upload File (PDF/DOC/DOCX, max 10MB) *</label>
-                <input
-                  type="file"
-                  required
-                  ref={fileInputRef}
-                  accept=".pdf,.doc,.docx"
-                  onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-                  className={`text-xs file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-500/10 file:text-blue-400 hover:file:bg-blue-500/20 file:cursor-pointer ${textColor}`}
-                />
+                {!selectedFile ? (
+                  <input
+                    type="file"
+                    required
+                    ref={fileInputRef}
+                    accept=".pdf,.doc,.docx"
+                    onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                    className={`text-xs file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-500/10 file:text-blue-400 hover:file:bg-blue-500/20 file:cursor-pointer ${textColor} w-full`}
+                  />
+                ) : (
+                  <div className="relative mt-1 p-3 rounded-xl border border-dashed border-slate-300 dark:border-[#2f3336] bg-slate-50/50 dark:bg-[#16181c] flex items-center gap-3">
+                    <div className="p-2 bg-blue-500/10 text-blue-400 rounded-lg">
+                      <FileText className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-xs font-semibold truncate ${textColor}`}>{selectedFile.name}</p>
+                      <p className="text-[10px] text-slate-400">{(selectedFile.size / (1024 * 1024)).toFixed(2)} MB</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedFile(null);
+                        if (fileInputRef.current) {
+                          fileInputRef.current.value = "";
+                        }
+                      }}
+                      className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center shadow-md cursor-pointer transition-all hover:scale-110"
+                      title="Remove file"
+                    >
+                      <X className="w-3 h-3 stroke-[3]" />
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-1.5">
