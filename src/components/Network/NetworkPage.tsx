@@ -14,6 +14,7 @@ import { supabase } from "../../lib/supabase";
 import ChipLoader from "../ui/ChipLoader";
 
 type Tab = "connections" | "requests" | "discover";
+type ConnectionFilter = "all" | "students" | "alumni";
 
 interface Props {
   currentUserId: string;
@@ -25,16 +26,17 @@ interface Props {
   goToAlumniHub?: () => void;
 }
 
-export default function NetworkPage({ 
-  currentUserId, 
-  onClose, 
-  onViewProfile, 
-  isDarkMode, 
+export default function NetworkPage({
+  currentUserId,
+  onClose,
+  onViewProfile,
+  isDarkMode,
   onPendingRequestsChange,
   onViewAlumniProfile,
   goToAlumniHub
 }: Props) {
   const [tab, setTab] = useState<Tab>("connections");
+  const [connFilter, setConnFilter] = useState<ConnectionFilter>("all");
   const [connections, setConnections] = useState<Connection[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
@@ -49,8 +51,30 @@ export default function NetworkPage({
   const load = async (silent = false) => {
     if (!silent) setLoading(true);
     const conns = await listMyConnections(currentUserId);
-    setConnections(conns);
-    const incomingCount = conns.filter((c) => c.status === "pending" && c.addressee_id === currentUserId).length;
+    console.log("Raw connections:", conns);
+
+    const mapped = conns.map((c) => {
+      const p = c.other_profile;
+      return {
+        id: c.id,
+        profileId: p?.id || "",
+        name: p?.name || "User",
+        avatar: p?.avatar_url || p?.profile_pic || null,
+        headline: p?.headline || (p?.section ? `${p.section} · ${p.major}` : null),
+        is_alumni: p?.is_alumni || false,
+        status: c.status,
+        requester_id: c.requester_id,
+        addressee_id: c.addressee_id,
+        is_mentorship: c.is_mentorship,
+        skills: p?.skills || []
+      };
+    });
+
+    console.log("mapped connections:", mapped);
+
+    setConnections(mapped);
+
+    const incomingCount = mapped.filter((c) => c.status === "pending" && c.addressee_id === currentUserId).length;
     onPendingRequestsChange?.(incomingCount);
     if (!silent) setLoading(false);
   };
@@ -63,6 +87,41 @@ export default function NetworkPage({
   const accepted = connections.filter((c) => c.status === "accepted");
   const incoming = connections.filter((c) => c.status === "pending" && c.addressee_id === currentUserId);
   const outgoing = connections.filter((c) => c.status === "pending" && c.requester_id === currentUserId);
+
+  const totalAllCount = accepted.length;
+  const totalStudentCount = accepted.filter(
+    (c) => c.is_alumni === false
+  ).length;
+  const totalAlumniCount = accepted.filter(
+    (c) => c.is_alumni === true
+  ).length;
+
+  const filteredConnections = accepted.filter((c) => {
+    if (connFilter === "students") {
+      return c.is_alumni === false;
+    }
+    if (connFilter === "alumni") {
+      return c.is_alumni === true;
+    }
+    return true;
+  });
+
+  const getEmptyMessage = () => {
+    if (connFilter === "students") return "No student connections found.";
+    if (connFilter === "alumni") return "No alumni connections found.";
+    return "No connections found.";
+  };
+
+  useEffect(() => {
+    console.log("all connections:", accepted);
+    console.log("alumni connections:", accepted.filter((c) => c.is_alumni === true));
+  }, [accepted]);
+
+  // Debug log for active filter changes and count updates
+  useEffect(() => {
+    console.log(`[DEBUG] Filter updated to: "${connFilter}"`);
+    console.log(`[DEBUG] Filtered result count: ${filteredConnections.length}`);
+  }, [connFilter, filteredConnections.length]);
 
   const runSearch = async () => {
     setSearching(true);
@@ -95,31 +154,75 @@ export default function NetworkPage({
   const pageBg = isDarkMode ? "bg-[#000000]" : "bg-slate-100";
   const title = isDarkMode ? "text-white" : "text-slate-900";
   const sub = isDarkMode ? "text-slate-400" : "text-slate-500";
-  const inputCls = `px-3 py-2 rounded-lg text-sm border outline-none transition-colors ${
-    isDarkMode
+  const inputCls = `px-3 py-2 rounded-lg text-sm border outline-none transition-colors ${isDarkMode
       ? "bg-[#16181c] border-[#2f3336] text-white placeholder-[#71767b] focus:border-[#1e9df1]"
       : "bg-white border-slate-300 text-slate-900 placeholder-slate-400 focus:border-[#1e9df1]"
-  }`;
+    }`;
 
   const tabBtn = (t: Tab, label: string, count?: number) => (
     <button
       onClick={() => setTab(t)}
-      className={`relative px-5 py-2 rounded-full text-sm transition-colors duration-150 flex items-center gap-2 ${
-        tab === t
+      className={`relative px-5 py-2 rounded-full text-sm transition-colors duration-150 flex items-center gap-2 ${tab === t
           ? "bg-[#1e9df1] text-white font-bold shadow-md shadow-[#1e9df1]/20"
           : isDarkMode ? "font-medium text-[#71767b] hover:text-[#e7e9ea]" : "font-medium text-slate-500 hover:text-slate-800"
-      }`}
+        }`}
     >
       {label}
       {count !== undefined && count > 0 && (
-        <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
-          tab === t ? "bg-white/20 text-white" : "bg-[#1e9df1] text-white"
-        }`}>
+        <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${tab === t ? "bg-white/20 text-white" : "bg-[#1e9df1] text-white"
+          }`}>
           {count}
         </span>
       )}
     </button>
   );
+
+  const filterBtn = (f: ConnectionFilter, label: string, count: number) => (
+    <button
+      onClick={() => setConnFilter(f)}
+      className={`px-4 py-1.5 rounded-full text-xs transition-colors duration-150 flex items-center gap-1.5 border ${connFilter === f
+          ? "bg-[#1e9df1]/10 text-[#1e9df1] border-[#1e9df1]/30 font-bold"
+          : isDarkMode
+            ? "bg-transparent border-[#2f3336] text-[#71767b] hover:text-[#e7e9ea] hover:border-[#71767b]"
+            : "bg-transparent border-slate-200 text-slate-500 hover:text-slate-800 hover:border-slate-400"
+        }`}
+    >
+      <span>{label}</span>
+      <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${connFilter === f
+          ? "bg-[#1e9df1]/20 text-[#1e9df1]"
+          : isDarkMode
+            ? "bg-[#16181c] text-[#71767b]"
+            : "bg-slate-100 text-slate-500"
+        }`}>
+        {count}
+      </span>
+    </button>
+  );
+
+  const getSocialProfile = (c: any): SocialProfile => ({
+    id: c.profileId,
+    name: c.name,
+    avatar_url: c.avatar,
+    profile_pic: null,
+    headline: c.headline,
+    skills: c.skills || [],
+    is_alumni: c.is_alumni,
+    username: null,
+    about: null,
+    location: null,
+    website: null,
+    social_links: {},
+    cover_photo_url: null,
+    interests: [],
+    visibility: "users",
+    is_admin: false,
+    section: null,
+    major: null,
+    department: null,
+    bubt_email: null,
+    phone: null,
+    created_at: new Date().toISOString()
+  });
 
   const viewProfile = (p: SocialProfile) => {
     onViewProfile(p.username || p.id);
@@ -132,11 +235,10 @@ export default function NetworkPage({
 
 
         {/* Pill tab row — matches navbar style */}
-        <div className={`inline-flex items-center rounded-full p-1.5 gap-0.5 border mb-6 ${
-          isDarkMode
+        <div className={`inline-flex items-center rounded-full p-1.5 gap-0.5 border mb-6 ${isDarkMode
             ? "bg-[#16181c] border-[#2f3336] shadow-lg shadow-black/20"
             : "bg-white border-slate-300 shadow-md shadow-black/8"
-        }`}>
+          }`}>
           {tabBtn("connections", "Connections", accepted.length)}
           {tabBtn("requests", "Requests", incoming.length)}
           {tabBtn("discover", "Discover")}
@@ -155,7 +257,14 @@ export default function NetworkPage({
           </div>
         ) : tab === "connections" ? (
           <div className="space-y-3">
-            {accepted.length === 0 && (
+            {/* Connection Sub-filters */}
+            <div className="flex flex-wrap items-center gap-2 mb-4">
+              {filterBtn("all", "All", totalAllCount)}
+              {filterBtn("students", "Students", totalStudentCount)}
+              {filterBtn("alumni", "Alumni", totalAlumniCount)}
+            </div>
+
+            {filteredConnections.length === 0 && (
               <motion.div
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -165,39 +274,42 @@ export default function NetworkPage({
                   <Users size={28} className={isDarkMode ? "text-slate-500" : "text-[#8b98a5]"} />
                 </div>
                 <div>
-                  <p className={`text-sm font-bold ${isDarkMode ? "text-[#8b98a5]" : "text-slate-700"}`}>No connections yet</p>
-                  <p className={`text-xs mt-1 ${sub}`}>Find and connect with classmates</p>
+                  <p className={`text-sm font-bold ${isDarkMode ? "text-[#8b98a5]" : "text-slate-700"}`}>
+                    {getEmptyMessage()}
+                  </p>
+                  {connFilter === "all" && (
+                    <>
+                      <p className={`text-xs mt-1 ${sub}`}>Find and connect with classmates</p>
+                      <button
+                        onClick={() => setTab("discover")}
+                        className="px-4 py-2 mt-3 rounded-xl bg-[#1e9df1] hover:bg-[#1677cc] text-white text-xs font-bold transition-colors"
+                      >
+                        Discover People
+                      </button>
+                    </>
+                  )}
                 </div>
-                <button
-                  onClick={() => setTab("discover")}
-                  className="px-4 py-2 rounded-xl bg-[#1e9df1] hover:bg-[#1677cc] text-white text-xs font-bold transition-colors"
-                >
-                  Discover People
-                </button>
               </motion.div>
             )}
-            {accepted.map((c) =>
-              c.other_profile ? (
-                <UserCard
-                  key={c.id}
-                  profile={c.other_profile}
-                  isDarkMode={isDarkMode}
-                  onView={viewProfile}
-                  action={
-                    <button
-                      onClick={() => handleAction(() => removeConnection(c.id), c.id)}
-                      disabled={busy === c.id}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1 ${
-                        isDarkMode ? "bg-[#16181c] text-slate-400 hover:text-red-400" : "bg-slate-100 text-slate-500 hover:text-red-500"
+            {filteredConnections.map((c) => (
+              <UserCard
+                key={c.id}
+                profile={getSocialProfile(c)}
+                isDarkMode={isDarkMode}
+                onView={viewProfile}
+                action={
+                  <button
+                    onClick={() => handleAction(() => removeConnection(c.id, c.is_mentorship), c.id)}
+                    disabled={busy === c.id}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1 ${isDarkMode ? "bg-[#16181c] text-slate-400 hover:text-red-400" : "bg-slate-100 text-slate-500 hover:text-red-500"
                       }`}
-                    >
-                      {busy === c.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <UserX className="w-3 h-3" />}
-                      Remove
-                    </button>
-                  }
-                />
-              ) : null,
-            )}
+                  >
+                    {busy === c.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <UserX className="w-3 h-3" />}
+                    Remove
+                  </button>
+                }
+              />
+            ))}
           </div>
         ) : tab === "requests" ? (
           <div className="space-y-5">
@@ -210,37 +322,34 @@ export default function NetworkPage({
                     <p className={`text-sm ${sub}`}>No incoming requests</p>
                   </motion.div>
                 )}
-                {incoming.map((c) =>
-                  c.other_profile ? (
-                    <UserCard
-                      key={c.id}
-                      profile={c.other_profile}
-                      isDarkMode={isDarkMode}
-                      onView={viewProfile}
-                      action={
-                        <div className="flex gap-1.5">
-                          <button
-                            onClick={() => handleAction(() => respondToRequest(c.id, true), c.id)}
-                            disabled={busy === c.id}
-                            className="px-3 py-1.5 rounded-lg bg-[#1e9df1] text-white text-xs font-medium hover:bg-[#1677cc] flex items-center gap-1"
-                          >
-                            {busy === c.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <UserCheck className="w-3 h-3" />}
-                            Accept
-                          </button>
-                          <button
-                            onClick={() => handleAction(() => respondToRequest(c.id, false), `r-${c.id}`)}
-                            disabled={busy === `r-${c.id}`}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-medium ${
-                              isDarkMode ? "bg-[#16181c] text-slate-400" : "bg-slate-100 text-slate-500"
+                {incoming.map((c) => (
+                  <UserCard
+                    key={c.id}
+                    profile={getSocialProfile(c)}
+                    isDarkMode={isDarkMode}
+                    onView={viewProfile}
+                    action={
+                      <div className="flex gap-1.5">
+                        <button
+                          onClick={() => handleAction(() => respondToRequest(c.id, true), c.id)}
+                          disabled={busy === c.id}
+                          className="px-3 py-1.5 rounded-lg bg-[#1e9df1] text-white text-xs font-medium hover:bg-[#1677cc] flex items-center gap-1"
+                        >
+                          {busy === c.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <UserCheck className="w-3 h-3" />}
+                          Accept
+                        </button>
+                        <button
+                          onClick={() => handleAction(() => respondToRequest(c.id, false), `r-${c.id}`)}
+                          disabled={busy === `r-${c.id}`}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-medium ${isDarkMode ? "bg-[#16181c] text-slate-400" : "bg-slate-100 text-slate-500"
                             }`}
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        </div>
-                      }
-                    />
-                  ) : null,
-                )}
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    }
+                  />
+                ))}
               </div>
             </div>
             <div>
@@ -252,27 +361,24 @@ export default function NetworkPage({
                     <p className={`text-sm ${sub}`}>No sent requests</p>
                   </motion.div>
                 )}
-                {outgoing.map((c) =>
-                  c.other_profile ? (
-                    <UserCard
-                      key={c.id}
-                      profile={c.other_profile}
-                      isDarkMode={isDarkMode}
-                      onView={viewProfile}
-                      action={
-                        <button
-                          onClick={() => handleAction(() => removeConnection(c.id), c.id)}
-                          disabled={busy === c.id}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-medium ${
-                            isDarkMode ? "bg-[#16181c] text-slate-400 hover:text-red-400" : "bg-slate-100 text-slate-500 hover:text-red-500"
+                {outgoing.map((c) => (
+                  <UserCard
+                    key={c.id}
+                    profile={getSocialProfile(c)}
+                    isDarkMode={isDarkMode}
+                    onView={viewProfile}
+                    action={
+                      <button
+                        onClick={() => handleAction(() => removeConnection(c.id), c.id)}
+                        disabled={busy === c.id}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium ${isDarkMode ? "bg-[#16181c] text-slate-400 hover:text-red-400" : "bg-slate-100 text-slate-500 hover:text-red-500"
                           }`}
-                        >
-                          Cancel
-                        </button>
-                      }
-                    />
-                  ) : null,
-                )}
+                      >
+                        Cancel
+                      </button>
+                    }
+                  />
+                ))}
               </div>
             </div>
           </div>
@@ -334,22 +440,20 @@ export default function NetworkPage({
                       action={
                         existing && existing.status !== "rejected" ? (
                           <div className="flex items-center gap-1.5">
-                            <span className={`px-3 py-1.5 rounded-lg text-xs font-medium ${
-                              existing.status === "accepted"
+                            <span className={`px-3 py-1.5 rounded-lg text-xs font-medium ${existing.status === "accepted"
                                 ? isDarkMode ? "bg-emerald-900/30 text-emerald-400" : "bg-emerald-50 text-emerald-700"
                                 : isDarkMode ? "bg-[#16181c] text-slate-400" : "bg-slate-100 text-slate-500"
-                            }`}>
+                              }`}>
                               {existing.status === "accepted" ? "Connected" : "Pending"}
                             </span>
                             {existing.status === "pending" && (
                               <button
                                 onClick={() => handleAction(() => removeConnection(existing.id), existing.id)}
                                 disabled={busy === existing.id}
-                                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                                  isDarkMode
+                                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${isDarkMode
                                     ? "bg-[#16181c] text-slate-400 hover:text-red-400 hover:bg-red-500/10 border border-[#2f3336]"
                                     : "bg-slate-100 text-slate-500 hover:text-red-500 hover:bg-red-50 border border-slate-200"
-                                }`}
+                                  }`}
                               >
                                 {busy === existing.id ? (
                                   <Loader2 className="w-3.5 h-3.5 animate-spin" />

@@ -20,6 +20,7 @@ export interface SocialProfile {
   is_alumni: boolean;
   is_admin: boolean;
   is_verified?: boolean;
+  role?: string;
   // legacy Edu51Five fields (kept working)
   section: string | null;
   major: string | null;
@@ -84,6 +85,7 @@ export interface Connection {
   responded_at: string | null;
   // joined profile of the "other" user (populated client-side)
   other_profile?: SocialProfile;
+  is_mentorship?: boolean;
 }
 
 export type TeamCategory =

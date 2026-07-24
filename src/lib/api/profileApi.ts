@@ -136,14 +136,18 @@ function dedupeLower(arr: string[]): string[] {
 }
 
 export function normalizeProfile(row: any): SocialProfile {
+  const isAlumni = row.is_alumni ?? false;
+  const sectionLower = String(row.section || "").toLowerCase();
+  const determinedAlumni = isAlumni || sectionLower === "alumni" || sectionLower.includes("alumni");
   return {
     ...row,
     social_links: row.social_links ?? {},
     skills: row.skills ?? [],
     interests: row.interests ?? [],
     visibility: row.visibility ?? "users",
-    is_alumni: row.is_alumni ?? false,
+    is_alumni: determinedAlumni,
     is_admin: row.is_admin ?? false,
     profile_pic: row.profile_pic ?? null,
+    role: determinedAlumni ? "alumni" : "student",
   } as SocialProfile;
 }
