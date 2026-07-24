@@ -34,6 +34,7 @@ import { ChangeEmailModal } from "./components/ChangeEmailModal";
 import { SignInModal } from "./components/SignInModal";
 import GlobalSearchModal from "./components/ui/GlobalSearchModal";
 import OnboardingTour, { ONBOARDING_SEEN_KEY } from "./components/ui/OnboardingTour";
+import EmergencyMarquee from "./components/ui/EmergencyMarquee";
 import { FeedbackModal } from "./components/FeedbackModal";
 import {
   listFeedback,
@@ -532,6 +533,41 @@ function App() {
 
   const activeMajor = isLoggedIn ? userProfile.major : guestMajor;
   const activeDepartment = isLoggedIn ? userProfile.department : guestDepartment;
+
+  // Realtime: any notice change (create/edit/activate/deactivate, any
+  // category) refreshes the list instantly for everyone with the app open —
+  // no refresh needed. loadNotices is a plain const fn defined later in this
+  // component, but effects only run after the full render body has executed,
+  // so it's already bound by the time this callback actually fires.
+  useEffect(() => {
+    const channel = supabase
+      .channel("notices-realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "notices" },
+        () => {
+          loadNotices();
+        },
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Active emergency notices for the viewer's department — shown as a
+  // persistent marquee under the header, not a blocking popup.
+  const emergencyNotices = useMemo(
+    () =>
+      notices.filter(
+        (n) =>
+          n.category === "emergency" &&
+          n.is_active &&
+          (n.target_department == null || n.target_department === activeDepartment),
+      ),
+    [notices, activeDepartment],
+  );
 
   // Resolve the legacy major's Drive root folder (admin Course Management
   // back-navigation still targets the ai/software/networking views).
@@ -4673,6 +4709,9 @@ For any queries, contact your course instructors or the department.`,
       {(!["custom","profile","network","teams","team","alumni"].includes(currentView) || showNoticeModal || showMaterialViewer) && (
         <main className="relative pt-[72px] lg:pt-20 min-h-screen [overflow-x:clip]">
           {currentView === "home" && isDarkMode && <Tiles isDarkMode={isDarkMode} />}
+
+          {/* ── Emergency notices — persistent marquee, always the first thing under the header ── */}
+          <EmergencyMarquee notices={emergencyNotices} />
 
           {/* ── Ban restriction banner ── */}
           {isBanned && (
