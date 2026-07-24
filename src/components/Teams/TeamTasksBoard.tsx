@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
   Calendar,
   Clock,
@@ -308,7 +308,7 @@ export default function TeamTasksBoard({
       <div className={`p-4 sm:p-5 rounded-2xl border ${bgCard}`}>
         <div className="flex items-start justify-between gap-3 mb-4">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#1e9df1] to-[#7c3aed] flex items-center justify-center flex-shrink-0 shadow-sm">
+            <div className="w-10 h-10 rounded-xl bg-[#1e9df1] flex items-center justify-center flex-shrink-0 shadow-sm">
               <LayoutGrid className="w-5 h-5 text-[#e7e9ea]" />
             </div>
             <div className="min-w-0">
@@ -321,7 +321,7 @@ export default function TeamTasksBoard({
           </div>
           <button
             onClick={() => openCreate("todo")}
-            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#1e9df1] to-[#7c3aed] text-[#e7e9ea] text-sm font-semibold hover:from-[#1677cc] hover:to-[#6d28d9] shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-1.5 active:scale-95 flex-shrink-0"
+            className="px-4 py-2.5 rounded-xl bg-[#1e9df1] text-[#e7e9ea] text-sm font-semibold hover:bg-[#1677cc] shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-1.5 active:scale-95 flex-shrink-0"
           >
             <Plus className="w-4 h-4" /> <span className="hidden sm:inline">Add Task</span>
           </button>

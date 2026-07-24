@@ -94,9 +94,42 @@ export function SignInModal({
     }
   };
 
+  const handleFailedAttempt = () => {
+    const attemptsStr = localStorage.getItem('loginFailedAttempts') || '0';
+    const attempts = parseInt(attemptsStr, 10) + 1;
+    if (attempts >= 3) {
+      const lockoutTime = Date.now() + 3 * 60 * 1000; // 3 minutes
+      localStorage.setItem('loginLockoutUntil', lockoutTime.toString());
+      localStorage.setItem('loginFailedAttempts', '0'); // reset count
+      setError('Too many failed attempts. Please try again after 3 minutes.');
+    } else {
+      localStorage.setItem('loginFailedAttempts', attempts.toString());
+      setError('Invalid email or password. Please check and try again.');
+    }
+  };
+
+  const handleSuccessfulAttempt = () => {
+    localStorage.removeItem('loginFailedAttempts');
+    localStorage.removeItem('loginLockoutUntil');
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    // Check lockout first
+    const lockoutUntilStr = localStorage.getItem('loginLockoutUntil');
+    if (lockoutUntilStr) {
+      const lockoutUntil = parseInt(lockoutUntilStr, 10);
+      if (Date.now() < lockoutUntil) {
+        const remainingMs = lockoutUntil - Date.now();
+        const remainingMins = Math.ceil(remainingMs / 1000 / 60);
+        setError(`Too many failed attempts. Please try again after ${remainingMins} minute(s).`);
+        return;
+      } else {
+        localStorage.removeItem('loginLockoutUntil');
+      }
+    }
 
     if (!identifier.trim()) {
       setError('Please enter your email address');
@@ -197,6 +230,7 @@ export function SignInModal({
                       localStorage.setItem('userProfileAvatarUrl', profile.profile_pic);
                     }
 
+                    handleSuccessfulAttempt();
                     setIsSubmitting(false);
                     onClose();
                     onSignIn(identifier, password, profile);
@@ -210,7 +244,7 @@ export function SignInModal({
             }
 
             if (error.message.includes('Invalid login credentials')) {
-              setError('Invalid email or password. Please check and try again.');
+              handleFailedAttempt();
             } else if (error.message.includes('Email not confirmed')) {
               setError('Please verify your email before signing in.');
             } else {
@@ -291,6 +325,7 @@ export function SignInModal({
             localStorage.setItem('userProfileAvatarUrl', cachedPic);
           }
 
+          handleSuccessfulAttempt();
           setIsSubmitting(false);
           onClose();
           onSignIn(identifier, password, profile);
@@ -385,12 +420,13 @@ export function SignInModal({
           isVerified: localStorage.getItem('userProfileIsVerified') === 'true',
         };
 
+        handleSuccessfulAttempt();
         setIsSubmitting(false);
         console.log('✅ Sign in successful (local fallback)');
         onClose();
         onSignIn(identifier, password, profile);
       } else {
-        setError('Invalid credentials. Please check your email and password.');
+        handleFailedAttempt();
       }
     } catch (err) {
       if (isStale()) return;
