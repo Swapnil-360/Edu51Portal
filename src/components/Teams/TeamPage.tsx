@@ -45,6 +45,7 @@ import TeamFiles from "./TeamFiles";
 import { uploadImage } from "../../lib/storage";
 import { supabase } from "../../lib/supabase";
 import ChipLoader from "../ui/ChipLoader";
+import StudentProfileView from "../Alumni/StudentProfileView";
 
 type Tab = "overview" | "members" | "chat" | "tasks" | "files";
 
@@ -70,6 +71,7 @@ export default function TeamPage({ teamId, currentUserId, onClose, onViewProfile
   const [annTitle, setAnnTitle] = useState("");
   const [annBody, setAnnBody] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
+  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   const [uploadingBanner, setUploadingBanner] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -592,7 +594,13 @@ export default function TeamPage({ teamId, currentUserId, onClose, onViewProfile
               {members.map((m) => (
                 <li key={m.user_id} className="flex items-center gap-3">
                   <button
-                    onClick={() => (m.profile?.username || m.profile?.id) && onViewProfile(m.profile.username || m.profile.id)}
+                    onClick={() => {
+                      if (m.profile && !m.profile.is_alumni) {
+                        setSelectedStudentId(m.user_id);
+                      } else if (m.profile?.username || m.profile?.id) {
+                        onViewProfile(m.profile.username || m.profile.id);
+                      }
+                    }}
                     className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center text-[#e7e9ea] font-bold"
                   >
                     {m.profile?.avatar_url || m.profile?.profile_pic ? (
@@ -604,7 +612,13 @@ export default function TeamPage({ teamId, currentUserId, onClose, onViewProfile
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() => (m.profile?.username || m.profile?.id) && onViewProfile(m.profile.username || m.profile.id)}
+                        onClick={() => {
+                          if (m.profile && !m.profile.is_alumni) {
+                            setSelectedStudentId(m.user_id);
+                          } else if (m.profile?.username || m.profile?.id) {
+                            onViewProfile(m.profile.username || m.profile.id);
+                          }
+                        }}
                         className={`text-sm font-semibold truncate hover:underline ${title}`}
                       >
                         {m.profile?.name ?? "User"}
@@ -837,6 +851,13 @@ function TeamSettingsModal({
           </button>
         </div>
       </div>
+
+      <StudentProfileView
+        isOpen={!!selectedStudentId}
+        onClose={() => setSelectedStudentId(null)}
+        studentId={selectedStudentId || ""}
+        isDarkMode={isDarkMode}
+      />
     </div>
   );
 }

@@ -112,3 +112,34 @@ export async function getSuggestedMentors(
     .slice(0, limit)
     .map((x) => x.alumnus);
 }
+
+export async function removeMentorshipConnection(
+  alumniId: string,
+  studentId: string
+): Promise<{ error: string | null }> {
+  try {
+    const res = await supabase
+      .from("mentor_connections")
+      .delete()
+      .eq("alumni_id", alumniId)
+      .eq("student_id", studentId)
+      .select();
+    
+    console.log("Supabase delete response for mentor_connections:", res);
+    
+    if (res.error) {
+      return { error: res.error.message };
+    }
+    
+    if (!res.data || res.data.length === 0) {
+      return { 
+        error: "Permission denied or connection not found. Please ensure the database migration policies have been applied in your Supabase SQL Editor." 
+      };
+    }
+    
+    return { error: null };
+  } catch (err: any) {
+    return { error: err.message || "Failed to remove connection" };
+  }
+}
+

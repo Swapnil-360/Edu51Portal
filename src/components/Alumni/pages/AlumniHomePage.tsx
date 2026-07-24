@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
-import { Users, BookOpen, Compass, Check, X, Calendar, MessageSquare } from "lucide-react";
+import { Users, BookOpen, Compass, Check, X, Calendar, MessageSquare, Trash2 } from "lucide-react";
 import { supabase } from "../../../lib/supabase";
 import ChipLoader from "../../ui/ChipLoader";
+import StudentProfileView from "../StudentProfileView";
+import { removeMentorshipConnection } from "../../../lib/api/mentorshipApi";
 
 interface Props {
   isDarkMode: boolean;
@@ -17,6 +19,11 @@ export default function AlumniHomePage({ isDarkMode, userProfile, authSession }:
   const [loading, setLoading] = useState(true);
   const [mentees, setMentees] = useState<any[]>([]);
   const [loadingMentees, setLoadingMentees] = useState(false);
+  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
+  const [onAcceptCallback, setOnAcceptCallback] = useState<(() => void) | undefined>(undefined);
+  const [connectionCount, setConnectionCount] = useState<number | "...">("...");
+  const [resourcesCount, setResourcesCount] = useState<number | "...">("...");
+  const [removingId, setRemovingId] = useState<string | null>(null);
 
   const textColor = isDarkMode ? "text-white" : "text-slate-900";
   const subColor = isDarkMode ? "text-slate-400" : "text-slate-500";
@@ -72,10 +79,76 @@ export default function AlumniHomePage({ isDarkMode, userProfile, authSession }:
     }
   };
 
+  const fetchConnectionCount = async () => {
+    if (!authSession?.user?.id) return;
+    try {
+      // 1. Fetch count of accepted peer connections from connections table
+      const { count: peerCount, error: peerErr } = await supabase
+        .from("connections")
+        .select("id", { count: "exact", head: true })
+        .or(`requester_id.eq.${authSession.user.id},addressee_id.eq.${authSession.user.id}`)
+        .eq("status", "accepted");
+
+      if (peerErr) throw peerErr;
+
+      // 2. Fetch count of connected mentees from mentor_connections table
+      const { count: menteeCount, error: menteeErr } = await supabase
+        .from("mentor_connections")
+        .select("id", { count: "exact", head: true })
+        .eq("alumni_id", authSession.user.id);
+
+      if (menteeErr) throw menteeErr;
+
+      setConnectionCount((peerCount || 0) + (menteeCount || 0));
+    } catch (err) {
+      console.error("Error fetching connections count:", err);
+      setConnectionCount(0);
+    }
+  };
+
+  const fetchResourcesCount = async () => {
+    if (!authSession?.user?.id) return;
+    try {
+      const { count, error } = await supabase
+        .from("alumni_resources")
+        .select("id", { count: "exact", head: true })
+        .eq("alumni_id", authSession.user.id);
+
+      if (error) throw error;
+      setResourcesCount(count || 0);
+    } catch (err) {
+      console.error("Error fetching resources count:", err);
+      setResourcesCount(0);
+    }
+  };
+
   useEffect(() => {
     fetchRequests();
     fetchMentees();
+    fetchConnectionCount();
+    fetchResourcesCount();
   }, [authSession]);
+
+  const handleRemoveConnection = async (studentId: string, studentName: string) => {
+    if (!authSession?.user?.id) return;
+    const confirmed = window.confirm(`Are you sure you want to remove this connection with ${studentName}? This action cannot be undone.`);
+    if (!confirmed) return;
+
+    try {
+      setRemovingId(studentId);
+      const { error } = await removeMentorshipConnection(authSession.user.id, studentId);
+      if (error) throw new Error(error);
+
+      alert("Connection removed successfully.");
+      fetchMentees();
+      fetchConnectionCount();
+    } catch (err: any) {
+      console.error("Error removing connection:", err);
+      alert(err.message || "Failed to remove connection.");
+    } finally {
+      setRemovingId(null);
+    }
+  };
 
   const handleAccept = async (requestId: string, studentId: string) => {
     try {
@@ -162,13 +235,34 @@ export default function AlumniHomePage({ isDarkMode, userProfile, authSession }:
   return (
     <div className="space-y-6">
       {/* Welcome Banner */}
-      <div className={`p-6 sm:p-8 rounded-2xl border ${cardBg}`}>
-        <h1 className={`text-2xl sm:text-3xl font-extrabold tracking-tight mb-2 ${textColor}`}>
-          Welcome back, {userProfile.name}! 👋
-        </h1>
-        <p className={`text-sm sm:text-base ${subColor}`}>
-          Alumni · {userProfile.major ? userProfile.major.toUpperCase() : "CSE"}
-        </p>
+      <div className={`p-6 sm:p-8 rounded-2xl border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 ${cardBg}`}>
+        <div>
+          <h1 className={`text-2xl sm:text-3xl font-extrabold tracking-tight mb-2 ${textColor}`}>
+            Welcome back, {userProfile.name}! 👋
+          </h1>
+          <p className={`text-sm sm:text-base ${subColor}`}>
+            Alumni · {userProfile.major ? userProfile.major.toUpperCase() : "CSE"}
+          </p>
+        </div>
+        <button
+          onClick={() => {
+            fetchRequests();
+            fetchMentees();
+            fetchConnectionCount();
+            fetchResourcesCount();
+          }}
+          className={`px-4 py-2 rounded-xl border text-sm font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer h-fit ${
+            isDarkMode
+              ? "border-[#2f3336] bg-[#16181c] text-[#e7e9ea] hover:bg-[#2f3336]"
+              : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+          }`}
+          title="Refresh statistics"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89M9 11l3-3m0 0l3 3m-3-3v8" />
+          </svg>
+          Sync Stats
+        </button>
       </div>
 
       {/* Stats Grid */}
@@ -179,7 +273,7 @@ export default function AlumniHomePage({ isDarkMode, userProfile, authSession }:
             <Users className="w-5 h-5" />
           </div>
           <div>
-            <p className={`text-2xl font-bold ${textColor}`}>12</p>
+            <p className={`text-2xl font-bold ${textColor}`}>{connectionCount}</p>
             <p className={`text-xs ${subColor}`}>My Connections</p>
           </div>
         </div>
@@ -201,7 +295,7 @@ export default function AlumniHomePage({ isDarkMode, userProfile, authSession }:
             <BookOpen className="w-5 h-5" />
           </div>
           <div>
-            <p className={`text-2xl font-bold ${textColor}`}>5</p>
+            <p className={`text-2xl font-bold ${textColor}`}>{resourcesCount}</p>
             <p className={`text-xs ${subColor}`}>Shared Resources</p>
           </div>
         </div>
@@ -221,7 +315,15 @@ export default function AlumniHomePage({ isDarkMode, userProfile, authSession }:
               >
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <p className={`font-bold text-sm ${textColor}`}>{req.student_name}</p>
+                    <button
+                      onClick={() => {
+                        setSelectedStudentId(req.student_id);
+                        setOnAcceptCallback(() => () => handleAccept(req.id, req.student_id));
+                      }}
+                      className={`font-bold text-sm text-left hover:underline focus:outline-none cursor-pointer ${textColor}`}
+                    >
+                      {req.student_name}
+                    </button>
                     <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold text-slate-400">
                       <Calendar className="w-3.5 h-3.5" />
                       {new Date(req.created_at).toLocaleDateString()}
@@ -279,30 +381,52 @@ export default function AlumniHomePage({ isDarkMode, userProfile, authSession }:
             {mentees.map((mentee) => (
               <div
                 key={mentee.id}
-                className={`p-4 rounded-xl border flex gap-3 items-center ${
+                className={`p-4 rounded-xl border flex items-center justify-between gap-3 ${
                   isDarkMode ? "bg-slate-900/40 border-[#2f3336]/40" : "bg-slate-50 border-slate-200"
                 }`}
               >
-                <div className="w-10 h-10 rounded-full overflow-hidden border border-purple-500/30 flex-shrink-0 bg-slate-800">
-                  {mentee.avatar_url || mentee.profile_pic ? (
-                    <img src={mentee.avatar_url || mentee.profile_pic} alt={mentee.name} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-xs font-bold text-white bg-purple-600">
-                      {mentee.name?.charAt(0)?.toUpperCase()}
-                    </div>
-                  )}
-                </div>
-                <div className="min-w-0">
-                  <p className={`font-bold text-xs truncate ${textColor}`}>{mentee.name}</p>
-                  <p className={`text-[10px] truncate ${subColor}`}>
-                    Dept: {mentee.major ? mentee.major.toUpperCase() : "CSE"}
-                  </p>
-                  {mentee.section && (
-                    <p className="text-[10px] text-purple-400 font-semibold">
-                      Section: {mentee.section}
+                <div className="flex gap-3 items-center min-w-0">
+                  <div className="w-10 h-10 rounded-full overflow-hidden border border-purple-500/30 flex-shrink-0 bg-slate-800">
+                    {mentee.avatar_url || mentee.profile_pic ? (
+                      <img src={mentee.avatar_url || mentee.profile_pic} alt={mentee.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-xs font-bold text-white bg-purple-600">
+                        {mentee.name?.charAt(0)?.toUpperCase()}
+                      </div>
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <button
+                      onClick={() => {
+                        setSelectedStudentId(mentee.id);
+                        setOnAcceptCallback(undefined);
+                      }}
+                      className={`font-bold text-xs truncate text-left hover:underline focus:outline-none cursor-pointer ${textColor}`}
+                    >
+                      {mentee.name}
+                    </button>
+                    <p className={`text-[10px] truncate ${subColor}`}>
+                      Dept: {mentee.major ? mentee.major.toUpperCase() : "CSE"}
                     </p>
-                  )}
+                    {mentee.section && (
+                      <p className="text-[10px] text-purple-400 font-semibold">
+                        Section: {mentee.section}
+                      </p>
+                    )}
+                  </div>
                 </div>
+                <button
+                  onClick={() => handleRemoveConnection(mentee.id, mentee.name)}
+                  disabled={removingId === mentee.id}
+                  className={`p-2 rounded-lg transition-colors flex-shrink-0 cursor-pointer ${
+                    removingId === mentee.id 
+                      ? "text-slate-500 bg-slate-500/10 cursor-not-allowed" 
+                      : "text-red-400 hover:bg-red-500/10 hover:text-red-300"
+                  }`}
+                  title="Remove Connection"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
               </div>
             ))}
           </div>
@@ -319,6 +443,17 @@ export default function AlumniHomePage({ isDarkMode, userProfile, authSession }:
           </p>
         </div>
       </div>
+
+      <StudentProfileView
+        isOpen={!!selectedStudentId}
+        onClose={() => {
+          setSelectedStudentId(null);
+          setOnAcceptCallback(undefined);
+        }}
+        studentId={selectedStudentId || ""}
+        isDarkMode={isDarkMode}
+        onAcceptRequest={onAcceptCallback}
+      />
     </div>
   );
 }

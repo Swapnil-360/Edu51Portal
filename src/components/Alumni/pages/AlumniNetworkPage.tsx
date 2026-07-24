@@ -3,6 +3,9 @@ import { Users, User, Compass, MessageSquare, Briefcase, GraduationCap, Inbox } 
 import { supabase } from "../../../lib/supabase";
 import MentorChat from "../MentorChat";
 import ChipLoader from "../../ui/ChipLoader";
+import StudentProfileView from "../StudentProfileView";
+import { Trash2 } from "lucide-react";
+import { removeMentorshipConnection } from "../../../lib/api/mentorshipApi";
 
 interface Props {
   isDarkMode: boolean;
@@ -22,9 +25,11 @@ export default function AlumniNetworkPage({ isDarkMode, authSession, userProfile
   const [loadingMentees, setLoadingMentees] = useState(false);
   const [loadingFellows, setLoadingFellows] = useState(false);
   const [loadingStudents, setLoadingStudents] = useState(false);
+  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   
   // Chat state
   const [chatTarget, setChatTarget] = useState<any | null>(null);
+  const [removingId, setRemovingId] = useState<string | null>(null);
 
   const currentUserId = authSession?.user?.id;
 
@@ -32,6 +37,26 @@ export default function AlumniNetworkPage({ isDarkMode, authSession, userProfile
   const subColor = isDarkMode ? "text-slate-400" : "text-slate-500";
   const cardBg = isDarkMode ? "bg-[#17181c] border-[#2f3336]/60" : "bg-white border-slate-200 shadow-sm";
   const innerCardBg = isDarkMode ? "bg-slate-900/40 border-[#2f3336]/40" : "bg-slate-50 border-slate-200";
+
+  const handleRemoveConnection = async (studentId: string, studentName: string) => {
+    if (!currentUserId) return;
+    const confirmed = window.confirm(`Are you sure you want to remove this connection with ${studentName}? This action cannot be undone.`);
+    if (!confirmed) return;
+
+    try {
+      setRemovingId(studentId);
+      const { error } = await removeMentorshipConnection(currentUserId, studentId);
+      if (error) throw new Error(error);
+
+      alert("Connection removed successfully.");
+      fetchMentees();
+    } catch (err: any) {
+      console.error("Error removing connection:", err);
+      alert(err.message || "Failed to remove connection.");
+    } finally {
+      setRemovingId(null);
+    }
+  };
 
   // 1. Fetch Connected Mentees
   const fetchMentees = async () => {
@@ -204,20 +229,39 @@ export default function AlumniNetworkPage({ isDarkMode, authSession, userProfile
                       )}
                     </div>
                     <div className="min-w-0">
-                      <p className={`font-bold text-sm truncate ${textColor}`}>{mentee.name}</p>
+                      <button
+                        onClick={() => setSelectedStudentId(mentee.id)}
+                        className={`font-bold text-sm truncate text-left hover:underline focus:outline-none cursor-pointer ${textColor}`}
+                      >
+                        {mentee.name}
+                      </button>
                       <p className="text-xs text-purple-400 font-semibold truncate">{mentee.major || "No Major Specified"}</p>
                       <p className={`text-[10px] truncate ${subColor}`}>
                         {mentee.section || "No Section Specified"}
                       </p>
                     </div>
                   </div>
-                  <button
-                    onClick={() => setChatTarget(mentee)}
-                    className="w-full py-1.5 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20 transition-all font-semibold text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
-                  >
-                    <MessageSquare className="w-3.5 h-3.5" />
-                    Message
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setChatTarget(mentee)}
+                      className="flex-1 py-1.5 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20 transition-all font-semibold text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
+                    >
+                      <MessageSquare className="w-3.5 h-3.5" />
+                      Message
+                    </button>
+                    <button
+                      onClick={() => handleRemoveConnection(mentee.id, mentee.name)}
+                      disabled={removingId === mentee.id}
+                      className={`px-3 py-1.5 rounded-lg transition-all border font-semibold text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-sm ${
+                        removingId === mentee.id
+                          ? "bg-slate-800 text-slate-500 border-slate-700 cursor-not-allowed"
+                          : "bg-red-500/10 hover:bg-red-500/20 text-red-400 border-red-500/20"
+                      }`}
+                      title="Remove Connection"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -306,7 +350,12 @@ export default function AlumniNetworkPage({ isDarkMode, authSession, userProfile
                     )}
                   </div>
                   <div className="min-w-0">
-                    <p className={`font-bold text-sm truncate ${textColor}`}>{student.name}</p>
+                    <button
+                      onClick={() => setSelectedStudentId(student.id)}
+                      className={`font-bold text-sm truncate text-left hover:underline focus:outline-none cursor-pointer ${textColor}`}
+                    >
+                      {student.name}
+                    </button>
                     <p className="text-xs text-purple-400 font-semibold truncate">{student.major || "No Major"}</p>
                     <p className={`text-[10px] truncate ${subColor}`}>
                       {student.section || "No Section"}
@@ -331,6 +380,13 @@ export default function AlumniNetworkPage({ isDarkMode, authSession, userProfile
           onClose={() => setChatTarget(null)}
         />
       )}
+
+      <StudentProfileView
+        isOpen={!!selectedStudentId}
+        onClose={() => setSelectedStudentId(null)}
+        studentId={selectedStudentId || ""}
+        isDarkMode={isDarkMode}
+      />
     </div>
   );
 }
