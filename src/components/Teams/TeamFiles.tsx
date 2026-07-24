@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import {
   FileText, FileSpreadsheet, ImageIcon, Upload, Trash2,
   Download, Globe, Lock, X, Paperclip, Eye, ArrowUpDown,
@@ -601,12 +601,12 @@ function FileCard({
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.15 } }}
       transition={{ type: 'spring', stiffness: 320, damping: 26 }}
-      className={`group relative flex flex-col gap-2.5 p-3.5 rounded-2xl border transition-shadow hover:shadow-md ${
+      className={`group relative flex flex-col gap-3 pt-3 pb-4 px-4 rounded-2xl border transition-shadow hover:shadow-md ${
         isDarkMode ? 'border-[#2f3336] bg-[#17181c] hover:border-[#2f3336]' : 'border-slate-200 bg-white hover:border-slate-300'
       }`}
     >
       {/* Icon + visibility badge row */}
-      <div className="flex items-start justify-between gap-2">
+      <div className="flex items-center justify-between gap-2">
         <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${isDarkMode ? 'bg-[#16181c]' : 'bg-slate-50'}`}>
           <FileIcon mime={file.file_type} size={20} />
         </div>
@@ -641,25 +641,25 @@ function FileCard({
         <p className={`text-xs font-bold leading-tight line-clamp-2 ${isDarkMode ? 'text-[#e7e9ea]' : 'text-slate-900'}`}>
           {file.name}
         </p>
-        <p className={`text-[10px] mt-0.5 ${isDarkMode ? 'text-slate-500' : 'text-[#71767b]'}`}>
+        <p className={`text-[10px] mt-1 ${isDarkMode ? 'text-slate-500' : 'text-[#71767b]'}`}>
           {formatFileSize(file.file_size)}
         </p>
       </div>
 
       {/* Uploader + date */}
-      <div className="flex items-center gap-1.5 min-w-0">
+      <div className="flex items-center gap-1.5 min-w-0 pr-20">
         {(file.uploader?.avatar_url || file.uploader?.profile_pic) ? (
-          <img src={(file.uploader.avatar_url || file.uploader.profile_pic)!} className="w-4 h-4 rounded-full object-cover flex-shrink-0" alt="" />
+          <img src={(file.uploader.avatar_url || file.uploader.profile_pic)!} className="w-5 h-5 rounded-full object-cover flex-shrink-0" alt="" />
         ) : (
-          <div className={`w-4 h-4 rounded-full flex-shrink-0 ${isDarkMode ? 'bg-[#2f3336]' : 'bg-slate-200'}`} />
+          <div className={`w-5 h-5 rounded-full flex-shrink-0 ${isDarkMode ? 'bg-[#2f3336]' : 'bg-slate-200'}`} />
         )}
-        <span className={`text-[10px] ${isDarkMode ? 'text-slate-500' : 'text-[#71767b]'}`}>
+        <span className={`text-[10px] truncate ${isDarkMode ? 'text-slate-500' : 'text-[#71767b]'}`}>
           {file.uploader?.name ?? 'Unknown'} · {relativeDate(file.created_at)}
         </span>
       </div>
 
       {/* Hover actions */}
-      <div className="absolute bottom-2.5 right-2.5 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="absolute bottom-3 right-3 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
         {isPreviewable(file.file_type, file.name) && (
           <button
             onClick={onPreview}
