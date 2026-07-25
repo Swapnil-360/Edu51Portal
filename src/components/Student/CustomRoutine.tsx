@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import { Plus, Trash2, AlertTriangle, Save, Clock, MapPin, Download, X, Layers } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { syncRoutineToGoogleCalendar } from '../../lib/googleCalendarClient';
 import { supabase, supabaseConfigured } from '../../lib/supabase';
 import Loader from '../ui/Loader';
 
@@ -209,7 +210,17 @@ export default function CustomRoutine({ onClose, isDarkMode: dk, userId }: Custo
     const sanitized = enforceOverlapConstraints(next);
     setEntries(sanitized);
     try { localStorage.setItem(storageKey, JSON.stringify(sanitized)); } catch { /* ignore */ }
-    if (!isLoadingFromDb && opts.sync !== false) syncToDatabase(sanitized);
+    if (!isLoadingFromDb && opts.sync !== false) {
+      syncToDatabase(sanitized);
+      // Auto-sync Google Calendar in background if already authorized in this session
+      const hasToken = window.gapi?.client?.getToken() !== null;
+      if (hasToken) {
+        syncRoutineToGoogleCalendar(sanitized, (msg) => {
+          setSyncMessage(msg);
+          setTimeout(() => setSyncMessage(null), 2000);
+        }).catch((err) => console.error('Google Calendar Auto Sync error:', err));
+      }
+    }
   }, [isLoadingFromDb, storageKey, syncToDatabase]);
 
   const handleSave = useCallback(async () => {
@@ -217,7 +228,17 @@ export default function CustomRoutine({ onClose, isDarkMode: dk, userId }: Custo
       localStorage.setItem(storageKey, JSON.stringify(entries));
       const ok = await syncToDatabase(entries);
       setSyncMessage(ok ? '✓ Saved & synced' : '✓ Saved locally');
-      setTimeout(() => setSyncMessage(null), 2000);
+      
+      // Automatically sync to Google Calendar on save
+      try {
+        await syncRoutineToGoogleCalendar(entries, (msg) => {
+          setSyncMessage(msg);
+        });
+      } catch (err) {
+        console.error('Google Calendar Auto Sync error:', err);
+      }
+
+      setTimeout(() => setSyncMessage(null), 3000);
     } catch {
       setSyncMessage('✗ Save failed');
       setTimeout(() => setSyncMessage(null), 2000);
@@ -609,14 +630,16 @@ ${slots.map(s => `<tr>
               );
             })}
           </div>
+        </div>
 
+        <div className="flex-1 min-w-0 pr-4 flex flex-wrap gap-2 items-center">
           {entries.length > 0 && (
             <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${dk ? 'bg-[#16181c] text-slate-400' : 'bg-slate-100 text-slate-500'}`}>
               {entries.length} {entries.length === 1 ? 'class' : 'classes'}
             </span>
           )}
           {(syncMessage || isSyncing) && (
-            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+            <span className={`text-[10px] sm:text-xs font-semibold px-2.5 py-1 rounded-full ${
               isSyncing ? dk ? 'text-slate-500' : 'text-slate-400'
               : syncMessage?.startsWith('✓')
               ? dk ? 'bg-emerald-900/30 text-emerald-400' : 'bg-emerald-50 text-emerald-600'
