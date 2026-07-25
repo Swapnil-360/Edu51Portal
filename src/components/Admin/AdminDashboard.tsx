@@ -3,6 +3,7 @@ import { Bell, Plus, ChevronDown, ChevronUp, AlertCircle, Trash2, Edit2, BarChar
 import MaterialManager from './MaterialManager';
 import { supabase, supabaseConfigured } from '../../lib/supabase';
 import { sendEmailNotification } from '../../lib/emailNotifications';
+import { getAiUsageToday, GEMINI_FREE_TIER_DAILY_LIMIT, type AiUsageToday } from '../../lib/api/adminApi';
 
 interface Notice {
   id: string;
@@ -184,6 +185,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [pendingAlumni, setPendingAlumni] = useState<any[]>([]);
   const [pendingAlumniLoading, setPendingAlumniLoading] = useState(false);
 
+  const [aiUsage, setAiUsage] = useState<AiUsageToday | null>(null);
+
+  useEffect(() => {
+    getAiUsageToday().then(setAiUsage);
+  }, []);
+
   const fetchPendingAlumni = async () => {
     setPendingAlumniLoading(true);
     try {
@@ -328,13 +335,20 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     <div className={`min-h-screen ${isDarkMode ? 'bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900' : 'bg-gradient-to-br from-slate-50 to-blue-50'}`}>
       {/* Header Section */}
       <div className={`${isDarkMode ? 'bg-gradient-to-r from-slate-800/80 to-slate-900/80 border-[#2f3336]/50 backdrop-blur-sm' : 'bg-white/80 border-gray-200 backdrop-blur-sm'} shadow-sm border-b`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5 md:py-6">
-          <h1 className={`text-2xl sm:text-3xl lg:text-4xl font-bold ${isDarkMode ? 'bg-gradient-to-r from-blue-400 to-cyan-300 bg-clip-text text-transparent' : 'bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent'}`}>
-            Admin Dashboard
-          </h1>
-          <p className={`${isDarkMode ? 'text-gray-300' : 'text-gray-600'} mt-2 sm:mt-3 text-sm sm:text-base font-medium`}>
-            Manage notices, emergencies, and view platform statistics
-          </p>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5 md:py-6 flex items-center justify-between gap-4">
+          <div className="min-w-0">
+            <h1 className={`text-2xl sm:text-3xl lg:text-4xl font-bold ${isDarkMode ? 'bg-gradient-to-r from-blue-400 to-cyan-300 bg-clip-text text-transparent' : 'bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent'}`}>
+              Admin Dashboard
+            </h1>
+            <p className={`${isDarkMode ? 'text-gray-300' : 'text-gray-600'} mt-2 sm:mt-3 text-sm sm:text-base font-medium`}>
+              Manage notices, emergencies, and view platform statistics
+            </p>
+          </div>
+          <img
+            src="/image.png"
+            alt="BUBT"
+            className="block w-14 h-14 sm:w-20 sm:h-20 md:w-24 md:h-24 object-contain flex-shrink-0 opacity-90"
+          />
         </div>
       </div>
 
@@ -439,6 +453,39 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <div className={`mt-2 h-1 w-8 rounded-full ${isDarkMode ? 'bg-gradient-to-r from-purple-500 to-purple-400' : 'bg-gradient-to-r from-purple-500 to-purple-600'}`}></div>
               </div>
             </div>
+
+            {/* AI Usage Card — tracks combined usage against Gemini's free-tier
+                project cap (250 req/day), since our own 30/user/day limit
+                won't stop the shared project ceiling from being hit first. */}
+            {(() => {
+              const aiPct = aiUsage ? Math.min(100, (aiUsage.totalMessages / GEMINI_FREE_TIER_DAILY_LIMIT) * 100) : 0;
+              const aiBarColor = aiPct >= 90 ? 'bg-red-500' : aiPct >= 70 ? 'bg-amber-500' : 'bg-pink-500';
+              return (
+                <div
+                  title="Combined AI chat requests today vs. Gemini's free-tier daily project limit"
+                  className={`col-span-2 group relative overflow-hidden rounded-xl transition-all duration-300 ${isDarkMode ? 'bg-gradient-to-br from-slate-700/40 to-slate-800/40 backdrop-blur-xl border border-pink-500/20 hover:border-pink-400/40' : 'bg-gradient-to-br from-pink-50/80 to-pink-100/80 backdrop-blur-xl border border-pink-200/50 hover:border-pink-300/80'}`}
+                >
+                  <div className="relative z-10 p-3 sm:p-4">
+                    <div className="flex items-start justify-between mb-2">
+                      <p className={`text-xs font-semibold uppercase tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>AI Usage Today</p>
+                      <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-pink-500/20 text-pink-400 group-hover:bg-pink-500/30' : 'bg-pink-200 text-pink-600 group-hover:bg-pink-300'} transition-all group-hover:scale-110`}>
+                        <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />
+                      </div>
+                    </div>
+                    <p className={`text-xl sm:text-2xl font-black ${isDarkMode ? 'text-pink-300' : 'text-pink-700'} transition-colors`}>
+                      {aiUsage ? aiUsage.totalMessages : '—'}
+                      <span className={`text-sm font-semibold ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}> / {GEMINI_FREE_TIER_DAILY_LIMIT} requests</span>
+                    </p>
+                    <div className={`mt-2.5 h-2 rounded-full overflow-hidden ${isDarkMode ? 'bg-[#2f3336]' : 'bg-slate-200'}`}>
+                      <div className={`h-full rounded-full transition-all duration-500 ${aiBarColor}`} style={{ width: `${Math.max(2, aiPct)}%` }} />
+                    </div>
+                    <p className={`mt-1.5 text-[10px] ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>
+                      {aiUsage ? `${aiPct.toFixed(0)}% of free-tier cap · ${aiUsage.activeUsers} user${aiUsage.activeUsers === 1 ? '' : 's'} active` : 'Loading…'}
+                    </p>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         </div>
 

@@ -85,19 +85,21 @@ Deno.serve(async (req) => {
     .maybeSingle();
 
   if (usageRow && usageRow.message_count >= DAILY_LIMIT) {
-    return json({ error: "daily_limit" }, 429);
+    return json({ error: "daily_limit", limit: DAILY_LIMIT, remaining: 0 }, 429);
   }
 
+  const newCount = (usageRow?.message_count ?? 0) + 1;
   if (usageRow) {
     await admin
       .from("ai_chat_usage")
-      .update({ message_count: usageRow.message_count + 1 })
+      .update({ message_count: newCount })
       .eq("id", usageRow.id);
   } else {
     await admin
       .from("ai_chat_usage")
-      .insert({ user_id: userId, usage_date: today, message_count: 1 });
+      .insert({ user_id: userId, usage_date: today, message_count: newCount });
   }
+  const remaining = Math.max(0, DAILY_LIMIT - newCount);
 
   try {
     const contents = [
@@ -127,7 +129,7 @@ Deno.serve(async (req) => {
     const reply: string | undefined = data?.candidates?.[0]?.content?.parts?.[0]?.text;
     if (!reply) return json({ error: "Empty response from Gemini" }, 502);
 
-    return json({ reply });
+    return json({ reply, remaining, limit: DAILY_LIMIT });
   } catch (err) {
     console.error("ai-chat error:", err);
     return json({ error: "Internal error" }, 500);

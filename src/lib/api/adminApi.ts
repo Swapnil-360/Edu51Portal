@@ -33,3 +33,21 @@ export async function deleteUserAccount(targetId: string): Promise<DeleteUserRes
   if (data?.error) return { success: false, error: data.error };
   return { success: true, teamsTransferred: data?.teamsTransferred ?? [] };
 }
+
+export interface AiUsageToday {
+  totalMessages: number;
+  activeUsers: number;
+}
+
+// Gemini free-tier project cap for gemini-2.5-flash is 250 requests/day —
+// this lets admins see how close today's combined usage is to that ceiling.
+export const GEMINI_FREE_TIER_DAILY_LIMIT = 250;
+
+export async function getAiUsageToday(): Promise<AiUsageToday | null> {
+  const { data, error } = await supabase.rpc("admin_get_ai_usage_today").single<{
+    total_messages: number;
+    active_users: number;
+  }>();
+  if (error || !data) return null;
+  return { totalMessages: Number(data.total_messages), activeUsers: Number(data.active_users) };
+}

@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Send, Sparkles, BrainCircuit } from "lucide-react";
 import { AstronautIcon } from "../ui/animated-cosmic-icons";
-import { sendChatMessage, type ChatTurn } from "../../lib/api/aiChatApi";
+import { sendChatMessage, getRemainingMessagesToday, type ChatTurn } from "../../lib/api/aiChatApi";
 
 function getPortalRoot(): HTMLElement {
   let el = document.getElementById("ai-assistant-portal");
@@ -70,6 +70,8 @@ export function AIAssistant({ isDarkMode: dk, userId }: Props) {
   const [messages, setMessages] = useState<Message[]>([WELCOME]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [remaining, setRemaining] = useState<number | null>(null);
+  const [dailyLimit, setDailyLimit] = useState(30);
   const listRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -101,6 +103,11 @@ export function AIAssistant({ isDarkMode: dk, userId }: Props) {
     if (open) setTimeout(() => scrollToBottom("instant"), 50);
   }, [open]);
 
+  useEffect(() => {
+    if (!userId) return;
+    getRemainingMessagesToday(userId).then(setRemaining).catch(() => {});
+  }, [userId]);
+
   const handleSend = async () => {
     const text = input.trim();
     if (!text || loading) return;
@@ -117,16 +124,19 @@ export function AIAssistant({ isDarkMode: dk, userId }: Props) {
     setTimeout(() => scrollToBottom(), 30);
 
     try {
-      const reply = await sendChatMessage(text, history);
-      setMessages((prev) => [...prev, { role: "model", text: reply }]);
+      const res = await sendChatMessage(text, history);
+      setMessages((prev) => [...prev, { role: "model", text: res.reply }]);
+      setRemaining(res.remaining);
+      setDailyLimit(res.limit);
     } catch (err) {
       const isLimit = err instanceof Error && err.message === "daily_limit";
+      if (isLimit) setRemaining(0);
       setMessages((prev) => [
         ...prev,
         {
           role: "model",
           text: isLimit
-            ? "You've reached today's limit of 30 messages. Come back tomorrow!"
+            ? `You've reached today's limit of ${dailyLimit} messages. Come back tomorrow!`
             : "Something went wrong on my end. Try again in a moment.",
         },
       ]);
@@ -228,6 +238,22 @@ export function AIAssistant({ isDarkMode: dk, userId }: Props) {
                     </p>
                   </div>
                 </div>
+                <div className="flex items-center gap-2">
+                  {remaining !== null && (
+                    <span
+                      title={`${remaining} of ${dailyLimit} daily messages left`}
+                      style={{
+                        fontSize: 10.5,
+                        fontWeight: 600,
+                        padding: "3px 7px",
+                        borderRadius: 999,
+                        color: remaining <= 5 ? "#ef4444" : dk ? "#71767b" : "#64748b",
+                        backgroundColor: remaining <= 5 ? (dk ? "#ef444422" : "#fef2f2") : dk ? "#2f333644" : "#f1f5f9",
+                      }}
+                    >
+                      {remaining}/{dailyLimit} left
+                    </span>
+                  )}
                 <button
                   onClick={() => setOpen(false)}
                   className="flex items-center justify-center w-7 h-7 rounded-lg transition-colors"
@@ -243,6 +269,7 @@ export function AIAssistant({ isDarkMode: dk, userId }: Props) {
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
+                </div>
               </div>
 
               {/* Messages */}
@@ -261,6 +288,19 @@ export function AIAssistant({ isDarkMode: dk, userId }: Props) {
                     <p style={{ fontSize: 11, color: dk ? "#71767b" : "#94a3b8", maxWidth: 180, lineHeight: 1.5 }}>
                       Platform navigation or coursework — I've got you.
                     </p>
+                    <span
+                      style={{
+                        marginTop: 10,
+                        fontSize: 10,
+                        fontWeight: 600,
+                        padding: "3px 8px",
+                        borderRadius: 999,
+                        color: dk ? "#71767b" : "#64748b",
+                        backgroundColor: dk ? "#2f333644" : "#f1f5f9",
+                      }}
+                    >
+                      {remaining !== null ? `${remaining}/${dailyLimit} messages left today` : `${dailyLimit} messages/day limit`}
+                    </span>
                   </div>
                 )}
 
