@@ -235,40 +235,30 @@ export default function AlumniHomePage({ isDarkMode, userProfile, authSession }:
   return (
     <div className="space-y-6">
       {/* Welcome Banner */}
-      <div className={`p-6 sm:p-8 rounded-2xl border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 ${cardBg}`}>
-        <div>
-          <h1 className={`text-2xl sm:text-3xl font-extrabold tracking-tight mb-2 ${textColor}`}>
-            Welcome back, {userProfile.name}! 👋
-          </h1>
-          <p className={`text-sm sm:text-base ${subColor}`}>
+      <div className={`relative overflow-hidden p-6 sm:p-8 rounded-2xl border flex items-center justify-between gap-4 ${cardBg}`}>
+        <div
+          className="pointer-events-none absolute -top-16 -right-16 w-56 h-56 rounded-full opacity-10"
+          style={{ background: "radial-gradient(circle, #a855f7, transparent 70%)" }}
+        />
+        <div className="relative min-w-0">
+          <span className="inline-block text-[11px] font-semibold tracking-wide uppercase text-purple-500 mb-2">
             Alumni · {userProfile.major ? userProfile.major.toUpperCase() : "CSE"}
-          </p>
+          </span>
+          <h1 className={`text-xl sm:text-2xl md:text-3xl font-extrabold tracking-tight break-words ${textColor}`}>
+            Welcome back, {userProfile.name}
+          </h1>
         </div>
-        <button
-          onClick={() => {
-            fetchRequests();
-            fetchMentees();
-            fetchConnectionCount();
-            fetchResourcesCount();
-          }}
-          className={`px-4 py-2 rounded-xl border text-sm font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer h-fit ${
-            isDarkMode
-              ? "border-[#2f3336] bg-[#16181c] text-[#e7e9ea] hover:bg-[#2f3336]"
-              : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-          }`}
-          title="Refresh statistics"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89M9 11l3-3m0 0l3 3m-3-3v8" />
-          </svg>
-          Sync Stats
-        </button>
+        <img
+          src="/image.png"
+          alt="BUBT"
+          className="relative block w-14 h-14 sm:w-20 sm:h-20 md:w-24 md:h-24 object-contain flex-shrink-0 opacity-90"
+        />
       </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {/* Stat 1 */}
-        <div className={`p-5 rounded-xl border flex items-center gap-4 ${cardBg}`}>
+        <div className={`p-5 rounded-xl border flex items-center gap-4 transition-shadow hover:shadow-md ${cardBg}`}>
           <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500">
             <Users className="w-5 h-5" />
           </div>
@@ -279,7 +269,7 @@ export default function AlumniHomePage({ isDarkMode, userProfile, authSession }:
         </div>
 
         {/* Stat 2 */}
-        <div className={`p-5 rounded-xl border flex items-center gap-4 ${cardBg}`}>
+        <div className={`p-5 rounded-xl border flex items-center gap-4 transition-shadow hover:shadow-md ${cardBg}`}>
           <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-500">
             <Compass className="w-5 h-5" />
           </div>
@@ -290,7 +280,7 @@ export default function AlumniHomePage({ isDarkMode, userProfile, authSession }:
         </div>
 
         {/* Stat 3 */}
-        <div className={`p-5 rounded-xl border flex items-center gap-4 ${cardBg}`}>
+        <div className={`p-5 rounded-xl border flex items-center gap-4 transition-shadow hover:shadow-md ${cardBg}`}>
           <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500">
             <BookOpen className="w-5 h-5" />
           </div>
@@ -342,17 +332,21 @@ export default function AlumniHomePage({ isDarkMode, userProfile, authSession }:
                   )}
                 </div>
 
-                <div className="flex gap-2 border-t border-[#2f3336]/10 pt-3 mt-2">
+                <div className={`flex gap-2 border-t pt-3 mt-2 ${isDarkMode ? "border-[#2f3336]/60" : "border-slate-200"}`}>
                   <button
                     onClick={() => handleDecline(req.id, req.student_id)}
-                    className="flex-1 py-1.5 rounded-lg text-xs font-bold transition-all bg-red-500/20 text-red-300 hover:bg-red-500/30 flex items-center justify-center gap-1 cursor-pointer"
+                    className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-colors flex items-center justify-center gap-1 cursor-pointer border ${
+                      isDarkMode
+                        ? "border-red-500/30 text-red-400 hover:bg-red-500/10"
+                        : "border-red-200 text-red-600 hover:bg-red-50"
+                    }`}
                   >
                     <X className="w-3.5 h-3.5" />
                     Decline
                   </button>
                   <button
                     onClick={() => handleAccept(req.id, req.student_id)}
-                    className="flex-1 py-1.5 rounded-lg text-xs font-bold transition-all bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 flex items-center justify-center gap-1 cursor-pointer"
+                    className="flex-1 py-1.5 rounded-lg text-xs font-bold transition-colors flex items-center justify-center gap-1 cursor-pointer bg-emerald-600 text-white hover:bg-emerald-700"
                   >
                     <Check className="w-3.5 h-3.5" />
                     Accept

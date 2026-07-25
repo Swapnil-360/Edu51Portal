@@ -205,7 +205,7 @@ export default function AlumniDashboard({
 
               <button
                 onClick={() => setCurrentView("home")}
-                className="hidden lg:flex items-center focus:outline-none"
+                className="header-logo-btn hidden lg:flex items-center focus:outline-none"
                 title="Alumni Portal Home"
               >
                 <img
@@ -230,7 +230,7 @@ export default function AlumniDashboard({
               {/* Mobile center logo */}
               <button
                 onClick={() => setCurrentView("home")}
-                className="flex lg:hidden items-center focus:outline-none"
+                className="header-logo-btn flex lg:hidden items-center focus:outline-none"
                 title="Alumni Portal Home"
               >
                 <img
