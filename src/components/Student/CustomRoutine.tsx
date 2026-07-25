@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import { Plus, Trash2, AlertTriangle, Save, Clock, MapPin, Download, X, Layers } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { syncRoutineToGoogleCalendar } from '../../lib/googleCalendarClient';
 import { supabase, supabaseConfigured } from '../../lib/supabase';
 import Loader from '../ui/Loader';
 
@@ -212,14 +211,6 @@ export default function CustomRoutine({ onClose, isDarkMode: dk, userId }: Custo
     try { localStorage.setItem(storageKey, JSON.stringify(sanitized)); } catch { /* ignore */ }
     if (!isLoadingFromDb && opts.sync !== false) {
       syncToDatabase(sanitized);
-      // Auto-sync Google Calendar in background if already authorized in this session
-      const hasToken = window.gapi?.client?.getToken() !== null;
-      if (hasToken) {
-        syncRoutineToGoogleCalendar(sanitized, (msg) => {
-          setSyncMessage(msg);
-          setTimeout(() => setSyncMessage(null), 2000);
-        }).catch((err) => console.error('Google Calendar Auto Sync error:', err));
-      }
     }
   }, [isLoadingFromDb, storageKey, syncToDatabase]);
 
@@ -228,16 +219,6 @@ export default function CustomRoutine({ onClose, isDarkMode: dk, userId }: Custo
       localStorage.setItem(storageKey, JSON.stringify(entries));
       const ok = await syncToDatabase(entries);
       setSyncMessage(ok ? '✓ Saved & synced' : '✓ Saved locally');
-      
-      // Automatically sync to Google Calendar on save
-      try {
-        await syncRoutineToGoogleCalendar(entries, (msg) => {
-          setSyncMessage(msg);
-        });
-      } catch (err) {
-        console.error('Google Calendar Auto Sync error:', err);
-      }
-
       setTimeout(() => setSyncMessage(null), 3000);
     } catch {
       setSyncMessage('✗ Save failed');

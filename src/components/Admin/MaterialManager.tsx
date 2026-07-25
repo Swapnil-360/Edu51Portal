@@ -17,6 +17,15 @@ import {
   DepartmentConfig, listDepartmentConfigs, upsertDepartmentConfig, setDepartmentActive,
 } from '../../lib/api/studyApi';
 import { DEPARTMENTS } from '../../config/departments';
+import { useGoogleDriveAuth } from '../../hooks/useGoogleDriveAuth';
+import { pickDriveFolder } from '../../lib/googleDrivePicker';
+
+// Picker needs to open at the PARENT of each row's target folder (not the
+// target folder itself) so that folder shows up as a selectable item,
+// rather than browsing into its contents. The Drive tab (legacy majors) and
+// Departments tab live under two different shared Drive roots.
+const DRIVE_MAJORS_ROOT_FOLDER_ID = '1lFktSbOz-voVmiSnYJzuHbtSfpeqsuAx';
+const DEPARTMENTS_ROOT_FOLDER_ID = '1mKyhFh6Ealtxjvb2TCdcijqTJVkb8DlF';
 
 interface Props {
   isDarkMode: boolean;
@@ -149,6 +158,29 @@ export default function MaterialManager({ isDarkMode, currentUserId, onPreviewFi
   const [departmentEditing, setDepartmentEditing] = useState<Record<string, { folderId: string; label: string }>>({});
   const [departmentSaving, setDepartmentSaving] = useState<string | null>(null);
   const [departmentTogglingActive, setDepartmentTogglingActive] = useState<string | null>(null);
+  const [pickingKey, setPickingKey] = useState<string | null>(null);
+
+  const { getToken: getDriveToken } = useGoogleDriveAuth();
+
+  // Re-selecting a folder here (even one already configured) authorizes it
+  // under the drive.file scope via Google's own picker UI — the path off
+  // the full `drive` OAuth scope without breaking existing folder access.
+  const handlePickFolder = useCallback(
+    async (pickKey: string, parentFolderId: string | undefined, onPicked: (folderId: string, name: string) => void) => {
+      setPickingKey(pickKey);
+      try {
+        const token = await getDriveToken();
+        const picked = await pickDriveFolder(token, parentFolderId);
+        if (picked) onPicked(picked.id, picked.name);
+      } catch (err) {
+        console.error('Drive folder picker failed:', err);
+        alert(`Couldn't open the Drive folder picker: ${err instanceof Error ? err.message : String(err)}`);
+      } finally {
+        setPickingKey(null);
+      }
+    },
+    [getDriveToken],
+  );
 
   // Modals
   const [showCreateFolder, setShowCreateFolder] = useState(false);
@@ -374,13 +406,29 @@ export default function MaterialManager({ isDarkMode, currentUserId, onPreviewFi
                   )}
                 </div>
                 <div className="space-y-2">
-                  <input
-                    type="text"
-                    placeholder="Drive Folder ID (e.g. 1lFktSbOz-voVmiSnYJzuHbtSfpeqsuAx)"
-                    value={edit.folderId}
-                    onChange={e => setDriveEditing(prev => ({ ...prev, [key]: { ...edit, folderId: e.target.value } }))}
-                    className={input}
-                  />
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      placeholder="Drive Folder ID (e.g. 1lFktSbOz-voVmiSnYJzuHbtSfpeqsuAx)"
+                      value={edit.folderId}
+                      onChange={e => setDriveEditing(prev => ({ ...prev, [key]: { ...edit, folderId: e.target.value } }))}
+                      className={cls(input, 'flex-1')}
+                    />
+                    <button
+                      type="button"
+                      disabled={pickingKey === `drive-${key}`}
+                      onClick={() => handlePickFolder(`drive-${key}`, DRIVE_MAJORS_ROOT_FOLDER_ID, (folderId, name) =>
+                        setDriveEditing(prev => ({ ...prev, [key]: { folderId, label: prev[key]?.label || name } })))}
+                      title="Select this folder through Google Drive's own picker (authorizes it for the app)"
+                      className={cls(
+                        'flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors border',
+                        dk ? 'border-[#2f3336] text-slate-300 hover:bg-[#2f3336]' : 'border-slate-200 text-slate-600 hover:bg-slate-50',
+                      )}
+                    >
+                      {pickingKey === `drive-${key}` ? <Loader2 size={12} className="animate-spin" /> : <FolderOpen size={12} />}
+                      Pick
+                    </button>
+                  </div>
                   <div className="flex items-center gap-2">
                     <input
                       type="text"
@@ -479,13 +527,29 @@ export default function MaterialManager({ isDarkMode, currentUserId, onPreviewFi
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <input
-                    type="text"
-                    placeholder="Drive Folder ID (e.g. 1lFktSbOz-voVmiSnYJzuHbtSfpeqsuAx)"
-                    value={edit.folderId}
-                    onChange={e => setDepartmentEditing(prev => ({ ...prev, [d.key]: { ...edit, folderId: e.target.value } }))}
-                    className={input}
-                  />
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      placeholder="Drive Folder ID (e.g. 1lFktSbOz-voVmiSnYJzuHbtSfpeqsuAx)"
+                      value={edit.folderId}
+                      onChange={e => setDepartmentEditing(prev => ({ ...prev, [d.key]: { ...edit, folderId: e.target.value } }))}
+                      className={cls(input, 'flex-1')}
+                    />
+                    <button
+                      type="button"
+                      disabled={pickingKey === `dept-${d.key}`}
+                      onClick={() => handlePickFolder(`dept-${d.key}`, DEPARTMENTS_ROOT_FOLDER_ID, (folderId, name) =>
+                        setDepartmentEditing(prev => ({ ...prev, [d.key]: { folderId, label: prev[d.key]?.label || name } })))}
+                      title="Select this folder through Google Drive's own picker (authorizes it for the app)"
+                      className={cls(
+                        'flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors border',
+                        dk ? 'border-[#2f3336] text-slate-300 hover:bg-[#2f3336]' : 'border-slate-200 text-slate-600 hover:bg-slate-50',
+                      )}
+                    >
+                      {pickingKey === `dept-${d.key}` ? <Loader2 size={12} className="animate-spin" /> : <FolderOpen size={12} />}
+                      Pick
+                    </button>
+                  </div>
                   <div className="flex items-center gap-2">
                     <input
                       type="text"

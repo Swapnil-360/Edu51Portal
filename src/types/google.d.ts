@@ -15,5 +15,6 @@ interface Window {
         revoke: (token: string, callback: () => void) => void;
       };
     };
+    picker: any;
   };
 }

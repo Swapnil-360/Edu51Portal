@@ -1,8 +1,12 @@
 import { useState, useCallback, useEffect } from 'react';
+import { loadGisScript } from '../lib/googleIdentityServices';
 
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID as string;
-const SCOPE = 'https://www.googleapis.com/auth/drive openid profile email';
-const CALLBACK_PATH = '/oauth-callback.html';
+// drive.file: only files/folders the app created OR that the admin has
+// explicitly authorized via the Drive Picker (see MaterialManager's "Pick"
+// buttons) — narrower than the full `drive` scope, which Google classifies
+// as restricted and requires a paid CASA security assessment to verify.
+const SCOPE = 'https://www.googleapis.com/auth/drive.file openid profile email';
 
 export interface DriveUserProfile {
   email: string;
@@ -26,63 +30,35 @@ async function fetchProfile(accessToken: string): Promise<DriveUserProfile | nul
   }
 }
 
-function openAuthPopup(): Promise<string> {
-  const redirectUri = `${window.location.origin}${CALLBACK_PATH}`;
-  const state = Array.from(crypto.getRandomValues(new Uint8Array(16)))
-    .map(b => b.toString(16).padStart(2, '0')).join('');
-  const params = new URLSearchParams({
-    client_id: CLIENT_ID,
-    redirect_uri: redirectUri,
-    response_type: 'token',
-    scope: SCOPE,
-    prompt: 'select_account',
-    state,
-  });
-
-  const w = 520, h = 620;
-  const left = Math.round(window.screenLeft + (window.outerWidth - w) / 2);
-  const top = Math.round(window.screenTop + (window.outerHeight - h) / 2);
-  const popup = window.open(
-    `https://accounts.google.com/o/oauth2/v2/auth?${params}`,
-    'gdrive_oauth',
-    `width=${w},height=${h},left=${left},top=${top},popup=1`,
-  );
-
+// Uses Google Identity Services' token client instead of hand-rolling the
+// redirect-based implicit flow — Google's OAuth project checkup flags raw
+// response_type=token popups as a deprecated/insecure flow, and GIS also
+// gets us incremental-authorization support for free via
+// include_granted_scopes.
+function requestDriveToken(): Promise<string> {
   return new Promise((resolve, reject) => {
-    if (!popup) {
-      reject(new Error('Popup was blocked — please allow popups for this site and try again.'));
-      return;
-    }
-
-    let settled = false;
-
-    function cleanup() {
-      window.removeEventListener('message', onMessage);
-      clearTimeout(timeoutId);
-      // Never call popup.closed or popup.close() from the parent —
-      // Google's COOP header permanently blocks those calls and logs
-      // console errors that can't be suppressed. The popup closes itself.
-    }
-
-    function onMessage(event: MessageEvent) {
-      if (event.origin !== window.location.origin) return;
-      if (event.data?.type === 'GDRIVE_OAUTH_SUCCESS') {
-        if (event.data.state && event.data.state !== state) {
-          settled = true; cleanup(); reject(new Error('State mismatch')); return;
+    loadGisScript()
+      .then(() => {
+        if (!CLIENT_ID) {
+          reject(new Error('Google Client ID is not configured. Please add VITE_GOOGLE_CLIENT_ID to your .env file'));
+          return;
         }
-        settled = true; cleanup(); resolve(event.data.token as string);
-      } else if (event.data?.type === 'GDRIVE_OAUTH_ERROR') {
-        settled = true; cleanup(); reject(new Error(event.data.error ?? 'OAuth failed'));
-      }
-    }
 
-    window.addEventListener('message', onMessage);
+        const client = window.google.accounts.oauth2.initTokenClient({
+          client_id: CLIENT_ID,
+          scope: SCOPE,
+          callback: (response: any) => {
+            if (response.error) {
+              reject(new Error(response.error));
+              return;
+            }
+            resolve(response.access_token as string);
+          },
+        });
 
-    // Fallback: if the user closes the popup without completing sign-in,
-    // no postMessage ever arrives — reject after 5 minutes.
-    const timeoutId = setTimeout(() => {
-      if (!settled) { settled = true; cleanup(); reject(new Error('Sign-in cancelled or timed out')); }
-    }, 300_000);
+        client.requestAccessToken({ prompt: 'consent' });
+      })
+      .catch(reject);
   });
 }
 
@@ -111,7 +87,7 @@ export function useGoogleDriveAuth() {
     }
 
     setLoading(true);
-    return openAuthPopup()
+    return requestDriveToken()
       .then(t => {
         _cached = { token: t, expiresAt: Date.now() + 55 * 60 * 1000 };
         setToken(t);
