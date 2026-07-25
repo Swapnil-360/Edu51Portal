@@ -359,7 +359,7 @@ export default function AlumniDirectoryPage({
                     <p className={`text-xs mb-4 ${subColor}`}>Based on your major and skills</p>
                     <div className="flex gap-3 sm:gap-4 overflow-x-auto custom-scrollbar snap-x snap-mandatory -mx-1 px-1 pb-2">
                       {suggestedMentors.map((a) => (
-                        <div key={a.id} className="w-[240px] sm:w-64 flex-shrink-0 snap-start">
+                        <div key={a.id} className="w-[280px] sm:w-72 flex-shrink-0 snap-start flex">
                           <AlumniCard alumni={a} isDarkMode={isDarkMode} onViewProfile={onViewProfile} />
                         </div>
                       ))}

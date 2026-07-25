@@ -12,7 +12,7 @@ export default function AlumniCard({ alumni, isDarkMode, onViewProfile }: Props)
 
   return (
     <div
-      className={`rounded-xl border p-4 flex flex-col justify-between overflow-hidden transition-all duration-200 ${
+      className={`h-full rounded-xl border p-4 flex flex-col justify-between overflow-hidden transition-all duration-200 ${
         isDarkMode
           ? "bg-[#17181c] border-[#2f3336]/50 hover:border-[#38444d] hover:shadow-lg hover:shadow-black/20"
           : "bg-white border-slate-200 hover:border-slate-300 hover:shadow-md hover:shadow-slate-100"
@@ -73,19 +73,21 @@ export default function AlumniCard({ alumni, isDarkMode, onViewProfile }: Props)
         </div>
       )}
 
-      <div className="mt-4 pt-3 border-t border-[#2f3336]/10 flex flex-wrap items-center justify-between gap-2">
+      <div className="mt-4 pt-3 border-t border-[#2f3336]/10 flex items-center justify-between gap-2">
         {/* Available for Mentorship Badge */}
         {alumni.is_available_for_mentorship ? (
-          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-green-500/10 text-green-400 border border-green-500/20 whitespace-nowrap">
+          <span className="px-2 py-0.5 rounded-full text-[9px] font-semibold bg-green-500/10 text-green-400 border border-green-500/20 whitespace-nowrap">
             Available for Mentorship
           </span>
         ) : (
-          <span className="text-[10px] text-slate-500 italic">Not mentoring currently</span>
+          <span className="px-2 py-0.5 rounded-full text-[9px] font-medium bg-slate-500/10 text-slate-400 border border-slate-500/10 whitespace-nowrap">
+            Not mentoring currently
+          </span>
         )}
 
         <button
           onClick={() => onViewProfile(alumni.id)}
-          className="px-3.5 py-1.5 rounded-lg bg-[#1e9df1] text-white text-xs font-semibold hover:bg-[#1677cc] transition-colors whitespace-nowrap shadow-sm ml-auto"
+          className="px-2.5 py-1 rounded-lg bg-[#1e9df1] text-white text-xs font-semibold hover:bg-[#1677cc] transition-colors whitespace-nowrap shadow-sm"
         >
           View Profile
         </button>

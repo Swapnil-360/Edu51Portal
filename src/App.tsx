@@ -232,6 +232,7 @@ function App() {
 
   const [alumniSubView, setAlumniSubView] = useState<"directory" | "profile" | "register">("directory");
   const [selectedAlumniId, setSelectedAlumniId] = useState<string | null>(null);
+  const [adminExitConfirm, setAdminExitConfirm] = useState<{ view: any; extra: string | null } | null>(null);
 
   // Helper to change view and update browser history (memoized)
   const goToView = useCallback(
@@ -259,7 +260,12 @@ function App() {
         | "shared-resources"
         | "meet-team",
       extra?: string | null,
+      bypassAdminCheck = false,
     ) => {
+      if (currentView === "admin" && view !== "admin" && !bypassAdminCheck) {
+        setAdminExitConfirm({ view, extra });
+        return;
+      }
       let path = "/";
       if (view === "admin") path = "/admin";
       else if (view === "section5" || view === "ai") path = "/ai";
@@ -294,7 +300,7 @@ function App() {
       if (!["ai", "section5"].includes(view)) setMajorAccessMessage(null);
       startTransition(() => setCurrentView(view));
     },
-    [setAlumniSubView, setSelectedAlumniId],
+    [setAlumniSubView, setSelectedAlumniId, currentView],
   );
 
   // Admin status is DB-driven (profiles.is_admin), applied after the profile loads.
@@ -2890,7 +2896,7 @@ Best of luck with your studies!
   // Exit the admin view back to home. The admin role itself is DB-driven and
   // persists — this just leaves the dashboard, it does not revoke admin.
   const handleExitAdmin = () => {
-    goToView("home");
+    goToView("home", null, true);
   };
 
   // Admin: Delete material
@@ -3484,7 +3490,7 @@ For any queries, contact your course instructors or the department.`,
       "userProfileIsAlumni",
       "userProfileIsVerified",
     ].forEach((k) => localStorage.removeItem(k));
-    goToView("home");
+    goToView("home", null, true);
     showMajorAccessNotification(
       "success",
       "Signed out successfully. See you soon!",
@@ -3911,7 +3917,7 @@ For any queries, contact your course instructors or the department.`,
                             "userProfileIsAlumni",
                             "userProfileIsVerified",
                           ].forEach((k) => localStorage.removeItem(k));
-                          goToView("home");
+                          goToView("home", null, true);
                           showMajorAccessNotification(
                             "success",
                             "Signed out successfully. See you soon!",
@@ -4481,7 +4487,7 @@ For any queries, contact your course instructors or the department.`,
                       "userProfileIsVerified",
                     ];
                     keysToRemove.forEach((key) => localStorage.removeItem(key));
-                    goToView("home");
+                    goToView("home", null, true);
                     showMajorAccessNotification(
                       "success",
                       "Signed out successfully. See you soon!",
@@ -8676,6 +8682,60 @@ For any queries, contact your course instructors or the department.`,
         <Suspense fallback={null}>
           <AIAssistant isDarkMode={isDarkMode} userId={authSession.user.id} />
         </Suspense>
+      )}
+
+      {/* Admin Exit Confirmation Modal */}
+      {adminExitConfirm && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div
+            className={`w-full max-w-sm rounded-2xl p-6 shadow-2xl border transition-all duration-300 ${
+              isDarkMode
+                ? "bg-[#17181c] border-[#2f3336]/60 text-white"
+                : "bg-white border-slate-200 text-slate-900"
+            }`}
+          >
+            <div className="flex flex-col items-center text-center gap-4">
+              {/* Icon */}
+              <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center text-red-500">
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+
+              {/* Title & Desc */}
+              <div>
+                <h3 className="text-lg font-bold">Exit Admin Panel?</h3>
+                <p className={`text-xs mt-2 leading-relaxed ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                  Are you sure you want to exit from the admin panel?
+                </p>
+              </div>
+
+              {/* Buttons */}
+              <div className="flex items-center gap-3 w-full mt-2">
+                <button
+                  onClick={() => setAdminExitConfirm(null)}
+                  className={`flex-1 py-2.5 rounded-xl text-xs font-semibold border transition-colors ${
+                    isDarkMode
+                      ? "border-[#2f3336] hover:bg-[#202327] text-slate-300"
+                      : "border-slate-200 hover:bg-slate-50 text-slate-700"
+                  }`}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    const target = adminExitConfirm;
+                    setAdminExitConfirm(null);
+                    goToView(target.view, target.extra, true);
+                  }}
+                  className="flex-1 py-2.5 rounded-xl text-xs font-semibold bg-[#ef4444] text-white hover:bg-red-600 transition-colors shadow-md"
+                >
+                  Confirm
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
