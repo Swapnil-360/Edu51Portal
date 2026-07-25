@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { MessageSquare, Inbox } from "lucide-react";
 import { supabase } from "../../../lib/supabase";
 import MentorChat from "../MentorChat";
-import ChipLoader from "../../ui/ChipLoader";
+import Loader from "../../ui/Loader";
 
 interface Props {
   isDarkMode: boolean;
@@ -135,9 +135,8 @@ export default function AlumniMessagesPage({ isDarkMode, authSession, userProfil
         <h2 className={`text-lg font-bold ${textColor}`}>Active Conversations</h2>
 
         {loading ? (
-          <div className="flex flex-col items-center gap-1 text-xs text-slate-500 py-10 justify-center">
-            <ChipLoader size="md" />
-            Loading chats...
+          <div className="flex justify-center py-10">
+            <Loader />
           </div>
         ) : chats.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center gap-4 text-slate-500">

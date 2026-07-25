@@ -46,9 +46,7 @@ import { banUser, unbanUser, deleteUserAccount } from "./lib/api/adminApi";
 import type { Feedback, FeedbackStatus } from "./types";
 import MarqueeTicker from "./components/MarqueeTicker";
 import { Tiles } from "./components/ui/tiles";
-import ChipLoader from "./components/ui/ChipLoader";
-import AnimatedLoadingSkeleton from "./components/ui/animated-loading-skeleton";
-import LottieLoader from "./components/ui/LottieLoader";
+import AppLoader from "./components/ui/Loader";
 const PDFViewer = lazy(() => import("./components/PDFViewer"));
 const AdminDashboard = lazy(() => import("./components/Admin/AdminDashboard"));
 const AlumniDashboard = lazy(() => import("./components/Alumni/AlumniDashboard"));
@@ -5168,7 +5166,7 @@ For any queries, contact your course instructors or the department.`,
                   )}
                   <Suspense fallback={
                     <div className="flex justify-center py-16">
-                      <ChipLoader size="lg" />
+                      <AppLoader />
                     </div>
                   }>
                     <>
@@ -5258,7 +5256,7 @@ For any queries, contact your course instructors or the department.`,
                 {selectedDriveCourse ? (
                   <Suspense fallback={
                     <div className="flex justify-center py-16">
-                      <ChipLoader size="lg" />
+                      <AppLoader />
                     </div>
                   }>
                     <GDriveCourseView
@@ -5297,7 +5295,7 @@ For any queries, contact your course instructors or the department.`,
                     <h2 className={`text-2xl font-bold ${isDarkMode ? "text-gray-100" : "text-gray-900"}`}>{selectedSemester.name}</h2>
                     <Suspense fallback={
                       <div className="flex justify-center py-16">
-                        <ChipLoader size="lg" />
+                        <AppLoader />
                       </div>
                     }>
                       <GDriveFolderBrowser
@@ -5328,7 +5326,7 @@ For any queries, contact your course instructors or the department.`,
                     {departmentFolderId ? (
                       <Suspense fallback={
                         <div className="flex justify-center py-16">
-                          <ChipLoader size="lg" />
+                          <AppLoader />
                         </div>
                       }>
                         <SemesterFolderBrowser
@@ -5455,7 +5453,7 @@ For any queries, contact your course instructors or the department.`,
 
                 {loading ? (
                   <div className="text-center py-8">
-                    <ChipLoader size="lg" />
+                    <AppLoader />
                     <p
                       className={`mt-2 transition-colors duration-300 ${isDarkMode ? "text-[#71767b]" : "text-gray-600"
                         }`}
@@ -5664,7 +5662,7 @@ For any queries, contact your course instructors or the department.`,
               currentView === "terms" ||
               currentView === "cookie-policy" ||
               currentView === "disclaimer") && (
-                <Suspense fallback={<ChipLoader />}>
+                <Suspense fallback={<AppLoader />}>
                   <LegalPage
                     currentView={currentView}
                     isDarkMode={isDarkMode}
@@ -8060,7 +8058,7 @@ For any queries, contact your course instructors or the department.`,
                     {/* Loading overlay */}
                     {isViewerLoading && (
                       <div className={`absolute inset-0 flex items-center justify-center z-20 ${isDarkMode ? "bg-[#000000]/95" : "bg-white/95"}`}>
-                        <ChipLoader size="md" />
+                        <AppLoader />
                       </div>
                     )}
 
@@ -8329,7 +8327,7 @@ For any queries, contact your course instructors or the department.`,
       {/* ── Lazy-loaded views — Suspense ensures a spinner while chunks download ── */}
       <Suspense fallback={
         <div className="fixed top-[72px] lg:top-20 inset-x-0 bottom-0 z-40 flex items-center justify-center p-6 overflow-y-auto bg-slate-50 dark:bg-[#0b0f19]">
-          <LottieLoader />
+          <AppLoader />
         </div>
       }>
 
@@ -8427,7 +8425,7 @@ For any queries, contact your course instructors or the department.`,
           <main className="fixed top-[72px] lg:top-20 inset-x-0 bottom-0 z-40 overflow-y-auto overscroll-y-contain">
             <Suspense fallback={
               <div className={`h-full flex items-center justify-center p-6 ${isDarkMode ? "bg-[#000000]" : "bg-slate-50"}`}>
-                <LottieLoader />
+                <AppLoader />
               </div>
             }>
               <MeetTeamPage isDarkMode={isDarkMode} onClose={() => goToView("home")} />
@@ -8440,7 +8438,7 @@ For any queries, contact your course instructors or the department.`,
           <main className="fixed top-[72px] lg:top-20 inset-x-0 bottom-0 z-40 overflow-y-auto overscroll-y-contain">
             <Suspense fallback={
               <div className={`h-full flex items-center justify-center p-6 ${isDarkMode ? "bg-[#000000]" : "bg-slate-50"}`}>
-                <LottieLoader />
+                <AppLoader />
               </div>
             }>
               {alumniSubView === "directory" && (

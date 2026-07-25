@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../../lib/supabase';
-import ChipLoader from '../ui/ChipLoader';
+import Loader from '../ui/Loader';
 import type { TeamFile } from '../../types/social';
 import {
   listTeamFiles, uploadTeamFile, deleteTeamFile,
@@ -435,7 +435,7 @@ export default function TeamFiles({ teamId, currentUserId, isMember, canManage, 
         >
           {loading ? (
             <div className="flex justify-center py-12">
-              <ChipLoader size="md" />
+              <Loader />
             </div>
           ) : displayed.length === 0 ? (
             <div className={`py-12 rounded-2xl border text-center ${isDarkMode ? 'border-[#2f3336]' : 'border-slate-200'}`}>
@@ -466,7 +466,7 @@ export default function TeamFiles({ teamId, currentUserId, isMember, canManage, 
       {/* Loading on first load */}
       {loading && files.length === 0 && (
         <div className="flex justify-center py-16">
-          <ChipLoader size="lg" />
+          <Loader />
         </div>
       )}
 

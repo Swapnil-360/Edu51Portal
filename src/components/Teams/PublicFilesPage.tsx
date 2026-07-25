@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import type { TeamFile } from '../../types/social';
 import { listPublicFiles, formatFileSize, fileTypeLabel, PublicFilesSort } from '../../lib/api/filesApi';
 import { supabase } from '../../lib/supabase';
-import ChipLoader from '../ui/ChipLoader';
+import Loader from '../ui/Loader';
 
 type FileFilter = 'all' | 'pdf' | 'doc' | 'sheet' | 'image';
 
@@ -240,7 +240,7 @@ export default function PublicFilesPage({ isDarkMode, onViewTeam, onViewPreview 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-5">
         {loading && files.length === 0 ? (
           <div className="flex justify-center py-20">
-            <ChipLoader size="lg" />
+            <Loader />
           </div>
         ) : displayed.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">

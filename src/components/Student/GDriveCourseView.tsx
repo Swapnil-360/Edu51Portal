@@ -1,10 +1,10 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   FileText, Play, Eye, Download, RefreshCw, AlertCircle,
   ChevronLeft, Folder, Loader2, BookOpen, Zap,
 } from 'lucide-react';
 import { getCurrentSemesterStatus } from '../../config/semester';
-import ChipLoader from '../ui/ChipLoader';
+import Loader from '../ui/Loader';
 
 interface DriveFile {
   id: string;
@@ -127,7 +127,7 @@ export const GDriveCourseView: React.FC<GDriveCourseViewProps> = ({
 
   if (loading) return (
     <div className="flex flex-col items-center justify-center py-20 gap-3">
-      <ChipLoader size="lg" />
+      <Loader />
       <p className={cls('text-xs', dk ? 'text-slate-500' : 'text-slate-400')}>Loading materials…</p>
     </div>
   );

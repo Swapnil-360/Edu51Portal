@@ -1,11 +1,11 @@
-﻿import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Folder, FolderOpen, ChevronRight, Search, Download, Eye, FileText, ArrowLeft, Home } from 'lucide-react';
 import {
   StudyFolder, StudyMaterial, StudyMajor,
   listAllFolders, listMaterials, buildFolderTree,
   formatFileSize, fileIcon, MAJORS,
 } from '../../lib/api/studyApi';
-import ChipLoader from '../ui/ChipLoader';
+import Loader from '../ui/Loader';
 
 interface Props {
   userMajor: string | null;
@@ -162,7 +162,7 @@ export default function StudyMaterials({ userMajor, isDarkMode, onPreviewFile }:
       {/* Content */}
       <div className="p-4 min-h-[300px]">
         {loading ? (
-          <div className="flex justify-center py-16"><ChipLoader size="lg" /></div>
+          <div className="flex justify-center py-16"><Loader /></div>
         ) : (
           <>
             {/* Back button */}
@@ -202,7 +202,7 @@ export default function StudyMaterials({ userMajor, isDarkMode, onPreviewFile }:
                   <p className={cls('text-xs font-semibold mb-2', sub)}>FILES</p>
                 )}
                 {loadingMaterials ? (
-                  <div className="flex justify-center py-8"><ChipLoader size="md" /></div>
+                  <div className="flex justify-center py-8"><Loader /></div>
                 ) : filteredMaterials.length === 0 && !visibleFolders.length ? (
                   <div className={cls('flex flex-col items-center justify-center py-12 text-center', sub)}>
                     <FileText size={32} className="opacity-30 mb-3" />

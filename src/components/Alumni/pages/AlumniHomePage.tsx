@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Users, BookOpen, Compass, Check, X, Calendar, MessageSquare, Trash2 } from "lucide-react";
 import { supabase } from "../../../lib/supabase";
-import ChipLoader from "../../ui/ChipLoader";
+import Loader from "../../ui/Loader";
 import StudentProfileView from "../StudentProfileView";
 import { removeMentorshipConnection } from "../../../lib/api/mentorshipApi";
 
@@ -363,7 +363,7 @@ export default function AlumniHomePage({ isDarkMode, userProfile, authSession }:
         <h2 className={`text-lg font-bold ${textColor}`}>My Mentees</h2>
         {loadingMentees ? (
           <div className="flex flex-col items-center gap-1 text-xs text-slate-500 py-4">
-            <ChipLoader size="sm" />
+            <Loader />
             Loading mentees...
           </div>
         ) : mentees.length === 0 ? (

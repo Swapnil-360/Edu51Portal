@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   FolderOpen, ChevronRight, Home, ArrowLeft, RefreshCw,
   Upload, Trash2, Plus, Loader2, AlertCircle, Eye, Download,
@@ -12,7 +12,7 @@ import {
 import { listDepartmentConfigs, DepartmentConfig } from '../../lib/api/studyApi';
 import { DEPARTMENTS } from '../../config/departments';
 import { useGoogleDriveAuth } from '../../hooks/useGoogleDriveAuth';
-import ChipLoader from '../ui/ChipLoader';
+import Loader from '../ui/Loader';
 
 interface Props {
   isDarkMode: boolean;
@@ -178,7 +178,7 @@ export default function AdminDrivePanel({ isDarkMode: dk, onPreviewFile }: Props
   );
 
   if (configLoading) {
-    return <div className="flex justify-center py-16"><ChipLoader size="lg" /></div>;
+    return <div className="flex justify-center py-16"><Loader /></div>;
   }
 
   return (
@@ -395,7 +395,7 @@ export default function AdminDrivePanel({ isDarkMode: dk, onPreviewFile }: Props
                 <button onClick={refresh} className="px-4 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold">Retry</button>
               </div>
             ) : listLoading ? (
-              <div className="flex justify-center py-12"><ChipLoader size="md" /></div>
+              <div className="flex justify-center py-12"><Loader /></div>
             ) : (
               <>
                 {stack.length > 0 && (

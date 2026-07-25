@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, GraduationCap, BookOpen, User, Briefcase, Mail, Phone, Calendar, Check } from "lucide-react";
 import { getProfileById, listEducations } from "../../lib/api/profileApi";
 import { SocialProfile, Education } from "../../types/social";
-import ChipLoader from "../ui/ChipLoader";
+import Loader from "../ui/Loader";
 
 interface Props {
   isOpen: boolean;
@@ -139,7 +139,7 @@ export default function StudentProfileView({
           <div className="px-6 pt-12 pb-6 space-y-6">
             {loading ? (
               <div className="flex flex-col items-center justify-center py-12 gap-2 text-slate-500">
-                <ChipLoader size="md" />
+                <Loader />
                 <span>Loading student profile...</span>
               </div>
             ) : error ? (

@@ -7,7 +7,7 @@ import { supabase } from "../../lib/supabase";
 import MentorChat from "./MentorChat";
 import { getSuggestedMentors } from "../../lib/api/mentorshipApi";
 import { AlumniProfile } from "../../types/social";
-import ChipLoader from "../ui/ChipLoader";
+import Loader from "../ui/Loader";
 
 interface Props {
   isDarkMode: boolean;
@@ -398,7 +398,7 @@ export default function AlumniDirectoryPage({
             {/* Main Grid / Loading / Empty State */}
             {loading ? (
               <div className="flex justify-center py-20">
-                <ChipLoader size="lg" />
+                <Loader />
               </div>
             ) : alumni.length === 0 ? (
               /* Empty State */
@@ -432,7 +432,7 @@ export default function AlumniDirectoryPage({
         {activeTab === "requests" && (
           myRequestsLoading ? (
             <div className="flex flex-col items-center justify-center py-20 gap-3">
-              <ChipLoader size="lg" />
+              <Loader />
               <span className={`text-xs ${subColor}`}>Loading requests...</span>
             </div>
           ) : myRequests.length === 0 ? (
@@ -505,7 +505,7 @@ export default function AlumniDirectoryPage({
         {activeTab === "messages" && (
           loadingConvs ? (
             <div className="flex flex-col items-center gap-1 text-xs text-slate-500 py-10 justify-center">
-              <ChipLoader size="md" />
+              <Loader />
               Loading conversations...
             </div>
           ) : conversations.length === 0 ? (
@@ -582,7 +582,7 @@ export default function AlumniDirectoryPage({
         {activeTab === "resources" && (
           resourcesLoading ? (
             <div className="flex flex-col items-center gap-1 text-xs text-slate-500 py-10 justify-center">
-              <ChipLoader size="md" />
+              <Loader />
               Loading resources...
             </div>
           ) : (

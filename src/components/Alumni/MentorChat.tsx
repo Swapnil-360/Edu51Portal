@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { X, Send, Check, CheckCheck, Loader2 } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { resolveConnectionId } from "../../lib/api/mentorshipApi";
-import ChipLoader from "../ui/ChipLoader";
+import Loader from "../ui/Loader";
 
 interface MentorChatProps {
   isDarkMode: boolean;
@@ -233,7 +233,7 @@ export default function MentorChat({
         <div className="flex-1 overflow-y-auto p-5 space-y-4 min-h-0 bg-[#000000]/10">
           {loading ? (
             <div className="h-full flex items-center justify-center">
-              <ChipLoader size="lg" />
+              <Loader />
             </div>
           ) : !connectionId ? (
             <div className="h-full flex flex-col items-center justify-center text-center p-4">

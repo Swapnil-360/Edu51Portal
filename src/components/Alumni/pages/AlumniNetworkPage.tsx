@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Users, User, Compass, MessageSquare, Briefcase, GraduationCap, Inbox } from "lucide-react";
 import { supabase } from "../../../lib/supabase";
 import MentorChat from "../MentorChat";
-import ChipLoader from "../../ui/ChipLoader";
+import Loader from "../../ui/Loader";
 import StudentProfileView from "../StudentProfileView";
 import { Trash2 } from "lucide-react";
 import { removeMentorshipConnection } from "../../../lib/api/mentorshipApi";
@@ -195,10 +195,9 @@ export default function AlumniNetworkPage({ isDarkMode, authSession, userProfile
         {/* SECTION 1: MENTEES */}
         {activeTab === "mentees" && (
           loadingMentees ? (
-            <div className="flex flex-col items-center gap-1 text-xs text-slate-500 py-10 justify-center">
-              <ChipLoader size="md" />
-              Loading mentees...
-            </div>
+          <div className="flex justify-center py-10">
+            <Loader />
+          </div>
           ) : mentees.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center gap-4 text-slate-500">
               <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${isDarkMode ? "bg-[#16181c]" : "bg-slate-100"}`}>
@@ -271,9 +270,8 @@ export default function AlumniNetworkPage({ isDarkMode, authSession, userProfile
         {/* SECTION 2: FELLOW ALUMNI */}
         {activeTab === "fellows" && (
           loadingFellows ? (
-            <div className="flex flex-col items-center gap-1 text-xs text-slate-500 py-10 justify-center">
-              <ChipLoader size="md" />
-              Loading fellow alumni...
+            <div className="flex justify-center py-10">
+              <Loader />
             </div>
           ) : fellows.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center gap-4 text-slate-500">
@@ -320,9 +318,8 @@ export default function AlumniNetworkPage({ isDarkMode, authSession, userProfile
         {/* SECTION 3: EXPLORE STUDENTS */}
         {activeTab === "students" && (
           loadingStudents ? (
-            <div className="flex flex-col items-center gap-1 text-xs text-slate-500 py-10 justify-center">
-              <ChipLoader size="md" />
-              Loading students...
+            <div className="flex justify-center py-10">
+              <Loader />
             </div>
           ) : students.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center gap-4 text-slate-500">

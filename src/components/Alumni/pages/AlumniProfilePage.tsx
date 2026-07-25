@@ -20,7 +20,7 @@ import { validateAndSanitizeUrl, normalizeWhatsAppLink } from "../../../lib/sani
 import SkillsEditor, { BadgeList, CSE_SKILL_SUGGESTIONS } from "../../Profile/SkillsEditor";
 import ExperienceSection from "../../Profile/ExperienceSection";
 import { uploadImage, removeStorageFile } from "../../../lib/storage";
-import ChipLoader from "../../ui/ChipLoader";
+import Loader from "../../ui/Loader";
 
 interface Props {
   isDarkMode: boolean;
@@ -281,9 +281,8 @@ export default function AlumniProfilePage({ isDarkMode, authSession }: Props) {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 gap-3">
-        <ChipLoader size="lg" />
-        <span className={`text-xs ${subColor}`}>Loading profile...</span>
+      <div className="flex justify-center py-20">
+        <Loader />
       </div>
     );
   }

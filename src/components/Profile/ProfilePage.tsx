@@ -37,7 +37,7 @@ import EditBasicInfoModal from "./EditBasicInfoModal";
 import EducationSection from "./EducationSection";
 import ExperienceSection from "./ExperienceSection";
 import SkillsEditor, { BadgeList, CSE_SKILL_SUGGESTIONS, INTEREST_SUGGESTIONS } from "./SkillsEditor";
-import ChipLoader from "../ui/ChipLoader";
+import Loader from "../ui/Loader";
 
 interface Props {
   /** username when viewing someone else via /u/:username; null = own profile */
@@ -228,7 +228,7 @@ export default function ProfilePage({ username, currentUserId, initialAvatarUrl,
   if (loading) {
     return (
       <div className={`min-h-screen flex items-center justify-center ${pageBg}`}>
-        <ChipLoader size="xl" />
+        <Loader />
       </div>
     );
   }

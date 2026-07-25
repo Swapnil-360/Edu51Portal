@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
 import {
   Folder, FolderOpen, ChevronRight, ChevronDown, Plus, Trash2,
   Edit2, Upload, X, Check, FileText, Loader2, AlertTriangle,
@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 const GDriveBrowserLazy = lazy(() => import('../Student/GDriveBrowser'));
 const AdminDrivePanelLazy = lazy(() => import('./AdminDrivePanel'));
-import ChipLoader from '../ui/ChipLoader';
+import Loader from '../ui/Loader';
 import {
   StudyFolder, StudyMaterial, StudyMajor,
   listAllFolders, createFolder, updateFolder, deleteFolder,
@@ -352,7 +352,7 @@ export default function MaterialManager({ isDarkMode, currentUserId, onPreviewFi
           {/* Live preview */}
           <div className={cls('rounded-xl border overflow-hidden', border)}>
             <div className={cls('px-4 py-2 border-b text-xs font-semibold', border, sub)}>LIVE PREVIEW (what students see)</div>
-            <Suspense fallback={<div className="flex justify-center py-8"><ChipLoader size="md" /></div>}>
+            <Suspense fallback={<div className="flex justify-center py-8"><Loader /></div>}>
               <GDriveBrowserLazy userMajor={null} isDarkMode={dk} onPreviewFile={() => {}} />
             </Suspense>
           </div>
@@ -533,7 +533,7 @@ export default function MaterialManager({ isDarkMode, currentUserId, onPreviewFi
 
       {/* Drive admin panel (folders tab) */}
       {activeTab === 'folders' && <div className="min-h-[520px] flex flex-col">
-        <Suspense fallback={<div className="flex justify-center py-16"><ChipLoader size="lg" /></div>}>
+        <Suspense fallback={<div className="flex justify-center py-16"><Loader /></div>}>
           <AdminDrivePanelLazy isDarkMode={dk} onPreviewFile={onPreviewFile} />
         </Suspense>
       </div>}
@@ -554,7 +554,7 @@ export default function MaterialManager({ isDarkMode, currentUserId, onPreviewFi
           </div>
           <div className="flex-1 overflow-y-auto py-1 px-1">
             {loadingFolders ? (
-              <div className="flex justify-center py-8"><ChipLoader size="md" /></div>
+              <div className="flex justify-center py-8"><Loader /></div>
             ) : tree.length === 0 ? (
               <div className={cls('text-center py-8 px-2 text-xs', sub)}>
                 No folders yet.<br />Click New to create one.
@@ -670,7 +670,7 @@ export default function MaterialManager({ isDarkMode, currentUserId, onPreviewFi
                 onDrop={handleDrop}
               >
                 {loadingMaterials ? (
-                  <div className="flex justify-center py-12"><ChipLoader size="md" /></div>
+                  <div className="flex justify-center py-12"><Loader /></div>
                 ) : materials.length === 0 ? (
                   <div className={cls('flex flex-col items-center justify-center py-12 text-center', sub)}>
                     <Upload size={32} className="opacity-30 mb-3" />

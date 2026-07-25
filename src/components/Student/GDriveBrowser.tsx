@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Folder, FolderOpen, ChevronRight, Search, Download, Eye,
   FileText, Loader2, ArrowLeft, Home, RefreshCw, AlertCircle,
@@ -8,7 +8,7 @@ import {
   drivePreviewUrl, DriveItem,
 } from '../../lib/driveApi';
 import { getDriveConfigForMajor, MAJORS, StudyMajor } from '../../lib/api/studyApi';
-import ChipLoader from '../ui/ChipLoader';
+import Loader from '../ui/Loader';
 
 interface Props {
   userMajor: string | null;
@@ -176,7 +176,7 @@ export default function GDriveBrowser({ userMajor, isDarkMode: dk, onPreviewFile
       <div className="p-4 min-h-[300px]">
         {configLoading ? (
           <div className="flex justify-center py-16">
-            <ChipLoader size="lg" />
+            <Loader />
           </div>
         ) : !rootFolderId ? (
           <div className={cls('flex flex-col items-center justify-center py-16 text-center', sub)}>
@@ -215,7 +215,7 @@ export default function GDriveBrowser({ userMajor, isDarkMode: dk, onPreviewFile
           </div>
         ) : loading ? (
           <div className="flex justify-center py-16">
-            <ChipLoader size="lg" />
+            <Loader />
           </div>
         ) : (
           <>

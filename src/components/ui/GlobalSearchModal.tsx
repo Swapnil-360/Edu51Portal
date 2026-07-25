@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Search, X, FileText, Megaphone, User as UserIcon } from "lucide-react";
 import { globalSearch, GlobalSearchResults } from "../../lib/api/globalSearchApi";
-import ChipLoader from "./ChipLoader";
+import Loader from "./Loader";
 
 interface Props {
   isDarkMode: boolean;
@@ -106,7 +106,7 @@ export default function GlobalSearchModal({ isDarkMode, onClose, onOpenMaterial,
             </p>
           ) : loading ? (
             <div className="flex justify-center py-8">
-              <ChipLoader size="sm" />
+              <Loader />
             </div>
           ) : !hasResults ? (
             <p className={`text-xs text-center py-10 ${isDarkMode ? "text-slate-500" : "text-slate-400"}`}>

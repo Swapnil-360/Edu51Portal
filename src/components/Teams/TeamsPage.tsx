@@ -1,4 +1,4 @@
-﻿import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Loader2, Mail, Plus, Search, Users, CheckCircle2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -19,7 +19,7 @@ import {
 } from "../../lib/api/teamsApi";
 import TeamCard from "./TeamCard";
 import CreateTeamModal from "./CreateTeamModal";
-import ChipLoader from "../ui/ChipLoader";
+import Loader from "../ui/Loader";
 
 type Tab = "discover" | "mine";
 
@@ -234,7 +234,7 @@ export default function TeamsPage({ currentUserId, onClose, onOpenTeam, isDarkMo
 
         {loading ? (
           <div className="flex justify-center py-16">
-            <ChipLoader size="lg" />
+            <Loader />
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

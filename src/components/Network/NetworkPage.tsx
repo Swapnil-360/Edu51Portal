@@ -11,7 +11,7 @@ import {
 } from "../../lib/api/connectionsApi";
 import UserCard from "./UserCard";
 import { supabase } from "../../lib/supabase";
-import ChipLoader from "../ui/ChipLoader";
+import Loader from "../ui/Loader";
 
 type Tab = "connections" | "requests" | "discover";
 type ConnectionFilter = "all" | "students" | "alumni";
@@ -253,7 +253,7 @@ export default function NetworkPage({
 
         {loading ? (
           <div className="flex justify-center py-16">
-            <ChipLoader size="lg" />
+            <Loader />
           </div>
         ) : tab === "connections" ? (
           <div className="space-y-3">
@@ -410,7 +410,7 @@ export default function NetworkPage({
 
             {searching ? (
               <div className="flex justify-center py-16">
-                <ChipLoader size="lg" />
+                <Loader />
               </div>
             ) : (
               <div className="space-y-3">

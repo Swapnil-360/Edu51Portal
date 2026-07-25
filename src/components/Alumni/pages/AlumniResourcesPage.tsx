@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { BookOpen, Plus, X, Globe, Lock, Trash2, Calendar, Loader2, FileText, AlertCircle } from "lucide-react";
 import { supabase } from "../../../lib/supabase";
-import ChipLoader from "../../ui/ChipLoader";
+import Loader from "../../ui/Loader";
 
 interface Props {
   isDarkMode: boolean;
@@ -270,9 +270,8 @@ export default function AlumniResourcesPage({ isDarkMode, authSession, userProfi
       {/* Resources list */}
       <div>
         {loading ? (
-          <div className="flex flex-col items-center gap-1 text-xs text-slate-500 py-10 justify-center">
-            <ChipLoader size="md" />
-            Loading resources...
+          <div className="flex justify-center py-12">
+            <Loader />
           </div>
         ) : resources.length === 0 ? (
           <div className={`p-12 text-center rounded-2xl border ${cardBg}`}>

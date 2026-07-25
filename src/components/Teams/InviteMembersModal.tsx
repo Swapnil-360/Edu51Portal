@@ -1,10 +1,10 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { X, Loader2, Search, Send } from "lucide-react";
 import { SocialProfile, Team } from "../../types/social";
 import { searchUsers } from "../../lib/api/connectionsApi";
 import { inviteUser, listTeamInvitations, listTeamMembers } from "../../lib/api/teamsApi";
 import UserCard from "../Network/UserCard";
-import ChipLoader from "../ui/ChipLoader";
+import Loader from "../ui/Loader";
 
 interface Props {
   team: Team;
@@ -98,7 +98,7 @@ export default function InviteMembersModal({ team, currentUserId, onClose, isDar
         <div className="flex-1 overflow-y-auto px-5 pb-5 space-y-2">
           {searching ? (
             <div className="flex justify-center py-10">
-              <ChipLoader size="md" />
+              <Loader />
             </div>
           ) : results.length === 0 ? (
             <p className={`text-sm text-center py-8 ${isDarkMode ? "text-slate-500" : "text-[#71767b]"}`}>
