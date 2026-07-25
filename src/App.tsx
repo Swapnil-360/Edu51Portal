@@ -1892,7 +1892,8 @@ function App() {
       showCreateCourse ||
       showFileViewer ||
       showMobileMenu ||
-      showMaterialViewer;
+      showMaterialViewer ||
+      Boolean(adminExitConfirm);
     if (overlaysOpen) {
       const previousOverflow = document.body.style.overflow;
       const previousPaddingRight = document.body.style.paddingRight || "";
@@ -1917,6 +1918,7 @@ function App() {
     showFileViewer,
     showMobileMenu,
     showMaterialViewer,
+    adminExitConfirm,
   ]);
 
   // Initialize database tables if they don't exist
@@ -8683,8 +8685,8 @@ For any queries, contact your course instructors or the department.`,
       )}
 
       {/* Admin Exit Confirmation Modal */}
-      {adminExitConfirm && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+      {adminExitConfirm && createPortal(
+        <div className="fixed inset-x-0 top-0 h-dvh z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div
             className={`w-full max-w-sm rounded-2xl p-6 shadow-2xl border transition-all duration-300 ${
               isDarkMode
@@ -8733,7 +8735,8 @@ For any queries, contact your course instructors or the department.`,
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   );
