@@ -71,7 +71,7 @@ export function AIAssistant({ isDarkMode: dk, userId }: Props) {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [remaining, setRemaining] = useState<number | null>(null);
-  const [dailyLimit, setDailyLimit] = useState(30);
+  const [dailyLimit, setDailyLimit] = useState(20);
   const listRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 

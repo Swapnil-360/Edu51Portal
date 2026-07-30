@@ -12,7 +12,7 @@ const json = (body: unknown, status = 200) =>
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 
-const DAILY_LIMIT = 30;
+const DAILY_LIMIT = 20;
 const MAX_HISTORY_TURNS = 10;
 
 const SYSTEM_PROMPT = `You are the Edu51 Assistant — a calm, knowledgeable helper for BUBT students across all departments (CSE, EEE, Textile, Civil, Data Science, BBA, English, Economics, LL.B.), not just one section or intake.

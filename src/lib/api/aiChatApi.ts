@@ -8,7 +8,7 @@ export interface ChatReply {
   limit: number;
 }
 
-export const AI_CHAT_DAILY_LIMIT = 30;
+export const AI_CHAT_DAILY_LIMIT = 20;
 
 export async function getRemainingMessagesToday(userId: string): Promise<number> {
   const today = new Date().toISOString().slice(0, 10);
