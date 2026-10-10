@@ -22,8 +22,12 @@ Academic portal for **BUBT Intake 51 – Section 5** students. Built as a fast, 
 
 ## Features
 
-### Core Academic
+### Core Academic & Campus
 - **Student Dashboard** — intake and section view, course browser, file delivery (upload or Drive links)
+- **Info Hub** — comprehensive university directory with 3 sub-sections:
+  - *Faculty Directory:* 280+ professors across 9 departments (CSE, EEE, Civil, Textile, BBA, Law, Economics, English, Math) with real-time search, filters, and detailed modal profiles.
+  - *Officials:* University leadership (Vice Chancellor Prof. Dr. A.B.M. Shawkat Ali profile and message) and administrative offices directory (Registrar, Exam Controller, IT, Proctor, Library, etc.).
+  - *University Notices:* Live BUBT notices feed via serverless Edge API (`/api/notices`), categorized tags, PDF downloads, and automated weekly GitHub Actions sync.
 - **PDF Viewer** — modal preview with fullscreen and mobile support
 - **Semester Tracker** — real-time progress bar, milestone timeline, countdown to next exam
 - **Custom Routine** — personal schedule builder with export
@@ -35,7 +39,10 @@ Academic portal for **BUBT Intake 51 – Section 5** students. Built as a fast, 
 - **Team Building** — create and discover teams (2–7 members), roles, invitations, join requests, announcements
 - **Alumni Hub** — BUBT alumni directory (admin-verified)
 
-### Platform
+### Platform & Reliability
+- **Live Data Sync** — automated weekly GitHub Actions workflow (`sync-faculty.yml`) + Node scraper (`scripts/sync-bubt-data.js`) syncing live university records.
+- **Service Worker (PWA)** — versioned offline caching with dynamic `/api/*` route bypass.
+- **Resilient Error Isolation** — global suppression of intrusive browser extensions and legacy permission policy violations.
 - **Push Notifications** — service worker + VAPID, opt-in per user
 - **Dark / Light Mode** — system-aware toggle persisted per user
 - **Responsive** — mobile-first, tested on Chrome / Safari / Firefox

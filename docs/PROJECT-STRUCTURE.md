@@ -434,6 +434,51 @@ Top-of-page dismissible banner shown on the home/main views (not inside fullscre
 
 ---
 
+## Info Hub (University Directory & Live Notices)
+
+Comprehensive academic hub accessible via `/info-hub`, `/info`, or `/faculty`. Replaces the legacy "Varsity" naming with a modern 3-tab layout matching the Network section aesthetics (`connections`, `requests`, `discover` style).
+
+| What | File | Detail |
+|------|------|--------|
+| Main container view & tab state | `src/components/Faculty/FacultyDirectoryPage.tsx` | Manages 3 active tabs (`faculty`, `officials`, `notices`), search state, department filtering |
+| Faculty directory card grid | `src/components/Faculty/FacultyCard.tsx` | Profile card with verified badge, department pill, routine initials, contact links, and avatar fallbacks |
+| Faculty detail modal | `src/components/Faculty/FacultyDetailModal.tsx` | Rendered via `createPortal(..., document.body)` with `z-[100]` to eliminate header layering conflicts; shows degrees, work experience, research, contact links |
+| Officials & leadership view | `src/components/Faculty/LeadershipCard.tsx` | High-res Vice Chancellor portrait (`/images/vc-shawkat-ali.jpg`), official message, credentials, and responsive grid of 8 university administrative offices |
+| Live University Notices feed | `src/components/Faculty/UniversityNoticesFeed.tsx` | Real-time notices feed with category filtering, PDF downloads, and manual refresh button |
+| Faculty dataset (280+ members) | `src/data/facultyData.json` | Scraped and enriched records across 9 departments |
+| Leadership dataset | `src/data/leadershipData.json` | Vice Chancellor credentials and university offices directory |
+| Notices snapshot dataset | `src/data/noticesData.json` | Fallback cache of recent official university notices |
+| TypeScript contracts | `src/types/faculty.ts` | Types for `FacultyMember`, `DepartmentOption`, `ViceChancellor`, `AdministrativeOffice`, `UniversityNotice` |
+
+**Design & Responsiveness:**
+- **Tab Bar:** Pill-based active indicator styled with platform theme (`#1e9df1` accents, dark `#16181c` surface).
+- **Mobile Adaptations:** Leadership card uses flexible wrapping and text truncation (`min-w-0`, `break-words`) to prevent horizontal overflow on smaller screens.
+- **Portals:** `FacultyDetailModal` renders outside `<main>` hierarchy directly onto `document.body` to ensure it always overlays the fixed navigation header (`z-50`).
+
+---
+
+## Data Synchronization Architecture
+
+Automated pipeline keeping university notices and faculty datasets accurate without requiring manual codebase updates.
+
+| Layer | File / Workflow | Role |
+|-------|-----------------|------|
+| Serverless Notice Scraper | `api/notices.ts` | Vercel Edge/Serverless function fetching live HTML from `https://www.bubt.edu.bd/home/all_notices`, parses tables, strips boilerplate, and edge-caches with `s-maxage=1800` |
+| Local Dev Proxy Middleware | `vite.config.ts` | Emulates the `/api/notices` serverless route during local development (`npm run dev`) |
+| Batch Data Sync Script | `scripts/sync-bubt-data.js` | Node.js script scraping all 9 BUBT department faculty rosters and notices, formatting output into `src/data/` |
+| Automated GitHub Action | `.github/workflows/sync-faculty.yml` | Weekly scheduled cron job (Sundays at 00:00 UTC) + manual trigger (`workflow_dispatch`) that runs the sync script and commits updates |
+
+---
+
+## Client Error Isolation & Extension Immunity
+
+| What | File | Role |
+|-------|------|------|
+| Unhandled error & rejection listeners | `src/main.tsx` (lines ~32–55) | Suppresses third-party browser extension exceptions (e.g. Floto Widget, translation extensions, `content-DS2BZpGT.js`) and Chromium permissions policy warnings (`unload is not allowed`) |
+| Safe telemetry handler | `api/log.ts` | Returns clean `{ ok: true }` responses for legacy logging requests, eliminating 405 Method Not Allowed console errors |
+
+---
+
 ## Key Conventions
 
 - **Routing:** state-based (`currentView` string union), no react-router at runtime

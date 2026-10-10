@@ -16,10 +16,14 @@ Browser (React SPA, static bundle)
    │      ├── Realtime — postgres_changes subscriptions (chat, tasks, files)
    │      └── Edge Functions (Deno) — secret-holding / service-role logic
    │
-   └── Google Drive API (direct, browser-side, VITE_GOOGLE_API_KEY) — study material files
+   ├── Google Drive API (direct, browser-side, VITE_GOOGLE_API_KEY) — study material files
+   │
+   └── Vercel Serverless Functions (/api/*)
+          ├── /api/notices — BUBT live notice board scraper + Edge CDN caching (s-maxage=1800)
+          └── /api/log — Safe telemetry handler returning clean status
 ```
 
-**No custom backend server.** There is no Express/Fastify/Next.js API layer — the browser talks to Supabase and Google Drive directly. This is a hard architectural constraint, not a gap: any new "backend" logic must be either (a) a Postgres function/RPC, or (b) a Supabase Edge Function. Do not introduce a separate Node server unless there's a concrete reason Supabase's model can't cover it.
+**Serverless API layer:** Lightweight Vercel serverless functions in `api/` handle tasks that require HTML parsing or caching without spinning up a stateful Node server. The browser routes requests to `/api/notices`, which pulls live university notices directly from `https://www.bubt.edu.bd/home/all_notices` with stale-while-revalidate edge caching. During local development, `vite.config.ts` proxies these routes directly.
 
 **No SSR/SSG.** Vite builds a static SPA (`vite build` → `dist/`). There is no server-rendered HTML — SEO relies on `public/sitemap.xml` / `robots.txt` and standard `<meta>` tags, not rendered content. Don't assume `window`/`document` are ever unavailable at runtime — but also don't assume any code runs on a server, because none of it does.
 
@@ -120,7 +124,8 @@ Every live-updating feature uses a Supabase Realtime channel scoped to the relev
 | Google Gemini (`gemini-2.5-flash`) | AI Assistant | `GEMINI_API_KEY` in Edge Function | Free-tier quota exhaustion — `gemini-2.0-flash` was rejected earlier for exactly this (`limit:0` on this project's key); monitor quota before assuming a model swap is safe |
 | Brevo | Transactional + broadcast email | API key in Edge Function | Migrated from Resend — don't reintroduce Resend code paths |
 | Web Push (VAPID) | Push notifications | VAPID keypair, subscription per browser in `push_subscriptions` | Stale/expired subscriptions should fail silently per-recipient, not abort a broadcast |
-| Vercel | Hosting, analytics, speed insights | Project-linked | — |
+| BUBT Notice Board | University notices & academic events | Public web scraper (`api/notices.ts`) | Upstream HTML structure change or downtime; falls back gracefully to cached static snapshot in `src/data/noticesData.json` |
+| Vercel | Hosting, analytics, speed insights, serverless routes | Project-linked | — |
 
 ---
 
@@ -157,6 +162,7 @@ Any new upload feature should set an explicit bucket size/type limit rather than
 2. Preview deployments generated per-branch/PR by default; production promotion tied to the branch → domain mapping (see `PLAN.md` → Domain & Hosting).
 3. Supabase migrations are applied separately — **not** part of the Vercel build. Migrations in `supabase/migrations/` are the source of truth for schema history; apply via Supabase MCP `apply_migration` or `supabase db push`, matching what's committed, before or alongside a frontend deploy that depends on the new schema. A frontend deploy that assumes a column/table exists must not ship before the migration is applied to the target project.
 4. Edge Functions deploy independently via `deploy_edge_function` / `supabase functions deploy` — not bundled into the Vite build.
+5. **Scheduled Data Sync (GitHub Actions):** `.github/workflows/sync-faculty.yml` runs weekly (Sundays at 00:00 UTC) via GitHub Actions runner to execute `scripts/sync-bubt-data.js`. If upstream faculty or notice changes are detected, it commits the refreshed JSON files directly to the active branch, keeping datasets synchronized without manual developer intervention.
 
 **Two live Supabase projects implied by two branches** (`main` vs `full-version` pointing at `bubt.edu51portal.live`) — confirm which project a migration/Edge Function change targets before applying; the `study_drive_config` vs `study_department_config` split exists specifically because `main`'s data must not be touched by `full-version` schema work.
 

@@ -203,30 +203,48 @@ AI models like Gemini don't actually have memory between messages — every sing
 
 ---
 
-## 11. Keeping things safe (in plain terms)
+## 11. Info Hub (Faculty, Officials & University Notices)
+
+**What is it:** A central campus directory and live notice board for BUBT students, faculty, and administration. Accessible via `/info-hub` (or `/info` and `/faculty`).
+
+**How it works for the user:**
+- **Faculty Directory:** Browse and search 280+ professors across 9 departments (CSE, EEE, Civil, Textile, BBA, Economics, English, Law, Mathematics). Filter by department pills or search by name, room number, or research area. Clicking any faculty card opens a rich modal showing their degrees, academic background, research papers, and contact info (with one-tap email and call buttons).
+- **Officials (Leadership & Offices):** Features Vice Chancellor Prof. Dr. A.B.M. Shawkat Ali's official portrait, academic credentials, and message to students. Below the VC profile is an organized directory of all primary administrative offices (Registrar, Controller of Examinations, Proctor, IT Office, Accounts, Admission, Medical Center, Central Library) with locations and official phone/email links.
+- **University Notices Feed:** A real-time stream of official BUBT notices. Notices are labeled with category tags (Examination, Routine, General, Admission, Holiday) and include direct PDF attachments. Users can click "Refresh" at any time to query the latest updates.
+
+**How it works behind the scenes:**
+- **Live Serverless Scraping:** When students open the Notices tab, the app calls `/api/notices`, a serverless function that scrapes and parses the official BUBT notice board in real time. It uses Edge CDN caching (`s-maxage=1800`) to keep response times under 50ms while preventing unnecessary load on the university website.
+- **Automated Sync Workflow:** A weekly GitHub Actions cron job runs a Node scraper script (`scripts/sync-bubt-data.js`) to automatically audit faculty and notices data and commit updates directly to the repository.
+- **Modal Layering (React Portals):** The faculty detail modal is rendered into `document.body` via `createPortal` with `z-[100]`. This breaks it out of the main scroll container, ensuring it always displays cleanly on top of the fixed navigation header on all desktop and mobile devices.
+
+---
+
+## 12. Keeping things safe (in plain terms)
 
 - **The database is the real gatekeeper**, always — think of the app's buttons and menus as signage, and the database's rules as the actual locked doors.
 - We found and fixed a real bug where three important tables could be edited by *any* logged-in user directly, bypassing the app entirely — that's now locked down to admins only.
 - Admin-only actions in the database are explicitly locked so that only truly-admin accounts can even attempt to call them — not just "hidden," actually blocked.
 - Search boxes (like searching alumni or admin user lists) had their input cleaned up to prevent a kind of attack where someone types special characters to trick the search into leaking data it shouldn't.
 - Every password/API key that must stay secret (our AI provider key, our email provider key, etc.) lives only on the server side — never inside the website code that ships to your browser, which anyone could technically inspect.
+- **Browser Extension Isolation:** The app catches and suppresses third-party browser extension errors (like AI floating widgets, translation plugins, or deprecated `unload` policies) so they can never crash the React application.
 
 ---
 
-## 12. Where things run
+## 13. Where things run
 
 - The website is hosted on **Vercel** and rebuilds automatically whenever code is pushed.
 - There are two live versions: the original **edu51portal.live** (older, single-department version) and the newer **bubt.edu51portal.live** (university-wide, multiple departments) — they're separate deployments from separate branches of the code.
+- Serverless API routes (e.g. `/api/notices`) run at the Vercel Edge with zero cold start delays.
 - Security headers (things that stop the site from being embedded maliciously in another page, etc.) are applied automatically to every page.
 
 ---
 
-## 13. Quick answers to common questions
+## 14. Quick answers to common questions
 
 - **"Who decides if someone's an admin?"** → A yes/no flag on their account, double-checked by the database every single time, not just by the app.
 - **"Where do course PDFs actually live?"** → Mostly in Google Drive folders that admins manage — the app just displays them. A second option (uploading straight into our own storage) exists but isn't being used yet.
 - **"Why can't I see materials for my department?"** → Only Computer Science (CSE) is fully connected right now — other departments will light up once an admin connects their Drive folder.
 - **"Can a banned person still see study materials?"** → Yes, on purpose — a ban only blocks the social/team features, not academic access.
 - **"Why are there two different chat systems (Team Chat and Mentor Chat)?"** → Team Chat is for a whole team talking together; Mentor Chat is always exactly one student and one alumnus, privately — different enough uses that they're built as two separate systems.
-- **"Is the old World Cup 2026 feature really gone?"** → The feature and its data are gone; one small leftover background job still technically exists but does nothing and is scheduled for cleanup.
-- **"If I'm building something new that needs a secret API key, where does it go?"** → Never in the website code — it goes in a server-side Edge Function, with the key stored securely on Supabase's side.
+- **"How does the Info Hub get updated?"** → Real-time notices are pulled directly from BUBT's servers through an edge-cached API, and an automated weekly GitHub Action updates the faculty roster.
+- **"Why did an extension error show up in my console?"** → External extensions (like floating widgets) inject legacy code that triggers modern browser warnings; Edu51Portal safely isolates and silences these so your app never crashes.
