@@ -29,23 +29,37 @@ import { SpeedInsights } from '@vercel/speed-insights/react';
 import { Analytics } from '@vercel/analytics/react';
 import './index.css';
 
-// Suppress browser extension errors
+// Suppress browser extension errors (e.g. Floto widget, translation tools, ad blockers)
 window.addEventListener('error', (event) => {
-  if (event.message?.includes('Could not establish connection') || 
-      event.message?.includes('Receiving end does not exist') ||
-      event.message?.includes('Extension context invalidated') ||
-      event.filename?.includes('content-all.js') ||
-      event.filename?.includes('chrome-extension')) {
+  const msg = event.message || '';
+  const file = event.filename || '';
+  if (
+    msg.includes('Could not establish connection') || 
+    msg.includes('Receiving end does not exist') ||
+    msg.includes('Extension context invalidated') ||
+    msg.includes('unload is not allowed') ||
+    file.includes('chrome-extension') ||
+    file.includes('moz-extension') ||
+    file.includes('content-all.js') ||
+    file.includes('content-DS2BZpGT.js') ||
+    file.includes('jquery.js')
+  ) {
     event.preventDefault();
+    event.stopPropagation();
     return;
   }
 });
 
 window.addEventListener('unhandledrejection', (event) => {
-  if (event.reason?.message?.includes('Could not establish connection') || 
-      event.reason?.message?.includes('Receiving end does not exist') ||
-      event.reason?.message?.includes('Extension context invalidated')) {
+  const reasonMsg = event.reason?.message || (typeof event.reason === 'string' ? event.reason : '');
+  if (
+    reasonMsg.includes('Could not establish connection') || 
+    reasonMsg.includes('Receiving end does not exist') ||
+    reasonMsg.includes('Extension context invalidated') ||
+    reasonMsg.includes('unload is not allowed')
+  ) {
     event.preventDefault();
+    event.stopPropagation();
     return;
   }
 });
