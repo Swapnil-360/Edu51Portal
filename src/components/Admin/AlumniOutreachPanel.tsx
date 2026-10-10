@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Users,
   Mail,
@@ -105,6 +106,18 @@ export const AlumniOutreachPanel: React.FC<AlumniOutreachPanelProps> = ({ isDark
   useEffect(() => {
     fetchLeads();
   }, []);
+
+  useEffect(() => {
+    const isAnyModalOpen = isAddModalOpen || isCsvModalOpen || isLinkedInHelperOpen || isLinkedInExtractorOpen;
+    if (isAnyModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isAddModalOpen, isCsvModalOpen, isLinkedInHelperOpen, isLinkedInExtractorOpen]);
 
   const showToast = (text: string, type: 'success' | 'error' = 'success') => {
     setActionMessage({ text, type });
@@ -910,12 +923,17 @@ export const AlumniOutreachPanel: React.FC<AlumniOutreachPanelProps> = ({ isDark
         }`}>
           <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
             <div>
-              <h3 className="text-sm font-bold flex items-center gap-2">
+              <div className="flex items-center gap-2 mb-1">
                 <Sparkles className="w-4 h-4 text-cyan-400" />
-                Search Across All University Departments & Web
-              </h3>
-              <p className={`text-xs mt-0.5 ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                Discover graduates from CSE, EEE, Civil, Textile, BBA, Law, Economics, English, and Math. Select any or all profiles and capture them directly into outreach.
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                  BUBT Multi-Department Graduate Directory & Discovery
+                </h3>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-cyan-500/15 text-cyan-400 border border-cyan-500/30">
+                  All 9 Departments
+                </span>
+              </div>
+              <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                Query verified BUBT graduates across all faculties, or extract fresh live profiles directly from LinkedIn.
               </p>
             </div>
 
@@ -934,10 +952,28 @@ export const AlumniOutreachPanel: React.FC<AlumniOutreachPanelProps> = ({ isDark
                   isDarkMode ? 'bg-indigo-950/40 text-indigo-300 border-indigo-500/30 hover:bg-indigo-900/60' : 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100'
                 }`}
               >
-                <Linkedin className="w-3.5 h-3.5" />
-                LinkedIn Extractor
+                <Linkedin className="w-3.5 h-3.5 text-sky-400" />
+                LinkedIn 1-Click Extractor
               </button>
             </div>
+          </div>
+
+          {/* Explanation Banner */}
+          <div className={`p-3 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs ${
+            isDarkMode ? 'bg-slate-800/50 border-slate-700/60 text-slate-300' : 'bg-sky-50/70 border-sky-200/80 text-sky-900'
+          }`}>
+            <div className="flex items-center gap-2">
+              <span className="text-sm">💡</span>
+              <span className="leading-snug">
+                <strong>How it works:</strong> The filter below searches our pre-indexed directory across all 9 departments. To discover <em>hundreds of fresh alumni</em> directly from LinkedIn, click <strong>LinkedIn 1-Click Extractor</strong>!
+              </span>
+            </div>
+            <button
+              onClick={() => setIsLinkedInExtractorOpen(true)}
+              className="text-[11px] font-bold text-sky-400 hover:underline shrink-0 flex items-center gap-1"
+            >
+              Open Extractor →
+            </button>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
@@ -950,7 +986,7 @@ export const AlumniOutreachPanel: React.FC<AlumniOutreachPanelProps> = ({ isDark
                   isDarkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-800'
                 }`}
               >
-                <option value="all">All Departments (9)</option>
+                <option value="all">All Departments ({discoveredAlumni.length})</option>
                 {DEPARTMENTS.map((d) => (
                   <option key={d} value={d}>{d}</option>
                 ))}
@@ -965,7 +1001,7 @@ export const AlumniOutreachPanel: React.FC<AlumniOutreachPanelProps> = ({ isDark
                 value={discoveryKeyword}
                 onChange={(e) => setDiscoveryKeyword(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleRunDiscovery()}
-                placeholder="Filter by alumnus name, current company (e.g. Brain Station, bKash), or role..."
+                placeholder="Filter by alumnus name, company (e.g. Brain Station, bKash, Walton), or role..."
                 className={`w-full pl-9 pr-3 py-2.5 rounded-xl text-xs border outline-none ${
                   isDarkMode ? 'bg-slate-800 border-slate-700 text-white placeholder-slate-500' : 'bg-white border-slate-300 text-slate-900 placeholder-slate-400'
                 }`}
@@ -979,8 +1015,8 @@ export const AlumniOutreachPanel: React.FC<AlumniOutreachPanelProps> = ({ isDark
                 disabled={discoveryLoading}
                 className="w-full h-full py-2.5 rounded-xl text-xs font-bold bg-cyan-600 hover:bg-cyan-500 text-white flex items-center justify-center gap-1.5 shadow-md transition-all disabled:opacity-50"
               >
-                <RefreshCw className={`w-3.5 h-3.5 ${discoveryLoading ? 'animate-spin' : ''}`} />
-                {discoveryLoading ? 'Scanning...' : 'Scan Now'}
+                <Search className={`w-3.5 h-3.5 ${discoveryLoading ? 'animate-spin' : ''}`} />
+                {discoveryLoading ? 'Filtering...' : 'Search Directory'}
               </button>
             </div>
           </div>
@@ -1133,9 +1169,12 @@ export const AlumniOutreachPanel: React.FC<AlumniOutreachPanelProps> = ({ isDark
   </div>
 
       {/* MODAL 1: Add Single Prospect */}
-      {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <div className={`w-full max-w-lg rounded-2xl p-6 border shadow-2xl relative ${
+      {isAddModalOpen && createPortal(
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) setIsAddModalOpen(false); }}
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-200"
+        >
+          <div className={`w-full max-w-lg rounded-2xl p-6 border shadow-2xl relative max-h-[92vh] overflow-y-auto animate-in zoom-in-95 duration-200 ${
             isDarkMode ? 'bg-[#161a23] border-slate-700 text-white' : 'bg-white border-slate-200 text-slate-900'
           }`}>
             <button
@@ -1268,13 +1307,17 @@ export const AlumniOutreachPanel: React.FC<AlumniOutreachPanelProps> = ({ isDark
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* MODAL 2: Bulk CSV Import */}
-      {isCsvModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <div className={`w-full max-w-xl rounded-2xl p-6 border shadow-2xl relative ${
+      {isCsvModalOpen && createPortal(
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) setIsCsvModalOpen(false); }}
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-200"
+        >
+          <div className={`w-full max-w-xl rounded-2xl p-6 border shadow-2xl relative max-h-[92vh] overflow-y-auto animate-in zoom-in-95 duration-200 ${
             isDarkMode ? 'bg-[#161a23] border-slate-700 text-white' : 'bg-white border-slate-200 text-slate-900'
           }`}>
             <button
@@ -1323,13 +1366,17 @@ export const AlumniOutreachPanel: React.FC<AlumniOutreachPanelProps> = ({ isDark
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* MODAL 3: LinkedIn Smart Search Assistant */}
-      {isLinkedInHelperOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <div className={`w-full max-w-lg rounded-2xl p-6 border shadow-2xl relative ${
+      {isLinkedInHelperOpen && createPortal(
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) setIsLinkedInHelperOpen(false); }}
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-200"
+        >
+          <div className={`w-full max-w-lg rounded-2xl p-6 border shadow-2xl relative max-h-[92vh] overflow-y-auto animate-in zoom-in-95 duration-200 ${
             isDarkMode ? 'bg-[#161a23] border-slate-700 text-white' : 'bg-white border-slate-200 text-slate-900'
           }`}>
             <button
@@ -1401,13 +1448,17 @@ export const AlumniOutreachPanel: React.FC<AlumniOutreachPanelProps> = ({ isDark
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* MODAL 4: LinkedIn 1-Click Profile Extractor */}
-      {isLinkedInExtractorOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <div className={`w-full max-w-2xl rounded-2xl p-6 border shadow-2xl relative max-h-[90vh] overflow-y-auto ${
+      {isLinkedInExtractorOpen && createPortal(
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) setIsLinkedInExtractorOpen(false); }}
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-200"
+        >
+          <div className={`w-full max-w-2xl rounded-2xl p-6 border shadow-2xl relative max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200 ${
             isDarkMode ? 'bg-[#161a23] border-slate-700 text-white' : 'bg-white border-slate-200 text-slate-900'
           }`}>
             <button
@@ -1533,7 +1584,8 @@ export const AlumniOutreachPanel: React.FC<AlumniOutreachPanelProps> = ({ isDark
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
