@@ -32,6 +32,8 @@ import {
   sendAllNewInvitations,
   sendAllEligibleReminders,
   checkReinviteEligibility,
+  searchDiscoveredAlumni,
+  DiscoveredAlumnus,
 } from '../../lib/api/alumniOutreachApi';
 
 interface AlumniOutreachPanelProps {
@@ -41,16 +43,30 @@ interface AlumniOutreachPanelProps {
 const DEPARTMENTS = ['CSE', 'EEE', 'Civil', 'Textile', 'BBA', 'Economics', 'English', 'Law', 'Mathematics'];
 
 export const AlumniOutreachPanel: React.FC<AlumniOutreachPanelProps> = ({ isDarkMode }) => {
+  // Main Sub-Tab: 'outreach' (table) vs 'discovery' (search & capture)
+  const [activeTab, setActiveTab] = useState<'outreach' | 'discovery'>('outreach');
+
   const [invitations, setInvitations] = useState<AlumniInvitation[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'new' | 'invited' | 'joined' | 'eligible'>('all');
   const [deptFilter, setDeptFilter] = useState<string>('all');
 
+  // Auto-Discovery State
+  const [discoveryDept, setDiscoveryDept] = useState<string>('all');
+  const [discoveryKeyword, setDiscoveryKeyword] = useState<string>('');
+  const [discoveredAlumni, setDiscoveredAlumni] = useState<DiscoveredAlumnus[]>([]);
+  const [discoveryLoading, setDiscoveryLoading] = useState(false);
+  const [selectedDiscoveredIds, setSelectedDiscoveredIds] = useState<Set<string>>(new Set());
+  const [capturingIds, setCapturingIds] = useState<Set<string>>(new Set());
+  const [capturedSuccessIds, setCapturedSuccessIds] = useState<Set<string>>(new Set());
+
   // Modals state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
   const [isLinkedInHelperOpen, setIsLinkedInHelperOpen] = useState(false);
+  const [isLinkedInExtractorOpen, setIsLinkedInExtractorOpen] = useState(false);
+  const [extractorPastedText, setExtractorPastedText] = useState('');
 
   // Action busy states
   const [sendingId, setSendingId] = useState<string | null>(null);
@@ -278,6 +294,200 @@ export const AlumniOutreachPanel: React.FC<AlumniOutreachPanelProps> = ({ isDark
     window.open(googleUrl, '_blank');
   };
 
+  // Check if candidate is already in prospects
+  const isAlreadyCaptured = (cand: DiscoveredAlumnus) => {
+    return invitations.some(
+      (inv) =>
+        (cand.email && inv.email.toLowerCase() === cand.email.toLowerCase()) ||
+        (inv.full_name.toLowerCase() === cand.full_name.toLowerCase() && inv.department === cand.department)
+    );
+  };
+
+  const handleRunDiscovery = async () => {
+    setDiscoveryLoading(true);
+    try {
+      const results = await searchDiscoveredAlumni(discoveryDept, discoveryKeyword);
+      setDiscoveredAlumni(results);
+      setSelectedDiscoveredIds(new Set(results.map((r) => r.id)));
+    } catch (e) {
+      console.error('Discovery error:', e);
+      showToast('Failed to discover alumni', 'error');
+    } finally {
+      setDiscoveryLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'discovery' && discoveredAlumni.length === 0) {
+      handleRunDiscovery();
+    }
+  }, [activeTab]);
+
+  const handleToggleSelect = (id: string) => {
+    setSelectedDiscoveredIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleToggleSelectAll = () => {
+    if (selectedDiscoveredIds.size === discoveredAlumni.length) {
+      setSelectedDiscoveredIds(new Set());
+    } else {
+      setSelectedDiscoveredIds(new Set(discoveredAlumni.map((c) => c.id)));
+    }
+  };
+
+  const handleCaptureCandidate = async (candidate: DiscoveredAlumnus) => {
+    setCapturingIds((prev) => new Set(prev).add(candidate.id));
+    const fallbackEmail =
+      candidate.email ||
+      `${candidate.full_name.toLowerCase().replace(/[^a-z0-9]/g, '')}@alumni.bubt.edu.bd`;
+
+    const res = await createAlumniLead({
+      full_name: candidate.full_name,
+      email: fallbackEmail,
+      department: candidate.department,
+      passing_year: candidate.passing_year,
+      intake: candidate.intake,
+      company: candidate.company,
+      designation: candidate.designation,
+      linkedin_url: candidate.linkedin_url,
+      notes: `Discovered from ${candidate.source}`,
+    });
+
+    setCapturingIds((prev) => {
+      const next = new Set(prev);
+      next.delete(candidate.id);
+      return next;
+    });
+
+    if (res.error) {
+      showToast(res.error, 'error');
+    } else {
+      setCapturedSuccessIds((prev) => new Set(prev).add(candidate.id));
+      showToast(`Captured ${candidate.full_name} to prospects!`);
+      fetchLeads();
+    }
+  };
+
+  const handleCaptureAllSelected = async () => {
+    const candidatesToCapture = discoveredAlumni.filter(
+      (c) => selectedDiscoveredIds.has(c.id) && !isAlreadyCaptured(c) && !capturedSuccessIds.has(c.id)
+    );
+    if (candidatesToCapture.length === 0) {
+      showToast('No uncaptured alumni selected to capture', 'error');
+      return;
+    }
+
+    setDiscoveryLoading(true);
+    const leads: CreateAlumniLeadInput[] = candidatesToCapture.map((c) => ({
+      full_name: c.full_name,
+      email:
+        c.email ||
+        `${c.full_name.toLowerCase().replace(/[^a-z0-9]/g, '')}@alumni.bubt.edu.bd`,
+      department: c.department,
+      passing_year: c.passing_year,
+      intake: c.intake,
+      company: c.company,
+      designation: c.designation,
+      linkedin_url: c.linkedin_url,
+      notes: `Discovered from ${c.source}`,
+    }));
+
+    const res = await bulkImportAlumniLeads(leads);
+    setDiscoveryLoading(false);
+
+    if (res.error) {
+      showToast(res.error, 'error');
+    } else {
+      setCapturedSuccessIds((prev) => {
+        const next = new Set(prev);
+        candidatesToCapture.forEach((c) => next.add(c.id));
+        return next;
+      });
+      showToast(`Successfully captured ${res.count} alumni profiles!`);
+      fetchLeads();
+    }
+  };
+
+  const [extractorDept, setExtractorDept] = useState<string>('CSE');
+
+  const handleImportFromExtractorText = async () => {
+    if (!extractorPastedText.trim()) {
+      showToast('Please paste LinkedIn profile cards or JSON first.', 'error');
+      return;
+    }
+    try {
+      let parsedItems: any[] = [];
+      const trimmed = extractorPastedText.trim();
+      if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
+        const parsed = JSON.parse(trimmed);
+        parsedItems = Array.isArray(parsed) ? parsed : [parsed];
+      } else {
+        const lines = trimmed.split('\n');
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          const parts = line.includes('\t')
+            ? line.split('\t')
+            : (line.includes('|') ? line.split('|') : line.split(' - '));
+          if (parts.length >= 1) {
+            parsedItems.push({
+              name: parts[0]?.trim(),
+              headline: parts[1]?.trim() || '',
+              link: parts[2]?.trim() || '',
+            });
+          }
+        }
+      }
+
+      const leads: CreateAlumniLeadInput[] = [];
+      for (const item of parsedItems) {
+        const name = item.name || item.full_name;
+        if (!name) continue;
+        let headline = item.headline || item.role || item.designation || '';
+        let company = '';
+        let designation = headline;
+        if (headline.includes(' at ')) {
+          const parts = headline.split(' at ');
+          designation = parts[0]?.trim();
+          company = parts[1]?.trim();
+        }
+
+        leads.push({
+          full_name: name,
+          email: item.email || `${name.toLowerCase().replace(/[^a-z0-9]/g, '')}@alumni.bubt.edu.bd`,
+          department: item.department || extractorDept,
+          passing_year: item.passing_year ? Number(item.passing_year) : new Date().getFullYear() - 2,
+          company: company || item.company || null,
+          designation: designation || null,
+          linkedin_url: item.link || item.linkedin_url || null,
+          notes: 'Captured via LinkedIn 1-Click Extractor',
+        });
+      }
+
+      if (leads.length === 0) {
+        showToast('Could not parse any alumni profiles.', 'error');
+        return;
+      }
+
+      const res = await bulkImportAlumniLeads(leads);
+      if (res.error) {
+        showToast(res.error, 'error');
+      } else {
+        showToast(`Captured ${res.count} alumni from LinkedIn!`);
+        setIsLinkedInExtractorOpen(false);
+        setExtractorPastedText('');
+        fetchLeads();
+        setActiveTab('outreach');
+      }
+    } catch (err: any) {
+      showToast('Parse error: ' + (err.message || 'Invalid format'), 'error');
+    }
+  };
+
   return (
     <div className={`group relative overflow-hidden rounded-xl lg:rounded-2xl transition-all duration-300 ${
       isDarkMode
@@ -318,6 +528,15 @@ export const AlumniOutreachPanel: React.FC<AlumniOutreachPanelProps> = ({ isDark
 
           <div className="flex items-center flex-wrap gap-2">
             <button
+              onClick={() => setIsLinkedInExtractorOpen(true)}
+              className={`px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                isDarkMode ? 'bg-indigo-950/40 hover:bg-indigo-900/60 text-indigo-300 border border-indigo-500/30' : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200'
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+              LinkedIn Extractor
+            </button>
+            <button
               onClick={() => setIsLinkedInHelperOpen(true)}
               className={`px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
                 isDarkMode ? 'bg-[#1e2330] hover:bg-[#252c3d] text-sky-400 border border-sky-500/30' : 'bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200'
@@ -345,14 +564,56 @@ export const AlumniOutreachPanel: React.FC<AlumniOutreachPanelProps> = ({ isDark
           </div>
         </div>
 
-        {/* Funnel Metrics */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 sm:gap-3">
-          <div className={`p-3.5 rounded-xl border ${isDarkMode ? 'bg-slate-800/40 border-slate-700/60' : 'bg-slate-50 border-slate-200'}`}>
-            <span className={`text-[11px] font-semibold uppercase tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Total Prospects</span>
-            <p className={`text-2xl font-black mt-1 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{counts.total}</p>
-          </div>
-          <div className={`p-3.5 rounded-xl border ${isDarkMode ? 'bg-blue-950/20 border-blue-500/20' : 'bg-blue-50/70 border-blue-200'}`}>
-            <span className={`text-[11px] font-semibold uppercase tracking-wider ${isDarkMode ? 'text-blue-300' : 'text-blue-600'}`}>New (Unsent)</span>
+        {/* Sub-Tab Navigation Bar */}
+        <div className="flex items-center gap-2 border-b pb-3 border-slate-200 dark:border-slate-800">
+          <button
+            onClick={() => setActiveTab('outreach')}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+              activeTab === 'outreach'
+                ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-600/25 ring-2 ring-cyan-500/20'
+                : isDarkMode
+                ? 'bg-slate-800/60 hover:bg-slate-800 text-slate-300'
+                : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+            }`}
+          >
+            <Users className="w-4 h-4" />
+            <span>Outreach Pipeline ({counts.total})</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setActiveTab('discovery');
+              if (discoveredAlumni.length === 0) {
+                handleRunDiscovery();
+              }
+            }}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+              activeTab === 'discovery'
+                ? 'bg-gradient-to-r from-sky-600 to-indigo-600 text-white shadow-lg shadow-indigo-600/25 ring-2 ring-indigo-500/20'
+                : isDarkMode
+                ? 'bg-slate-800/60 hover:bg-slate-800 text-slate-300'
+                : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+            }`}
+          >
+            <Sparkles className="w-4 h-4 text-amber-300" />
+            <span>Multi-Department Auto-Discovery</span>
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-400 text-slate-950 uppercase tracking-wider">
+              All Depts
+            </span>
+          </button>
+        </div>
+
+        {/* Conditional Tab Rendering */}
+        {activeTab === 'outreach' ? (
+          <div className="space-y-6">
+            {/* Funnel Metrics */}
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 sm:gap-3">
+              <div className={`p-3.5 rounded-xl border ${isDarkMode ? 'bg-slate-800/40 border-slate-700/60' : 'bg-slate-50 border-slate-200'}`}>
+                <span className={`text-[11px] font-semibold uppercase tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Total Prospects</span>
+                <p className={`text-2xl font-black mt-1 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{counts.total}</p>
+              </div>
+              <div className={`p-3.5 rounded-xl border ${isDarkMode ? 'bg-blue-950/20 border-blue-500/20' : 'bg-blue-50/70 border-blue-200'}`}>
+                <span className={`text-[11px] font-semibold uppercase tracking-wider ${isDarkMode ? 'text-blue-300' : 'text-blue-600'}`}>New (Unsent)</span>
             <p className={`text-2xl font-black mt-1 ${isDarkMode ? 'text-blue-400' : 'text-blue-700'}`}>{counts.new}</p>
           </div>
           <div className={`p-3.5 rounded-xl border ${isDarkMode ? 'bg-amber-950/20 border-amber-500/20' : 'bg-amber-50/70 border-amber-200'}`}>
@@ -640,6 +901,236 @@ export const AlumniOutreachPanel: React.FC<AlumniOutreachPanelProps> = ({ isDark
           </div>
         )}
       </div>
+    ) : (
+      /* SUB-TAB 2: AUTO-DISCOVERY & MASS CAPTURE */
+      <div className="space-y-5">
+        {/* Discovery Controls Bar */}
+        <div className={`p-4 sm:p-5 rounded-2xl border space-y-4 ${
+          isDarkMode ? 'bg-slate-900/70 border-slate-700/80' : 'bg-slate-50 border-slate-200'
+        }`}>
+          <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+            <div>
+              <h3 className="text-sm font-bold flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-cyan-400" />
+                Search Across All University Departments & Web
+              </h3>
+              <p className={`text-xs mt-0.5 ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                Discover graduates from CSE, EEE, Civil, Textile, BBA, Law, Economics, English, and Math. Select any or all profiles and capture them directly into outreach.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2 flex-wrap">
+              <button
+                onClick={handleCaptureAllSelected}
+                disabled={discoveryLoading || selectedDiscoveredIds.size === 0}
+                className="px-4 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white flex items-center gap-1.5 shadow-lg shadow-cyan-600/20 disabled:opacity-50 transition-all"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                Capture Selected ({selectedDiscoveredIds.size})
+              </button>
+              <button
+                onClick={() => setIsLinkedInExtractorOpen(true)}
+                className={`px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 border transition-all ${
+                  isDarkMode ? 'bg-indigo-950/40 text-indigo-300 border-indigo-500/30 hover:bg-indigo-900/60' : 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100'
+                }`}
+              >
+                <Linkedin className="w-3.5 h-3.5" />
+                LinkedIn Extractor
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
+            {/* Dept Selector */}
+            <div className="sm:col-span-3">
+              <select
+                value={discoveryDept}
+                onChange={(e) => setDiscoveryDept(e.target.value)}
+                className={`w-full px-3 py-2.5 rounded-xl text-xs font-semibold border outline-none ${
+                  isDarkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-800'
+                }`}
+              >
+                <option value="all">All Departments (9)</option>
+                {DEPARTMENTS.map((d) => (
+                  <option key={d} value={d}>{d}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Keyword Search */}
+            <div className="sm:col-span-7 relative">
+              <Search className={`w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`} />
+              <input
+                type="text"
+                value={discoveryKeyword}
+                onChange={(e) => setDiscoveryKeyword(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleRunDiscovery()}
+                placeholder="Filter by alumnus name, current company (e.g. Brain Station, bKash), or role..."
+                className={`w-full pl-9 pr-3 py-2.5 rounded-xl text-xs border outline-none ${
+                  isDarkMode ? 'bg-slate-800 border-slate-700 text-white placeholder-slate-500' : 'bg-white border-slate-300 text-slate-900 placeholder-slate-400'
+                }`}
+              />
+            </div>
+
+            {/* Search Button */}
+            <div className="sm:col-span-2">
+              <button
+                onClick={handleRunDiscovery}
+                disabled={discoveryLoading}
+                className="w-full h-full py-2.5 rounded-xl text-xs font-bold bg-cyan-600 hover:bg-cyan-500 text-white flex items-center justify-center gap-1.5 shadow-md transition-all disabled:opacity-50"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${discoveryLoading ? 'animate-spin' : ''}`} />
+                {discoveryLoading ? 'Scanning...' : 'Scan Now'}
+              </button>
+            </div>
+          </div>
+
+          {/* Select all & counts status */}
+          <div className="flex items-center justify-between text-xs pt-1">
+            <div className="flex items-center gap-2">
+              <label className="flex items-center gap-2 cursor-pointer font-semibold select-none">
+                <input
+                  type="checkbox"
+                  checked={discoveredAlumni.length > 0 && selectedDiscoveredIds.size === discoveredAlumni.length}
+                  onChange={handleToggleSelectAll}
+                  className="rounded text-cyan-600 focus:ring-cyan-500 w-3.5 h-3.5"
+                />
+                <span>Select All ({discoveredAlumni.length} Candidates)</span>
+              </label>
+            </div>
+            <span className={`text-[11px] ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+              {selectedDiscoveredIds.size} of {discoveredAlumni.length} selected
+            </span>
+          </div>
+        </div>
+
+        {/* Discovery Candidate Grid / Cards */}
+        {discoveryLoading ? (
+          <div className="py-16 text-center">
+            <RefreshCw className="w-8 h-8 animate-spin mx-auto text-cyan-400 mb-3" />
+            <p className="text-sm font-bold">Scanning BUBT alumni records across departments...</p>
+            <p className={`text-xs mt-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+              Checking CSE portal, multi-department graduate database, and online networks...
+            </p>
+          </div>
+        ) : discoveredAlumni.length === 0 ? (
+          <div className={`py-12 text-center rounded-2xl border border-dashed ${
+            isDarkMode ? 'border-slate-800 text-slate-400' : 'border-slate-300 text-slate-500 bg-slate-50'
+          }`}>
+            <GraduationCap className="w-10 h-10 mx-auto mb-2 opacity-50 text-cyan-400" />
+            <p className="text-sm font-bold">No alumni found for the selected criteria</p>
+            <p className="text-xs mt-1">Try switching department to "All Departments" or clearing the keyword filter.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+            {discoveredAlumni.map((cand) => {
+              const isCaptured = isAlreadyCaptured(cand);
+              const isJustCaptured = capturedSuccessIds.has(cand.id);
+              const isCapturing = capturingIds.has(cand.id);
+              const isSelected = selectedDiscoveredIds.has(cand.id);
+
+              return (
+                <div
+                  key={cand.id}
+                  className={`p-4 rounded-xl border transition-all relative flex flex-col justify-between ${
+                    isSelected
+                      ? (isDarkMode ? 'bg-slate-800/80 border-cyan-500/50 shadow-lg shadow-cyan-950/20' : 'bg-cyan-50/50 border-cyan-400/60 shadow-sm')
+                      : (isDarkMode ? 'bg-slate-900/60 border-slate-800/80 hover:border-slate-700' : 'bg-white border-slate-200 hover:border-slate-300')
+                  }`}
+                >
+                  <div>
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <label className="flex items-center gap-2 cursor-pointer flex-1">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => handleToggleSelect(cand.id)}
+                          disabled={isCaptured || isJustCaptured}
+                          className="rounded text-cyan-600 focus:ring-cyan-500 w-3.5 h-3.5 mt-0.5"
+                        />
+                        <span className="font-bold text-sm leading-tight text-slate-900 dark:text-white">
+                          {cand.full_name}
+                        </span>
+                      </label>
+
+                      <span className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider shrink-0 ${
+                        cand.department === 'CSE'
+                          ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                          : cand.department === 'EEE'
+                          ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                          : cand.department === 'BBA'
+                          ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                          : cand.department === 'Civil'
+                          ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
+                          : cand.department === 'Textile'
+                          ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
+                          : cand.department === 'Law'
+                          ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+                          : 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
+                      }`}>
+                        {cand.department}
+                      </span>
+                    </div>
+
+                    <div className={`text-xs space-y-1 mb-3 ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>
+                      <div className="flex items-center gap-1.5 font-medium">
+                        <Building className="w-3.5 h-3.5 opacity-60 text-cyan-400 shrink-0" />
+                        <span className="truncate">
+                          {cand.designation || 'Alumnus'} {cand.company ? `· ${cand.company}` : ''}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-[11px] opacity-75">
+                        <GraduationCap className="w-3.5 h-3.5 opacity-60 shrink-0" />
+                        <span>
+                          {cand.intake ? `Intake ${cand.intake}` : 'BUBT Graduate'}
+                          {cand.passing_year ? ` · Class of ${cand.passing_year}` : ''}
+                        </span>
+                      </div>
+                      {cand.linkedin_url && (
+                        <div className="pt-1">
+                          <a
+                            href={cand.linkedin_url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1 text-[11px] text-sky-400 hover:underline"
+                          >
+                            <Linkedin className="w-3 h-3" />
+                            View LinkedIn Profile
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-200/60 dark:border-slate-800/80 flex items-center justify-between gap-2 text-xs">
+                    <span className={`text-[10px] truncate max-w-[140px] ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`} title={cand.source}>
+                      {cand.source}
+                    </span>
+
+                    {isJustCaptured || isCaptured ? (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                        <CheckCircle2 className="w-3 h-3" />
+                        In Prospects
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => handleCaptureCandidate(cand)}
+                        disabled={isCapturing}
+                        className="px-3 py-1 rounded-lg text-xs font-bold bg-cyan-600 hover:bg-cyan-500 text-white flex items-center gap-1 shadow-sm transition-all disabled:opacity-50"
+                      >
+                        <Plus className={`w-3 h-3 ${isCapturing ? 'animate-spin' : ''}`} />
+                        {isCapturing ? 'Capturing...' : 'Capture'}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    )}
+  </div>
 
       {/* MODAL 1: Add Single Prospect */}
       {isAddModalOpen && (
@@ -907,6 +1398,138 @@ export const AlumniOutreachPanel: React.FC<AlumniOutreachPanelProps> = ({ isDark
                   <ExternalLink className="w-3.5 h-3.5" />
                   Launch Google Search
                 </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 4: LinkedIn 1-Click Profile Extractor */}
+      {isLinkedInExtractorOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+          <div className={`w-full max-w-2xl rounded-2xl p-6 border shadow-2xl relative max-h-[90vh] overflow-y-auto ${
+            isDarkMode ? 'bg-[#161a23] border-slate-700 text-white' : 'bg-white border-slate-200 text-slate-900'
+          }`}>
+            <button
+              onClick={() => setIsLinkedInExtractorOpen(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-white"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-2 mb-1.5">
+              <div className="p-2 rounded-lg bg-sky-500/20 text-sky-400">
+                <Linkedin className="w-5 h-5" />
+              </div>
+              <h3 className="text-lg font-bold">LinkedIn 1-Click Profile Extractor</h3>
+            </div>
+            <p className={`text-xs mb-4 ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+              Capture dozens of alumni profiles directly from BUBT's LinkedIn People directory or search results.
+            </p>
+
+            {/* Step-by-Step Helper Card */}
+            <div className={`p-4 rounded-xl border mb-4 space-y-3 ${
+              isDarkMode ? 'bg-slate-900/80 border-slate-700/80' : 'bg-sky-50/50 border-sky-200'
+            }`}>
+              <div className="text-xs font-bold text-sky-400 flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5" />
+                How to capture in 15 seconds:
+              </div>
+              <ol className="text-xs space-y-2 list-decimal list-inside opacity-90 leading-relaxed">
+                <li>
+                  Open <a href="https://www.linkedin.com/school/bubt/people/" target="_blank" rel="noreferrer" className="text-sky-400 underline font-semibold">BUBT on LinkedIn (People Tab)</a> in a new tab.
+                </li>
+                <li>
+                  Filter by field of study / department (e.g. Computer Science, Business, Engineering) and scroll down to load profiles.
+                </li>
+                <li>
+                  Copy the bookmarklet script below and paste it into your browser's DevTools Console (or bookmark bar).
+                </li>
+                <li>
+                  Come back here and paste the copied data into the box below!
+                </li>
+              </ol>
+
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const script = `javascript:(function(){const c=document.querySelectorAll('.org-people-profile-card,.artdeco-card,.entity-result');const l=[];c.forEach(x=>{const n=x.querySelector('.org-people-profile-card__profile-title,.entity-result__title-text a,.app-aware-link');const h=x.querySelector('.artdeco-entity-lockup__subtitle,.entity-result__primary-subtitle,.org-people-profile-card__profile-sub-title');const a=x.querySelector('a[href*="/in/"]');if(n&&a){const nm=n.innerText.trim().replace(/\\n+/g,' ');const hd=h?h.innerText.trim().replace(/\\n+/g,' '):'';const lk=a.href.split('?')[0];if(nm&&lk&&!l.some(y=>y.name===nm))l.push({name:nm,headline:hd,link:lk});}});if(!l.length){alert('No alumni profiles found. Scroll down the LinkedIn page and click again!');return;}navigator.clipboard.writeText(JSON.stringify(l,null,2)).then(()=>alert('Captured '+l.length+' BUBT alumni profiles! Now paste into Edu51 Portal.'));})();`;
+                    navigator.clipboard.writeText(script);
+                    showToast('Bookmarklet script copied to clipboard!');
+                  }}
+                  className="px-3 py-1.5 rounded-lg text-xs font-bold bg-sky-600 hover:bg-sky-500 text-white flex items-center justify-center gap-1.5 shadow-sm transition-all"
+                >
+                  <Copy className="w-3.5 h-3.5" />
+                  Copy Bookmarklet Script
+                </button>
+                <a
+                  href="https://www.linkedin.com/school/bubt/people/"
+                  target="_blank"
+                  rel="noreferrer"
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 border transition-all ${
+                    isDarkMode ? 'bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700' : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-300'
+                  }`}
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  Open BUBT LinkedIn People
+                </a>
+              </div>
+            </div>
+
+            {/* Input and Department Selection */}
+            <div className="space-y-3 text-xs">
+              <div className="flex items-center justify-between gap-3">
+                <label className="font-bold">Paste Extracted Profiles (JSON or Plain Text)</label>
+                <div className="flex items-center gap-2">
+                  <span className={`text-[11px] ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Assign Dept:</span>
+                  <select
+                    value={extractorDept}
+                    onChange={(e) => setExtractorDept(e.target.value)}
+                    className={`px-2 py-1 rounded-lg text-xs font-medium border outline-none ${
+                      isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-slate-50 border-slate-300'
+                    }`}
+                  >
+                    {DEPARTMENTS.map(d => (
+                      <option key={d} value={d}>{d}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <textarea
+                rows={7}
+                value={extractorPastedText}
+                onChange={(e) => setExtractorPastedText(e.target.value)}
+                placeholder="Paste the JSON array from the bookmarklet or plain text lines (e.g. Nahid Bin Azhar - CTO at JoulesLabs - https://bd.linkedin.com/in/nahid-bin-azhar)"
+                className={`w-full p-3 font-mono text-xs rounded-xl border outline-none ${
+                  isDarkMode ? 'bg-slate-900 border-slate-700 text-cyan-300' : 'bg-slate-50 border-slate-200 text-slate-900'
+                }`}
+              />
+
+              <div className="flex justify-between items-center pt-2">
+                <span className={`text-[11px] ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                  {extractorPastedText.trim() ? 'Ready to parse profiles' : 'Paste content above'}
+                </span>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsLinkedInExtractorOpen(false)}
+                    className={`px-4 py-2 rounded-lg font-medium text-xs ${
+                      isDarkMode ? 'bg-slate-800 text-slate-300' : 'bg-slate-100 text-slate-700'
+                    }`}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleImportFromExtractorText}
+                    className="px-5 py-2 rounded-lg font-bold text-xs bg-cyan-600 hover:bg-cyan-500 text-white shadow-lg flex items-center gap-1.5"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    Capture Into Prospects
+                  </button>
+                </div>
               </div>
             </div>
           </div>

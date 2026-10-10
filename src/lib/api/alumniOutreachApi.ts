@@ -1,4 +1,18 @@
 import { supabase } from '../supabase';
+import bubtAlumniDirectory from '../../data/bubtAlumniDirectory.json';
+
+export interface DiscoveredAlumnus {
+  id: string;
+  full_name: string;
+  department: string;
+  intake?: number | null;
+  passing_year?: number | null;
+  designation?: string | null;
+  company?: string | null;
+  linkedin_url?: string | null;
+  email?: string | null;
+  source: string;
+}
 
 export interface AlumniInvitation {
   id: string;
@@ -197,6 +211,50 @@ export async function deleteAlumniLead(id: string): Promise<{ success: boolean; 
 }
 
 /**
+ * Searches discovered alumni across all departments
+ * Combines serverless endpoint with fallback to pre-indexed directory
+ */
+export async function searchDiscoveredAlumni(
+  department: string = 'all',
+  keyword: string = ''
+): Promise<DiscoveredAlumnus[]> {
+  try {
+    const params = new URLSearchParams();
+    if (department && department !== 'all') params.set('dept', department);
+    if (keyword.trim()) params.set('q', keyword.trim());
+
+    const res = await fetch(`/api/alumni-search?${params.toString()}`);
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data.results) && data.results.length > 0) {
+        return data.results;
+      }
+    }
+  } catch (err) {
+    console.warn('API alumni search fetch failed, using local pre-indexed directory:', err);
+  }
+
+  // Fallback to local pre-indexed multi-department directory
+  let results = bubtAlumniDirectory as DiscoveredAlumnus[];
+  if (department && department !== 'all') {
+    results = results.filter(
+      (a) => a.department.toLowerCase() === department.toLowerCase()
+    );
+  }
+  if (keyword.trim()) {
+    const q = keyword.toLowerCase();
+    results = results.filter(
+      (a) =>
+        a.full_name.toLowerCase().includes(q) ||
+        (a.company && a.company.toLowerCase().includes(q)) ||
+        (a.designation && a.designation.toLowerCase().includes(q)) ||
+        (a.email && a.email.toLowerCase().includes(q))
+    );
+  }
+  return results;
+}
+
+/**
  * Generate invitation email HTML
  */
 function buildInvitationEmailHtml(invitation: AlumniInvitation, inviteUrl: string, isReminder: boolean): string {
@@ -210,6 +268,8 @@ function buildInvitationEmailHtml(invitation: AlumniInvitation, inviteUrl: strin
 
   const companyPart = invitation.company ? `at ${invitation.company}` : '';
   const roleText = invitation.designation || 'Alumnus';
+  const gradYearText = invitation.passing_year ? `Class of ${invitation.passing_year}` : 'BUBT Alumni';
+  const intakePart = invitation.intake ? ` · Intake ${invitation.intake}` : '';
 
   return `
 <!DOCTYPE html>
@@ -241,14 +301,24 @@ function buildInvitationEmailHtml(invitation: AlumniInvitation, inviteUrl: strin
           <table style="width:100%;font-size:13px;border-collapse:collapse;">
             <tr><td style="padding:4px 0;color:#64748b;">Name:</td><td style="padding:4px 0;color:#f1f5f9;font-weight:600;text-align:right;">${invitation.full_name}</td></tr>
             <tr><td style="padding:4px 0;color:#64748b;">Department:</td><td style="padding:4px 0;color:#f1f5f9;font-weight:600;text-align:right;">${invitation.department}</td></tr>
-            <tr><td style="padding:4px 0;color:#64748b;">Graduation Year:</td><td style="padding:4px 0;color:#f1f5f9;font-weight:600;text-align:right;">${invitation.passing_year || 'BUBT Alumni'}</td></tr>
+            <tr><td style="padding:4px 0;color:#64748b;">Graduation & Intake:</td><td style="padding:4px 0;color:#f1f5f9;font-weight:600;text-align:right;">${gradYearText}${intakePart}</td></tr>
             <tr><td style="padding:4px 0;color:#64748b;">Current Role:</td><td style="padding:4px 0;color:#f1f5f9;font-weight:600;text-align:right;">${roleText} ${companyPart}</td></tr>
             <tr><td style="padding:4px 0;color:#64748b;">Status:</td><td style="padding:4px 0;color:#34d399;font-weight:700;text-align:right;">✓ Pre-Verified by Administration</td></tr>
           </table>
         </div>
 
+        <!-- 3 Key Alumni Perks -->
+        <div style="background:rgba(2,132,199,0.08);border:1px solid rgba(2,132,199,0.25);border-radius:12px;padding:14px 16px;margin-bottom:20px;">
+          <div style="font-size:12px;font-weight:700;color:#38bdf8;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;">Why Join the Network?</div>
+          <ul style="margin:0;padding-left:18px;font-size:13px;color:#cbd5e1;line-height:1.7;">
+            <li><strong>Connect with Alumni:</strong> Network with fellow BUBT graduates across industry-leading firms.</li>
+            <li><strong>Support Juniors:</strong> (Optional) Guide current students with career tips and resume feedback.</li>
+            <li><strong>Zero Waitlist:</strong> Pre-approved by administration—no ID card upload or approval waiting required.</li>
+          </ul>
+        </div>
+
         <p style="font-size:13px;color:#94a3b8;margin-bottom:20px;line-height:1.6;">
-          Claiming your account takes less than <strong>30 seconds</strong>. Simply review your pre-filled details, set your password, and stay connected with juniors and fellow alumni.
+          Claiming your account takes less than <strong>30 seconds</strong>. Simply review your pre-filled details, set your password, and start connecting.
         </p>
 
         <div style="text-align:center;margin:28px 0 16px 0;">
@@ -256,11 +326,18 @@ function buildInvitationEmailHtml(invitation: AlumniInvitation, inviteUrl: strin
             Claim Your Verified Profile →
           </a>
           <div style="font-size:11px;color:#64748b;margin-top:8px;">
-            No forms or waiting required · Direct instant access
+            Direct instant access · Pre-verified status active
           </div>
+        </div>
+
+        <!-- Fallback plain text link -->
+        <div style="margin-top:24px;padding-top:14px;border-top:1px solid #283040;font-size:11px;color:#64748b;line-height:1.5;">
+          Button not working? Copy and paste this URL into your browser:<br/>
+          <a href="${inviteUrl}" style="color:#38bdf8;word-break:break-all;">${inviteUrl}</a>
         </div>
       </div>
       <div style="background:#11141c;padding:20px;text-align:center;border-top:1px solid #242b3b;font-size:11px;color:#475569;">
+        Sent on behalf of the <strong>BUBT Alumni Relations Team & Administration</strong><br/>
         © 2026 Edu51Portal · BUBT Academic & Alumni Network · Mirpur-2, Dhaka
       </div>
     </div>
