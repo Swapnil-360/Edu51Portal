@@ -138,21 +138,21 @@ export const FacultyDirectoryPage: React.FC<FacultyDirectoryPageProps> = ({
 
   return (
     <div className={`min-h-screen pb-16 transition-colors ${pageBg} ${isDarkMode ? "text-[#e7e9ea]" : "text-slate-900"}`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-4 sm:pt-6">
         {/* Header Title Row */}
-        <div className="flex items-center justify-between mb-4">
-          <div>
+        <div className="flex items-center justify-between mb-4 gap-3">
+          <div className="min-w-0 flex-1">
             <h1 className={`text-xl sm:text-2xl font-bold ${titleColor}`}>
               Info Hub
             </h1>
-            <p className={`text-xs sm:text-sm mt-0.5 ${subColor}`}>
+            <p className={`text-xs sm:text-sm mt-0.5 ${subColor} break-words`}>
               BUBT university directory for faculty members, administrative offices, and official circulars
             </p>
           </div>
 
           <button
             onClick={onClose}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold border flex items-center gap-1.5 transition-colors flex-shrink-0 ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold border flex items-center gap-1.5 transition-colors flex-shrink-0 ${
               isDarkMode
                 ? "bg-[#16181c] border-[#2f3336] text-[#71767b] hover:text-white hover:bg-[#202327]"
                 : "bg-white border-slate-300 text-slate-600 hover:text-slate-900 shadow-sm"
@@ -164,16 +164,18 @@ export const FacultyDirectoryPage: React.FC<FacultyDirectoryPageProps> = ({
         </div>
 
         {/* Pill Tab Row — exact NetworkPage style */}
-        <div
-          className={`inline-flex items-center rounded-full p-1.5 gap-0.5 border mb-5 ${
-            isDarkMode
-              ? "bg-[#16181c] border-[#2f3336] shadow-lg shadow-black/20"
-              : "bg-white border-slate-300 shadow-md shadow-black/8"
-          }`}
-        >
-          {tabBtn("faculty", "Faculty", 472)}
-          {tabBtn("officials", "Officials", 11)}
-          {tabBtn("notices", "Notices", noticesCount)}
+        <div className="max-w-full overflow-x-auto no-scrollbar mb-5">
+          <div
+            className={`inline-flex items-center rounded-full p-1.5 gap-0.5 border ${
+              isDarkMode
+                ? "bg-[#16181c] border-[#2f3336] shadow-lg shadow-black/20"
+                : "bg-white border-slate-300 shadow-md shadow-black/8"
+            }`}
+          >
+            {tabBtn("faculty", "Faculty", 472)}
+            {tabBtn("officials", "Officials", 11)}
+            {tabBtn("notices", "Notices", noticesCount)}
+          </div>
         </div>
 
         {/* ── TAB 1: FACULTY DIRECTORY ── */}

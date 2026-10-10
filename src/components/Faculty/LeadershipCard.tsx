@@ -50,12 +50,12 @@ export const LeadershipCard: React.FC<LeadershipCardProps> = ({
   }`;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full max-w-full overflow-hidden">
       {/* ── Featured Vice-Chancellor Card ── */}
-      <div className={`p-5 sm:p-6 rounded-xl border ${
+      <div className={`p-4 sm:p-6 rounded-xl border w-full max-w-full overflow-hidden ${
         isDarkMode ? "bg-[#17181c] border-[#2f3336]/70" : "bg-white border-slate-200 shadow-sm"
       }`}>
-        <div className="flex flex-col sm:flex-row items-start gap-5">
+        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-5 w-full min-w-0">
           {/* Avatar */}
           <div className="relative flex-shrink-0 mx-auto sm:mx-0">
             {!vcImgError ? (
@@ -89,16 +89,16 @@ export const LeadershipCard: React.FC<LeadershipCardProps> = ({
           </div>
 
           {/* VC Info */}
-          <div className="flex-1 min-w-0 text-center sm:text-left">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div>
-                <h2 className={`text-lg sm:text-xl font-bold leading-tight ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+          <div className="flex-1 w-full min-w-0 text-center sm:text-left">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+              <div className="min-w-0">
+                <h2 className={`text-lg sm:text-xl font-bold leading-tight break-words ${isDarkMode ? "text-white" : "text-slate-900"}`}>
                   {viceChancellor.name}
                 </h2>
-                <p className="text-xs sm:text-sm font-semibold text-[#1e9df1] mt-0.5">
+                <p className="text-xs sm:text-sm font-semibold text-[#1e9df1] mt-1 break-words">
                   {viceChancellor.title} • {viceChancellor.university}
                 </p>
-                <p className={`text-xs mt-0.5 ${isDarkMode ? "text-[#71767b]" : "text-slate-500"}`}>
+                <p className={`text-xs mt-0.5 break-words ${isDarkMode ? "text-[#71767b]" : "text-slate-500"}`}>
                   {viceChancellor.academicRole}
                 </p>
               </div>
@@ -108,7 +108,7 @@ export const LeadershipCard: React.FC<LeadershipCardProps> = ({
                   href={viceChancellor.profileUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-3 py-1.5 rounded-lg bg-[#1e9df1] hover:bg-[#1677cc] text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors self-center sm:self-start"
+                  className="px-3.5 py-1.5 rounded-lg bg-[#1e9df1] hover:bg-[#1677cc] text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors self-center sm:self-start flex-shrink-0 shadow-sm"
                 >
                   <span>Official Desk</span>
                   <ExternalLink className="w-3.5 h-3.5" />
@@ -118,7 +118,7 @@ export const LeadershipCard: React.FC<LeadershipCardProps> = ({
 
             {/* Quote message */}
             <blockquote
-              className={`mt-3 p-3 rounded-lg text-xs italic leading-relaxed border ${
+              className={`mt-3 p-3 rounded-lg text-xs italic leading-relaxed border w-full break-words text-left ${
                 isDarkMode
                   ? "bg-[#111317] border-[#2f3336]/60 text-slate-300"
                   : "bg-slate-50 border-slate-200 text-slate-700"
@@ -128,18 +128,18 @@ export const LeadershipCard: React.FC<LeadershipCardProps> = ({
             </blockquote>
 
             {/* Contact details row */}
-            <div className="mt-3 flex flex-wrap items-center justify-center sm:justify-start gap-2.5 text-xs">
+            <div className="mt-3 flex flex-wrap items-center justify-center sm:justify-start gap-2 text-xs w-full min-w-0">
               <div
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border ${
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border max-w-full min-w-0 ${
                   isDarkMode ? "bg-[#111317] border-[#2f3336]/60" : "bg-slate-50 border-slate-200"
                 }`}
               >
                 <Mail className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />
-                <span className="font-mono text-[11px]">{viceChancellor.email}</span>
+                <span className="font-mono text-[11px] truncate">{viceChancellor.email}</span>
                 <button
                   onClick={() => handleCopy(viceChancellor.email)}
                   title="Copy Email"
-                  className="ml-1 p-0.5 hover:text-[#1e9df1] transition-colors"
+                  className="ml-1 p-0.5 hover:text-[#1e9df1] transition-colors flex-shrink-0"
                 >
                   {copiedEmail === viceChancellor.email ? (
                     <Check className="w-3 h-3 text-emerald-400" />
@@ -150,21 +150,23 @@ export const LeadershipCard: React.FC<LeadershipCardProps> = ({
               </div>
 
               <div
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border ${
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border max-w-full min-w-0 ${
                   isDarkMode ? "bg-[#111317] border-[#2f3336]/60" : "bg-slate-50 border-slate-200"
                 }`}
               >
                 <Phone className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
-                <span className="text-[11px]">{viceChancellor.phone}</span>
+                <span className="text-[11px] font-mono truncate">{viceChancellor.phone}</span>
               </div>
 
               <div
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border max-w-full ${
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border max-w-full w-full sm:w-auto min-w-0 ${
                   isDarkMode ? "bg-[#111317] border-[#2f3336]/60" : "bg-slate-50 border-slate-200"
                 }`}
               >
                 <MapPin className="w-3.5 h-3.5 text-rose-500 flex-shrink-0" />
-                <span className="text-[11px] truncate">{viceChancellor.office}</span>
+                <span className="text-[11px] truncate text-left" title={viceChancellor.office}>
+                  {viceChancellor.office}
+                </span>
               </div>
             </div>
           </div>
@@ -172,8 +174,8 @@ export const LeadershipCard: React.FC<LeadershipCardProps> = ({
       </div>
 
       {/* ── Administrative Offices Section ── */}
-      <div>
-        <div className="mb-3.5 flex items-center justify-between">
+      <div className="w-full min-w-0">
+        <div className="mb-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-2">
           <h3 className={`text-base font-bold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
             Administrative Offices & Student Desks ({administrativeOffices.length})
           </h3>
@@ -182,57 +184,58 @@ export const LeadershipCard: React.FC<LeadershipCardProps> = ({
           </span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 w-full">
           {administrativeOffices.map((office, idx) => (
-            <div key={idx} className={`${cardCls} p-4 flex flex-col justify-between`}>
-              <div>
+            <div key={idx} className={`${cardCls} p-4 flex flex-col justify-between w-full min-w-0 overflow-hidden`}>
+              <div className="min-w-0">
                 <div className="flex items-start justify-between gap-2 mb-1.5">
-                  <h4 className={`font-semibold text-sm leading-snug ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                  <h4 className={`font-semibold text-sm leading-snug break-words flex-1 min-w-0 ${isDarkMode ? "text-white" : "text-slate-900"}`}>
                     {office.name}
                   </h4>
                   <span
-                    className={`text-[10px] font-medium px-2 py-0.5 rounded border flex-shrink-0 ${
+                    className={`text-[10px] font-medium px-2 py-0.5 rounded border flex-shrink-0 max-w-[130px] truncate ${
                       isDarkMode
                         ? "bg-[#111317] text-slate-300 border-[#2f3336]"
                         : "bg-slate-100 text-slate-700 border-slate-200"
                     }`}
+                    title={office.designation}
                   >
                     {office.designation}
                   </span>
                 </div>
 
-                <p className={`text-xs leading-relaxed mb-3 ${isDarkMode ? "text-[#71767b]" : "text-slate-600"}`}>
+                <p className={`text-xs leading-relaxed mb-3 break-words ${isDarkMode ? "text-[#71767b]" : "text-slate-600"}`}>
                   {office.description}
                 </p>
               </div>
 
               {/* Office Contact Info */}
               <div
-                className={`pt-2.5 border-t space-y-1.5 text-xs ${
+                className={`pt-2.5 border-t space-y-1.5 text-xs min-w-0 ${
                   isDarkMode ? "border-[#2f3336]/60" : "border-slate-100"
                 }`}
               >
                 {office.location && (
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1.5 min-w-0">
                     <MapPin className="w-3 h-3 text-rose-500 flex-shrink-0" />
-                    <span className={`truncate text-[11px] ${isDarkMode ? "text-slate-400" : "text-slate-600"}`}>
+                    <span className={`truncate text-[11px] ${isDarkMode ? "text-slate-400" : "text-slate-600"}`} title={office.location}>
                       {office.location}
                     </span>
                   </div>
                 )}
 
                 {office.phone && (
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1.5 min-w-0">
                     <Phone className="w-3 h-3 text-emerald-500 flex-shrink-0" />
-                    <span className="truncate font-mono text-[11px]">{office.phone}</span>
+                    <span className="truncate font-mono text-[11px]" title={office.phone}>{office.phone}</span>
                   </div>
                 )}
 
                 {office.email && (
-                  <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center justify-between gap-2 min-w-0">
                     <a
                       href={`mailto:${office.email}`}
-                      className="flex items-center gap-1.5 font-mono text-[11px] truncate text-[#1e9df1] hover:underline"
+                      className="flex items-center gap-1.5 font-mono text-[11px] truncate text-[#1e9df1] hover:underline min-w-0 flex-1"
                     >
                       <Mail className="w-3 h-3 flex-shrink-0" />
                       <span className="truncate">{office.email}</span>
