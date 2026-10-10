@@ -2,9 +2,30 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 
+function apiDevPlugin() {
+  return {
+    name: 'api-dev-server',
+    configureServer(server: any) {
+      server.middlewares.use(async (req: any, res: any, next: any) => {
+        if (req.url && (req.url === '/api/notices' || req.url.startsWith('/api/notices?'))) {
+          try {
+            const handlerModule = await import('./api/notices.ts');
+            return handlerModule.default(req, res);
+          } catch (e: any) {
+            res.statusCode = 500;
+            res.end(JSON.stringify({ error: e.message }));
+            return;
+          }
+        }
+        next();
+      });
+    },
+  };
+}
+
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
-  plugins: [react()],
+  plugins: [react(), apiDevPlugin()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

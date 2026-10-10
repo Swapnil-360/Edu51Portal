@@ -1,0 +1,116 @@
+{
+  "viceChancellor": {
+    "name": "Prof. Dr. A B M Shawkat Ali",
+    "title": "Vice-Chancellor",
+    "university": "Bangladesh University of Business and Technology (BUBT)",
+    "academicRole": "Professor, Department of Data Science & Engineering",
+    "email": "vc@bubt.edu.bd",
+    "phone": "+880 2-4803-6351 (Ext: 110)",
+    "office": "Office of the Vice-Chancellor, Building 1, BUBT Permanent Campus, Rupnagar, Mirpur-2, Dhaka",
+    "avatar": "/images/vc-shawkat-ali.jpg",
+    "message": "Welcome to BUBT. Our mission is to produce world-class graduates equipped with high technical competency, analytical mindset, and ethical leadership to serve the nation and the global society.",
+    "bio": "Prof. Dr. A B M Shawkat Ali assumed the role of Vice-Chancellor of BUBT on October 1, 2024. Prior to joining BUBT, he served as a professor in the Department of Computer Science and Engineering at The University of Fiji. He is an internationally acclaimed computer scientist, academician, and researcher with deep expertise in Artificial Intelligence, Machine Learning, and Big Data.",
+    "profileUrl": "https://www.bubt.edu.bd/offices/office-of-the-vice-chancellor"
+  },
+  "administrativeOffices": [
+    {
+      "name": "Office of the Vice-Chancellor",
+      "head": "Prof. Dr. A B M Shawkat Ali",
+      "designation": "Vice-Chancellor",
+      "email": "vc@bubt.edu.bd",
+      "phone": "+880 2-4803-6351 (Ext: 110)",
+      "location": "Building 1, Level 4",
+      "description": "Executive leadership, policy direction, and overall academic governance of BUBT."
+    },
+    {
+      "name": "Office of the Registrar",
+      "head": "Dr. Md. Harun-Or-Rashid",
+      "designation": "Registrar",
+      "email": "registrar@bubt.edu.bd",
+      "phone": "+880 2-4803-6351 (Ext: 106, 107)",
+      "location": "Building 1, Level 1",
+      "description": "Student enrollment records, academic certificates, transcripts, and official administration."
+    },
+    {
+      "name": "Office of the Controller of Examinations",
+      "head": "Controller of Examinations",
+      "designation": "Controller of Examinations",
+      "email": "controller@bubt.edu.bd",
+      "phone": "+880 2-4803-6351 (Ext: 112)",
+      "location": "Building 1, Level 2",
+      "description": "Semester final examinations, midterm routine scheduling, grade reports, and result publications."
+    },
+    {
+      "name": "Office of the Proctor",
+      "head": "Proctorial Body",
+      "designation": "Proctor",
+      "email": "proctor@bubt.edu.bd",
+      "phone": "+880 2-4803-6351 (Ext: 115)",
+      "location": "Building 1, Level 1",
+      "description": "Campus discipline, student code of conduct, safety, and campus security."
+    },
+    {
+      "name": "Student Welfare of BUBT",
+      "head": "Director, Student Welfare",
+      "designation": "Director",
+      "email": "studentwelfare@bubt.edu.bd",
+      "phone": "+880 2-4803-6351 (Ext: 120)",
+      "location": "Building 2, Level 2",
+      "description": "Student financial aid, waivers, co-curricular clubs, student support, and grievance redressal."
+    },
+    {
+      "name": "Office of the Treasurer",
+      "head": "Treasurer",
+      "designation": "Treasurer",
+      "email": "treasurer@bubt.edu.bd",
+      "phone": "+880 2-4803-6351 (Ext: 108)",
+      "location": "Building 1, Level 3",
+      "description": "Financial management, fees collection, budget oversight, and accounts."
+    },
+    {
+      "name": "Career Guidance & Counselling",
+      "head": "Director, Career Services",
+      "designation": "Director",
+      "email": "careerguidance@bubt.edu.bd",
+      "phone": "+880 2-4803-6351 (Ext: 125)",
+      "location": "Building 2, Level 3",
+      "description": "Job fairs, corporate internships, CV writing workshops, and alumni placement connections."
+    },
+    {
+      "name": "Admission & Information Office",
+      "head": "Head of Admissions",
+      "designation": "Deputy Registrar (Admission)",
+      "email": "admission@bubt.edu.bd",
+      "phone": "+880 1810-033733, +880 1810-033740",
+      "location": "Building 1, Ground Floor",
+      "description": "New student admissions, credit transfers, program fees information, and university campus visits."
+    },
+    {
+      "name": "Central Library",
+      "head": "Librarian",
+      "designation": "Librarian",
+      "email": "library@bubt.edu.bd",
+      "phone": "+880 2-4803-6351 (Ext: 118)",
+      "location": "Building 1, Level 5",
+      "description": "Physical book borrowing, IEEE/ACM digital access, silent study rooms, and research archives."
+    },
+    {
+      "name": "Institutional Quality Assurance Cell (IQAC)",
+      "head": "Director, IQAC",
+      "designation": "Director",
+      "email": "iqac@bubt.edu.bd",
+      "phone": "+880 2-4803-6351 (Ext: 130)",
+      "location": "Building 2, Level 4",
+      "description": "Quality education monitoring, BAETE/UGC accreditation, and faculty training workshops."
+    },
+    {
+      "name": "BUBT Innovation Hub",
+      "head": "Director, Innovation Hub",
+      "designation": "Director",
+      "email": "innovation@bubt.edu.bd",
+      "phone": "+880 2-4803-6351 (Ext: 140)",
+      "location": "Building 2, Level 5",
+      "description": "Student startup incubation, prototype funding, hackathons, and research commercialization."
+    }
+  ]
+}

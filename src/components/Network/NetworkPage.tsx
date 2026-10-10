@@ -214,7 +214,7 @@ export default function NetworkPage({
     social_links: {},
     cover_photo_url: null,
     interests: [],
-    visibility: "users",
+    visibility: "public",
     is_admin: false,
     section: null,
     major: null,

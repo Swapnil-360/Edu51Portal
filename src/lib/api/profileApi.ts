@@ -65,10 +65,41 @@ export async function updateProfile(
   // normalize skills/interests to lowercase for searchability
   if (payload.skills) payload.skills = dedupeLower(payload.skills);
   if (payload.interests) payload.interests = dedupeLower(payload.interests);
-  const { error } = await supabase.from("profiles").update(payload).eq("id", userId);
+
+  const updates = { ...payload };
+
+  // If setting connected visibility, store backup in social_links._visibility
+  // so it persists even if DB check constraint has not yet been migrated.
+  if (updates.visibility === "connected") {
+    updates.social_links = {
+      ...(updates.social_links || {}),
+      _visibility: "connected",
+    };
+  } else if (updates.social_links && updates.social_links._visibility) {
+    const { _visibility, ...cleanSocial } = updates.social_links;
+    updates.social_links = cleanSocial;
+  }
+
+  const { error } = await supabase.from("profiles").update(updates).eq("id", userId);
   if (error) {
     if (error.message?.includes("profiles_username_lower_uq")) {
       return { error: "That username is already taken." };
+    }
+    // If DB check constraint rejected 'connected' (code 23514 / profiles_visibility_check),
+    // fallback to storing 'users' in the column while keeping _visibility in social_links
+    if (
+      (error.code === "23514" || error.message?.includes("profiles_visibility_check")) &&
+      updates.visibility === "connected"
+    ) {
+      const fallbackUpdates = {
+        ...updates,
+        visibility: "users",
+      };
+      const retry = await supabase.from("profiles").update(fallbackUpdates).eq("id", userId);
+      if (!retry.error) {
+        return { error: null };
+      }
+      return { error: retry.error.message };
     }
     return { error: error.message };
   }
@@ -139,12 +170,23 @@ export function normalizeProfile(row: any): SocialProfile {
   const isAlumni = row.is_alumni ?? false;
   const sectionLower = String(row.section || "").toLowerCase();
   const determinedAlumni = isAlumni || sectionLower === "alumni" || sectionLower.includes("alumni");
+  
+  // Resolve visibility: support 'connected', 'public', 'private', and legacy 'users'
+  let visibility: ProfileVisibility = "public";
+  if (row.visibility === "connected" || row.social_links?._visibility === "connected") {
+    visibility = "connected";
+  } else if (row.visibility === "private" || row.social_links?._visibility === "private") {
+    visibility = "private";
+  } else if (row.visibility === "public" || row.visibility === "users") {
+    visibility = "public";
+  }
+
   return {
     ...row,
     social_links: row.social_links ?? {},
     skills: row.skills ?? [],
     interests: row.interests ?? [],
-    visibility: row.visibility ?? "users",
+    visibility,
     is_alumni: determinedAlumni,
     is_admin: row.is_admin ?? false,
     profile_pic: row.profile_pic ?? null,

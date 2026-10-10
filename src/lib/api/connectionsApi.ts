@@ -226,7 +226,7 @@ export async function listMyConnections(myId: string): Promise<Connection[]> {
         cover_photo_url: null,
         skills: ap.skills ?? [],
         interests: [],
-        visibility: "users",
+        visibility: "public",
         is_alumni: true,
         is_admin: false,
         section: `Alumni (Class of ${ap.graduation_year})`,

@@ -1,7 +1,7 @@
 // Domain types for the V2 social platform features
 // (profiles, connections, teams — Phase 1)
 
-export type ProfileVisibility = "public" | "users" | "private";
+export type ProfileVisibility = "public" | "connected" | "users" | "private";
 
 export interface SocialProfile {
   id: string;

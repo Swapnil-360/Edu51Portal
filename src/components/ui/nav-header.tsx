@@ -221,6 +221,13 @@ export function AppNavHeader({
       onClick: () => goToView("home"),
     },
     {
+      label: "Info Hub",
+      view: "faculty",
+      badge: "new",
+      isActive: currentView === "faculty",
+      onClick: () => goToView("faculty"),
+    },
+    {
       label: "Teams",
       view: "teams",
       badge: "new",
@@ -283,6 +290,13 @@ export function AlumniNavHeader({
       icon: <Home className="h-4 w-4" />,
       isActive: currentView === "home",
       onClick: () => goToView("home"),
+    },
+    {
+      label: "Info Hub",
+      view: "faculty",
+      badge: "new",
+      isActive: currentView === "faculty",
+      onClick: () => goToView("faculty"),
     },
     {
       label: "Network",

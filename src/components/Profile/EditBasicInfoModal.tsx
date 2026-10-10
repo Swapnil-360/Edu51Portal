@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, Loader2 } from "lucide-react";
+import { X, Loader2, Globe, Users, Lock } from "lucide-react";
 import { SocialProfile, ProfileVisibility } from "../../types/social";
 import { updateProfile } from "../../lib/api/profileApi";
 import { validateAndSanitizeUrl } from "../../lib/sanitize";
@@ -21,7 +21,9 @@ export default function EditBasicInfoModal({ profile, onClose, onSaved, isDarkMo
   const [linkedin, setLinkedin] = useState(profile.social_links?.linkedin ?? "");
   const [github, setGithub] = useState(profile.social_links?.github ?? "");
   const [facebook, setFacebook] = useState(profile.social_links?.facebook ?? "");
-  const [visibility, setVisibility] = useState<ProfileVisibility>(profile.visibility);
+  const [visibility, setVisibility] = useState<ProfileVisibility>(
+    profile.visibility === "users" ? "public" : profile.visibility || "public"
+  );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -193,14 +195,40 @@ export default function EditBasicInfoModal({ profile, onClose, onSaved, isDarkMo
           <div>
             <label className={labelCls}>Profile Visibility</label>
             <select
-              className={inputCls}
-              value={visibility}
+              className={`${inputCls} cursor-pointer`}
+              value={visibility === "users" ? "public" : visibility}
               onChange={(e) => setVisibility(e.target.value as ProfileVisibility)}
             >
-              <option value="public">Public — anyone can view</option>
-              <option value="users">Edu51Portal users only</option>
-              <option value="private">Private — only you</option>
+              <option value="public">🌐 Public — Anyone can view all details</option>
+              <option value="connected">👥 Connected only — Only connected persons can view details</option>
+              <option value="private">🔒 Private — Only you can view (hidden from others)</option>
             </select>
+            <div className={`mt-2 p-2.5 rounded-lg border text-xs flex items-start gap-2 ${
+              isDarkMode ? "bg-[#16181c]/60 border-[#2f3336] text-[#8b98a5]" : "bg-slate-50 border-slate-200 text-slate-600"
+            }`}>
+              {visibility === "connected" ? (
+                <>
+                  <Users className="w-4 h-4 text-blue-400 mt-0.5 flex-shrink-0" />
+                  <span>
+                    <strong>Connected only:</strong> Non-connected visitors only see your basic header card with a Connect button. Your About, Skills, Interests, Education, Experience, Mentors, and links will only be shown to accepted connections.
+                  </span>
+                </>
+              ) : visibility === "private" ? (
+                <>
+                  <Lock className="w-4 h-4 text-amber-400 mt-0.5 flex-shrink-0" />
+                  <span>
+                    <strong>Private:</strong> Your profile is completely hidden from other users. Anyone attempting to visit will see a private profile screen.
+                  </span>
+                </>
+              ) : (
+                <>
+                  <Globe className="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" />
+                  <span>
+                    <strong>Public:</strong> Anyone on Edu51Portal can view your full profile and all details.
+                  </span>
+                </>
+              )}
+            </div>
           </div>
         </div>
 

@@ -258,6 +258,11 @@ export default function ProfilePage({ username, currentUserId, initialAvatarUrl,
   }
 
   const avatarSrc = profile.avatar_url || legacyPic || initialAvatarUrl || "";
+  const isConnected = connection?.status === "accepted";
+  const isPublic = profile.visibility === "public" || profile.visibility === "users";
+  const isConnectedOnly = profile.visibility === "connected";
+  const canViewDetails = isOwn || isPublic || (isConnectedOnly && isConnected);
+
   const showConnect = !connection || connection.status === "rejected";
   const connectLabel = showConnect
     ? "Connect"
@@ -351,20 +356,45 @@ export default function ProfilePage({ username, currentUserId, initialAvatarUrl,
                   {isOwn && (
                     <span className="inline-flex items-center gap-1"><Users className="w-3 h-3" />{connectionCount} connection{connectionCount === 1 ? "" : "s"}</span>
                   )}
+                  {isOwn && (
+                    <span
+                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border ${
+                        profile.visibility === "connected"
+                          ? isDarkMode ? "bg-blue-500/15 text-blue-400 border-blue-500/30" : "bg-blue-50 text-blue-700 border-blue-200"
+                          : profile.visibility === "private"
+                          ? isDarkMode ? "bg-amber-500/15 text-amber-400 border-amber-500/30" : "bg-amber-50 text-amber-700 border-amber-200"
+                          : isDarkMode ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30" : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                      }`}
+                      title={`Profile visibility: ${profile.visibility === "connected" ? "Connected only" : profile.visibility === "private" ? "Private" : "Public"}`}
+                    >
+                      {profile.visibility === "connected" ? (
+                        <><Users className="w-2.5 h-2.5" /> Connected only</>
+                      ) : profile.visibility === "private" ? (
+                        <><Lock className="w-2.5 h-2.5" /> Private</>
+                      ) : (
+                        <><Globe className="w-2.5 h-2.5" /> Public</>
+                      )}
+                    </span>
+                  )}
                 </div>
                 {/* Links */}
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {profile.website && (
-                    <a href={profile.website} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-[#1e9df1] hover:underline">
-                      <Globe className="w-3 h-3" /> Website
-                    </a>
-                  )}
-                  {Object.entries(profile.social_links ?? {}).map(([k, v]) => (
-                    <a key={k} href={v} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-blue-500 hover:underline capitalize">
-                      <LinkIcon className="w-3 h-3" /> {k}
-                    </a>
-                  ))}
-                </div>
+                {canViewDetails && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {profile.website && (
+                      <a href={profile.website} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-[#1e9df1] hover:underline">
+                        <Globe className="w-3 h-3" /> Website
+                      </a>
+                    )}
+                    {Object.entries(profile.social_links ?? {}).map(([k, v]) => {
+                      if (k.startsWith("_")) return null;
+                      return (
+                        <a key={k} href={v} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-blue-500 hover:underline capitalize">
+                          <LinkIcon className="w-3 h-3" /> {k}
+                        </a>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               <div className="flex gap-2 flex-shrink-0 flex-wrap justify-end">
@@ -405,140 +435,182 @@ export default function ProfilePage({ username, currentUserId, initialAvatarUrl,
           </div>
         </div>
 
-        {/* About */}
-        {(isOwn || profile.about) && (
-          <section className={`rounded-2xl border p-5 ${card}`}>
-            <h3 className={`text-base font-bold mb-2 ${titleCls}`}>About</h3>
-            {profile.about ? (
-              <p className={`text-sm whitespace-pre-wrap ${isDarkMode ? "text-[#8b98a5]" : "text-slate-700"}`}>{profile.about}</p>
-            ) : (
-              <p className={`text-sm ${sub}`}>
-                Tell people about yourself —{" "}
-                <button onClick={() => setShowEditModal(true)} className="text-[#1e9df1] hover:underline">add an about section</button>.
+        {!canViewDetails ? (
+          <section className={`rounded-2xl border p-8 sm:p-12 text-center ${card} shadow-sm space-y-4`}>
+            <div className={`w-16 h-16 mx-auto rounded-2xl flex items-center justify-center ${
+              isDarkMode ? "bg-[#1e9df1]/10 text-[#1e9df1] border border-[#1e9df1]/20" : "bg-blue-50 text-[#1e9df1] border border-blue-100"
+            }`}>
+              <Lock className="w-8 h-8" />
+            </div>
+            <div className="space-y-1.5 max-w-md mx-auto">
+              <h3 className={`text-lg font-bold ${titleCls}`}>Profile Details are Connections-Only</h3>
+              <p className={`text-sm ${sub} leading-relaxed`}>
+                {profile.name} only shares their detailed profile information (About, Skills, Interests, Education, Experience, and Mentors) with accepted connections.
               </p>
+            </div>
+
+            {currentUserId && (
+              <div className="pt-2 flex flex-col items-center justify-center gap-2">
+                <button
+                  onClick={handleConnect}
+                  disabled={busy || (connection?.status === "pending" && connection.requester_id === currentUserId)}
+                  className={`px-6 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all shadow-sm ${
+                    connection?.status === "accepted"
+                      ? isDarkMode
+                        ? "bg-[#16181c] text-emerald-400 border border-emerald-700/50"
+                        : "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                      : "bg-[#1e9df1] text-white hover:bg-[#1677cc] disabled:opacity-60 cursor-pointer"
+                  }`}
+                >
+                  {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <ConnectIcon className="w-4 h-4" />}
+                  {connectLabel}
+                </button>
+                {connection?.status === "pending" && connection.requester_id === currentUserId && (
+                  <p className={`text-xs ${sub}`}>
+                    Your connection request is pending acceptance. Once approved, full profile details will unlock.
+                  </p>
+                )}
+              </div>
             )}
           </section>
-        )}
-
-        {/* Skills */}
-        <section className={`rounded-2xl border p-5 ${card}`}>
-          <div className="flex items-center justify-between mb-3">
-            <h3 className={`text-base font-bold ${titleCls}`}>Skills</h3>
-            {isOwn && (
-              <button
-                onClick={() => setEditingSkills(!editingSkills)}
-                className="text-xs text-blue-500 hover:underline"
-              >
-                {editingSkills ? "Done" : "Edit"}
-              </button>
+        ) : (
+          <>
+            {/* About */}
+            {(isOwn || profile.about) && (
+              <section className={`rounded-2xl border p-5 ${card}`}>
+                <h3 className={`text-base font-bold mb-2 ${titleCls}`}>About</h3>
+                {profile.about ? (
+                  <p className={`text-sm whitespace-pre-wrap ${isDarkMode ? "text-[#8b98a5]" : "text-slate-700"}`}>{profile.about}</p>
+                ) : (
+                  <p className={`text-sm ${sub}`}>
+                    Tell people about yourself —{" "}
+                    <button onClick={() => setShowEditModal(true)} className="text-[#1e9df1] hover:underline">add an about section</button>.
+                  </p>
+                )}
+              </section>
             )}
-          </div>
-          {editingSkills ? (
-            <SkillsEditor
-              items={profile.skills}
-              onChange={(items) => saveTags("skills", items)}
-              isDarkMode={isDarkMode}
-              suggestions={CSE_SKILL_SUGGESTIONS}
-            />
-          ) : (
-            <BadgeList items={profile.skills} isDarkMode={isDarkMode} emptyText={isOwn ? "Add skills so teams can find you." : "No skills listed."} />
-          )}
-        </section>
 
-        {/* Interests */}
-        <section className={`rounded-2xl border p-5 ${card}`}>
-          <div className="flex items-center justify-between mb-3">
-            <h3 className={`text-base font-bold ${titleCls}`}>Interests</h3>
-            {isOwn && (
-              <button
-                onClick={() => setEditingInterests(!editingInterests)}
-                className="text-xs text-blue-500 hover:underline"
-              >
-                {editingInterests ? "Done" : "Edit"}
-              </button>
-            )}
-          </div>
-          {editingInterests ? (
-            <SkillsEditor
-              items={profile.interests}
-              onChange={(items) => saveTags("interests", items)}
-              isDarkMode={isDarkMode}
-              badgeColor="blue"
-              placeholder="Add an interest…"
-              suggestions={INTEREST_SUGGESTIONS}
-            />
-          ) : (
-            <BadgeList items={profile.interests} isDarkMode={isDarkMode} badgeColor="blue" emptyText={isOwn ? "Add interests like AI, Research, Web Development…" : "No interests listed."} />
-          )}
-        </section>
-
-        <EducationSection userId={profile.id} educations={educations} isOwn={isOwn} isDarkMode={isDarkMode} onChanged={() => listEducations(profile.id).then(setEducations)} />
-        <ExperienceSection userId={profile.id} experiences={experiences} isOwn={isOwn} isDarkMode={isDarkMode} onChanged={() => listExperiences(profile.id).then(setExperiences)} />
-
-        {/* My Mentors Section */}
-        {profile && !profile.is_alumni && (
-          <section className={`rounded-2xl border p-5 ${card}`}>
-            <h3 className={`text-base font-bold mb-4 ${titleCls}`}>My Mentors</h3>
-            {loadingMentors ? (
-              <div className="flex items-center gap-2 text-xs text-slate-500 py-4">
-                <Loader2 className="w-4 h-4 animate-spin text-[#1e9df1]" />
-                Loading mentors...
-              </div>
-            ) : mentors.length === 0 ? (
-              <div className="py-6 text-center space-y-2">
-                <p className={`text-sm ${sub}`}>No mentors yet. Browse Alumni Hub to find a mentor.</p>
-                {onClose && (
+            {/* Skills */}
+            <section className={`rounded-2xl border p-5 ${card}`}>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className={`text-base font-bold ${titleCls}`}>Skills</h3>
+                {isOwn && (
                   <button
-                    onClick={onClose}
-                    className="px-3 py-1.5 rounded-lg bg-[#1e9df1]/10 text-[#1e9df1] hover:bg-[#1e9df1]/20 text-xs font-semibold cursor-pointer"
+                    onClick={() => setEditingSkills(!editingSkills)}
+                    className="text-xs text-blue-500 hover:underline"
                   >
-                    Browse Alumni Hub
+                    {editingSkills ? "Done" : "Edit"}
                   </button>
                 )}
               </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {mentors.map((mentor) => (
-                  <div
-                    key={mentor.id}
-                    className={`p-4 rounded-xl border flex gap-3 items-center justify-between ${
-                      isDarkMode ? "bg-slate-900/40 border-[#2f3336]/40" : "bg-slate-50 border-slate-200"
-                    }`}
+              {editingSkills ? (
+                <SkillsEditor
+                  items={profile.skills}
+                  onChange={(items) => saveTags("skills", items)}
+                  isDarkMode={isDarkMode}
+                  suggestions={CSE_SKILL_SUGGESTIONS}
+                />
+              ) : (
+                <BadgeList items={profile.skills} isDarkMode={isDarkMode} emptyText={isOwn ? "Add skills so teams can find you." : "No skills listed."} />
+              )}
+            </section>
+
+            {/* Interests */}
+            <section className={`rounded-2xl border p-5 ${card}`}>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className={`text-base font-bold ${titleCls}`}>Interests</h3>
+                {isOwn && (
+                  <button
+                    onClick={() => setEditingInterests(!editingInterests)}
+                    className="text-xs text-blue-500 hover:underline"
                   >
-                    <div className="flex gap-3 items-center min-w-0">
-                      <div className="w-12 h-12 rounded-full overflow-hidden border border-blue-500/30 flex-shrink-0 bg-slate-800">
-                        {mentor.avatar_url ? (
-                          <img src={mentor.avatar_url} alt={mentor.full_name} className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-sm font-bold text-white bg-blue-600">
-                            {mentor.full_name?.charAt(0)?.toUpperCase()}
-                          </div>
-                        )}
-                      </div>
-                      <div className="min-w-0">
-                        <p className={`font-bold text-sm truncate ${titleCls}`}>{mentor.full_name}</p>
-                        <p className={`text-xs truncate ${sub}`}>
-                          {mentor.job_title} {mentor.company_name ? `at ${mentor.company_name}` : ""}
-                        </p>
-                        <p className="text-[10px] text-purple-400 font-medium">
-                          {mentor.major} · Class of {mentor.graduation_year}
-                        </p>
-                      </div>
-                    </div>
-                    {isOwn && (
+                    {editingInterests ? "Done" : "Edit"}
+                  </button>
+                )}
+              </div>
+              {editingInterests ? (
+                <SkillsEditor
+                  items={profile.interests}
+                  onChange={(items) => saveTags("interests", items)}
+                  isDarkMode={isDarkMode}
+                  badgeColor="blue"
+                  placeholder="Add an interest…"
+                  suggestions={INTEREST_SUGGESTIONS}
+                />
+              ) : (
+                <BadgeList items={profile.interests} isDarkMode={isDarkMode} badgeColor="blue" emptyText={isOwn ? "Add interests like AI, Research, Web Development…" : "No interests listed."} />
+              )}
+            </section>
+
+            <EducationSection userId={profile.id} educations={educations} isOwn={isOwn} isDarkMode={isDarkMode} onChanged={() => listEducations(profile.id).then(setEducations)} />
+            <ExperienceSection userId={profile.id} experiences={experiences} isOwn={isOwn} isDarkMode={isDarkMode} onChanged={() => listExperiences(profile.id).then(setExperiences)} />
+
+            {/* My Mentors Section */}
+            {profile && !profile.is_alumni && (
+              <section className={`rounded-2xl border p-5 ${card}`}>
+                <h3 className={`text-base font-bold mb-4 ${titleCls}`}>My Mentors</h3>
+                {loadingMentors ? (
+                  <div className="flex items-center gap-2 text-xs text-slate-500 py-4">
+                    <Loader2 className="w-4 h-4 animate-spin text-[#1e9df1]" />
+                    Loading mentors...
+                  </div>
+                ) : mentors.length === 0 ? (
+                  <div className="py-6 text-center space-y-2">
+                    <p className={`text-sm ${sub}`}>No mentors yet. Browse Alumni Hub to find a mentor.</p>
+                    {onClose && (
                       <button
-                        onClick={() => setChatTarget(mentor)}
-                        className="p-2 rounded-full bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-all border border-blue-500/20 cursor-pointer flex-shrink-0"
-                        title="Chat with Mentor"
+                        onClick={onClose}
+                        className="px-3 py-1.5 rounded-lg bg-[#1e9df1]/10 text-[#1e9df1] hover:bg-[#1e9df1]/20 text-xs font-semibold cursor-pointer"
                       >
-                        <MessageSquare className="w-4 h-4" />
+                        Browse Alumni Hub
                       </button>
                     )}
                   </div>
-                ))}
-              </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {mentors.map((mentor) => (
+                      <div
+                        key={mentor.id}
+                        className={`p-4 rounded-xl border flex gap-3 items-center justify-between ${
+                          isDarkMode ? "bg-slate-900/40 border-[#2f3336]/40" : "bg-slate-50 border-slate-200"
+                        }`}
+                      >
+                        <div className="flex gap-3 items-center min-w-0">
+                          <div className="w-12 h-12 rounded-full overflow-hidden border border-blue-500/30 flex-shrink-0 bg-slate-800">
+                            {mentor.avatar_url ? (
+                              <img src={mentor.avatar_url} alt={mentor.full_name} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-sm font-bold text-white bg-blue-600">
+                                {mentor.full_name?.charAt(0)?.toUpperCase()}
+                              </div>
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <p className={`font-bold text-sm truncate ${titleCls}`}>{mentor.full_name}</p>
+                            <p className={`text-xs truncate ${sub}`}>
+                              {mentor.job_title} {mentor.company_name ? `at ${mentor.company_name}` : ""}
+                            </p>
+                            <p className="text-[10px] text-purple-400 font-medium">
+                              {mentor.major} · Class of {mentor.graduation_year}
+                            </p>
+                          </div>
+                        </div>
+                        {isOwn && (
+                          <button
+                            onClick={() => setChatTarget(mentor)}
+                            className="p-2 rounded-full bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-all border border-blue-500/20 cursor-pointer flex-shrink-0"
+                            title="Chat with Mentor"
+                          >
+                            <MessageSquare className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </section>
             )}
-          </section>
+          </>
         )}
       </div>
 

@@ -58,6 +58,7 @@ import { getDriveConfigForMajor, getDriveConfigForDepartment, DepartmentConfig, 
 import { DEPARTMENTS, getDepartment } from "./config/departments";
 const AIAssistant = lazy(() => import("./components/AIAssistant/AIAssistant").then(m => ({ default: m.AIAssistant })));
 const LegalPage = lazy(() => import("./components/Legal/LegalPage"));
+const FacultyDirectoryPage = lazy(() => import("./components/Faculty/FacultyDirectoryPage"));
 import {
   FileText,
   Play,
@@ -191,6 +192,7 @@ function App() {
     | "alumni"
     | "shared-resources"
     | "meet-team"
+    | "faculty"
   >(() => {
     const path = window.location.pathname;
     if (path === "/admin") return "admin";
@@ -212,6 +214,7 @@ function App() {
     if (path === "/alumni") return "alumni";
     if (path === "/shared-resources") return "shared-resources";
     if (path === "/meet-team") return "meet-team";
+    if (path === "/info-hub" || path === "/info" || path === "/faculty" || path === "/varsity") return "faculty";
     // Always treat root, /home, or empty as home
     if (path === "/" || path === "/home" || path === "" || !path) return "home";
     // Fallback: if path is not recognized, force home view
@@ -256,7 +259,8 @@ function App() {
         | "team"
         | "alumni"
         | "shared-resources"
-        | "meet-team",
+        | "meet-team"
+        | "faculty",
       extra?: string | null,
       bypassAdminCheck = false,
     ) => {
@@ -292,6 +296,7 @@ function App() {
       }
       else if (view === "shared-resources") path = "/shared-resources";
       else if (view === "meet-team") path = "/meet-team";
+      else if (view === "faculty") path = "/info-hub";
       else if (view === "home") path = "/home";
       window.history.pushState({}, "", path);
       // Dismiss any lingering toast when navigating away
@@ -374,6 +379,7 @@ function App() {
           setCurrentView("alumni");
         }
         else if (path === "/meet-team") setCurrentView("meet-team");
+        else if (path === "/info-hub" || path === "/info" || path === "/faculty" || path === "/varsity") setCurrentView("faculty");
         else if (path === "/" || path === "/home" || path === "" || !path)
           setCurrentView("home");
         else setCurrentView("home");
@@ -4235,6 +4241,41 @@ For any queries, contact your course instructors or the department.`,
               {!isBanned && (
                 <>
 
+                  {/* Faculty & Leadership Directory */}
+                  <button
+                    onClick={() => {
+                      goToView("faculty");
+                      setShowMobileMenu(false);
+                    }}
+                    className={`w-full flex items-center gap-3 p-3 sm:p-4 rounded-lg transition-all duration-300 border ${isDarkMode
+                        ? "hover:bg-blue-900/30 border-[#2f3336]/50 hover:border-[#1e9df1]/50 text-gray-100"
+                        : "hover:bg-blue-50 border-gray-200/50 hover:border-blue-300 text-gray-900"
+                      } ${currentView === "faculty" ? (isDarkMode ? "bg-blue-950/40 border-[#1e9df1]/60" : "bg-blue-100/50 border-blue-300") : ""}`}
+                  >
+                    <div
+                      className={`p-2 rounded-lg flex-shrink-0 ${isDarkMode ? "bg-blue-900/40" : "bg-blue-100"}`}
+                    >
+                      <GraduationCap
+                        className={`w-5 h-5 ${isDarkMode ? "text-[#1e9df1]" : "text-blue-600"}`}
+                      />
+                    </div>
+                    <div className="text-left flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="font-semibold text-sm">Info Hub</p>
+                        <span
+                          className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold ${isDarkMode ? "bg-emerald-500 text-white" : "bg-emerald-500 text-white"}`}
+                        >
+                          NEW
+                        </span>
+                      </div>
+                      <p
+                        className={`text-xs ${isDarkMode ? "text-[#71767b]" : "text-gray-600"}`}
+                      >
+                        Faculty, Officials & Notices
+                      </p>
+                    </div>
+                  </button>
+
                   {/* Team Building */}
                   <button
                     onClick={() => {
@@ -4403,7 +4444,7 @@ For any queries, contact your course instructors or the department.`,
                       <p
                         className={`text-xs ${isDarkMode ? "text-[#71767b]" : "text-gray-600"}`}
                       >
-                        Alumni from our varsity
+                        Alumni from our university
                       </p>
                     </div>
                   </button>
@@ -4731,7 +4772,7 @@ For any queries, contact your course instructors or the department.`,
 
       {/* Main Content - Enhanced Mobile Responsive Design */}
       {/* Also mounts when a modal is open in a feature view — modal is fixed inset-0 so home content stays hidden beneath it */}
-      {(!["custom", "profile", "network", "teams", "team", "alumni"].includes(currentView) || showNoticeModal || showMaterialViewer) && (
+      {(!["custom", "profile", "network", "teams", "team", "alumni", "faculty", "shared-resources", "meet-team"].includes(currentView) || showNoticeModal || showMaterialViewer) && (
         <main className="relative pt-[72px] lg:pt-20 min-h-screen [overflow-x:clip]">
           {currentView === "home" && isDarkMode && <Tiles isDarkMode={isDarkMode} />}
 
@@ -8431,6 +8472,19 @@ For any queries, contact your course instructors or the department.`,
               </div>
             }>
               <MeetTeamPage isDarkMode={isDarkMode} onClose={() => goToView("home")} />
+            </Suspense>
+          </main>
+        )}
+
+        {/* ── Faculty Directory & University Leadership ── */}
+        {currentView === "faculty" && (
+          <main className="fixed top-[72px] lg:top-20 inset-x-0 bottom-0 z-40 overflow-y-auto overscroll-y-contain">
+            <Suspense fallback={
+              <div className={`h-full flex items-center justify-center p-6 ${isDarkMode ? "bg-[#000000]" : "bg-slate-50"}`}>
+                <AppLoader />
+              </div>
+            }>
+              <FacultyDirectoryPage isDarkMode={isDarkMode} onClose={() => goToView("home")} />
             </Suspense>
           </main>
         )}
