@@ -4,6 +4,7 @@ import MaterialManager from './MaterialManager';
 import { supabase, supabaseConfigured } from '../../lib/supabase';
 import { sendEmailNotification } from '../../lib/emailNotifications';
 import { getAiUsageToday, GEMINI_FREE_TIER_DAILY_LIMIT, type AiUsageToday } from '../../lib/api/adminApi';
+import { AlumniOutreachPanel } from './AlumniOutreachPanel';
 
 interface Notice {
   id: string;
@@ -657,6 +658,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             )}
           </div>
         </div>
+
+        {/* Alumni Outreach & Prospects Manager */}
+        <AlumniOutreachPanel isDarkMode={isDarkMode} />
 
         {/* Alumni Approval Section */}
         <div className={`group relative overflow-hidden rounded-xl lg:rounded-2xl transition-all duration-300 ${isDarkMode ? 'bg-gradient-to-br from-indigo-900/30 to-slate-800/40 backdrop-blur-xl border border-indigo-500/25' : 'bg-gradient-to-br from-indigo-50/80 to-white/60 backdrop-blur-xl border border-indigo-200/60'}`}>

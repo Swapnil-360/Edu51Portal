@@ -479,6 +479,25 @@ Automated pipeline keeping university notices and faculty datasets accurate with
 
 ---
 
+## Alumni Outreach & Concierge Invitations
+
+Admin-led alumni prospecting and rapid onboarding system designed to engage busy alumni without requiring them to fill out manual verification forms from scratch.
+
+| What | File | Detail |
+|------|------|--------|
+| Admin outreach dashboard | `src/components/Admin/AlumniOutreachPanel.tsx` | Funnel metrics, status filter (`New`, `Invited`, `Joined`, `Ready for Reminder`), search, department filter, batch send actions |
+| 30-second onboarding landing page | `src/components/Alumni/AlumniClaimInvitePage.tsx` | Route `/alumni-invite` (`/alumni/invite?token=...`). Pre-fills name, department, year, company, job title, LinkedIn; requires only password setup |
+| Client outreach API layer | `src/lib/api/alumniOutreachApi.ts` | 72h cooldown calculator, single/bulk email sender, token validator, claiming RPC wrapper |
+| Email invitation template | `email-templates/alumni-invite.html` | VIP branded invitation template with prefilled card preview and direct magic link |
+| Database schema & RPCs | migration `20261011000000_alumni_invitations.sql` | `alumni_invitations` table with RLS, `get_alumni_invite_details`, and `claim_alumni_invite` (atomic auto-verification) |
+
+**72-Hour Cooldown & Deliverability Rules:**
+- **Initial Invite:** Dispatches to `new` leads and switches state to `invited`.
+- **72h Cooldown:** Disables the Re-invite button for 72 hours with a live remaining-hours indicator to prevent email fatigue and domain blacklisting.
+- **Auto-Verification:** Claiming the token marks `profiles.is_alumni = true`, `profiles.is_verified = true`, and `alumni_profiles.is_verified = true`, completely bypassing the manual approval queue.
+
+---
+
 ## Key Conventions
 
 - **Routing:** state-based (`currentView` string union), no react-router at runtime

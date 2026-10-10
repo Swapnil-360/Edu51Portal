@@ -46,6 +46,7 @@ See [`PRD.md`](./PRD.md) for how the two Study Materials flows differ technicall
 - [x] Suggested Mentors (major + skill/interest overlap scoring)
 - [x] Alumni resource sharing (career tips, job guides, study material, industry insights)
 - [x] **Admin Alumni Approval Queue** — new alumni gated behind `is_verified` until admin-approved
+- [x] **Alumni Outreach & Concierge Onboarding** — admin prospecting, LinkedIn search assistant, 72h cooldown re-invites, and 30-second pre-filled profile claiming (`/alumni-invite`)
 
 ### Admin & Security
 - [x] Admin ban (materials-only restriction, RLS-enforced not just UI-hidden) / unban with reason

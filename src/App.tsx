@@ -119,6 +119,7 @@ const AlumniDirectoryPage = lazy(() => import("./components/Alumni/AlumniDirecto
 const AlumniProfilePage = lazy(() => import("./components/Alumni/AlumniProfilePage"));
 const AlumniRegisterForm = lazy(() => import("./components/Alumni/AlumniRegisterForm"));
 const MeetTeamPage = lazy(() => import("./components/Team/MeetTeamPage"));
+const AlumniClaimInvitePage = lazy(() => import("./components/Alumni/AlumniClaimInvitePage").then(m => ({ default: m.AlumniClaimInvitePage })));
 
 interface Course {
   id: string;
@@ -193,6 +194,7 @@ function App() {
     | "shared-resources"
     | "meet-team"
     | "faculty"
+    | "alumni-invite"
   >(() => {
     const path = window.location.pathname;
     if (path === "/admin") return "admin";
@@ -215,6 +217,7 @@ function App() {
     if (path === "/shared-resources") return "shared-resources";
     if (path === "/meet-team") return "meet-team";
     if (path === "/info-hub" || path === "/info" || path === "/faculty" || path === "/varsity") return "faculty";
+    if (path === "/alumni-invite" || path === "/alumni/invite") return "alumni-invite";
     // Always treat root, /home, or empty as home
     if (path === "/" || path === "/home" || path === "" || !path) return "home";
     // Fallback: if path is not recognized, force home view
@@ -260,7 +263,8 @@ function App() {
         | "alumni"
         | "shared-resources"
         | "meet-team"
-        | "faculty",
+        | "faculty"
+        | "alumni-invite",
       extra?: string | null,
       bypassAdminCheck = false,
     ) => {
@@ -297,6 +301,7 @@ function App() {
       else if (view === "shared-resources") path = "/shared-resources";
       else if (view === "meet-team") path = "/meet-team";
       else if (view === "faculty") path = "/info-hub";
+      else if (view === "alumni-invite") path = "/alumni-invite";
       else if (view === "home") path = "/home";
       window.history.pushState({}, "", path);
       // Dismiss any lingering toast when navigating away
@@ -380,6 +385,7 @@ function App() {
         }
         else if (path === "/meet-team") setCurrentView("meet-team");
         else if (path === "/info-hub" || path === "/info" || path === "/faculty" || path === "/varsity") setCurrentView("faculty");
+        else if (path === "/alumni-invite" || path === "/alumni/invite") setCurrentView("alumni-invite");
         else if (path === "/" || path === "/home" || path === "" || !path)
           setCurrentView("home");
         else setCurrentView("home");
@@ -8430,6 +8436,30 @@ For any queries, contact your course instructors or the department.`,
               </div>
             }>
               <FacultyDirectoryPage isDarkMode={isDarkMode} onClose={() => goToView("home")} />
+            </Suspense>
+          </main>
+        )}
+
+        {/* ── Alumni Claim VIP Invitation Page ── */}
+        {currentView === "alumni-invite" && (
+          <main className="fixed top-[72px] lg:top-20 inset-x-0 bottom-0 z-40 overflow-y-auto overscroll-y-contain">
+            <Suspense fallback={
+              <div className={`h-full flex items-center justify-center p-6 ${isDarkMode ? "bg-[#000000]" : "bg-slate-50"}`}>
+                <AppLoader />
+              </div>
+            }>
+              <AlumniClaimInvitePage
+                isDarkMode={isDarkMode}
+                onNavigate={(view) => goToView(view as any)}
+                onSuccessLogin={(user) => {
+                  setIsLoggedIn(true);
+                  setUserProfile((prev: any) => ({
+                    ...prev,
+                    isAlumni: true,
+                    isVerified: true,
+                  }));
+                }}
+              />
             </Suspense>
           </main>
         )}
