@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   X,
   Mail,
@@ -56,7 +57,7 @@ export const FacultyDetailModal: React.FC<FacultyDetailModalProps> = ({
     };
   }, [isOpen, onClose]);
 
-  if (!isOpen || !member) return null;
+  if (!isOpen || !member || typeof document === "undefined") return null;
 
   const handleCopyEmail = () => {
     if (!member.email) return;
@@ -83,11 +84,11 @@ export const FacultyDetailModal: React.FC<FacultyDetailModalProps> = ({
   const hasPublications = Boolean(member.publications && member.publications.length > 0);
   const hasAbout = Boolean(member.summary);
 
-  return (
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 sm:p-6 overflow-y-auto bg-black/75 backdrop-blur-md animate-in fade-in duration-200"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 sm:p-6 overflow-y-auto bg-black/80 backdrop-blur-md animate-in fade-in duration-200"
       onClick={onClose}
     >
       <div
@@ -452,6 +453,7 @@ export const FacultyDetailModal: React.FC<FacultyDetailModalProps> = ({
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
