@@ -17,6 +17,16 @@ function apiDevPlugin() {
             return;
           }
         }
+        if (req.url && (req.url === '/api/log' || req.url.startsWith('/api/log?'))) {
+          try {
+            const handlerModule = await import('./api/log.ts');
+            return handlerModule.default(req, res);
+          } catch (e: any) {
+            res.statusCode = 200;
+            res.end(JSON.stringify({ ok: true }));
+            return;
+          }
+        }
         next();
       });
     },

@@ -618,61 +618,6 @@ function App() {
       return;
     }
 
-    const runCheck = async () => {
-      const { data: conns, error: errConns } = await supabase
-        .from("connections")
-        .select("*")
-        .or(`requester_id.eq.${authSession.user.id},addressee_id.eq.${authSession.user.id}`);
-
-      const { data: mentors, error: errMentors } = await supabase
-        .from("mentor_connections")
-        .select("*")
-        .or(`student_id.eq.${authSession.user.id},alumni_id.eq.${authSession.user.id}`);
-
-      // Query profiles of the connected users
-      const otherIds = [
-        ...new Set([
-          ...(conns ?? []).map(c => c.requester_id === authSession.user.id ? c.addressee_id : c.requester_id),
-          ...(mentors ?? []).map(m => m.student_id === authSession.user.id ? m.alumni_id : m.student_id)
-        ])
-      ];
-
-      let profilesData = null;
-      let profilesError = null;
-      let alumniProfilesData = null;
-      let alumniProfilesError = null;
-
-      if (otherIds.length > 0) {
-        const [pRes, apRes] = await Promise.all([
-          supabase
-            .from("profiles")
-            .select("*")
-            .in("id", otherIds),
-          supabase
-            .from("alumni_profiles")
-            .select("*")
-            .in("id", otherIds)
-        ]);
-        profilesData = pRes.data;
-        profilesError = pRes.error?.message || null;
-        alumniProfilesData = apRes.data;
-        alumniProfilesError = apRes.error?.message || null;
-      }
-
-      await fetch("/api/log", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          currentUserId: authSession.user.id,
-          connections: { data: conns, error: errConns?.message || null },
-          mentor_connections: { data: mentors, error: errMentors?.message || null },
-          profiles: { data: profilesData, error: profilesError },
-          alumni_profiles: { data: alumniProfilesData, error: alumniProfilesError }
-        })
-      }).catch(() => {});
-    };
-
-    runCheck();
 
     const checkUnread = async () => {
       try {

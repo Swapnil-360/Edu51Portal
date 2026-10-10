@@ -2,9 +2,11 @@
 // File: public/sw.js
 
 // Bump cache name on deploy to invalidate older cached index.html/assets
-const CACHE_NAME = 'edu51five-v4';
-// Only cache true static images — never JS/CSS (Vite handles those via HMR)
+const CACHE_NAME = 'edu51five-v5';
+// Only cache true static assets — never JS/CSS (Vite handles those via dynamic hashes)
 const urlsToCache = [
+  '/',
+  '/index.html',
   '/Edu51Portal.png',
   '/image.png',
 ];
@@ -13,12 +15,12 @@ console.log('[SW STARTUP] Service Worker starting...');
 
 // Global error handler
 self.addEventListener('error', (event) => {
-  console.error('[SW ERROR] Global error:', event.error, event.message);
+  console.warn('[SW ERROR] Global error:', event.error, event.message);
 });
 
 // Global unhandled promise rejection handler
 self.addEventListener('unhandledrejection', (event) => {
-  console.error('[SW UNHANDLED REJECTION]', event.reason);
+  console.warn('[SW UNHANDLED REJECTION]', event.reason);
 });
 
 // Install event - cache resources
@@ -29,6 +31,9 @@ self.addEventListener('install', (event) => {
       .then((cache) => {
         console.log('[SW INSTALL] Cache opened');
         return cache.addAll(urlsToCache);
+      })
+      .catch((err) => {
+        console.warn('[SW INSTALL] Cache addAll warning:', err);
       })
   );
   self.skipWaiting();
@@ -59,9 +64,8 @@ self.addEventListener('fetch', (event) => {
   const request = event.request;
 
   // Never intercept cross-origin requests (Supabase API, CDN, etc.)
-  // Letting the browser handle them directly avoids breaking auth flows
-  // when extensions also have fetch interceptors in the chain.
-  if (!request.url.startsWith(self.location.origin)) {
+  // or internal serverless API endpoints (/api/*)
+  if (!request.url.startsWith(self.location.origin) || request.url.includes('/api/')) {
     return;
   }
 
@@ -70,12 +74,23 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(request)
         .then((networkResponse) => {
-          caches.open(CACHE_NAME).then((cache) => {
-            try { cache.put(request, networkResponse.clone()); } catch (e) { /* ignore */ }
-          });
+          if (networkResponse && networkResponse.status === 200) {
+            caches.open(CACHE_NAME).then((cache) => {
+              try { cache.put(request, networkResponse.clone()); } catch (e) { /* ignore */ }
+            });
+          }
           return networkResponse;
         })
-        .catch(() => caches.match('/index.html'))
+        .catch(async () => {
+          const cached = await caches.match(request);
+          if (cached) return cached;
+          const fallback = await caches.match('/index.html');
+          if (fallback) return fallback;
+          return new Response('<!DOCTYPE html><html><body><h1>Offline</h1></body></html>', {
+            headers: { 'Content-Type': 'text/html' },
+            status: 200,
+          });
+        })
     );
     return;
   }
@@ -84,19 +99,22 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET') return;
 
   event.respondWith(
-    caches.match(request).then((response) => {
-      if (response) return response;
-      return fetch(request).then((networkResponse) => {
-        if (networkResponse && networkResponse.status === 200 && networkResponse.type !== 'opaque') {
-          caches.open(CACHE_NAME).then((cache) => {
-            try { cache.put(request, networkResponse.clone()); } catch (e) { /* ignore */ }
-          });
-        }
-        return networkResponse;
-      }).catch((error) => {
-        console.error('[SW FETCH ERROR]', error && error.message ? error.message : error);
-        throw error;
-      });
+    caches.match(request).then((cachedResponse) => {
+      if (cachedResponse) return cachedResponse;
+      return fetch(request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200 && networkResponse.type !== 'opaque') {
+            caches.open(CACHE_NAME).then((cache) => {
+              try { cache.put(request, networkResponse.clone()); } catch (e) { /* ignore */ }
+            });
+          }
+          return networkResponse;
+        })
+        .catch((error) => {
+          console.warn('[SW] Asset fetch failed:', request.url, error?.message || error);
+          // Return a safe 404 response instead of throwing/rejecting the promise
+          return new Response(null, { status: 404, statusText: 'Not Found' });
+        });
     })
   );
 });
