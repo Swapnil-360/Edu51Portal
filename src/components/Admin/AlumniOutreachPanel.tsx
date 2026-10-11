@@ -633,12 +633,9 @@ export const AlumniOutreachPanel: React.FC<AlumniOutreachPanelProps> = ({ isDark
               <h2 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
                 Alumni Outreach & Concierge Invitations
               </h2>
-              <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${isDarkMode ? 'bg-cyan-500/20 text-cyan-300' : 'bg-cyan-100 text-cyan-800'}`}>
-                72h Cooldown Guard
-              </span>
             </div>
             <p className={`text-xs sm:text-sm ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-              Collect former students on LinkedIn and databases, send pre-filled invites, and bypass manual forms with 30-second onboarding.
+              Collect former students on LinkedIn and databases, send pre-filled invites with automated 72h cooldown protection, and bypass manual forms with 30-second onboarding.
             </p>
           </div>
 
