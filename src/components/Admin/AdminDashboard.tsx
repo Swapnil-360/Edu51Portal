@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Plus, ChevronDown, ChevronUp, AlertCircle, Trash2, Edit2, BarChart3, BookOpen, Files, Users, TrendingUp, HardDrive, UsersRound, ShieldCheck, MessageSquare, RefreshCw, Bug, Lightbulb, Sparkles, Ban, GraduationCap, BadgeCheck, X, Loader2, Search } from 'lucide-react';
+import { Bell, Plus, ChevronDown, ChevronUp, AlertCircle, Trash2, Edit2, BarChart3, BookOpen, Files, Users, TrendingUp, HardDrive, UsersRound, ShieldCheck, MessageSquare, RefreshCw, Bug, Lightbulb, Sparkles, Ban, GraduationCap, BadgeCheck, X, Loader2, Search, FlaskConical } from 'lucide-react';
 import MaterialManager from './MaterialManager';
 import { supabase, supabaseConfigured } from '../../lib/supabase';
 import { sendEmailNotification } from '../../lib/emailNotifications';
@@ -76,8 +76,27 @@ function formatBytes(bytes: number): string {
   if (!bytes || bytes < 1024) return `${bytes || 0} B`;
   const mb = bytes / 1024 / 1024;
   if (mb < 1024) return `${mb.toFixed(mb < 10 ? 2 : 1)} MB`;
-  return `${(mb / 1024).toFixed(2)} GB`;
 }
+
+/**
+ * Checks if a user account is mock or test data.
+ * Matches accounts where name or email starts with "test" or "mock" (case-insensitive),
+ * or follows standard test/mock account naming patterns.
+ */
+export const isMockOrTestAccount = (user: { name?: string | null; bubt_email?: string | null }): boolean => {
+  const name = (user.name || '').trim().toLowerCase();
+  const email = (user.bubt_email || '').trim().toLowerCase();
+
+  // Primary criteria: starts with 'test' or 'mock'
+  if (name.startsWith('test') || name.startsWith('mock')) return true;
+  if (email.startsWith('test') || email.startsWith('mock')) return true;
+
+  // Additional mock data variations
+  if (name.includes('test user') || name.includes('test account') || name.includes('mock account') || name.includes('dummy')) return true;
+  if (email.includes('@test.') || email.includes('dummy@') || email.includes('mock@') || email.includes('+test@')) return true;
+
+  return false;
+};
 
 const FEEDBACK_META: Record<string, { label: string; icon: typeof Bug; cls: string }> = {
   bug: { label: 'Bug', icon: Bug, cls: 'bg-red-500/15 text-red-500' },
@@ -143,6 +162,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [deleteResult, setDeleteResult] = useState<string | null>(null);
   const [userSearchQuery, setUserSearchQuery] = useState('');
+  const [userCategoryFilter, setUserCategoryFilter] = useState<'all' | 'real' | 'mock'>('all');
 
   const submitBan = async (userId: string) => {
     setBanBusyId(userId);
@@ -320,7 +340,22 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     ? storageByBucket.map((b) => `${b.bucket}: ${formatBytes(b.bytes)} (${b.files})`).join('\n')
     : 'No files uploaded yet';
 
+  // Split users into real vs mock/test accounts
+  const realUsers = (adminUsers || []).filter((u) => !isMockOrTestAccount(u));
+  const testUsers = (adminUsers || []).filter((u) => isMockOrTestAccount(u));
+
+  const realStudentsCount = realUsers.filter((u) => !u.is_alumni).length;
+  const realAlumniCount = realUsers.filter((u) => u.is_alumni).length;
+
+  const testStudentsCount = testUsers.filter((u) => !u.is_alumni).length;
+  const testAlumniCount = testUsers.filter((u) => u.is_alumni).length;
+  const totalTestCount = testUsers.length;
+
   const filteredUsers = (adminUsers || []).filter((u) => {
+    const isMock = isMockOrTestAccount(u);
+    if (userCategoryFilter === 'real' && isMock) return false;
+    if (userCategoryFilter === 'mock' && !isMock) return false;
+
     const query = userSearchQuery.toLowerCase().trim();
     if (!query) return true;
     const nameMatch = (u.name || '').toLowerCase().includes(query);
@@ -328,9 +363,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     const idMatch = (u.id || '').toLowerCase().includes(query);
     return nameMatch || emailMatch || idMatch;
   });
-
-  const totalAlumniCount = (adminUsers || []).filter((u) => u.is_alumni).length;
-  const totalStudentsCount = (adminUsers || []).filter((u) => !u.is_alumni).length;
 
   return (
     <div className={`min-h-screen ${isDarkMode ? 'bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900' : 'bg-gradient-to-br from-slate-50 to-blue-50'}`}>
@@ -367,9 +399,141 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </h2>
           </div>
           
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3">
-            {/* Storage Used Card (spans 2 cols on mobile for the gauge) */}
-            <div title={storageTooltip} className={`col-span-2 group relative overflow-hidden rounded-xl transition-all duration-300 ${isDarkMode ? 'bg-gradient-to-br from-slate-700/40 to-slate-800/40 backdrop-blur-xl border border-cyan-500/20 hover:border-cyan-400/40' : 'bg-gradient-to-br from-cyan-50/80 to-cyan-100/80 backdrop-blur-xl border border-cyan-200/50 hover:border-cyan-300/80'}`}>
+          {/* Main Counter Metrics Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3">
+            {/* Real Students Card */}
+            <div
+              onClick={() => setUserCategoryFilter(userCategoryFilter === 'real' ? 'all' : 'real')}
+              title="Click to view real student accounts in user list"
+              className={`group relative overflow-hidden rounded-xl transition-all duration-300 cursor-pointer ${
+                userCategoryFilter === 'real'
+                  ? isDarkMode ? 'ring-2 ring-blue-400 bg-blue-950/40 border border-blue-400' : 'ring-2 ring-blue-500 bg-blue-100/90 border border-blue-400'
+                  : isDarkMode ? 'bg-gradient-to-br from-slate-700/40 to-slate-800/40 backdrop-blur-xl border border-blue-500/20 hover:border-blue-400/40' : 'bg-gradient-to-br from-blue-50/80 to-blue-100/80 backdrop-blur-xl border border-blue-200/50 hover:border-blue-300/80'
+              }`}
+            >
+              <div className="relative z-10 p-3 sm:p-4">
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <p className={`text-xs font-semibold uppercase tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Students</p>
+                    <span className={`inline-block text-[9px] font-semibold px-1.5 py-0.2 rounded ${isDarkMode ? 'bg-blue-500/20 text-blue-300' : 'bg-blue-100 text-blue-700'}`}>
+                      Real
+                    </span>
+                  </div>
+                  <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-blue-500/20 text-blue-400 group-hover:bg-blue-500/30' : 'bg-blue-200 text-blue-600 group-hover:bg-blue-300'} transition-all group-hover:scale-110`}>
+                    <Users className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </div>
+                </div>
+                <p className={`text-2xl sm:text-3xl font-black ${isDarkMode ? 'text-blue-300' : 'text-blue-600'}`}>{realStudentsCount}</p>
+                <div className={`mt-2 h-1 w-8 rounded-full ${isDarkMode ? 'bg-gradient-to-r from-blue-500 to-blue-400' : 'bg-gradient-to-r from-blue-500 to-blue-600'}`}></div>
+                {testStudentsCount > 0 && (
+                  <p className={`mt-1 text-[10px] ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                    +{testStudentsCount} test excluded
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Real Alumni Card */}
+            <div
+              onClick={() => setUserCategoryFilter(userCategoryFilter === 'real' ? 'all' : 'real')}
+              title="Click to view real alumni accounts in user list"
+              className={`group relative overflow-hidden rounded-xl transition-all duration-300 cursor-pointer ${
+                userCategoryFilter === 'real'
+                  ? isDarkMode ? 'ring-2 ring-violet-400 bg-violet-950/40 border border-violet-400' : 'ring-2 ring-violet-500 bg-violet-100/90 border border-violet-400'
+                  : isDarkMode ? 'bg-gradient-to-br from-slate-700/40 to-slate-800/40 backdrop-blur-xl border border-violet-500/20 hover:border-violet-400/40' : 'bg-gradient-to-br from-violet-50/80 to-violet-100/80 backdrop-blur-xl border border-violet-200/50 hover:border-violet-300/80'
+              }`}
+            >
+              <div className="relative z-10 p-3 sm:p-4">
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <p className={`text-xs font-semibold uppercase tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Alumni</p>
+                    <span className={`inline-block text-[9px] font-semibold px-1.5 py-0.2 rounded ${isDarkMode ? 'bg-violet-500/20 text-violet-300' : 'bg-violet-100 text-violet-700'}`}>
+                      Real
+                    </span>
+                  </div>
+                  <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-violet-500/20 text-violet-400 group-hover:bg-violet-500/30' : 'bg-violet-200 text-violet-600 group-hover:bg-violet-300'} transition-all group-hover:scale-110`}>
+                    <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </div>
+                </div>
+                <p className={`text-2xl sm:text-3xl font-black ${isDarkMode ? 'text-violet-300' : 'text-violet-600'}`}>{realAlumniCount}</p>
+                <div className={`mt-2 h-1 w-8 rounded-full ${isDarkMode ? 'bg-gradient-to-r from-violet-500 to-violet-400' : 'bg-gradient-to-r from-violet-500 to-violet-600'}`}></div>
+                {testAlumniCount > 0 && (
+                  <p className={`mt-1 text-[10px] ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                    +{testAlumniCount} test excluded
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Mock / Test Accounts Card */}
+            <div
+              onClick={() => setUserCategoryFilter(userCategoryFilter === 'mock' ? 'all' : 'mock')}
+              title="Click to view only Mock & Test accounts in user list"
+              className={`group relative overflow-hidden rounded-xl transition-all duration-300 cursor-pointer ${
+                userCategoryFilter === 'mock'
+                  ? isDarkMode ? 'ring-2 ring-amber-400 bg-amber-950/40 border border-amber-400' : 'ring-2 ring-amber-500 bg-amber-100/90 border border-amber-400'
+                  : isDarkMode ? 'bg-gradient-to-br from-slate-700/40 to-slate-800/40 backdrop-blur-xl border border-amber-500/25 hover:border-amber-400/50' : 'bg-gradient-to-br from-amber-50/80 to-amber-100/80 backdrop-blur-xl border border-amber-200/60 hover:border-amber-300/90'
+              }`}
+            >
+              <div className="relative z-10 p-3 sm:p-4">
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <p className={`text-xs font-semibold uppercase tracking-wider ${isDarkMode ? 'text-amber-300/80' : 'text-amber-800'}`}>Mock / Test</p>
+                    <span className={`inline-block text-[9px] font-bold px-1.5 py-0.5 rounded-full ${isDarkMode ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-amber-200 text-amber-800 border border-amber-300'}`}>
+                      TEST DATA
+                    </span>
+                  </div>
+                  <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-amber-500/20 text-amber-400 group-hover:bg-amber-500/30' : 'bg-amber-200 text-amber-700 group-hover:bg-amber-300'} transition-all group-hover:scale-110`}>
+                    <FlaskConical className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </div>
+                </div>
+                <p className={`text-2xl sm:text-3xl font-black ${isDarkMode ? 'text-amber-300' : 'text-amber-700'}`}>{totalTestCount}</p>
+                <div className={`mt-2 h-1 w-8 rounded-full ${isDarkMode ? 'bg-gradient-to-r from-amber-500 to-amber-400' : 'bg-gradient-to-r from-amber-500 to-amber-600'}`}></div>
+                <p className={`mt-1 text-[10px] font-medium ${isDarkMode ? 'text-amber-400/80' : 'text-amber-700'}`}>
+                  {testStudentsCount} std · {testAlumniCount} alm
+                </p>
+              </div>
+            </div>
+
+            {/* Teams Card */}
+            <div className={`group relative overflow-hidden rounded-xl transition-all duration-300 ${isDarkMode ? 'bg-gradient-to-br from-slate-700/40 to-slate-800/40 backdrop-blur-xl border border-emerald-500/20 hover:border-emerald-400/40' : 'bg-gradient-to-br from-emerald-50/80 to-emerald-100/80 backdrop-blur-xl border border-emerald-200/50 hover:border-emerald-300/80'}`}>
+              <div className="relative z-10 p-3 sm:p-4">
+                <div className="flex items-start justify-between mb-3">
+                  <p className={`text-xs font-semibold uppercase tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Teams</p>
+                  <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-emerald-500/20 text-emerald-400 group-hover:bg-emerald-500/30' : 'bg-emerald-200 text-emerald-600 group-hover:bg-emerald-300'} transition-all group-hover:scale-110`}>
+                    <UsersRound className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </div>
+                </div>
+                <p className={`text-2xl sm:text-3xl font-black ${isDarkMode ? 'text-emerald-300' : 'text-emerald-600'}`}>{teamsCount}</p>
+                <div className={`mt-2 h-1 w-8 rounded-full ${isDarkMode ? 'bg-gradient-to-r from-emerald-500 to-emerald-400' : 'bg-gradient-to-r from-emerald-500 to-emerald-600'}`}></div>
+              </div>
+            </div>
+
+            {/* Active Now Card (realtime) */}
+            <div className={`col-span-2 sm:col-span-1 group relative overflow-hidden rounded-xl transition-all duration-300 ${isDarkMode ? 'bg-gradient-to-br from-slate-700/40 to-slate-800/40 backdrop-blur-xl border border-purple-500/20 hover:border-purple-400/40' : 'bg-gradient-to-br from-purple-50/80 to-purple-100/80 backdrop-blur-xl border border-purple-200/50 hover:border-purple-300/80'}`}>
+              <div className="relative z-10 p-3 sm:p-4">
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <p className={`text-xs font-semibold uppercase tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Active</p>
+                    <span className={`inline-block mt-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full ${isDarkMode ? 'bg-green-500/30 text-green-300' : 'bg-green-200 text-green-700'}`}>
+                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-400 mr-1 animate-pulse"></span>
+                      LIVE
+                    </span>
+                  </div>
+                  <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-purple-500/20 text-purple-400 group-hover:bg-purple-500/30' : 'bg-purple-200 text-purple-600 group-hover:bg-purple-300'} transition-all group-hover:scale-110`}>
+                    <Users className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </div>
+                </div>
+                <p className={`text-2xl sm:text-3xl font-black ${isDarkMode ? 'text-purple-300' : 'text-purple-600'}`}>{onlineUsers}</p>
+                <div className={`mt-2 h-1 w-8 rounded-full ${isDarkMode ? 'bg-gradient-to-r from-purple-500 to-purple-400' : 'bg-gradient-to-r from-purple-500 to-purple-600'}`}></div>
+              </div>
+            </div>
+          </div>
+
+          {/* System & Resource Usage Gauges */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 sm:gap-3 mt-2.5 sm:mt-3">
+            {/* Storage Used Card */}
+            <div title={storageTooltip} className={`group relative overflow-hidden rounded-xl transition-all duration-300 ${isDarkMode ? 'bg-gradient-to-br from-slate-700/40 to-slate-800/40 backdrop-blur-xl border border-cyan-500/20 hover:border-cyan-400/40' : 'bg-gradient-to-br from-cyan-50/80 to-cyan-100/80 backdrop-blur-xl border border-cyan-200/50 hover:border-cyan-300/80'}`}>
               <div className="relative z-10 p-3 sm:p-4">
                 <div className="flex items-start justify-between mb-2">
                   <div>
@@ -393,68 +557,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               </div>
             </div>
 
-            {/* Students Card */}
-            <div className={`group relative overflow-hidden rounded-xl transition-all duration-300 ${isDarkMode ? 'bg-gradient-to-br from-slate-700/40 to-slate-800/40 backdrop-blur-xl border border-blue-500/20 hover:border-blue-400/40' : 'bg-gradient-to-br from-blue-50/80 to-blue-100/80 backdrop-blur-xl border border-blue-200/50 hover:border-blue-300/80'}`}>
-              <div className="relative z-10 p-3 sm:p-4">
-                <div className="flex items-start justify-between mb-3">
-                  <p className={`text-xs font-semibold uppercase tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Students</p>
-                  <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-blue-500/20 text-blue-400 group-hover:bg-blue-500/30' : 'bg-blue-200 text-blue-600 group-hover:bg-blue-300'} transition-all group-hover:scale-110`}>
-                    <Users className="w-4 h-4 sm:w-5 sm:h-5" />
-                  </div>
-                </div>
-                <p className={`text-2xl sm:text-3xl font-black ${isDarkMode ? 'text-blue-300' : 'text-blue-600'}`}>{totalStudentsCount}</p>
-                <div className={`mt-2 h-1 w-8 rounded-full ${isDarkMode ? 'bg-gradient-to-r from-blue-500 to-blue-400' : 'bg-gradient-to-r from-blue-500 to-blue-600'}`}></div>
-              </div>
-            </div>
-
-            {/* Alumni Card */}
-            <div className={`group relative overflow-hidden rounded-xl transition-all duration-300 ${isDarkMode ? 'bg-gradient-to-br from-slate-700/40 to-slate-800/40 backdrop-blur-xl border border-violet-500/20 hover:border-violet-400/40' : 'bg-gradient-to-br from-violet-50/80 to-violet-100/80 backdrop-blur-xl border border-violet-200/50 hover:border-violet-300/80'}`}>
-              <div className="relative z-10 p-3 sm:p-4">
-                <div className="flex items-start justify-between mb-3">
-                  <p className={`text-xs font-semibold uppercase tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Alumni</p>
-                  <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-violet-500/20 text-violet-400 group-hover:bg-violet-500/30' : 'bg-violet-200 text-violet-600 group-hover:bg-violet-300'} transition-all group-hover:scale-110`}>
-                    <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5" />
-                  </div>
-                </div>
-                <p className={`text-2xl sm:text-3xl font-black ${isDarkMode ? 'text-violet-300' : 'text-violet-600'}`}>{totalAlumniCount}</p>
-                <div className={`mt-2 h-1 w-8 rounded-full ${isDarkMode ? 'bg-gradient-to-r from-violet-500 to-violet-400' : 'bg-gradient-to-r from-violet-500 to-violet-600'}`}></div>
-              </div>
-            </div>
-
-            {/* Teams Card */}
-            <div className={`group relative overflow-hidden rounded-xl transition-all duration-300 ${isDarkMode ? 'bg-gradient-to-br from-slate-700/40 to-slate-800/40 backdrop-blur-xl border border-emerald-500/20 hover:border-emerald-400/40' : 'bg-gradient-to-br from-emerald-50/80 to-emerald-100/80 backdrop-blur-xl border border-emerald-200/50 hover:border-emerald-300/80'}`}>
-              <div className="relative z-10 p-3 sm:p-4">
-                <div className="flex items-start justify-between mb-3">
-                  <p className={`text-xs font-semibold uppercase tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Teams</p>
-                  <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-emerald-500/20 text-emerald-400 group-hover:bg-emerald-500/30' : 'bg-emerald-200 text-emerald-600 group-hover:bg-emerald-300'} transition-all group-hover:scale-110`}>
-                    <UsersRound className="w-4 h-4 sm:w-5 sm:h-5" />
-                  </div>
-                </div>
-                <p className={`text-2xl sm:text-3xl font-black ${isDarkMode ? 'text-emerald-300' : 'text-emerald-600'}`}>{teamsCount}</p>
-                <div className={`mt-2 h-1 w-8 rounded-full ${isDarkMode ? 'bg-gradient-to-r from-emerald-500 to-emerald-400' : 'bg-gradient-to-r from-emerald-500 to-emerald-600'}`}></div>
-              </div>
-            </div>
-
-            {/* Active Now Card (realtime) */}
-            <div className={`group relative overflow-hidden rounded-xl transition-all duration-300 ${isDarkMode ? 'bg-gradient-to-br from-slate-700/40 to-slate-800/40 backdrop-blur-xl border border-purple-500/20 hover:border-purple-400/40' : 'bg-gradient-to-br from-purple-50/80 to-purple-100/80 backdrop-blur-xl border border-purple-200/50 hover:border-purple-300/80'}`}>
-              <div className="relative z-10 p-3 sm:p-4">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <p className={`text-xs font-semibold uppercase tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Active</p>
-                    <span className={`inline-block mt-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full ${isDarkMode ? 'bg-green-500/30 text-green-300' : 'bg-green-200 text-green-700'}`}>
-                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-400 mr-1 animate-pulse"></span>
-                      LIVE
-                    </span>
-                  </div>
-                  <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-purple-500/20 text-purple-400 group-hover:bg-purple-500/30' : 'bg-purple-200 text-purple-600 group-hover:bg-purple-300'} transition-all group-hover:scale-110`}>
-                    <Users className="w-4 h-4 sm:w-5 sm:h-5" />
-                  </div>
-                </div>
-                <p className={`text-2xl sm:text-3xl font-black ${isDarkMode ? 'text-purple-300' : 'text-purple-600'}`}>{onlineUsers}</p>
-                <div className={`mt-2 h-1 w-8 rounded-full ${isDarkMode ? 'bg-gradient-to-r from-purple-500 to-purple-400' : 'bg-gradient-to-r from-purple-500 to-purple-600'}`}></div>
-              </div>
-            </div>
-
             {/* AI Usage Card — tracks combined usage against Gemini's free-tier
                 project cap (250 req/day), since our own 30/user/day limit
                 won't stop the shared project ceiling from being hit first. */}
@@ -464,7 +566,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               return (
                 <div
                   title="Combined AI chat requests today vs. Gemini's free-tier daily project limit"
-                  className={`col-span-2 group relative overflow-hidden rounded-xl transition-all duration-300 ${isDarkMode ? 'bg-gradient-to-br from-slate-700/40 to-slate-800/40 backdrop-blur-xl border border-pink-500/20 hover:border-pink-400/40' : 'bg-gradient-to-br from-pink-50/80 to-pink-100/80 backdrop-blur-xl border border-pink-200/50 hover:border-pink-300/80'}`}
+                  className={`group relative overflow-hidden rounded-xl transition-all duration-300 ${isDarkMode ? 'bg-gradient-to-br from-slate-700/40 to-slate-800/40 backdrop-blur-xl border border-pink-500/20 hover:border-pink-400/40' : 'bg-gradient-to-br from-pink-50/80 to-pink-100/80 backdrop-blur-xl border border-pink-200/50 hover:border-pink-300/80'}`}
                 >
                   <div className="relative z-10 p-3 sm:p-4">
                     <div className="flex items-start justify-between mb-2">
@@ -507,6 +609,45 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               </div>
             </div>
 
+            {/* Category Filter Tabs */}
+            <div className="flex items-center gap-2 mb-3.5 flex-wrap">
+              <button
+                type="button"
+                onClick={() => setUserCategoryFilter('all')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  userCategoryFilter === 'all'
+                    ? isDarkMode ? 'bg-white text-slate-900 shadow-sm' : 'bg-slate-900 text-white shadow-sm'
+                    : isDarkMode ? 'bg-[#16181c] text-slate-300 hover:bg-[#202327] border border-[#2f3336]' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
+                }`}
+              >
+                All Accounts ({adminUsers?.length || 0})
+              </button>
+              <button
+                type="button"
+                onClick={() => setUserCategoryFilter('real')}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  userCategoryFilter === 'real'
+                    ? 'bg-blue-600 text-white shadow-sm'
+                    : isDarkMode ? 'bg-[#16181c] text-blue-400 hover:bg-blue-950/30 border border-blue-500/30' : 'bg-white text-blue-700 hover:bg-blue-50 border border-blue-200'
+                }`}
+              >
+                <Users className="w-3.5 h-3.5" />
+                Real Users ({realUsers.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setUserCategoryFilter('mock')}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  userCategoryFilter === 'mock'
+                    ? isDarkMode ? 'bg-amber-500 text-slate-950 font-bold shadow-sm' : 'bg-amber-600 text-white shadow-sm'
+                    : isDarkMode ? 'bg-[#16181c] text-amber-400 hover:bg-amber-950/30 border border-amber-500/30' : 'bg-white text-amber-800 hover:bg-amber-50 border border-amber-200'
+                }`}
+              >
+                <FlaskConical className="w-3.5 h-3.5" />
+                Mock / Test Data ({totalTestCount})
+              </button>
+            </div>
+
             {/* Search Box */}
             <div className="mb-4 relative">
               <div className={`absolute left-3 top-1/2 -translate-y-1/2 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
@@ -537,7 +678,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <p className={`text-sm py-4 text-center ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Loading users…</p>
             ) : filteredUsers.length === 0 ? (
               <p className={`text-sm py-4 text-center ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                {userSearchQuery ? 'No users matching your search.' : 'No users found.'}
+                {userSearchQuery
+                  ? 'No users matching your search.'
+                  : userCategoryFilter === 'mock'
+                    ? 'No mock or test accounts found.'
+                    : userCategoryFilter === 'real'
+                      ? 'No real users found.'
+                      : 'No users found.'}
               </p>
             ) : (
               <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
@@ -546,10 +693,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   const isProtected = u.is_owner || isSelf;
                   const banReasonOpen = banReasonOpenId === u.id;
                   const busy = banBusyId === u.id;
+                  const isMock = isMockOrTestAccount(u);
                   return (
                     <div
                       key={u.id}
-                      className={`p-3 rounded-lg border ${isDarkMode ? 'bg-[#16181c]/50 border-[#2f3336]/50' : 'bg-white/70 border-slate-200'} ${u.is_banned ? (isDarkMode ? 'border-red-500/30' : 'border-red-300') : ''}`}
+                      className={`p-3 rounded-lg border transition-all ${
+                        isDarkMode
+                          ? isMock ? 'bg-amber-950/20 border-amber-500/35' : 'bg-[#16181c]/50 border-[#2f3336]/50'
+                          : isMock ? 'bg-amber-50/80 border-amber-200' : 'bg-white/70 border-slate-200'
+                      } ${u.is_banned ? (isDarkMode ? 'border-red-500/30' : 'border-red-300') : ''}`}
                     >
                       <div className="flex items-center justify-between gap-3">
                         <div className="min-w-0 flex-1">
@@ -557,6 +709,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             <p className={`text-sm font-semibold truncate ${isDarkMode ? 'text-gray-100' : 'text-gray-900'}`}>
                               {u.name || 'Unnamed'}
                             </p>
+                            {isMock && (
+                              <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold ${
+                                isDarkMode ? 'bg-amber-500/25 text-amber-300 border border-amber-500/40' : 'bg-amber-100 text-amber-800 border border-amber-300'
+                              }`}>
+                                <FlaskConical className="w-2.5 h-2.5" /> TEST / MOCK
+                              </span>
+                            )}
                             {u.is_owner && (
                               <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-purple-500 text-white">OWNER</span>
                             )}
