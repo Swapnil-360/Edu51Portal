@@ -25,6 +25,10 @@ import {
   Eye,
   Edit3,
   RotateCcw,
+  Globe,
+  Facebook,
+  MessageCircle,
+  Share2,
 } from 'lucide-react';
 import {
   AlumniInvitation,
@@ -64,6 +68,234 @@ const VARIABLE_CHIPS = [
   { label: '{{intake}}', desc: 'Intake' },
 ];
 
+export interface ParsedUniversalAlumnus {
+  full_name: string;
+  designation: string | null;
+  company: string | null;
+  department: string;
+  intake: number | null;
+  passing_year: number | null;
+  linkedin_url: string | null;
+  email: string | null;
+  source: 'Facebook' | 'LinkedIn' | 'Google / Web';
+}
+
+export function parseUniversalAlumniText(
+  rawText: string,
+  defaultDept: string = 'CSE'
+): ParsedUniversalAlumnus[] {
+  const trimmed = rawText.trim();
+  if (!trimmed) return [];
+
+  // 1. JSON Array format
+  if (trimmed.startsWith('[') || (trimmed.startsWith('{') && trimmed.endsWith('}'))) {
+    try {
+      const parsed = JSON.parse(trimmed);
+      const items = Array.isArray(parsed) ? parsed : [parsed];
+      return items
+        .map((item) => {
+          const name = (item.name || item.full_name || '').trim();
+          const rawHeadline = item.headline || item.designation || item.role || '';
+          let designation = rawHeadline;
+          let company = item.company || '';
+          if (!company && rawHeadline.includes(' at ')) {
+            const parts = rawHeadline.split(' at ');
+            designation = parts[0]?.trim();
+            company = parts[1]?.trim();
+          } else if (!company && rawHeadline.includes(' @ ')) {
+            const parts = rawHeadline.split(' @ ');
+            designation = parts[0]?.trim();
+            company = parts[1]?.trim();
+          }
+          const profileUrl = item.link || item.linkedin_url || item.facebook_url || item.url || '';
+          const source: 'Facebook' | 'LinkedIn' | 'Google / Web' = profileUrl.includes('facebook.com')
+            ? 'Facebook'
+            : profileUrl.includes('linkedin.com')
+            ? 'LinkedIn'
+            : 'Google / Web';
+
+          return {
+            full_name: name,
+            designation: designation || null,
+            company: company || null,
+            department: item.department || defaultDept,
+            passing_year: item.passing_year
+              ? Number(item.passing_year)
+              : item.year
+              ? Number(item.year)
+              : new Date().getFullYear() - 2,
+            intake: item.intake ? Number(item.intake) : null,
+            linkedin_url: profileUrl || null,
+            email: item.email || null,
+            source,
+          };
+        })
+        .filter((item) => item.full_name.length > 0);
+    } catch {
+      // fallback to line parsing
+    }
+  }
+
+  const detectDept = (str: string) => {
+    const s = str.toUpperCase();
+    if (s.includes('CSE') || s.includes('COMPUTER SCIENCE')) return 'CSE';
+    if (s.includes('EEE') || s.includes('ELECTRICAL')) return 'EEE';
+    if (s.includes('CIVIL')) return 'Civil';
+    if (s.includes('TEXTILE')) return 'Textile';
+    if (s.includes('BBA') || s.includes('BUSINESS')) return 'BBA';
+    if (s.includes('ECONOMICS')) return 'Economics';
+    if (s.includes('ENGLISH')) return 'English';
+    if (s.includes('LAW')) return 'Law';
+    if (s.includes('MATH')) return 'Mathematics';
+    return defaultDept;
+  };
+
+  const detectIntake = (str: string) => {
+    const m = str.match(/(?:intake|batch)\s*[:#-]?\s*(\d{1,3})/i);
+    return m ? Number(m[1]) : null;
+  };
+
+  const detectYear = (str: string) => {
+    const m = str.match(/(?:class of|year|passed|batch\s*of)?\s*\b(20\d{2}|19\d{2})\b/i);
+    return m ? Number(m[1]) : null;
+  };
+
+  const lines = trimmed.split('\n').map((l) => l.trim()).filter(Boolean);
+  const results: ParsedUniversalAlumnus[] = [];
+
+  for (const rawLine of lines) {
+    if (!rawLine) continue;
+    let line = rawLine;
+
+    // 1. Extract URL if present
+    let url = '';
+    const urlMatch = line.match(/(https?:\/\/[^\s]+)/i);
+    if (urlMatch) {
+      url = urlMatch[1].replace(/[),.;]+$/, '');
+      line = line.replace(urlMatch[0], ' ').trim();
+    }
+
+    // Determine platform
+    let source: 'Facebook' | 'LinkedIn' | 'Google / Web' = 'Google / Web';
+    if (url.includes('facebook.com') || line.toLowerCase().includes('facebook')) {
+      source = 'Facebook';
+    } else if (url.includes('linkedin.com') || line.toLowerCase().includes('linkedin')) {
+      source = 'LinkedIn';
+    }
+
+    // Extract email if present
+    let email: string | null = null;
+    const emailMatch = line.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
+    if (emailMatch) {
+      email = emailMatch[1];
+      line = line.replace(emailMatch[0], ' ').trim();
+    }
+
+    const dept = detectDept(line);
+    const intake = detectIntake(line);
+    const passing_year = detectYear(line);
+
+    // Strip platform and location suffixes from snippet: e.g. "| LinkedIn", "- Facebook", "... - BUBT"
+    line = line
+      .replace(/\s*\|\s*(?:LinkedIn|Facebook|Google|BUBT).*/gi, '')
+      .replace(/\s*-\s*(?:LinkedIn|Facebook).*$/gi, '')
+      .replace(/\s*·\s*(?:LinkedIn|Facebook).*$/gi, '')
+      .replace(/Dhaka,?\s*Bangladesh/gi, '')
+      .replace(/Bangladesh University of Business and Technology.*$/gi, '')
+      .trim();
+
+    // Remove bracketed annotations like (Intake 48, BBA)
+    line = line.replace(/\(.*?\)/g, ' ').replace(/\[.*?\]/g, ' ').replace(/\s+/g, ' ').trim();
+
+    let name = '';
+    let designation = '';
+    let company = '';
+
+    if (line.includes('\t')) {
+      const parts = line.split('\t').map((p) => p.trim()).filter(Boolean);
+      name = parts[0] || '';
+      designation = parts[1] || '';
+      company = parts[2] || '';
+    } else if (line.includes(' - ')) {
+      const parts = line.split(' - ').map((p) => p.trim()).filter(Boolean);
+      name = parts[0] || '';
+      if (parts.length === 2) {
+        if (parts[1].includes(' at ')) {
+          const atParts = parts[1].split(' at ');
+          designation = atParts[0]?.trim();
+          company = atParts[1]?.trim();
+        } else if (parts[1].includes(' @ ')) {
+          const atParts = parts[1].split(' @ ');
+          designation = atParts[0]?.trim();
+          company = atParts[1]?.trim();
+        } else {
+          designation = parts[1];
+        }
+      } else if (parts.length >= 3) {
+        designation = parts[1];
+        company = parts[2];
+      }
+    } else if (line.includes(' | ')) {
+      const parts = line.split(' | ').map((p) => p.trim()).filter(Boolean);
+      name = parts[0] || '';
+      designation = parts[1] || '';
+      company = parts[2] || '';
+    } else if (line.includes(',') && line.split(',').length >= 3) {
+      const parts = line.split(',').map((p) => p.trim()).filter(Boolean);
+      name = parts[0] || '';
+      designation = parts[1] || '';
+      company = parts[2] || '';
+    } else {
+      if (line.includes(' at ')) {
+        const parts = line.split(' at ');
+        name = parts[0]?.trim();
+        company = parts[1]?.trim();
+      } else if (line.includes(' @ ')) {
+        const parts = line.split(' @ ');
+        name = parts[0]?.trim();
+        company = parts[1]?.trim();
+      } else {
+        name = line;
+      }
+    }
+
+    // Clean name
+    name = name
+      .replace(/^(?:Engr\.|Dr\.|Md\.|Mr\.|Ms\.|Mrs\.)\s*/i, (m) => m)
+      .trim();
+
+    // Clean up designation/company
+    if (designation.includes(' at ')) {
+      const atParts = designation.split(' at ');
+      designation = atParts[0].trim();
+      if (!company) company = atParts[1].trim();
+    } else if (designation.includes(' @ ')) {
+      const atParts = designation.split(' @ ');
+      designation = atParts[0].trim();
+      if (!company) company = atParts[1].trim();
+    }
+
+    company = company.replace(/^(?:at|@)\s*/i, '').replace(/[-–—]/g, '').trim();
+    designation = designation.replace(/[-–—]/g, '').trim();
+
+    if (!name || name.length < 2) continue;
+
+    results.push({
+      full_name: name,
+      designation: designation || null,
+      company: company || null,
+      department: dept,
+      intake: intake || null,
+      passing_year: passing_year || new Date().getFullYear() - 2,
+      linkedin_url: url || null,
+      email: email || null,
+      source,
+    });
+  }
+
+  return results;
+}
+
 export const AlumniOutreachPanel: React.FC<AlumniOutreachPanelProps> = ({ isDarkMode }) => {
   // Main Sub-Tab: 'outreach' (table) vs 'discovery' (search & capture)
   const [activeTab, setActiveTab] = useState<'outreach' | 'discovery'>('outreach');
@@ -86,9 +318,15 @@ export const AlumniOutreachPanel: React.FC<AlumniOutreachPanelProps> = ({ isDark
   // Modals state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
-  const [isLinkedInHelperOpen, setIsLinkedInHelperOpen] = useState(false);
-  const [isLinkedInExtractorOpen, setIsLinkedInExtractorOpen] = useState(false);
-  const [extractorPastedText, setExtractorPastedText] = useState('');
+  const [isUniversalCollectorOpen, setIsUniversalCollectorOpen] = useState(false);
+  const [collectorTab, setCollectorTab] = useState<'google' | 'facebook' | 'linkedin'>('google');
+  const [universalPastedText, setUniversalPastedText] = useState('');
+  const [universalDept, setUniversalDept] = useState<string>('CSE');
+
+  // Google X-Ray Search Assistant
+  const [googleDept, setGoogleDept] = useState('Computer Science');
+  const [googleRole, setGoogleRole] = useState('Software Engineer');
+  const [googleTarget, setGoogleTarget] = useState<'linkedin' | 'facebook' | 'web'>('linkedin');
 
   // Email Template & Custom Message Modals state
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
@@ -109,6 +347,23 @@ export const AlumniOutreachPanel: React.FC<AlumniOutreachPanelProps> = ({ isDark
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
+  // Live Universal Parser Memoization
+  const parsedUniversalLeads = useMemo(() => {
+    return parseUniversalAlumniText(universalPastedText, universalDept);
+  }, [universalPastedText, universalDept]);
+
+  const parsedCountsBySource = useMemo(() => {
+    let fb = 0;
+    let li = 0;
+    let web = 0;
+    for (const lead of parsedUniversalLeads) {
+      if (lead.source === 'Facebook') fb++;
+      else if (lead.source === 'LinkedIn') li++;
+      else web++;
+    }
+    return { fb, li, web, total: parsedUniversalLeads.length };
+  }, [parsedUniversalLeads]);
+
   // New lead form state
   const [newLead, setNewLead] = useState<CreateAlumniLeadInput>({
     full_name: '',
@@ -126,10 +381,6 @@ export const AlumniOutreachPanel: React.FC<AlumniOutreachPanelProps> = ({ isDark
   // CSV text input
   const [csvRawText, setCsvRawText] = useState('');
 
-  // LinkedIn Search Assistant
-  const [linkedInDept, setLinkedInDept] = useState('Computer Science');
-  const [linkedInRole, setLinkedInRole] = useState('Software Engineer');
-
   const fetchLeads = async () => {
     setLoading(true);
     const res = await getAlumniInvitations();
@@ -145,8 +396,7 @@ export const AlumniOutreachPanel: React.FC<AlumniOutreachPanelProps> = ({ isDark
     const isAnyModalOpen =
       isAddModalOpen ||
       isCsvModalOpen ||
-      isLinkedInHelperOpen ||
-      isLinkedInExtractorOpen ||
+      isUniversalCollectorOpen ||
       isTemplateModalOpen ||
       !!inviteModalLead;
     if (isAnyModalOpen) {
@@ -160,8 +410,7 @@ export const AlumniOutreachPanel: React.FC<AlumniOutreachPanelProps> = ({ isDark
   }, [
     isAddModalOpen,
     isCsvModalOpen,
-    isLinkedInHelperOpen,
-    isLinkedInExtractorOpen,
+    isUniversalCollectorOpen,
     isTemplateModalOpen,
     inviteModalLead,
   ]);
@@ -404,10 +653,52 @@ export const AlumniOutreachPanel: React.FC<AlumniOutreachPanelProps> = ({ isDark
     showToast('Magic invitation link copied to clipboard!');
   };
 
-  const openLinkedInSearch = () => {
-    const query = `site:linkedin.com/in ("BUBT" OR "Bangladesh University of Business and Technology") "${linkedInDept}" "${linkedInRole}"`;
+  const getGoogleSearchQuery = () => {
+    if (googleTarget === 'linkedin') {
+      return `site:linkedin.com/in ("BUBT" OR "Bangladesh University of Business and Technology") "${googleDept}" "${googleRole}"`;
+    }
+    if (googleTarget === 'facebook') {
+      return `site:facebook.com ("BUBT" OR "Bangladesh University of Business and Technology") "${googleDept}" ("Alumni" OR "Intake" OR "Batch")`;
+    }
+    return `("BUBT" OR "Bangladesh University of Business and Technology") "${googleDept}" ("${googleRole}" OR "Alumni" OR "Graduate")`;
+  };
+
+  const handleLaunchGoogleSearch = () => {
+    const query = getGoogleSearchQuery();
     const googleUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
     window.open(googleUrl, '_blank');
+  };
+
+  const handleCopyGoogleQuery = () => {
+    navigator.clipboard.writeText(getGoogleSearchQuery());
+    showToast('Google X-Ray search query copied to clipboard!');
+  };
+
+  const handleShareWhatsApp = (item: AlumniInvitation) => {
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://bubt.edu51portal.live';
+    const inviteUrl = `${origin}/alumni-invite?token=${item.invite_token}`;
+    const message = `Assalamu Alaikum ${item.full_name}! 🎓\n\nOn behalf of BUBT Intake 51, your official alumni profile has been pre-verified on Edu51Portal.\n\nPlease claim and activate your official profile in 30 seconds:\n${inviteUrl}\n\nWe look forward to reconnecting with you!`;
+    navigator.clipboard.writeText(message);
+    const cleanPhone = item.phone ? item.phone.replace(/[^0-9]/g, '') : '';
+    const waUrl = cleanPhone
+      ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`
+      : `https://wa.me/?text=${encodeURIComponent(message)}`;
+    window.open(waUrl, '_blank');
+    showToast('WhatsApp invitation prepared & copied to clipboard!');
+  };
+
+  const handleShareFacebook = (item: AlumniInvitation) => {
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://bubt.edu51portal.live';
+    const inviteUrl = `${origin}/alumni-invite?token=${item.invite_token}`;
+    const message = `Assalamu Alaikum ${item.full_name}! 🎓\n\nOn behalf of BUBT Intake 51, your official alumni profile has been pre-verified on Edu51Portal.\n\nPlease claim and activate your profile here:\n${inviteUrl}`;
+    navigator.clipboard.writeText(message);
+    if (item.linkedin_url && item.linkedin_url.includes('facebook.com')) {
+      window.open(item.linkedin_url, '_blank');
+      showToast('Invite copied! Opening Facebook profile to send via Messenger.');
+    } else {
+      window.open('https://www.facebook.com/messages/t/', '_blank');
+      showToast('Invite message copied to clipboard for Messenger!');
+    }
   };
 
   // Check if candidate is already in prospects
@@ -529,78 +820,73 @@ export const AlumniOutreachPanel: React.FC<AlumniOutreachPanelProps> = ({ isDark
     }
   };
 
-  const [extractorDept, setExtractorDept] = useState<string>('CSE');
+  const loadSampleData = (type: 'google' | 'facebook' | 'linkedin') => {
+    if (type === 'google') {
+      setUniversalPastedText(
+`Md. Tanvir Ahmed - Senior Software Engineer at Brain Station 23 | LinkedIn · Bangladesh University of Business and Technology · Dhaka, Bangladesh
+Sadia Sultana - Data Analyst at Robi Axiata | LinkedIn · BUBT CSE Intake 46 · Dhaka
+Engr. Rakibul Hasan - Lead Architect - Selise Digital Platforms https://linkedin.com/in/rakib-bubt`
+      );
+    } else if (type === 'facebook') {
+      setUniversalPastedText(
+`Ashikur Rahman (Intake 42, CSE) - Network Engineer at Grameenphone - https://facebook.com/ashikur.rahman
+Sadia Afrin (Intake 48, BBA) @ bKash Limited https://www.facebook.com/sadia.afrin.99
+Engr. Mahmudul Hasan, Intake 39, Textile Engineering, Senior Merchandiser at DBL Group, https://facebook.com/mahmudul.dbl`
+      );
+    } else {
+      setUniversalPastedText(
+`[
+  {
+    "name": "Nahid Bin Azhar",
+    "headline": "CTO at JoulesLabs",
+    "department": "CSE",
+    "link": "https://bd.linkedin.com/in/nahid-bin-azhar"
+  },
+  {
+    "name": "Sharmin Akter",
+    "headline": "Software Quality Assurance Engineer at Enosis Solutions",
+    "department": "CSE",
+    "link": "https://bd.linkedin.com/in/sharmin-sqa"
+  }
+]`
+      );
+    }
+    showToast(`Loaded sample ${type} alumni records!`);
+  };
 
-  const handleImportFromExtractorText = async () => {
-    if (!extractorPastedText.trim()) {
-      showToast('Please paste LinkedIn profile cards or JSON first.', 'error');
+  const handleImportUniversalLeads = async () => {
+    if (parsedUniversalLeads.length === 0) {
+      showToast('Please paste alumni text, search snippets, or profiles first.', 'error');
       return;
     }
-    try {
-      let parsedItems: any[] = [];
-      const trimmed = extractorPastedText.trim();
-      if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
-        const parsed = JSON.parse(trimmed);
-        parsedItems = Array.isArray(parsed) ? parsed : [parsed];
-      } else {
-        const lines = trimmed.split('\n');
-        for (const line of lines) {
-          if (!line.trim()) continue;
-          const parts = line.includes('\t')
-            ? line.split('\t')
-            : (line.includes('|') ? line.split('|') : line.split(' - '));
-          if (parts.length >= 1) {
-            parsedItems.push({
-              name: parts[0]?.trim(),
-              headline: parts[1]?.trim() || '',
-              link: parts[2]?.trim() || '',
-            });
-          }
-        }
-      }
 
-      const leads: CreateAlumniLeadInput[] = [];
-      for (const item of parsedItems) {
-        const name = item.name || item.full_name;
-        if (!name) continue;
-        let headline = item.headline || item.role || item.designation || '';
-        let company = '';
-        let designation = headline;
-        if (headline.includes(' at ')) {
-          const parts = headline.split(' at ');
-          designation = parts[0]?.trim();
-          company = parts[1]?.trim();
-        }
+    const leads: CreateAlumniLeadInput[] = parsedUniversalLeads.map((item) => {
+      const cleanName = item.full_name;
+      const fallbackEmail =
+        item.email ||
+        `${cleanName.toLowerCase().replace(/[^a-z0-9]/g, '')}@alumni.bubt.edu.bd`;
+      return {
+        full_name: cleanName,
+        email: fallbackEmail,
+        department: item.department || universalDept,
+        passing_year: item.passing_year,
+        intake: item.intake,
+        company: item.company,
+        designation: item.designation,
+        linkedin_url: item.linkedin_url,
+        notes: `Captured via Universal Collector (${item.source})`,
+      };
+    });
 
-        leads.push({
-          full_name: name,
-          email: item.email || `${name.toLowerCase().replace(/[^a-z0-9]/g, '')}@alumni.bubt.edu.bd`,
-          department: item.department || extractorDept,
-          passing_year: item.passing_year ? Number(item.passing_year) : new Date().getFullYear() - 2,
-          company: company || item.company || null,
-          designation: designation || null,
-          linkedin_url: item.link || item.linkedin_url || null,
-          notes: 'Captured via LinkedIn 1-Click Extractor',
-        });
-      }
-
-      if (leads.length === 0) {
-        showToast('Could not parse any alumni profiles.', 'error');
-        return;
-      }
-
-      const res = await bulkImportAlumniLeads(leads);
-      if (res.error) {
-        showToast(res.error, 'error');
-      } else {
-        showToast(`Captured ${res.count} alumni from LinkedIn!`);
-        setIsLinkedInExtractorOpen(false);
-        setExtractorPastedText('');
-        fetchLeads();
-        setActiveTab('outreach');
-      }
-    } catch (err: any) {
-      showToast('Parse error: ' + (err.message || 'Invalid format'), 'error');
+    const res = await bulkImportAlumniLeads(leads);
+    if (res.error) {
+      showToast(res.error, 'error');
+    } else {
+      showToast(`Successfully captured ${res.count} alumni from ${parsedUniversalLeads.length} parsed profiles!`);
+      setIsUniversalCollectorOpen(false);
+      setUniversalPastedText('');
+      fetchLeads();
+      setActiveTab('outreach');
     }
   };
 
@@ -654,22 +940,19 @@ export const AlumniOutreachPanel: React.FC<AlumniOutreachPanelProps> = ({ isDark
               Email Template
             </button>
             <button
-              onClick={() => setIsLinkedInExtractorOpen(true)}
-              className={`px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
-                isDarkMode ? 'bg-indigo-950/40 hover:bg-indigo-900/60 text-indigo-300 border border-indigo-500/30' : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200'
+              onClick={() => setIsUniversalCollectorOpen(true)}
+              className={`px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm ${
+                isDarkMode
+                  ? 'bg-gradient-to-r from-indigo-950/70 to-sky-950/70 hover:from-indigo-900/80 hover:to-sky-900/80 text-sky-200 border border-sky-500/40'
+                  : 'bg-gradient-to-r from-sky-50 to-indigo-50 hover:from-sky-100 hover:to-indigo-100 text-indigo-700 border border-indigo-200'
               }`}
+              title="Prospect and extract alumni from Google X-Ray, Facebook groups, and LinkedIn directory"
             >
-              <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
-              LinkedIn Extractor
-            </button>
-            <button
-              onClick={() => setIsLinkedInHelperOpen(true)}
-              className={`px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
-                isDarkMode ? 'bg-[#1e2330] hover:bg-[#252c3d] text-sky-400 border border-sky-500/30' : 'bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200'
-              }`}
-            >
-              <Linkedin className="w-3.5 h-3.5" />
-              Find on LinkedIn
+              <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Universal Collector</span>
+              <span className="px-1.5 py-0.5 rounded text-[10px] bg-cyan-500/20 text-cyan-300 font-mono">
+                Google · FB · In
+              </span>
             </button>
             <button
               onClick={() => setIsCsvModalOpen(true)}
@@ -901,10 +1184,28 @@ export const AlumniOutreachPanel: React.FC<AlumniOutreachPanelProps> = ({ isDark
                               href={item.linkedin_url}
                               target="_blank"
                               rel="noreferrer"
-                              title="LinkedIn Profile"
-                              className="text-sky-500 hover:text-sky-400"
+                              title={
+                                item.linkedin_url.includes('facebook.com')
+                                  ? 'Facebook Profile'
+                                  : item.linkedin_url.includes('linkedin.com')
+                                  ? 'LinkedIn Profile'
+                                  : 'Web Profile'
+                              }
+                              className={`p-0.5 rounded transition-colors ${
+                                item.linkedin_url.includes('facebook.com')
+                                  ? 'text-blue-500 hover:text-blue-400'
+                                  : item.linkedin_url.includes('linkedin.com')
+                                  ? 'text-sky-500 hover:text-sky-400'
+                                  : 'text-slate-400 hover:text-cyan-400'
+                              }`}
                             >
-                              <ExternalLink className="w-3 h-3" />
+                              {item.linkedin_url.includes('facebook.com') ? (
+                                <Facebook className="w-3.5 h-3.5" />
+                              ) : item.linkedin_url.includes('linkedin.com') ? (
+                                <Linkedin className="w-3.5 h-3.5" />
+                              ) : (
+                                <Globe className="w-3.5 h-3.5" />
+                              )}
                             </a>
                           )}
                         </div>
@@ -1003,6 +1304,40 @@ export const AlumniOutreachPanel: React.FC<AlumniOutreachPanelProps> = ({ isDark
                             </button>
                           )}
 
+                          {/* WhatsApp 1-Click Share Button */}
+                          {item.status !== 'joined' && (
+                            <button
+                              onClick={() => handleShareWhatsApp(item)}
+                              className={`p-1.5 rounded-lg transition-all ${
+                                isDarkMode
+                                  ? 'bg-emerald-950/40 hover:bg-emerald-900/60 text-emerald-400 border border-emerald-500/30'
+                                  : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200'
+                              }`}
+                              title="Share Invite via WhatsApp (prepares pre-filled message)"
+                            >
+                              <MessageCircle className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+
+                          {/* Facebook / Messenger Share Button */}
+                          {item.status !== 'joined' && (
+                            <button
+                              onClick={() => handleShareFacebook(item)}
+                              className={`p-1.5 rounded-lg transition-all ${
+                                isDarkMode
+                                  ? 'bg-blue-950/40 hover:bg-blue-900/60 text-blue-400 border border-blue-500/30'
+                                  : 'bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200'
+                              }`}
+                              title={
+                                item.linkedin_url?.includes('facebook.com')
+                                  ? 'Share on Facebook (copies message & opens Facebook profile)'
+                                  : 'Share via Messenger (copies message & opens Messenger)'
+                              }
+                            >
+                              <Facebook className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+
                           {/* Copy Link Button */}
                           {item.status !== 'joined' && (
                             <button
@@ -1059,7 +1394,7 @@ export const AlumniOutreachPanel: React.FC<AlumniOutreachPanelProps> = ({ isDark
                 </span>
               </div>
               <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                Query verified BUBT graduates across all faculties, or extract fresh live profiles directly from LinkedIn.
+                Query verified BUBT graduates across all faculties, or prospect live profiles directly from Google, Facebook, and LinkedIn.
               </p>
             </div>
 
@@ -1073,13 +1408,13 @@ export const AlumniOutreachPanel: React.FC<AlumniOutreachPanelProps> = ({ isDark
                 Capture Selected ({selectedDiscoveredIds.size})
               </button>
               <button
-                onClick={() => setIsLinkedInExtractorOpen(true)}
+                onClick={() => setIsUniversalCollectorOpen(true)}
                 className={`px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 border transition-all ${
                   isDarkMode ? 'bg-indigo-950/40 text-indigo-300 border-indigo-500/30 hover:bg-indigo-900/60' : 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100'
                 }`}
               >
-                <Linkedin className="w-3.5 h-3.5 text-sky-400" />
-                LinkedIn 1-Click Extractor
+                <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+                Universal Collector (Google · FB · In)
               </button>
             </div>
           </div>
@@ -1091,14 +1426,14 @@ export const AlumniOutreachPanel: React.FC<AlumniOutreachPanelProps> = ({ isDark
             <div className="flex items-center gap-2">
               <span className="text-sm">💡</span>
               <span className="leading-snug">
-                <strong>How it works:</strong> The filter below searches our pre-indexed directory across all 9 departments. To discover <em>hundreds of fresh alumni</em> directly from LinkedIn, click <strong>LinkedIn 1-Click Extractor</strong>!
+                <strong>How it works:</strong> The filter below searches our pre-indexed directory across all 9 departments. To discover <em>hundreds of fresh alumni</em> across Facebook groups, Google search, and LinkedIn, click <strong>Universal Collector</strong>!
               </span>
             </div>
             <button
-              onClick={() => setIsLinkedInExtractorOpen(true)}
+              onClick={() => setIsUniversalCollectorOpen(true)}
               className="text-[11px] font-bold text-sky-400 hover:underline shrink-0 flex items-center gap-1"
             >
-              Open Extractor →
+              Open Universal Collector →
             </button>
           </div>
 
@@ -1496,215 +1831,435 @@ export const AlumniOutreachPanel: React.FC<AlumniOutreachPanelProps> = ({ isDark
         document.body
       )}
 
-      {/* MODAL 3: LinkedIn Smart Search Assistant */}
-      {isLinkedInHelperOpen && createPortal(
+      {/* MODAL 3: Universal Alumni Collector (Google · Facebook · LinkedIn) */}
+      {isUniversalCollectorOpen && createPortal(
         <div
-          onClick={(e) => { if (e.target === e.currentTarget) setIsLinkedInHelperOpen(false); }}
-          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-200"
+          onClick={(e) => { if (e.target === e.currentTarget) setIsUniversalCollectorOpen(false); }}
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-200"
         >
-          <div className={`w-full max-w-lg rounded-2xl p-6 border shadow-2xl relative max-h-[92vh] overflow-y-auto animate-in zoom-in-95 duration-200 ${
+          <div className={`w-full max-w-3xl rounded-2xl p-5 sm:p-6 border shadow-2xl relative max-h-[92vh] overflow-y-auto animate-in zoom-in-95 duration-200 ${
             isDarkMode ? 'bg-[#161a23] border-slate-700 text-white' : 'bg-white border-slate-200 text-slate-900'
           }`}>
             <button
-              onClick={() => setIsLinkedInHelperOpen(false)}
+              onClick={() => setIsUniversalCollectorOpen(false)}
               className="absolute top-4 right-4 text-slate-400 hover:text-white"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <div className="flex items-center gap-2 mb-2">
-              <Linkedin className="w-5 h-5 text-sky-400" />
-              <h3 className="text-lg font-bold">LinkedIn Prospecting Helper</h3>
+            {/* Modal Header */}
+            <div className="flex items-start gap-3 mb-4">
+              <div className="p-2.5 rounded-xl bg-gradient-to-tr from-sky-500/20 via-indigo-500/20 to-blue-500/20 text-cyan-400 border border-cyan-500/30">
+                <Sparkles className="w-5 h-5 text-cyan-400" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                    Universal Alumni Collector
+                  </h3>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-cyan-500/15 text-cyan-400 border border-cyan-500/30">
+                    Google · Facebook · LinkedIn
+                  </span>
+                </div>
+                <p className={`text-xs mt-0.5 ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                  Prospect and extract BUBT alumni from Google X-Ray Search, Facebook Alumni Groups & Posts, and LinkedIn Directory.
+                </p>
+              </div>
             </div>
-            <p className={`text-xs mb-4 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-              LinkedIn blocks direct public bot scraping, but you can use targeted Google Search queries (Google Dorks) to uncover hundreds of BUBT graduates by department and role!
-            </p>
 
-            <div className="space-y-3.5 text-xs">
-              <div>
-                <label className="block font-semibold mb-1">Target Department</label>
-                <input
-                  type="text"
-                  value={linkedInDept}
-                  onChange={(e) => setLinkedInDept(e.target.value)}
-                  placeholder="Computer Science / EEE / BBA"
-                  className={`w-full px-3 py-2 rounded-lg border outline-none ${
-                    isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'
-                  }`}
-                />
+            {/* Platform Discovery Tabs */}
+            <div className="border-b pb-3 mb-4 border-slate-700/60">
+              <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-1.5">
+                <span>1. Select Discovery Tool:</span>
               </div>
-
-              <div>
-                <label className="block font-semibold mb-1">Target Job Designation / Skill</label>
-                <input
-                  type="text"
-                  value={linkedInRole}
-                  onChange={(e) => setLinkedInRole(e.target.value)}
-                  placeholder="Software Engineer / Data Analyst / Product Manager"
-                  className={`w-full px-3 py-2 rounded-lg border outline-none ${
-                    isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setCollectorTab('google')}
+                  className={`p-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all border ${
+                    collectorTab === 'google'
+                      ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 shadow-sm'
+                      : isDarkMode
+                      ? 'bg-slate-900/60 hover:bg-slate-800 text-slate-300 border-slate-800'
+                      : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
                   }`}
-                />
-              </div>
+                >
+                  <Search className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Google X-Ray</span>
+                </button>
 
-              <div className={`p-3 rounded-xl border font-mono text-[11px] ${
-                isDarkMode ? 'bg-slate-900/80 border-slate-700 text-cyan-300' : 'bg-slate-100 border-slate-200 text-slate-800'
+                <button
+                  type="button"
+                  onClick={() => setCollectorTab('facebook')}
+                  className={`p-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all border ${
+                    collectorTab === 'facebook'
+                      ? 'bg-blue-500/20 text-blue-300 border-blue-500/40 shadow-sm'
+                      : isDarkMode
+                      ? 'bg-slate-900/60 hover:bg-slate-800 text-slate-300 border-slate-800'
+                      : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
+                  }`}
+                >
+                  <Facebook className="w-3.5 h-3.5 text-blue-400" />
+                  <span>Facebook Groups</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setCollectorTab('linkedin')}
+                  className={`p-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all border ${
+                    collectorTab === 'linkedin'
+                      ? 'bg-sky-500/20 text-sky-300 border-sky-500/40 shadow-sm'
+                      : isDarkMode
+                      ? 'bg-slate-900/60 hover:bg-slate-800 text-slate-300 border-slate-800'
+                      : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
+                  }`}
+                >
+                  <Linkedin className="w-3.5 h-3.5 text-sky-400" />
+                  <span>LinkedIn Directory</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Platform Launcher Card */}
+            {collectorTab === 'google' && (
+              <div className={`p-4 rounded-xl border mb-4 space-y-3 ${
+                isDarkMode ? 'bg-slate-900/80 border-slate-700/80' : 'bg-amber-50/50 border-amber-200'
               }`}>
-                site:linkedin.com/in ("BUBT" OR "Bangladesh University of Business and Technology") "{linkedInDept}" "{linkedInRole}"
+                <div className="flex items-center justify-between gap-2">
+                  <div className="text-xs font-bold text-amber-400 flex items-center gap-1.5">
+                    <Search className="w-3.5 h-3.5" />
+                    Targeted Google Search Query Generator
+                  </div>
+                  <div className="flex items-center gap-1 text-[11px]">
+                    <span className="text-slate-400">Target:</span>
+                    <button
+                      type="button"
+                      onClick={() => setGoogleTarget('linkedin')}
+                      className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                        googleTarget === 'linkedin' ? 'bg-sky-500 text-white' : 'bg-slate-800 text-slate-400'
+                      }`}
+                    >
+                      LinkedIn
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setGoogleTarget('facebook')}
+                      className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                        googleTarget === 'facebook' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400'
+                      }`}
+                    >
+                      Facebook
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setGoogleTarget('web')}
+                      className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                        googleTarget === 'web' ? 'bg-amber-600 text-white' : 'bg-slate-800 text-slate-400'
+                      }`}
+                    >
+                      General Web
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+                  <div>
+                    <label className="block font-semibold mb-1">Target Department</label>
+                    <input
+                      type="text"
+                      value={googleDept}
+                      onChange={(e) => setGoogleDept(e.target.value)}
+                      placeholder="Computer Science / EEE / BBA"
+                      className={`w-full px-3 py-1.5 rounded-lg border outline-none text-xs ${
+                        isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'
+                      }`}
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-semibold mb-1">Target Role / Skill</label>
+                    <input
+                      type="text"
+                      value={googleRole}
+                      onChange={(e) => setGoogleRole(e.target.value)}
+                      placeholder="Software Engineer / Marketing / Officer"
+                      className={`w-full px-3 py-1.5 rounded-lg border outline-none text-xs ${
+                        isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'
+                      }`}
+                    />
+                  </div>
+                </div>
+
+                <div className={`p-2.5 rounded-lg border font-mono text-[11px] overflow-x-auto ${
+                  isDarkMode ? 'bg-slate-950/80 border-slate-800 text-amber-300' : 'bg-white border-slate-200 text-slate-800'
+                }`}>
+                  {getGoogleSearchQuery()}
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={handleCopyGoogleQuery}
+                    className="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700"
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                    Copy Query
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleLaunchGoogleSearch}
+                    className="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-amber-600 hover:bg-amber-500 text-white flex items-center gap-1.5 shadow-sm transition-all"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    Launch Google Search
+                  </button>
+                </div>
               </div>
+            )}
 
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsLinkedInHelperOpen(false)}
-                  className={`px-4 py-2 rounded-lg font-medium ${
-                    isDarkMode ? 'bg-slate-800 text-slate-300' : 'bg-slate-100 text-slate-700'
-                  }`}
-                >
-                  Close
-                </button>
-                <button
-                  type="button"
-                  onClick={openLinkedInSearch}
-                  className="px-5 py-2 rounded-lg font-bold bg-sky-600 hover:bg-sky-500 text-white shadow-lg flex items-center gap-1.5"
-                >
-                  <ExternalLink className="w-3.5 h-3.5" />
-                  Launch Google Search
-                </button>
+            {collectorTab === 'facebook' && (
+              <div className={`p-4 rounded-xl border mb-4 space-y-3 ${
+                isDarkMode ? 'bg-slate-900/80 border-slate-700/80' : 'bg-blue-50/50 border-blue-200'
+              }`}>
+                <div className="text-xs font-bold text-blue-400 flex items-center gap-1.5">
+                  <Facebook className="w-3.5 h-3.5" />
+                  1-Click Facebook Alumni Launchers:
+                </div>
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  Open Facebook to discover alumni profiles, graduate groups, and alumni batch posts. Simply copy profile links or post texts and paste below!
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
+                  <a
+                    href="https://www.facebook.com/search/groups/?q=BUBT+alumni"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="p-2.5 rounded-lg text-xs font-semibold bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/30 flex items-center justify-center gap-1.5 transition-all text-center"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    BUBT Alumni Groups
+                  </a>
+                  <a
+                    href="https://www.facebook.com/search/people/?q=BUBT+alumni"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="p-2.5 rounded-lg text-xs font-semibold bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/30 flex items-center justify-center gap-1.5 transition-all text-center"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    BUBT Alumni People
+                  </a>
+                  <a
+                    href="https://www.facebook.com/search/top/?q=BUBT+CSE+Alumni"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="p-2.5 rounded-lg text-xs font-semibold bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/30 flex items-center justify-center gap-1.5 transition-all text-center"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    CSE Alumni Association
+                  </a>
+                </div>
               </div>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
+            )}
 
-      {/* MODAL 4: LinkedIn 1-Click Profile Extractor */}
-      {isLinkedInExtractorOpen && createPortal(
-        <div
-          onClick={(e) => { if (e.target === e.currentTarget) setIsLinkedInExtractorOpen(false); }}
-          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-200"
-        >
-          <div className={`w-full max-w-2xl rounded-2xl p-6 border shadow-2xl relative max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200 ${
-            isDarkMode ? 'bg-[#161a23] border-slate-700 text-white' : 'bg-white border-slate-200 text-slate-900'
-          }`}>
-            <button
-              onClick={() => setIsLinkedInExtractorOpen(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-white"
-            >
-              <X className="w-5 h-5" />
-            </button>
+            {collectorTab === 'linkedin' && (
+              <div className={`p-4 rounded-xl border mb-4 space-y-3 ${
+                isDarkMode ? 'bg-slate-900/80 border-slate-700/80' : 'bg-sky-50/50 border-sky-200'
+              }`}>
+                <div className="text-xs font-bold text-sky-400 flex items-center gap-1.5">
+                  <Linkedin className="w-3.5 h-3.5" />
+                  BUBT LinkedIn People Directory & Bookmarklet Extractor
+                </div>
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  Open BUBT's official LinkedIn page to scroll verified graduates, or run our fast bookmarklet script to copy dozens of profiles at once:
+                </p>
 
-            <div className="flex items-center gap-2 mb-1.5">
-              <div className="p-2 rounded-lg bg-sky-500/20 text-sky-400">
-                <Linkedin className="w-5 h-5" />
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
+                  <a
+                    href="https://www.linkedin.com/school/bubt/people/"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="px-3 py-1.5 rounded-lg text-xs font-bold bg-sky-600 hover:bg-sky-500 text-white flex items-center justify-center gap-1.5 shadow-sm transition-all"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    Open BUBT LinkedIn People
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const script = `javascript:(function(){const c=document.querySelectorAll('.org-people-profile-card,.artdeco-card,.entity-result');const l=[];c.forEach(x=>{const n=x.querySelector('.org-people-profile-card__profile-title,.entity-result__title-text a,.app-aware-link');const h=x.querySelector('.artdeco-entity-lockup__subtitle,.entity-result__primary-subtitle,.org-people-profile-card__profile-sub-title');const a=x.querySelector('a[href*="/in/"]');if(n&&a){const nm=n.innerText.trim().replace(/\\n+/g,' ');const hd=h?h.innerText.trim().replace(/\\n+/g,' '):'';const lk=a.href.split('?')[0];if(nm&&lk&&!l.some(y=>y.name===nm))l.push({name:nm,headline:hd,link:lk});}});if(!l.length){alert('No alumni profiles found. Scroll down the LinkedIn page and click again!');return;}navigator.clipboard.writeText(JSON.stringify(l,null,2)).then(()=>alert('Captured '+l.length+' BUBT alumni profiles! Now paste into Edu51 Portal.'));})();`;
+                      navigator.clipboard.writeText(script);
+                      showToast('Bookmarklet script copied to clipboard!');
+                    }}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 border transition-all ${
+                      isDarkMode ? 'bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700' : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-300'
+                    }`}
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                    Copy Bookmarklet Script
+                  </button>
+                </div>
               </div>
-              <h3 className="text-lg font-bold">LinkedIn 1-Click Profile Extractor</h3>
-            </div>
-            <p className={`text-xs mb-4 ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-              Capture dozens of alumni profiles directly from BUBT's LinkedIn People directory or search results.
-            </p>
+            )}
 
-            {/* Step-by-Step Helper Card */}
-            <div className={`p-4 rounded-xl border mb-4 space-y-3 ${
-              isDarkMode ? 'bg-slate-900/80 border-slate-700/80' : 'bg-sky-50/50 border-sky-200'
-            }`}>
-              <div className="text-xs font-bold text-sky-400 flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5" />
-                How to capture in 15 seconds:
-              </div>
-              <ol className="text-xs space-y-2 list-decimal list-inside opacity-90 leading-relaxed">
-                <li>
-                  Open <a href="https://www.linkedin.com/school/bubt/people/" target="_blank" rel="noreferrer" className="text-sky-400 underline font-semibold">BUBT on LinkedIn (People Tab)</a> in a new tab.
-                </li>
-                <li>
-                  Filter by field of study / department (e.g. Computer Science, Business, Engineering) and scroll down to load profiles.
-                </li>
-                <li>
-                  Copy the bookmarklet script below and paste it into your browser's DevTools Console (or bookmark bar).
-                </li>
-                <li>
-                  Come back here and paste the copied data into the box below!
-                </li>
-              </ol>
-
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
-                <button
-                  type="button"
-                  onClick={() => {
-                    const script = `javascript:(function(){const c=document.querySelectorAll('.org-people-profile-card,.artdeco-card,.entity-result');const l=[];c.forEach(x=>{const n=x.querySelector('.org-people-profile-card__profile-title,.entity-result__title-text a,.app-aware-link');const h=x.querySelector('.artdeco-entity-lockup__subtitle,.entity-result__primary-subtitle,.org-people-profile-card__profile-sub-title');const a=x.querySelector('a[href*="/in/"]');if(n&&a){const nm=n.innerText.trim().replace(/\\n+/g,' ');const hd=h?h.innerText.trim().replace(/\\n+/g,' '):'';const lk=a.href.split('?')[0];if(nm&&lk&&!l.some(y=>y.name===nm))l.push({name:nm,headline:hd,link:lk});}});if(!l.length){alert('No alumni profiles found. Scroll down the LinkedIn page and click again!');return;}navigator.clipboard.writeText(JSON.stringify(l,null,2)).then(()=>alert('Captured '+l.length+' BUBT alumni profiles! Now paste into Edu51 Portal.'));})();`;
-                    navigator.clipboard.writeText(script);
-                    showToast('Bookmarklet script copied to clipboard!');
-                  }}
-                  className="px-3 py-1.5 rounded-lg text-xs font-bold bg-sky-600 hover:bg-sky-500 text-white flex items-center justify-center gap-1.5 shadow-sm transition-all"
-                >
-                  <Copy className="w-3.5 h-3.5" />
-                  Copy Bookmarklet Script
-                </button>
-                <a
-                  href="https://www.linkedin.com/school/bubt/people/"
-                  target="_blank"
-                  rel="noreferrer"
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 border transition-all ${
-                    isDarkMode ? 'bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700' : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-300'
-                  }`}
-                >
-                  <ExternalLink className="w-3.5 h-3.5" />
-                  Open BUBT LinkedIn People
-                </a>
-              </div>
-            </div>
-
-            {/* Input and Department Selection */}
+            {/* STEP 2: Universal Smart Paste Box */}
             <div className="space-y-3 text-xs">
-              <div className="flex items-center justify-between gap-3">
-                <label className="font-bold">Paste Extracted Profiles (JSON or Plain Text)</label>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
-                  <span className={`text-[11px] ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Assign Dept:</span>
+                  <span className="font-bold uppercase tracking-wider text-slate-300">
+                    2. Universal Freeform Paste Box:
+                  </span>
+                  <span className="text-[11px] text-slate-400">
+                    (Auto-detects FB, Google, In & JSON)
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className={`text-[11px] ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Default Dept:</span>
                   <select
-                    value={extractorDept}
-                    onChange={(e) => setExtractorDept(e.target.value)}
-                    className={`px-2 py-1 rounded-lg text-xs font-medium border outline-none ${
+                    value={universalDept}
+                    onChange={(e) => setUniversalDept(e.target.value)}
+                    className={`px-2 py-1 rounded-lg text-xs font-semibold border outline-none ${
                       isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-slate-50 border-slate-300'
                     }`}
                   >
-                    {DEPARTMENTS.map(d => (
+                    {DEPARTMENTS.map((d) => (
                       <option key={d} value={d}>{d}</option>
                     ))}
                   </select>
                 </div>
               </div>
 
+              {/* Sample loader chips */}
+              <div className="flex items-center gap-1.5 flex-wrap text-[11px]">
+                <span className="text-slate-400 font-medium">Load sample test:</span>
+                <button
+                  type="button"
+                  onClick={() => loadSampleData('google')}
+                  className="px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-300 border border-amber-500/30 hover:bg-amber-500/20"
+                >
+                  + Google Search Snippet
+                </button>
+                <button
+                  type="button"
+                  onClick={() => loadSampleData('facebook')}
+                  className="px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-300 border border-blue-500/30 hover:bg-blue-500/20"
+                >
+                  + Facebook Post / Profile
+                </button>
+                <button
+                  type="button"
+                  onClick={() => loadSampleData('linkedin')}
+                  className="px-2 py-0.5 rounded-md bg-sky-500/10 text-sky-300 border border-sky-500/30 hover:bg-sky-500/20"
+                >
+                  + LinkedIn JSON
+                </button>
+              </div>
+
               <textarea
-                rows={7}
-                value={extractorPastedText}
-                onChange={(e) => setExtractorPastedText(e.target.value)}
-                placeholder="Paste the JSON array from the bookmarklet or plain text lines (e.g. Nahid Bin Azhar - CTO at JoulesLabs - https://bd.linkedin.com/in/nahid-bin-azhar)"
-                className={`w-full p-3 font-mono text-xs rounded-xl border outline-none ${
-                  isDarkMode ? 'bg-slate-900 border-slate-700 text-cyan-300' : 'bg-slate-50 border-slate-200 text-slate-900'
+                rows={6}
+                value={universalPastedText}
+                onChange={(e) => setUniversalPastedText(e.target.value)}
+                placeholder="Paste anything here! Examples:&#10;• Ashikur Rahman (Intake 42, CSE) - Network Engineer at Grameenphone - https://facebook.com/ashikur&#10;• Md. Tanvir Ahmed - Senior Software Engineer at Brain Station 23 | LinkedIn&#10;• Sadia Afrin (Intake 48, BBA) @ bKash Limited&#10;• JSON array from bookmarklet extractor"
+                className={`w-full p-3 font-mono text-xs rounded-xl border outline-none transition-all ${
+                  isDarkMode
+                    ? 'bg-slate-900 border-slate-700 text-cyan-300 placeholder:text-slate-600 focus:border-cyan-500'
+                    : 'bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-cyan-500'
                 }`}
               />
 
+              {/* Live Parser Analysis Card */}
+              {parsedUniversalLeads.length > 0 && (
+                <div className={`p-3 rounded-xl border space-y-2 max-h-48 overflow-y-auto ${
+                  isDarkMode ? 'bg-slate-900/90 border-cyan-500/30' : 'bg-cyan-50/50 border-cyan-200'
+                }`}>
+                  <div className="flex items-center justify-between text-xs font-bold border-b pb-1.5 border-slate-700/60">
+                    <span className="text-emerald-400 flex items-center gap-1.5">
+                      <CheckCircle2 className="w-4 h-4" />
+                      {parsedCountsBySource.total} alumni profile(s) successfully detected:
+                    </span>
+                    <div className="flex items-center gap-1.5 text-[10px]">
+                      {parsedCountsBySource.fb > 0 && (
+                        <span className="px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                          {parsedCountsBySource.fb} Facebook
+                        </span>
+                      )}
+                      {parsedCountsBySource.li > 0 && (
+                        <span className="px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/30">
+                          {parsedCountsBySource.li} LinkedIn
+                        </span>
+                      )}
+                      {parsedCountsBySource.web > 0 && (
+                        <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                          {parsedCountsBySource.web} Web / Google
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5 pt-1">
+                    {parsedUniversalLeads.map((item, idx) => (
+                      <div
+                        key={idx}
+                        className={`p-2 rounded-lg text-xs flex items-center justify-between gap-2 ${
+                          isDarkMode ? 'bg-slate-800/60' : 'bg-white'
+                        }`}
+                      >
+                        <div className="min-w-0">
+                          <span className="font-bold text-slate-100">{item.full_name}</span>
+                          <span className="text-slate-400 ml-1.5">
+                            {item.designation ? `${item.designation}` : 'Alumnus'}
+                            {item.company ? ` @ ${item.company}` : ''}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-cyan-500/20 text-cyan-400">
+                            {item.department} {item.intake ? `· In ${item.intake}` : ''}
+                          </span>
+                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                            item.source === 'Facebook'
+                              ? 'bg-blue-500/20 text-blue-400'
+                              : item.source === 'LinkedIn'
+                              ? 'bg-sky-500/20 text-sky-400'
+                              : 'bg-amber-500/20 text-amber-400'
+                          }`}>
+                            {item.source}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Action Buttons */}
               <div className="flex justify-between items-center pt-2">
-                <span className={`text-[11px] ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                  {extractorPastedText.trim() ? 'Ready to parse profiles' : 'Paste content above'}
-                </span>
+                <div>
+                  {universalPastedText.trim() && (
+                    <button
+                      type="button"
+                      onClick={() => setUniversalPastedText('')}
+                      className="text-xs text-rose-400 hover:underline"
+                    >
+                      Clear Text
+                    </button>
+                  )}
+                </div>
                 <div className="flex gap-2">
                   <button
                     type="button"
-                    onClick={() => setIsLinkedInExtractorOpen(false)}
+                    onClick={() => setIsUniversalCollectorOpen(false)}
                     className={`px-4 py-2 rounded-lg font-medium text-xs ${
-                      isDarkMode ? 'bg-slate-800 text-slate-300' : 'bg-slate-100 text-slate-700'
+                      isDarkMode ? 'bg-slate-800 text-slate-300 hover:bg-slate-700' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                     }`}
                   >
                     Cancel
                   </button>
                   <button
                     type="button"
-                    onClick={handleImportFromExtractorText}
-                    className="px-5 py-2 rounded-lg font-bold text-xs bg-cyan-600 hover:bg-cyan-500 text-white shadow-lg flex items-center gap-1.5"
+                    disabled={parsedUniversalLeads.length === 0}
+                    onClick={handleImportUniversalLeads}
+                    className="px-5 py-2 rounded-lg font-bold text-xs bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white shadow-lg flex items-center gap-1.5 disabled:opacity-50 transition-all"
                   >
                     <Sparkles className="w-3.5 h-3.5" />
-                    Capture Into Prospects
+                    Capture All ({parsedUniversalLeads.length}) Into Prospects
                   </button>
                 </div>
               </div>
