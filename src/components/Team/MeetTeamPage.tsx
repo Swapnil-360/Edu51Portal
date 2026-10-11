@@ -83,7 +83,7 @@ export default function MeetTeamPage({ isDarkMode, onClose }: Props) {
             Meet Our Team
           </h1>
           <p className={`text-sm ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-            The people building Edu<span className="text-[#ef4444]">51</span>Portal
+            Team <strong className={isDarkMode ? "text-white" : "text-slate-900"}>"CoreWe5"</strong> (Intake 51) · The people building Edu<span className="text-[#ef4444]">51</span>Portal
           </p>
         </div>
 
