@@ -255,13 +255,112 @@ export async function searchDiscoveredAlumni(
 }
 
 /**
- * Generate invitation email HTML
+ * Email template configuration for alumni outreach
  */
-function buildInvitationEmailHtml(invitation: AlumniInvitation, inviteUrl: string, isReminder: boolean): string {
-  const isSecondReminder = invitation.invite_count >= 1;
-  const headline = isSecondReminder
+export interface EmailTemplateConfig {
+  inviteSubject: string;
+  inviteBody: string;
+  reminderSubject: string;
+  reminderBody: string;
+}
+
+export const DEFAULT_EMAIL_TEMPLATES: EmailTemplateConfig = {
+  inviteSubject: 'Exclusive Invitation: Claim your official BUBT Alumni Profile, {{name}}',
+  inviteBody: `On behalf of the faculty and students at Bangladesh University of Business and Technology (BUBT), we are honored to invite you to join the official Edu51Portal Alumni Community.
+
+Your profile has been pre-verified by university administration so you can claim your verified alumnus badge in less than 30 seconds with no paperwork or waiting. We look forward to having you connect with fellow graduates and inspire our current students!`,
+  reminderSubject: 'Friendly reminder: Your BUBT alumni profile is waiting, {{name}}',
+  reminderBody: `We know how demanding your schedule is. As an esteemed graduate of BUBT, the university administration has already set up and verified your official profile on Edu51Portal.
+
+Claiming your account takes less than 30 seconds. Simply review your pre-filled details, set your password, and start networking with fellow BUBT graduates across industry-leading firms.`,
+};
+
+const TEMPLATE_STORAGE_KEY = 'bubt_alumni_email_templates';
+
+/**
+ * Retrieves the active email template configuration
+ */
+export function getEmailTemplates(): EmailTemplateConfig {
+  try {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem(TEMPLATE_STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        return {
+          ...DEFAULT_EMAIL_TEMPLATES,
+          ...parsed,
+        };
+      }
+    }
+  } catch (e) {
+    console.warn('Failed to load email templates from localStorage:', e);
+  }
+  return { ...DEFAULT_EMAIL_TEMPLATES };
+}
+
+/**
+ * Saves customized email template configuration
+ */
+export function saveEmailTemplates(templates: EmailTemplateConfig): void {
+  try {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(TEMPLATE_STORAGE_KEY, JSON.stringify(templates));
+    }
+  } catch (e) {
+    console.warn('Failed to save email templates to localStorage:', e);
+  }
+}
+
+/**
+ * Resets email templates back to original university defaults
+ */
+export function resetEmailTemplates(): EmailTemplateConfig {
+  try {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(TEMPLATE_STORAGE_KEY);
+    }
+  } catch (e) {
+    // ignore
+  }
+  return { ...DEFAULT_EMAIL_TEMPLATES };
+}
+
+/**
+ * Replaces dynamic variables in subject or body text
+ */
+export function interpolateTemplate(
+  template: string,
+  invitation: Partial<AlumniInvitation>,
+  inviteUrl: string = ''
+): string {
+  const fullName = invitation.full_name || 'Alumnus';
+  const firstName = fullName.split(' ')[0] || fullName;
+  return template
+    .replace(/\{\{name\}\}/gi, fullName)
+    .replace(/\{\{first_name\}\}/gi, firstName)
+    .replace(/\{\{department\}\}/gi, invitation.department || 'BUBT')
+    .replace(/\{\{company\}\}/gi, invitation.company || 'your company')
+    .replace(/\{\{designation\}\}/gi, invitation.designation || 'Alumnus')
+    .replace(/\{\{passing_year\}\}/gi, invitation.passing_year ? String(invitation.passing_year) : '')
+    .replace(/\{\{year\}\}/gi, invitation.passing_year ? String(invitation.passing_year) : '')
+    .replace(/\{\{intake\}\}/gi, invitation.intake ? `Intake ${invitation.intake}` : '')
+    .replace(/\{\{link\}\}/gi, inviteUrl);
+}
+
+/**
+ * Generate invitation email HTML with optional customized subject and body text
+ */
+export function buildInvitationEmailHtml(
+  invitation: AlumniInvitation | Partial<AlumniInvitation>,
+  inviteUrl: string,
+  isReminder: boolean,
+  customSubject?: string,
+  customBodyText?: string
+): string {
+  const isSecondReminder = (invitation.invite_count || 0) >= 1 || isReminder;
+  const headline = customSubject || (isSecondReminder
     ? 'Friendly Reminder: Your BUBT Alumni Profile'
-    : 'Edu51Portal VIP Invitation';
+    : 'Edu51Portal VIP Invitation');
   const subheadline = isSecondReminder
     ? 'Your Pre-Verified Alumni Profile is Waiting'
     : 'BUBT Alumni Community';
@@ -270,6 +369,29 @@ function buildInvitationEmailHtml(invitation: AlumniInvitation, inviteUrl: strin
   const roleText = invitation.designation || 'Alumnus';
   const gradYearText = invitation.passing_year ? `Class of ${invitation.passing_year}` : 'BUBT Alumni';
   const intakePart = invitation.intake ? ` · Intake ${invitation.intake}` : '';
+
+  let bodyContentHtml = '';
+  if (customBodyText && customBodyText.trim()) {
+    const paragraphs = customBodyText.trim().split(/\n\s*\n/);
+    bodyContentHtml = paragraphs
+      .map(
+        (p) =>
+          `<p style="font-size:14px;color:#cbd5e1;margin-bottom:16px;line-height:1.65;">${p
+            .replace(/\n/g, '<br/>')
+            .replace(/<strong>(.*?)<\/strong>/gi, '<strong>$1</strong>')}</p>`
+      )
+      .join('');
+  } else {
+    bodyContentHtml = `
+      <p style="font-size:14px;color:#cbd5e1;margin-bottom:16px;line-height:1.65;">
+        ${
+          isReminder
+            ? `We know how demanding your schedule is. As an esteemed graduate of BUBT, the university administration has already set up and verified your official profile on <strong>Edu51Portal</strong>.`
+            : `On behalf of the faculty and students at Bangladesh University of Business and Technology (BUBT), we are honored to invite you to join the official <strong>Edu51Portal Alumni Community</strong>.`
+        }
+      </p>
+    `;
+  }
 
   return `
 <!DOCTYPE html>
@@ -287,20 +409,14 @@ function buildInvitationEmailHtml(invitation: AlumniInvitation, inviteUrl: strin
         <h1 style="margin:0;font-size:22px;font-weight:800;letter-spacing:-0.5px;">${headline}</h1>
       </div>
       <div style="padding:28px 24px;">
-        <div style="font-size:17px;font-weight:700;color:#ffffff;margin-bottom:12px;">Dear ${invitation.full_name},</div>
-        <p style="font-size:14px;color:#94a3b8;margin-bottom:16px;line-height:1.6;">
-          ${
-            isReminder
-              ? `We know how demanding your schedule is. As an esteemed graduate of BUBT, the university administration has already set up and verified your official profile on <strong>Edu51Portal</strong>.`
-              : `On behalf of the faculty and students at Bangladesh University of Business and Technology (BUBT), we are honored to invite you to join the official <strong>Edu51Portal Alumni Community</strong>.`
-          }
-        </p>
+        <div style="font-size:17px;font-weight:700;color:#ffffff;margin-bottom:12px;">Dear ${invitation.full_name || 'Alumnus'},</div>
+        ${bodyContentHtml}
 
         <div style="background:#1e2638;border:1px solid #334155;border-radius:12px;padding:16px;margin:20px 0;">
           <h3 style="margin:0 0 10px 0;font-size:12px;color:#38bdf8;text-transform:uppercase;letter-spacing:1px;">Your Pre-Filled Alumni File</h3>
           <table style="width:100%;font-size:13px;border-collapse:collapse;">
-            <tr><td style="padding:4px 0;color:#64748b;">Name:</td><td style="padding:4px 0;color:#f1f5f9;font-weight:600;text-align:right;">${invitation.full_name}</td></tr>
-            <tr><td style="padding:4px 0;color:#64748b;">Department:</td><td style="padding:4px 0;color:#f1f5f9;font-weight:600;text-align:right;">${invitation.department}</td></tr>
+            <tr><td style="padding:4px 0;color:#64748b;">Name:</td><td style="padding:4px 0;color:#f1f5f9;font-weight:600;text-align:right;">${invitation.full_name || 'Alumnus'}</td></tr>
+            <tr><td style="padding:4px 0;color:#64748b;">Department:</td><td style="padding:4px 0;color:#f1f5f9;font-weight:600;text-align:right;">${invitation.department || 'BUBT'}</td></tr>
             <tr><td style="padding:4px 0;color:#64748b;">Graduation & Intake:</td><td style="padding:4px 0;color:#f1f5f9;font-weight:600;text-align:right;">${gradYearText}${intakePart}</td></tr>
             <tr><td style="padding:4px 0;color:#64748b;">Current Role:</td><td style="padding:4px 0;color:#f1f5f9;font-weight:600;text-align:right;">${roleText} ${companyPart}</td></tr>
             <tr><td style="padding:4px 0;color:#64748b;">Status:</td><td style="padding:4px 0;color:#34d399;font-weight:700;text-align:right;">✓ Pre-Verified by Administration</td></tr>
@@ -348,11 +464,15 @@ function buildInvitationEmailHtml(invitation: AlumniInvitation, inviteUrl: strin
 }
 
 /**
- * Dispatches an invitation email for a specific lead
+ * Dispatches an invitation email for a specific lead, with optional custom subject and message body
  */
 export async function sendAlumniInvitation(
   invitationId: string,
-  appOrigin?: string
+  appOrigin?: string,
+  customEmail?: {
+    subject?: string;
+    bodyText?: string;
+  }
 ): Promise<{ success: boolean; error: string | null }> {
   try {
     const { data: invite, error: fetchErr } = await supabase
@@ -375,17 +495,23 @@ export async function sendAlumniInvitation(
     const inviteUrl = `${origin}/alumni-invite?token=${invitation.invite_token}`;
     const isReminder = invitation.status === 'invited';
 
-    const subject = isReminder
-      ? `Friendly reminder: Your BUBT alumni profile is waiting, ${invitation.full_name}`
-      : `Exclusive Invitation: Claim your official BUBT Alumni Profile, ${invitation.full_name}`;
+    const templates = getEmailTemplates();
+    const defaultSubjectTemplate = isReminder ? templates.reminderSubject : templates.inviteSubject;
+    const defaultBodyTemplate = isReminder ? templates.reminderBody : templates.inviteBody;
 
-    const htmlBody = buildInvitationEmailHtml(invitation, inviteUrl, isReminder);
+    const rawSubject = customEmail?.subject?.trim() || defaultSubjectTemplate;
+    const rawBody = customEmail?.bodyText?.trim() || defaultBodyTemplate;
+
+    const finalSubject = interpolateTemplate(rawSubject, invitation, inviteUrl);
+    const finalBodyText = interpolateTemplate(rawBody, invitation, inviteUrl);
+
+    const htmlBody = buildInvitationEmailHtml(invitation, inviteUrl, isReminder, finalSubject, finalBodyText);
 
     // Send email via Supabase Edge Function
     const { error: sendErr } = await supabase.functions.invoke('send-email-notification', {
       body: {
         to: invitation.email,
-        subject,
+        subject: finalSubject,
         htmlBody,
       },
     });

@@ -21,6 +21,10 @@ import {
   Filter,
   X,
   Linkedin,
+  FileText,
+  Eye,
+  Edit3,
+  RotateCcw,
 } from 'lucide-react';
 import {
   AlumniInvitation,
@@ -35,6 +39,13 @@ import {
   checkReinviteEligibility,
   searchDiscoveredAlumni,
   DiscoveredAlumnus,
+  EmailTemplateConfig,
+  DEFAULT_EMAIL_TEMPLATES,
+  getEmailTemplates,
+  saveEmailTemplates,
+  resetEmailTemplates,
+  interpolateTemplate,
+  buildInvitationEmailHtml,
 } from '../../lib/api/alumniOutreachApi';
 
 interface AlumniOutreachPanelProps {
@@ -42,6 +53,16 @@ interface AlumniOutreachPanelProps {
 }
 
 const DEPARTMENTS = ['CSE', 'EEE', 'Civil', 'Textile', 'BBA', 'Economics', 'English', 'Law', 'Mathematics'];
+
+const VARIABLE_CHIPS = [
+  { label: '{{name}}', desc: 'Full Name' },
+  { label: '{{first_name}}', desc: 'First Name' },
+  { label: '{{department}}', desc: 'Department' },
+  { label: '{{company}}', desc: 'Company' },
+  { label: '{{designation}}', desc: 'Job Title' },
+  { label: '{{year}}', desc: 'Class Year' },
+  { label: '{{intake}}', desc: 'Intake' },
+];
 
 export const AlumniOutreachPanel: React.FC<AlumniOutreachPanelProps> = ({ isDarkMode }) => {
   // Main Sub-Tab: 'outreach' (table) vs 'discovery' (search & capture)
@@ -68,6 +89,19 @@ export const AlumniOutreachPanel: React.FC<AlumniOutreachPanelProps> = ({ isDark
   const [isLinkedInHelperOpen, setIsLinkedInHelperOpen] = useState(false);
   const [isLinkedInExtractorOpen, setIsLinkedInExtractorOpen] = useState(false);
   const [extractorPastedText, setExtractorPastedText] = useState('');
+
+  // Email Template & Custom Message Modals state
+  const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+  const [templateActiveTab, setTemplateActiveTab] = useState<'invite' | 'reminder'>('invite');
+  const [templateDraft, setTemplateDraft] = useState<EmailTemplateConfig>(() => getEmailTemplates());
+  const [templatePreviewMode, setTemplatePreviewMode] = useState(false);
+
+  // Single Alumnus Send & Message Inspection modal
+  const [inviteModalLead, setInviteModalLead] = useState<AlumniInvitation | null>(null);
+  const [customSubjectDraft, setCustomSubjectDraft] = useState('');
+  const [customBodyDraft, setCustomBodyDraft] = useState('');
+  const [singlePreviewMode, setSinglePreviewMode] = useState(false);
+  const [saveAsDefaultTemplate, setSaveAsDefaultTemplate] = useState(false);
 
   // Action busy states
   const [sendingId, setSendingId] = useState<string | null>(null);
@@ -108,7 +142,13 @@ export const AlumniOutreachPanel: React.FC<AlumniOutreachPanelProps> = ({ isDark
   }, []);
 
   useEffect(() => {
-    const isAnyModalOpen = isAddModalOpen || isCsvModalOpen || isLinkedInHelperOpen || isLinkedInExtractorOpen;
+    const isAnyModalOpen =
+      isAddModalOpen ||
+      isCsvModalOpen ||
+      isLinkedInHelperOpen ||
+      isLinkedInExtractorOpen ||
+      isTemplateModalOpen ||
+      !!inviteModalLead;
     if (isAnyModalOpen) {
       document.body.style.overflow = 'hidden';
     } else {
@@ -117,7 +157,14 @@ export const AlumniOutreachPanel: React.FC<AlumniOutreachPanelProps> = ({ isDark
     return () => {
       document.body.style.overflow = '';
     };
-  }, [isAddModalOpen, isCsvModalOpen, isLinkedInHelperOpen, isLinkedInExtractorOpen]);
+  }, [
+    isAddModalOpen,
+    isCsvModalOpen,
+    isLinkedInHelperOpen,
+    isLinkedInExtractorOpen,
+    isTemplateModalOpen,
+    inviteModalLead,
+  ]);
 
   const showToast = (text: string, type: 'success' | 'error' = 'success') => {
     setActionMessage({ text, type });
@@ -250,16 +297,72 @@ export const AlumniOutreachPanel: React.FC<AlumniOutreachPanelProps> = ({ isDark
     }
   };
 
-  const handleSendSingle = async (invitation: AlumniInvitation) => {
-    setSendingId(invitation.id);
-    const res = await sendAlumniInvitation(invitation.id);
+  // Open the review & customize modal for an alumnus
+  const handleOpenSendModal = (lead: AlumniInvitation) => {
+    const isReminder = lead.status === 'invited';
+    const templates = getEmailTemplates();
+    const defaultSubject = isReminder ? templates.reminderSubject : templates.inviteSubject;
+    const defaultBody = isReminder ? templates.reminderBody : templates.inviteBody;
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://bubt.edu51portal.live';
+    const inviteUrl = `${origin}/alumni-invite?token=${lead.invite_token}`;
+
+    setInviteModalLead(lead);
+    setCustomSubjectDraft(interpolateTemplate(defaultSubject, lead, inviteUrl));
+    setCustomBodyDraft(interpolateTemplate(defaultBody, lead, inviteUrl));
+    setSinglePreviewMode(false);
+    setSaveAsDefaultTemplate(false);
+  };
+
+  // Dispatches the single invitation with any customized subject and body text
+  const handleConfirmSendInvite = async () => {
+    if (!inviteModalLead) return;
+    setSendingId(inviteModalLead.id);
+
+    // If user checked "save as default", update default templates
+    if (saveAsDefaultTemplate) {
+      const isReminder = inviteModalLead.status === 'invited';
+      const currentTemplates = getEmailTemplates();
+      if (isReminder) {
+        saveEmailTemplates({
+          ...currentTemplates,
+          reminderSubject: customSubjectDraft,
+          reminderBody: customBodyDraft,
+        });
+      } else {
+        saveEmailTemplates({
+          ...currentTemplates,
+          inviteSubject: customSubjectDraft,
+          inviteBody: customBodyDraft,
+        });
+      }
+    }
+
+    const res = await sendAlumniInvitation(inviteModalLead.id, undefined, {
+      subject: customSubjectDraft,
+      bodyText: customBodyDraft,
+    });
     setSendingId(null);
 
     if (res.error) {
       showToast(res.error, 'error');
     } else {
-      showToast(`Invitation sent to ${invitation.email}!`);
+      showToast(`Invitation dispatched to ${inviteModalLead.email}!`);
+      setInviteModalLead(null);
       fetchLeads();
+    }
+  };
+
+  const handleSaveDefaultTemplate = () => {
+    saveEmailTemplates(templateDraft);
+    showToast('Outreach message templates saved successfully!');
+    setIsTemplateModalOpen(false);
+  };
+
+  const handleResetDefaultTemplate = () => {
+    if (window.confirm('Reset outreach message templates back to university defaults?')) {
+      const def = resetEmailTemplates();
+      setTemplateDraft(def);
+      showToast('Templates reset to defaults');
     }
   };
 
@@ -541,6 +644,19 @@ export const AlumniOutreachPanel: React.FC<AlumniOutreachPanelProps> = ({ isDark
 
           <div className="flex items-center flex-wrap gap-2">
             <button
+              onClick={() => {
+                setTemplateDraft(getEmailTemplates());
+                setIsTemplateModalOpen(true);
+              }}
+              className={`px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                isDarkMode ? 'bg-amber-950/40 hover:bg-amber-900/60 text-amber-300 border border-amber-500/30' : 'bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200'
+              }`}
+              title="View and edit alumni message body and email templates"
+            >
+              <FileText className="w-3.5 h-3.5 text-amber-400" />
+              Email Template
+            </button>
+            <button
               onClick={() => setIsLinkedInExtractorOpen(true)}
               className={`px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
                 isDarkMode ? 'bg-indigo-950/40 hover:bg-indigo-900/60 text-indigo-300 border border-indigo-500/30' : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200'
@@ -672,6 +788,19 @@ export const AlumniOutreachPanel: React.FC<AlumniOutreachPanelProps> = ({ isDark
 
           {/* Batch Actions */}
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                setTemplateDraft(getEmailTemplates());
+                setIsTemplateModalOpen(true);
+              }}
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                isDarkMode ? 'bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200'
+              }`}
+              title="Inspect or customize default message body used for invitations"
+            >
+              <Edit3 className="w-3.5 h-3.5 text-amber-400" />
+              Edit Message Body
+            </button>
             {counts.new > 0 && (
               <button
                 onClick={handleSendAllNew}
@@ -850,22 +979,22 @@ export const AlumniOutreachPanel: React.FC<AlumniOutreachPanelProps> = ({ isDark
                           {/* Send / Re-invite Button */}
                           {item.status !== 'joined' && item.status !== 'already_registered' && (
                             <button
-                              onClick={() => handleSendSingle(item)}
+                              onClick={() => handleOpenSendModal(item)}
                               disabled={isSendingThis || !eligibility.eligible}
                               className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all ${
                                 item.status === 'new'
-                                  ? 'bg-blue-600 hover:bg-blue-500 text-white'
+                                  ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-sm'
                                   : eligibility.eligible
-                                  ? 'bg-purple-600 hover:bg-purple-500 text-white'
+                                  ? 'bg-purple-600 hover:bg-purple-500 text-white shadow-sm'
                                   : 'bg-slate-700/40 text-slate-500 cursor-not-allowed'
                               }`}
-                              title={eligibility.reason}
+                              title={eligibility.eligible ? 'Review & customize message body before sending' : eligibility.reason}
                             >
                               {isSendingThis ? (
                                 <RefreshCw className="w-3 h-3 animate-spin" />
                               ) : item.status === 'new' ? (
                                 <>
-                                  <Send className="w-3 h-3" />
+                                  <Mail className="w-3 h-3" />
                                   Invite
                                 </>
                               ) : (
@@ -1581,6 +1710,477 @@ export const AlumniOutreachPanel: React.FC<AlumniOutreachPanelProps> = ({ isDark
                     Capture Into Prospects
                   </button>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* MODAL 5: Global Email Template & Message Customizer */}
+      {isTemplateModalOpen && createPortal(
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) setIsTemplateModalOpen(false); }}
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-200"
+        >
+          <div className={`w-full max-w-3xl rounded-2xl p-5 sm:p-6 border shadow-2xl relative max-h-[92vh] overflow-y-auto animate-in zoom-in-95 duration-200 ${
+            isDarkMode ? 'bg-[#161a23] border-slate-700 text-white' : 'bg-white border-slate-200 text-slate-900'
+          }`}>
+            <button
+              onClick={() => setIsTemplateModalOpen(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-white"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-2 mb-1.5">
+              <div className="p-2 rounded-lg bg-amber-500/20 text-amber-400">
+                <Mail className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold">Alumni Invitation Message & Email Template</h3>
+                <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                  Customize the default email subject and message body delivered to alumni prospects.
+                </p>
+              </div>
+            </div>
+
+            {/* Template Type Tabs & Preview Toggle */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-4 mb-4 border-b pb-3 border-slate-700/60">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setTemplateActiveTab('invite')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                    templateActiveTab === 'invite'
+                      ? 'bg-blue-600 text-white shadow-md'
+                      : isDarkMode
+                      ? 'bg-slate-800 text-slate-400 hover:text-slate-200'
+                      : 'bg-slate-100 text-slate-600'
+                  }`}
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  Initial Invitation (New Leads)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTemplateActiveTab('reminder')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                    templateActiveTab === 'reminder'
+                      ? 'bg-purple-600 text-white shadow-md'
+                      : isDarkMode
+                      ? 'bg-slate-800 text-slate-400 hover:text-slate-200'
+                      : 'bg-slate-100 text-slate-600'
+                  }`}
+                >
+                  <Clock className="w-3.5 h-3.5" />
+                  72h Follow-up Reminder
+                </button>
+              </div>
+
+              {/* View Switcher: Edit vs Preview */}
+              <div className="flex items-center gap-1 bg-slate-800/80 p-1 rounded-lg border border-slate-700 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setTemplatePreviewMode(false)}
+                  className={`px-2.5 py-1 rounded-md font-semibold flex items-center gap-1 transition-all ${
+                    !templatePreviewMode ? 'bg-cyan-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <Edit3 className="w-3 h-3" />
+                  Edit Message
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTemplatePreviewMode(true)}
+                  className={`px-2.5 py-1 rounded-md font-semibold flex items-center gap-1 transition-all ${
+                    templatePreviewMode ? 'bg-cyan-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <Eye className="w-3 h-3" />
+                  Live Preview
+                </button>
+              </div>
+            </div>
+
+            {!templatePreviewMode ? (
+              /* Edit Mode */
+              <div className="space-y-4 text-xs">
+                {/* Subject Field */}
+                <div>
+                  <label className="block font-bold mb-1.5 text-slate-300">Email Subject Line</label>
+                  <input
+                    type="text"
+                    value={templateActiveTab === 'invite' ? templateDraft.inviteSubject : templateDraft.reminderSubject}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (templateActiveTab === 'invite') {
+                        setTemplateDraft({ ...templateDraft, inviteSubject: val });
+                      } else {
+                        setTemplateDraft({ ...templateDraft, reminderSubject: val });
+                      }
+                    }}
+                    placeholder="Subject line..."
+                    className={`w-full px-3.5 py-2.5 rounded-xl border font-medium outline-none ${
+                      isDarkMode ? 'bg-slate-900 border-slate-700 text-white focus:border-cyan-400' : 'bg-slate-50 border-slate-200 text-slate-900'
+                    }`}
+                  />
+                </div>
+
+                {/* Dynamic Variables Chips */}
+                <div className={`p-3 rounded-xl border ${
+                  isDarkMode ? 'bg-slate-900/60 border-slate-700/80' : 'bg-slate-50 border-slate-200'
+                }`}>
+                  <span className={`block font-semibold mb-1.5 text-[11px] ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                    Click to insert dynamic variable tag into message body:
+                  </span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {VARIABLE_CHIPS.map((chip) => (
+                      <button
+                        key={chip.label}
+                        type="button"
+                        onClick={() => {
+                          if (templateActiveTab === 'invite') {
+                            setTemplateDraft({
+                              ...templateDraft,
+                              inviteBody: templateDraft.inviteBody + ' ' + chip.label,
+                            });
+                          } else {
+                            setTemplateDraft({
+                              ...templateDraft,
+                              reminderBody: templateDraft.reminderBody + ' ' + chip.label,
+                            });
+                          }
+                        }}
+                        className={`px-2 py-1 rounded-md text-[11px] font-mono flex items-center gap-1 transition-all ${
+                          isDarkMode
+                            ? 'bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700'
+                            : 'bg-white hover:bg-cyan-50 text-cyan-800 border border-slate-200'
+                        }`}
+                        title={chip.desc}
+                      >
+                        <span className="font-bold">{chip.label}</span>
+                        <span className="opacity-60 text-[10px]">({chip.desc})</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Message Body Field */}
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="font-bold text-slate-300">
+                      Message Body (Greeting & Introduction)
+                    </label>
+                    <span className="text-[11px] text-slate-500">Separate paragraphs with an empty line</span>
+                  </div>
+                  <textarea
+                    rows={8}
+                    value={templateActiveTab === 'invite' ? templateDraft.inviteBody : templateDraft.reminderBody}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (templateActiveTab === 'invite') {
+                        setTemplateDraft({ ...templateDraft, inviteBody: val });
+                      } else {
+                        setTemplateDraft({ ...templateDraft, reminderBody: val });
+                      }
+                    }}
+                    placeholder="Write the message greeting and body text..."
+                    className={`w-full p-3.5 rounded-xl border font-sans text-xs sm:text-sm leading-relaxed outline-none ${
+                      isDarkMode ? 'bg-slate-900 border-slate-700 text-slate-100 focus:border-cyan-400' : 'bg-slate-50 border-slate-200 text-slate-900'
+                    }`}
+                  />
+                  <p className="text-[11px] text-slate-400 mt-1.5">
+                    💡 This message text appears prominently at the top of the invitation email, followed by the alumnus's pre-filled university file card and instant profile claim button.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              /* Live Preview Mode */
+              <div className="space-y-3">
+                <div className="text-xs text-slate-400 flex items-center justify-between">
+                  <span>Simulating preview with sample alumnus profile</span>
+                  <span className="text-cyan-400 font-semibold font-mono text-[11px]">
+                    Subject: {interpolateTemplate(
+                      templateActiveTab === 'invite' ? templateDraft.inviteSubject : templateDraft.reminderSubject,
+                      { full_name: 'Engr. Md. Tanvir Ahmed' }
+                    )}
+                  </span>
+                </div>
+                <iframe
+                  title="Email Template Preview"
+                  srcDoc={buildInvitationEmailHtml(
+                    {
+                      full_name: 'Engr. Md. Tanvir Ahmed',
+                      department: 'CSE',
+                      passing_year: 2022,
+                      intake: 42,
+                      company: 'Brain Station 23',
+                      designation: 'Senior Full Stack Engineer',
+                      status: templateActiveTab === 'reminder' ? 'invited' : 'new',
+                      invite_count: templateActiveTab === 'reminder' ? 1 : 0,
+                    },
+                    'https://bubt.edu51portal.live/alumni-invite?token=demo',
+                    templateActiveTab === 'reminder',
+                    interpolateTemplate(
+                      templateActiveTab === 'invite' ? templateDraft.inviteSubject : templateDraft.reminderSubject,
+                      { full_name: 'Engr. Md. Tanvir Ahmed' }
+                    ),
+                    interpolateTemplate(
+                      templateActiveTab === 'invite' ? templateDraft.inviteBody : templateDraft.reminderBody,
+                      { full_name: 'Engr. Md. Tanvir Ahmed', department: 'CSE' }
+                    )
+                  )}
+                  className="w-full h-[460px] rounded-xl border border-slate-700 bg-[#0b0e14]"
+                  sandbox="allow-same-origin"
+                />
+              </div>
+            )}
+
+            {/* Modal Footer */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-5 mt-4 border-t border-slate-700/60">
+              <button
+                type="button"
+                onClick={handleResetDefaultTemplate}
+                className="px-3.5 py-2 rounded-lg text-xs font-semibold text-slate-400 hover:text-white flex items-center justify-center gap-1.5 transition-all"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                Reset to University Defaults
+              </button>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsTemplateModalOpen(false)}
+                  className={`px-4 py-2 rounded-lg text-xs font-semibold ${
+                    isDarkMode ? 'bg-slate-800 text-slate-300 hover:bg-slate-700' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                  }`}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveDefaultTemplate}
+                  className="px-5 py-2 rounded-lg text-xs font-bold bg-cyan-600 hover:bg-cyan-500 text-white shadow-lg flex items-center justify-center gap-1.5"
+                >
+                  <Check className="w-3.5 h-3.5" />
+                  Save Default Template
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* MODAL 6: Single Alumnus Send & Message Inspection */}
+      {inviteModalLead && createPortal(
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) setInviteModalLead(null); }}
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-200"
+        >
+          <div className={`w-full max-w-3xl rounded-2xl p-5 sm:p-6 border shadow-2xl relative max-h-[92vh] overflow-y-auto animate-in zoom-in-95 duration-200 ${
+            isDarkMode ? 'bg-[#161a23] border-slate-700 text-white' : 'bg-white border-slate-200 text-slate-900'
+          }`}>
+            <button
+              onClick={() => setInviteModalLead(null)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-white"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Header */}
+            <div className="flex items-center gap-2 mb-2">
+              <div className="p-2 rounded-lg bg-cyan-500/20 text-cyan-400">
+                <Mail className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold">
+                  Send Invitation to {inviteModalLead.full_name}
+                </h3>
+                <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                  Review and customize the message body and subject before dispatching.
+                </p>
+              </div>
+            </div>
+
+            {/* Alumnus Recipient Card */}
+            <div className={`p-3.5 rounded-xl border my-3.5 flex flex-wrap items-center justify-between gap-3 ${
+              isDarkMode ? 'bg-slate-900/80 border-slate-700/80' : 'bg-slate-50 border-slate-200'
+            }`}>
+              <div>
+                <div className="font-bold text-sm text-white flex items-center gap-2">
+                  <span>{inviteModalLead.full_name}</span>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-cyan-500/20 text-cyan-300">
+                    {inviteModalLead.department}
+                  </span>
+                  {inviteModalLead.status === 'invited' && (
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300">
+                      Follow-up Reminder
+                    </span>
+                  )}
+                </div>
+                <div className={`text-xs mt-0.5 ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                  {inviteModalLead.email} · {inviteModalLead.designation || 'Alumnus'} {inviteModalLead.company ? `at ${inviteModalLead.company}` : ''}
+                </div>
+              </div>
+
+              {/* View toggle */}
+              <div className="flex items-center gap-1 bg-slate-800/80 p-1 rounded-lg border border-slate-700 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setSinglePreviewMode(false)}
+                  className={`px-2.5 py-1 rounded-md font-semibold flex items-center gap-1 transition-all ${
+                    !singlePreviewMode ? 'bg-cyan-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <Edit3 className="w-3 h-3" />
+                  Customize Message
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSinglePreviewMode(true)}
+                  className={`px-2.5 py-1 rounded-md font-semibold flex items-center gap-1 transition-all ${
+                    singlePreviewMode ? 'bg-cyan-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <Eye className="w-3 h-3" />
+                  Live Email Preview
+                </button>
+              </div>
+            </div>
+
+            {!singlePreviewMode ? (
+              /* Edit Form */
+              <div className="space-y-3.5 text-xs">
+                {/* Subject Line */}
+                <div>
+                  <label className="block font-bold mb-1.5 text-slate-300">Email Subject Line</label>
+                  <input
+                    type="text"
+                    value={customSubjectDraft}
+                    onChange={(e) => setCustomSubjectDraft(e.target.value)}
+                    placeholder="Invitation subject line..."
+                    className={`w-full px-3.5 py-2.5 rounded-xl border font-medium outline-none ${
+                      isDarkMode ? 'bg-slate-900 border-slate-700 text-white focus:border-cyan-400' : 'bg-slate-50 border-slate-200 text-slate-900'
+                    }`}
+                  />
+                </div>
+
+                {/* Variable tags */}
+                <div className="flex flex-wrap items-center gap-1">
+                  <span className={`text-[11px] mr-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Insert tag:</span>
+                  {VARIABLE_CHIPS.map((chip) => (
+                    <button
+                      key={chip.label}
+                      type="button"
+                      onClick={() => setCustomBodyDraft((prev) => prev + ' ' + chip.label)}
+                      className={`px-2 py-0.5 rounded text-[10px] font-mono transition-all ${
+                        isDarkMode ? 'bg-slate-800 hover:bg-slate-700 text-cyan-300' : 'bg-slate-100 text-cyan-800'
+                      }`}
+                    >
+                      {chip.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Message Body */}
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="font-bold text-slate-300">Message Body</label>
+                    <span className="text-[11px] text-slate-500">Edit or add personal notes for this alumnus</span>
+                  </div>
+                  <textarea
+                    rows={7}
+                    value={customBodyDraft}
+                    onChange={(e) => setCustomBodyDraft(e.target.value)}
+                    placeholder="Enter customized invitation message..."
+                    className={`w-full p-3.5 rounded-xl border font-sans text-xs sm:text-sm leading-relaxed outline-none ${
+                      isDarkMode ? 'bg-slate-900 border-slate-700 text-slate-100 focus:border-cyan-400' : 'bg-slate-50 border-slate-200 text-slate-900'
+                    }`}
+                  />
+                </div>
+
+                {/* Save as default template checkbox */}
+                <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-400 hover:text-slate-200 select-none pt-1">
+                  <input
+                    type="checkbox"
+                    checked={saveAsDefaultTemplate}
+                    onChange={(e) => setSaveAsDefaultTemplate(e.target.checked)}
+                    className="rounded text-cyan-600 focus:ring-0"
+                  />
+                  <span>Save this message text as the default template for future invitations</span>
+                </label>
+              </div>
+            ) : (
+              /* Live Preview */
+              <div className="space-y-3">
+                <div className="text-xs text-slate-400 flex items-center justify-between">
+                  <span>Exact rendering for <strong>{inviteModalLead.email}</strong></span>
+                  <span className="text-cyan-400 font-semibold font-mono text-[11px]">
+                    Subject: {customSubjectDraft}
+                  </span>
+                </div>
+                <iframe
+                  title="Alumnus Email Preview"
+                  srcDoc={buildInvitationEmailHtml(
+                    inviteModalLead,
+                    `${typeof window !== 'undefined' ? window.location.origin : 'https://bubt.edu51portal.live'}/alumni-invite?token=${inviteModalLead.invite_token}`,
+                    inviteModalLead.status === 'invited',
+                    customSubjectDraft,
+                    customBodyDraft
+                  )}
+                  className="w-full h-[460px] rounded-xl border border-slate-700 bg-[#0b0e14]"
+                  sandbox="allow-same-origin"
+                />
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-5 mt-4 border-t border-slate-700/60">
+              <button
+                type="button"
+                onClick={() => handleCopyLink(inviteModalLead.invite_token, inviteModalLead.id)}
+                className={`px-3 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                  copiedId === inviteModalLead.id
+                    ? 'bg-emerald-500/20 text-emerald-400'
+                    : isDarkMode
+                    ? 'bg-slate-800 hover:bg-slate-700 text-slate-300'
+                    : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                }`}
+              >
+                {copiedId === inviteModalLead.id ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                Copy Direct Claim Link
+              </button>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setInviteModalLead(null)}
+                  className={`px-4 py-2 rounded-lg text-xs font-semibold ${
+                    isDarkMode ? 'bg-slate-800 text-slate-300 hover:bg-slate-700' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                  }`}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmSendInvite}
+                  disabled={sendingId === inviteModalLead.id}
+                  className="px-5 py-2 rounded-lg text-xs font-bold bg-cyan-600 hover:bg-cyan-500 text-white shadow-lg flex items-center justify-center gap-1.5 disabled:opacity-50"
+                >
+                  {sendingId === inviteModalLead.id ? (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      Sending Invitation...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-3.5 h-3.5" />
+                      Send Invitation Email Now
+                    </>
+                  )}
+                </button>
               </div>
             </div>
           </div>
