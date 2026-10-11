@@ -266,13 +266,9 @@ export interface EmailTemplateConfig {
 
 export const DEFAULT_EMAIL_TEMPLATES: EmailTemplateConfig = {
   inviteSubject: 'Exclusive Invitation: Claim your official BUBT Alumni Profile, {{name}}',
-  inviteBody: `On behalf of the faculty and students at Bangladesh University of Business and Technology (BUBT), we are honored to invite you to join the official Edu51Portal Alumni Community.
-
-Your profile has been pre-verified by university administration so you can claim your verified alumnus badge in less than 30 seconds with no paperwork or waiting. We look forward to having you connect with fellow graduates and inspire our current students!`,
+  inviteBody: `We are delighted to invite you to join the official Edu51Portal Alumni Network! As someone whose professional milestones bring great pride to BUBT, we would be honored to have you connected with fellow graduates and guiding the next generation of students.`,
   reminderSubject: 'Friendly reminder: Your BUBT alumni profile is waiting, {{name}}',
-  reminderBody: `We know how demanding your schedule is. As an esteemed graduate of BUBT, the university administration has already set up and verified your official profile on Edu51Portal.
-
-Claiming your account takes less than 30 seconds. Simply review your pre-filled details, set your password, and start networking with fellow BUBT graduates across industry-leading firms.`,
+  reminderBody: `We know how demanding your schedule is! Your official BUBT alumni profile has already been pre-verified on Edu51Portal. Claiming your account takes less than 30 seconds so you can connect with graduates across top firms and inspire aspiring juniors.`,
 };
 
 const TEMPLATE_STORAGE_KEY = 'bubt_alumni_email_templates';
@@ -339,7 +335,7 @@ export function interpolateTemplate(
     .replace(/\{\{name\}\}/gi, fullName)
     .replace(/\{\{first_name\}\}/gi, firstName)
     .replace(/\{\{department\}\}/gi, invitation.department || 'BUBT')
-    .replace(/\{\{company\}\}/gi, invitation.company || 'your company')
+    .replace(/\{\{company\}\}/gi, invitation.company || 'your firm')
     .replace(/\{\{designation\}\}/gi, invitation.designation || 'Alumnus')
     .replace(/\{\{passing_year\}\}/gi, invitation.passing_year ? String(invitation.passing_year) : '')
     .replace(/\{\{year\}\}/gi, invitation.passing_year ? String(invitation.passing_year) : '')
@@ -348,7 +344,7 @@ export function interpolateTemplate(
 }
 
 /**
- * Generate invitation email HTML with optional customized subject and body text
+ * Generate invitation email HTML with website branding, logo, platform intro, visit link, and Why We Are Inviting You
  */
 export function buildInvitationEmailHtml(
   invitation: AlumniInvitation | Partial<AlumniInvitation>,
@@ -403,15 +399,71 @@ export function buildInvitationEmailHtml(
 </head>
 <body style="margin:0;padding:0;background-color:#0b0e14;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#e2e8f0;">
   <div style="width:100%;background-color:#0b0e14;padding:32px 12px;box-sizing:border-box;">
-    <div style="max-width:580px;margin:0 auto;background:#161a23;border:1px solid #283040;border-radius:16px;overflow:hidden;box-shadow:0 20px 40px rgba(0,0,0,0.4);">
-      <div style="background:linear-gradient(135deg,#1e3a8a 0%,#0284c7 100%);padding:32px 24px;text-align:center;color:#ffffff;">
+    <div style="max-width:600px;margin:0 auto;background:#161a23;border:1px solid #283040;border-radius:16px;overflow:hidden;box-shadow:0 20px 40px rgba(0,0,0,0.4);">
+      
+      <!-- Website Branding & Logo Header -->
+      <div style="background:#090d16;border-bottom:1px solid #1e2638;padding:18px 24px;">
+        <table align="center" border="0" cellpadding="0" cellspacing="0" style="margin:0 auto;">
+          <tr>
+            <td style="vertical-align:middle;padding-right:12px;">
+              <img src="https://bubt.edu51portal.live/Edu51Portal.png" alt="Edu51Portal Logo" width="42" height="42" style="display:block;border-radius:10px;object-fit:contain;border:1px solid #0284c7;background:#0f172a;" />
+            </td>
+            <td style="vertical-align:middle;text-align:left;">
+              <div style="font-size:22px;font-weight:900;color:#ffffff;letter-spacing:-0.5px;line-height:1.2;">
+                Edu<span style="color:#38bdf8;">51</span>Portal
+              </div>
+              <div style="font-size:11px;color:#94a3b8;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;">
+                Official BUBT Academic & Alumni Platform
+              </div>
+            </td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- Hero Banner -->
+      <div style="background:linear-gradient(135deg,#1e3a8a 0%,#0284c7 100%);padding:28px 24px;text-align:center;color:#ffffff;">
         <p style="margin:0 0 4px 0;font-size:12px;color:#bae6fd;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;">${subheadline}</p>
         <h1 style="margin:0;font-size:22px;font-weight:800;letter-spacing:-0.5px;">${headline}</h1>
       </div>
-      <div style="padding:28px 24px;">
-        <div style="font-size:17px;font-weight:700;color:#ffffff;margin-bottom:12px;">Dear ${invitation.full_name || 'Alumnus'},</div>
-        ${bodyContentHtml}
 
+      <div style="padding:28px 24px;">
+        <!-- Personalized Greeting -->
+        <div style="font-size:18px;font-weight:700;color:#ffffff;margin-bottom:14px;">Dear ${invitation.full_name || 'Alumnus'},</div>
+
+        <!-- 1. What is Edu51Portal Platform & Visit Link -->
+        <div style="background:#131a29;border:1px solid #1e293b;border-left:4px solid #38bdf8;border-radius:10px;padding:16px 18px;margin-bottom:20px;">
+          <div style="font-size:12px;font-weight:800;color:#38bdf8;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px;">
+            🎓 What is Edu51Portal?
+          </div>
+          <p style="font-size:13.5px;color:#cbd5e1;margin:0 0 10px 0;line-height:1.65;">
+            <strong>Edu51Portal</strong> is the central digital academic and alumni ecosystem for <strong>Bangladesh University of Business and Technology (BUBT)</strong>. It bridges current students, respected faculty members, and graduates across all 9 university departments (CSE, EEE, Civil, Textile, BBA, Economics, English, Law, and Mathematics) for academic collaboration, university resources, and professional networking.
+          </p>
+          <div style="font-size:12.5px;color:#94a3b8;padding-top:4px;">
+            🌐 <strong>Explore our platform:</strong> <a href="https://bubt.edu51portal.live" target="_blank" style="color:#38bdf8;font-weight:700;text-decoration:underline;">https://bubt.edu51portal.live</a>
+          </div>
+        </div>
+
+        <!-- 2. Why We Are Inviting You -->
+        <div style="background:#182032;border:1px solid #28354d;border-radius:12px;padding:16px 18px;margin-bottom:20px;">
+          <div style="font-size:12px;font-weight:800;color:#fbbf24;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px;">
+            ★ Why We Are Inviting You
+          </div>
+          <p style="font-size:13.5px;color:#e2e8f0;margin:0 0 10px 0;line-height:1.65;">
+            As an accomplished graduate of BUBT (${roleText} ${companyPart}), your career accomplishments represent the pride and success of our university:
+          </p>
+          <ul style="margin:0;padding-left:18px;font-size:13px;color:#cbd5e1;line-height:1.7;">
+            <li><strong>Inspire & Guide Juniors:</strong> Current students look up to alumni in leading organizations for real-world guidance, internships, and career insights.</li>
+            <li><strong>Exclusive Alumni Network:</strong> Reconnect with former classmates and build relationships across companies like Brain Station 23, Shohoz, Chaldal, Therap, Robi, and more.</li>
+            <li><strong>Pre-Verified & Ready:</strong> University administration has already pre-verified your alumni credentials. No document submission or waiting period required!</li>
+          </ul>
+        </div>
+
+        <!-- 3. Message Body Content -->
+        <div style="margin-bottom:20px;">
+          ${bodyContentHtml}
+        </div>
+
+        <!-- 4. Pre-Filled Alumni File Card -->
         <div style="background:#1e2638;border:1px solid #334155;border-radius:12px;padding:16px;margin:20px 0;">
           <h3 style="margin:0 0 10px 0;font-size:12px;color:#38bdf8;text-transform:uppercase;letter-spacing:1px;">Your Pre-Filled Alumni File</h3>
           <table style="width:100%;font-size:13px;border-collapse:collapse;">
@@ -423,7 +475,7 @@ export function buildInvitationEmailHtml(
           </table>
         </div>
 
-        <!-- 3 Key Alumni Perks -->
+        <!-- 5. 3 Key Alumni Perks -->
         <div style="background:rgba(2,132,199,0.08);border:1px solid rgba(2,132,199,0.25);border-radius:12px;padding:14px 16px;margin-bottom:20px;">
           <div style="font-size:12px;font-weight:700;color:#38bdf8;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;">Why Join the Network?</div>
           <ul style="margin:0;padding-left:18px;font-size:13px;color:#cbd5e1;line-height:1.7;">
@@ -437,6 +489,7 @@ export function buildInvitationEmailHtml(
           Claiming your account takes less than <strong>30 seconds</strong>. Simply review your pre-filled details, set your password, and start connecting.
         </p>
 
+        <!-- CTA Button -->
         <div style="text-align:center;margin:28px 0 16px 0;">
           <a href="${inviteUrl}" target="_blank" style="display:inline-block;background:linear-gradient(135deg,#0284c7 0%,#2563eb 100%);color:#ffffff!important;text-decoration:none;font-weight:700;font-size:15px;padding:13px 32px;border-radius:10px;box-shadow:0 8px 20px rgba(37,99,235,0.35);">
             Claim Your Verified Profile →
