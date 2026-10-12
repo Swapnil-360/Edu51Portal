@@ -400,11 +400,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </p>
           </div>
           <div className="flex items-center gap-3 flex-shrink-0">
-            <img
-              src="/image.png"
-              alt="BUBT"
-              className="block w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 object-contain opacity-90"
-            />
+            <div className="relative flex items-center justify-center">
+              {/* Glowing ambient background behind BUBT logo */}
+              <div className="absolute -inset-2 sm:-inset-3 bg-gradient-to-r from-blue-500/35 via-teal-400/25 to-purple-600/35 rounded-full blur-xl opacity-80 animate-pulse pointer-events-none" />
+              <img
+                src="/image.png"
+                alt="BUBT"
+                className="relative block w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 object-contain drop-shadow-md logo-glow-pulse"
+              />
+            </div>
           </div>
         </div>
       </div>
