@@ -131,6 +131,7 @@ export const FacultyDetailModal: React.FC<FacultyDetailModalProps> = ({
                 <img
                   src={member.img}
                   alt={member.name}
+                  referrerPolicy="no-referrer"
                   onError={() => setImgError(true)}
                   className={`w-24 h-24 sm:w-28 sm:h-28 rounded-2xl object-cover object-top border-4 shadow-xl ${
                     isDarkMode ? "border-[#16181c] bg-slate-900" : "border-white bg-slate-100"

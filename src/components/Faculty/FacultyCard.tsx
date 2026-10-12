@@ -144,6 +144,7 @@ export const FacultyCard: React.FC<FacultyCardProps> = ({
                 src={member.img}
                 alt={member.name}
                 loading="lazy"
+                referrerPolicy="no-referrer"
                 onError={() => setImgError(true)}
                 className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl object-cover object-top border transition-transform duration-300 group-hover:scale-105 ${
                   isDarkMode ? "border-[#2f3336] bg-slate-900" : "border-slate-200 bg-slate-100"
