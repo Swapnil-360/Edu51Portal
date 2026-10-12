@@ -396,45 +396,82 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const bannedUsersCount = (adminUsers || []).filter((u) => u.is_banned).length;
   const adminStaffCount = (adminUsers || []).filter((u) => u.is_admin || u.is_owner).length;
 
-  // Academic semester progression calculations
-  const safeCurrentWeek = Math.max(1, currentWeek || 1);
-  const safeTotalWeeks = Math.max(1, totalWeeks || 20);
-  const semesterProgressPct = Math.min(100, Math.round((safeCurrentWeek / safeTotalWeeks) * 100));
+  // Academic Year progression (January 1 - December 31)
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const yearStart = new Date(currentYear, 0, 1, 0, 0, 0);
+  const isLeapYear = (currentYear % 4 === 0 && currentYear % 100 !== 0) || (currentYear % 400 === 0);
+  const totalDaysInYear = isLeapYear ? 366 : 365;
 
-  const getSemesterPhaseInfo = (week: number) => {
-    if (week <= 4) {
-      return {
-        label: 'Early Semester',
-        sub: 'Enrollment & Course Setup',
-        color: 'from-emerald-500 to-teal-400',
-        badgeBg: isDarkMode ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' : 'bg-emerald-100 text-emerald-800 border-emerald-200',
-      };
-    }
-    if (week <= 9) {
-      return {
-        label: 'Midterm Phase',
-        sub: 'Lectures & Midterm Exams',
-        color: 'from-amber-500 to-orange-400',
-        badgeBg: isDarkMode ? 'bg-amber-500/20 text-amber-300 border-amber-500/30' : 'bg-amber-100 text-amber-800 border-amber-200',
-      };
-    }
-    if (week <= 15) {
-      return {
-        label: 'Advanced Term',
-        sub: 'Lab Projects & Term Work',
-        color: 'from-blue-500 to-indigo-500',
-        badgeBg: isDarkMode ? 'bg-blue-500/20 text-blue-300 border-blue-500/30' : 'bg-blue-100 text-blue-800 border-blue-200',
-      };
-    }
-    return {
-      label: 'Finals Window',
-      sub: 'Final Exams & Grading',
-      color: 'from-purple-500 to-rose-400',
-      badgeBg: isDarkMode ? 'bg-purple-500/20 text-purple-300 border-purple-500/30' : 'bg-purple-100 text-purple-800 border-purple-200',
-    };
-  };
+  const diffMs = Math.max(0, now.getTime() - yearStart.getTime());
+  const daysPassedInYear = Math.min(totalDaysInYear, Math.floor(diffMs / (1000 * 60 * 60 * 24)) + 1);
+  const daysRemainingInYear = Math.max(0, totalDaysInYear - daysPassedInYear);
+  const currentWeekOfYear = Math.min(52, Math.max(1, Math.ceil(daysPassedInYear / 7)));
+  const yearProgressPct = Math.min(100, Math.max(0, Math.round((daysPassedInYear / totalDaysInYear) * 100)));
 
-  const semesterPhase = getSemesterPhaseInfo(safeCurrentWeek);
+  // BUBT Tri-Semester mapping across the Jan-Dec academic calendar
+  const currentMonth = now.getMonth(); // 0 = Jan, 11 = Dec
+
+  let activeSemesterName = 'Fall';
+  let activeSemesterPeriod = 'Sep – Dec';
+  let semesterPhaseLabel = 'Fall · Midterm Sprint';
+  let semesterPhaseSub = 'Lectures & Midterm Assessments';
+  let semesterColor = 'from-indigo-500 via-blue-500 to-cyan-400';
+  let semesterBadgeCls = isDarkMode ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30' : 'bg-indigo-100 text-indigo-800 border-indigo-200';
+
+  if (currentMonth <= 3) {
+    // January - April: Spring Semester
+    activeSemesterName = 'Spring';
+    activeSemesterPeriod = 'Jan – Apr';
+    semesterColor = 'from-emerald-500 via-teal-500 to-cyan-500';
+    semesterBadgeCls = isDarkMode ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' : 'bg-emerald-100 text-emerald-800 border-emerald-200';
+    if (currentMonth === 0) {
+      semesterPhaseLabel = 'Spring · Orientation';
+      semesterPhaseSub = 'Admissions & Syllabus Setup';
+    } else if (currentMonth <= 2) {
+      semesterPhaseLabel = 'Spring · Midterms';
+      semesterPhaseSub = 'Lectures & Midterm Exams';
+    } else {
+      semesterPhaseLabel = 'Spring · Finals';
+      semesterPhaseSub = 'Final Examinations & Results';
+    }
+  } else if (currentMonth <= 7) {
+    // May - August: Summer Semester
+    activeSemesterName = 'Summer';
+    activeSemesterPeriod = 'May – Aug';
+    semesterColor = 'from-amber-500 via-orange-500 to-yellow-500';
+    semesterBadgeCls = isDarkMode ? 'bg-amber-500/20 text-amber-300 border-amber-500/30' : 'bg-amber-100 text-amber-800 border-amber-200';
+    if (currentMonth === 4) {
+      semesterPhaseLabel = 'Summer · Classes Start';
+      semesterPhaseSub = 'Orientation & Regular Classes';
+    } else if (currentMonth <= 6) {
+      semesterPhaseLabel = 'Summer · Midterms';
+      semesterPhaseSub = 'Midterm Examinations Window';
+    } else {
+      semesterPhaseLabel = 'Summer · Finals';
+      semesterPhaseSub = 'Final Examinations & Recess';
+    }
+  } else {
+    // September - December: Fall Semester
+    activeSemesterName = 'Fall';
+    activeSemesterPeriod = 'Sep – Dec';
+    semesterColor = 'from-indigo-500 via-blue-500 to-cyan-400';
+    semesterBadgeCls = isDarkMode ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30' : 'bg-indigo-100 text-indigo-800 border-indigo-200';
+    if (currentMonth === 8) {
+      semesterPhaseLabel = 'Fall · Classes Start';
+      semesterPhaseSub = 'Commencement & Course Setup';
+    } else if (currentMonth <= 10) {
+      semesterPhaseLabel = 'Fall · Midterm Sprint';
+      semesterPhaseSub = 'Lectures & Midterm Assessments';
+    } else {
+      semesterPhaseLabel = 'Fall · Finals Window';
+      semesterPhaseSub = 'Final Exams & Annual Review';
+    }
+  }
+
+  const springStatus = currentMonth > 3 ? 'completed' : currentMonth >= 0 && currentMonth <= 3 ? 'active' : 'upcoming';
+  const summerStatus = currentMonth > 7 ? 'completed' : currentMonth >= 4 && currentMonth <= 7 ? 'active' : 'upcoming';
+  const fallStatus = currentMonth >= 8 ? 'active' : 'upcoming';
 
   const remainingStorageBytes = Math.max(0, STORAGE_LIMIT_BYTES - storageBytes);
 
@@ -661,49 +698,96 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
               {/* Executive Telemetry Grid: Academic Pulse + Storage Allocations + AI Engine */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3 mt-2.5 sm:mt-3">
-                {/* 1. Academic Semester Lifecycle & Pulse Card */}
+                {/* 1. Academic Year & Semester Lifecycle Card (Jan – Dec) */}
                 <div className={`group relative overflow-hidden rounded-xl transition-all duration-300 ${isDarkMode ? 'bg-gradient-to-br from-slate-700/40 to-slate-800/40 backdrop-blur-xl border border-indigo-500/20 hover:border-indigo-400/40' : 'bg-gradient-to-br from-indigo-50/80 to-blue-50/80 backdrop-blur-xl border border-indigo-200/50 hover:border-indigo-300/80'}`}>
                   <div className="relative z-10 p-3 sm:p-4">
                     <div className="flex items-start justify-between mb-2">
                       <div>
-                        <p className={`text-xs font-semibold uppercase tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Semester Lifecycle</p>
+                        <p className={`text-xs font-semibold uppercase tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Academic Lifecycle</p>
+                        <span className={`text-[10px] font-medium ${isDarkMode ? 'text-indigo-400/80' : 'text-indigo-600'}`}>Jan – Dec {currentYear}</span>
                       </div>
                       <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-indigo-500/20 text-indigo-400 group-hover:bg-indigo-500/30' : 'bg-indigo-200 text-indigo-600 group-hover:bg-indigo-300'} transition-all group-hover:scale-110`}>
                         <Calendar className="w-4 h-4 sm:w-5 sm:h-5" />
                       </div>
                     </div>
-                    <div className="flex items-baseline justify-between">
+                    <div className="flex items-baseline justify-between gap-2">
                       <p className={`text-xl sm:text-2xl font-black ${isDarkMode ? 'text-indigo-300' : 'text-indigo-700'} transition-colors`}>
-                        Week {safeCurrentWeek}
-                        <span className={`text-sm font-semibold ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}> / {safeTotalWeeks}</span>
+                        Week {currentWeekOfYear}
+                        <span className={`text-sm font-semibold ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}> / 52</span>
                       </p>
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${semesterPhase.badgeBg}`}>
-                        {semesterPhase.label}
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border truncate ${semesterBadgeCls}`}>
+                        {semesterPhaseLabel}
                       </span>
                     </div>
 
-                    {/* Semester Progress Gauge */}
+                    {/* Annual Progress Gauge (Jan to Dec) */}
                     <div className={`mt-2.5 h-2.5 rounded-full overflow-hidden ${isDarkMode ? 'bg-[#2f3336]' : 'bg-slate-200'}`}>
                       <div
-                        className="h-full rounded-full transition-all duration-500 bg-gradient-to-r from-indigo-500 via-blue-500 to-cyan-400"
-                        style={{ width: `${Math.max(4, semesterProgressPct)}%` }}
+                        className={`h-full rounded-full transition-all duration-500 bg-gradient-to-r ${semesterColor}`}
+                        style={{ width: `${Math.max(4, yearProgressPct)}%` }}
+                        title={`${yearProgressPct}% of ${currentYear} completed (${daysPassedInYear}/${totalDaysInYear} days)`}
                       />
                     </div>
 
+                    {/* Tri-Semester Status Badges (Spring, Summer, Fall across Jan-Dec) */}
+                    <div className="mt-2.5 flex items-center justify-between gap-1">
+                      {/* Spring */}
+                      <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold border ${
+                        springStatus === 'active'
+                          ? (isDarkMode ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-sm' : 'bg-emerald-100 text-emerald-800 border-emerald-300')
+                          : springStatus === 'completed'
+                            ? (isDarkMode ? 'bg-slate-800/60 text-emerald-400 border-emerald-500/20' : 'bg-emerald-50 text-emerald-700 border-emerald-200')
+                            : (isDarkMode ? 'bg-slate-800/30 text-slate-500 border-slate-700/40' : 'bg-slate-100 text-slate-400 border-slate-200')
+                      }`}>
+                        {springStatus === 'completed' ? <CheckCircle2 className="w-2.5 h-2.5 text-emerald-400" /> : springStatus === 'active' ? <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> : null}
+                        <span>Spring <span className="text-[9px] opacity-75">1-4m</span></span>
+                      </div>
+
+                      {/* Summer */}
+                      <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold border ${
+                        summerStatus === 'active'
+                          ? (isDarkMode ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 shadow-sm' : 'bg-amber-100 text-amber-800 border-amber-300')
+                          : summerStatus === 'completed'
+                            ? (isDarkMode ? 'bg-slate-800/60 text-emerald-400 border-emerald-500/20' : 'bg-emerald-50 text-emerald-700 border-emerald-200')
+                            : (isDarkMode ? 'bg-slate-800/30 text-slate-500 border-slate-700/40' : 'bg-slate-100 text-slate-400 border-slate-200')
+                      }`}>
+                        {summerStatus === 'completed' ? <CheckCircle2 className="w-2.5 h-2.5 text-emerald-400" /> : summerStatus === 'active' ? <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" /> : null}
+                        <span>Summer <span className="text-[9px] opacity-75">5-8m</span></span>
+                      </div>
+
+                      {/* Fall */}
+                      <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold border ${
+                        fallStatus === 'active'
+                          ? (isDarkMode ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40 shadow-sm' : 'bg-indigo-100 text-indigo-800 border-indigo-300')
+                          : fallStatus === 'completed'
+                            ? (isDarkMode ? 'bg-slate-800/60 text-emerald-400 border-emerald-500/20' : 'bg-emerald-50 text-emerald-700 border-emerald-200')
+                            : (isDarkMode ? 'bg-slate-800/30 text-slate-500 border-slate-700/40' : 'bg-slate-100 text-slate-400 border-slate-200')
+                      }`}>
+                        {fallStatus === 'completed' ? <CheckCircle2 className="w-2.5 h-2.5 text-emerald-400" /> : fallStatus === 'active' ? <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" /> : null}
+                        <span>Fall <span className="text-[9px] opacity-75">9-12m</span></span>
+                      </div>
+                    </div>
+
                     {/* Sub metrics grid */}
-                    <div className="mt-2.5 grid grid-cols-3 gap-1.5 pt-1 border-t border-slate-700/20">
-                      <div className={`px-2 py-1 rounded-md text-center ${isDarkMode ? 'bg-slate-800/50' : 'bg-white/70'}`}>
+                    <div className="mt-2.5 grid grid-cols-4 gap-1.5 pt-1 border-t border-slate-700/20">
+                      <div className={`px-1.5 py-1 rounded-md text-center ${isDarkMode ? 'bg-slate-800/50' : 'bg-white/70'}`}>
                         <p className={`text-[9px] uppercase font-bold tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Courses</p>
                         <p className={`text-xs font-extrabold ${isDarkMode ? 'text-indigo-300' : 'text-indigo-600'}`}>{coursesCount}</p>
                       </div>
-                      <div className={`px-2 py-1 rounded-md text-center ${isDarkMode ? 'bg-slate-800/50' : 'bg-white/70'}`}>
+                      <div className={`px-1.5 py-1 rounded-md text-center ${isDarkMode ? 'bg-slate-800/50' : 'bg-white/70'}`}>
                         <p className={`text-[9px] uppercase font-bold tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Materials</p>
                         <p className={`text-xs font-extrabold ${isDarkMode ? 'text-blue-300' : 'text-blue-600'}`}>{materialsCount}</p>
                       </div>
-                      <div className={`px-2 py-1 rounded-md text-center ${isDarkMode ? 'bg-slate-800/50' : 'bg-white/70'}`}>
+                      <div className={`px-1.5 py-1 rounded-md text-center ${isDarkMode ? 'bg-slate-800/50' : 'bg-white/70'}`}>
                         <p className={`text-[9px] uppercase font-bold tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Density</p>
                         <p className={`text-xs font-extrabold ${isDarkMode ? 'text-cyan-300' : 'text-cyan-600'}`}>
                           {(materialsCount / Math.max(1, coursesCount)).toFixed(1)}/c
+                        </p>
+                      </div>
+                      <div className={`px-1.5 py-1 rounded-md text-center ${isDarkMode ? 'bg-slate-800/50' : 'bg-white/70'}`}>
+                        <p className={`text-[9px] uppercase font-bold tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Annual</p>
+                        <p className={`text-xs font-extrabold ${isDarkMode ? 'text-purple-300' : 'text-purple-600'}`}>
+                          {yearProgressPct}%
                         </p>
                       </div>
                     </div>
