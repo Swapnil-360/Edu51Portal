@@ -28,7 +28,7 @@ import {
   EmailNotification,
 } from "./lib/emailNotifications";
 import { SignUpModal } from "./components/SignUpModal";
-import { AppNavHeader } from "./components/ui/nav-header";
+import { AppNavHeader, AdminNavHeader, type AdminTabId } from "./components/ui/nav-header";
 import { ResetPasswordModal } from "./components/ResetPasswordModal";
 import { SetNewPasswordModal } from "./components/SetNewPasswordModal";
 import { ChangeEmailModal } from "./components/ChangeEmailModal";
@@ -317,6 +317,9 @@ function App() {
 
   // Admin status is DB-driven (profiles.is_admin), applied after the profile loads.
   const [isAdmin, setIsAdmin] = useState(false);
+  // Admin header classified tabs selection & pending badges
+  const [adminTab, setAdminTab] = useState<AdminTabId>("dashboard");
+  const [pendingAlumniCount, setPendingAlumniCount] = useState<number>(0);
 
   // Department "active" state is DB-driven (study_department_config.active) —
   // an admin can configure a Drive folder link and separately flip a
@@ -3663,19 +3666,30 @@ For any queries, contact your course instructors or the department.`,
                 </span>
               </button>
 
-              {/* Desktop: sliding pill nav with home icon as first tab */}
+              {/* Desktop: Admin header tabs when in admin view; student tabs otherwise */}
               <nav className="hidden lg:flex items-center">
-                <AppNavHeader
-                  currentView={currentView}
-                  isDarkMode={isDarkMode}
-                  isLoggedIn={isLoggedIn}
-                  goToView={goToView}
-                  showMajorAccessNotification={showMajorAccessNotification}
-                  setShowSignInModal={setShowSignInModal}
-                  pendingConnectionsCount={pendingConnectionsCount}
-                  unreadMessagesCount={unreadMsgCount}
-                  isBanned={isBanned}
-                />
+                {isAdmin && currentView === "admin" ? (
+                  <AdminNavHeader
+                    activeTab={adminTab}
+                    isDarkMode={isDarkMode}
+                    onTabChange={setAdminTab}
+                    onExitAdmin={handleExitAdmin}
+                    pendingAlumniCount={pendingAlumniCount}
+                    newFeedbackCount={feedbackItems.filter((f) => f.status === "new").length}
+                  />
+                ) : (
+                  <AppNavHeader
+                    currentView={currentView}
+                    isDarkMode={isDarkMode}
+                    isLoggedIn={isLoggedIn}
+                    goToView={goToView}
+                    showMajorAccessNotification={showMajorAccessNotification}
+                    setShowSignInModal={setShowSignInModal}
+                    pendingConnectionsCount={pendingConnectionsCount}
+                    unreadMessagesCount={unreadMsgCount}
+                    isBanned={isBanned}
+                  />
+                )}
               </nav>
             </div>
 
@@ -3717,6 +3731,18 @@ For any queries, contact your course instructors or the department.`,
                     <LogIn className="w-4 h-4" />
                   </button>
                 </>
+              )}
+
+              {/* Mobile quick Exit Admin button */}
+              {isAdmin && currentView === "admin" && (
+                <button
+                  onClick={handleExitAdmin}
+                  className="lg:hidden flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-semibold text-rose-500 bg-rose-500/10 border border-rose-500/20 hover:bg-rose-500/20 transition-all"
+                  title="Exit Admin to Student Portal"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  <span>Exit</span>
+                </button>
               )}
 
               {/* User Dropdown Menu - visible when logged in */}
@@ -5727,6 +5753,10 @@ For any queries, contact your course instructors or the department.`,
                   setCurrentFileName(name);
                   setShowFileViewer(true);
                 }}
+                activeTab={adminTab}
+                onTabChange={setAdminTab}
+                onExitAdmin={handleExitAdmin}
+                onPendingAlumniCountChange={setPendingAlumniCount}
               />
             )}
 

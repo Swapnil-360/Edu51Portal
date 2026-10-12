@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Plus, ChevronDown, ChevronUp, AlertCircle, Trash2, Edit2, BarChart3, BookOpen, Files, Users, TrendingUp, HardDrive, UsersRound, ShieldCheck, MessageSquare, RefreshCw, Bug, Lightbulb, Sparkles, Ban, GraduationCap, BadgeCheck, X, Loader2, Search, FlaskConical } from 'lucide-react';
+import { Bell, Plus, ChevronDown, ChevronUp, AlertCircle, Trash2, Edit2, BarChart3, BookOpen, Files, Users, TrendingUp, HardDrive, UsersRound, ShieldCheck, MessageSquare, RefreshCw, Bug, Lightbulb, Sparkles, Ban, GraduationCap, BadgeCheck, X, Loader2, Search, FlaskConical, ArrowLeft } from 'lucide-react';
 import MaterialManager from './MaterialManager';
 import { supabase, supabaseConfigured } from '../../lib/supabase';
 import { sendEmailNotification } from '../../lib/emailNotifications';
 import { getAiUsageToday, GEMINI_FREE_TIER_DAILY_LIMIT, type AiUsageToday } from '../../lib/api/adminApi';
 import { AlumniOutreachPanel } from './AlumniOutreachPanel';
+
+export type AdminTabType = 'dashboard' | 'alumni' | 'notices' | 'materials' | 'feedback';
 
 interface Notice {
   id: string;
@@ -35,6 +37,10 @@ interface FeedbackItem {
 
 interface AdminDashboardProps {
   isDarkMode: boolean;
+  activeTab?: AdminTabType;
+  onTabChange?: (tab: AdminTabType) => void;
+  onExitAdmin?: () => void;
+  onPendingAlumniCountChange?: (count: number) => void;
   coursesCount: number;
   materialsCount: number;
   onlineUsers?: number;
@@ -118,6 +124,10 @@ function timeAgo(iso: string): string {
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   isDarkMode,
+  activeTab,
+  onTabChange,
+  onExitAdmin,
+  onPendingAlumniCountChange,
   onlineUsers = 0,
   storageBytes = 0,
   storageByBucket = [],
@@ -144,6 +154,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   isSendingBroadcast = false,
   onPreviewFile,
 }) => {
+  const [internalTab, setInternalTab] = useState<AdminTabType>('dashboard');
+  const currentTab = activeTab || internalTab;
+  const setTab = (t: AdminTabType) => {
+    setInternalTab(t);
+    onTabChange?.(t);
+  };
+
   const [expandedSections, setExpandedSections] = useState<{ [key: string]: boolean }>({
     courseManagement: false,
     materialUpload: false,
@@ -221,11 +238,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           .select('*')
           .eq('is_verified', false);
         if (error) throw error;
-        setPendingAlumni(data || []);
+        const list = data || [];
+        setPendingAlumni(list);
+        onPendingAlumniCountChange?.(list.length);
       } else {
         const savedMock = localStorage.getItem('mock_pending_alumni');
         if (savedMock) {
-          setPendingAlumni(JSON.parse(savedMock));
+          const parsed = JSON.parse(savedMock);
+          setPendingAlumni(parsed);
+          onPendingAlumniCountChange?.(parsed.length);
         } else {
           const initialMock = [
             {
@@ -241,6 +262,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           ];
           setPendingAlumni(initialMock);
           localStorage.setItem('mock_pending_alumni', JSON.stringify(initialMock));
+          onPendingAlumniCountChange?.(initialMock.length);
         }
       }
     } catch (err) {
@@ -377,17 +399,77 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               Manage notices, emergencies, and view platform statistics
             </p>
           </div>
-          <img
-            src="/image.png"
-            alt="BUBT"
-            className="block w-14 h-14 sm:w-20 sm:h-20 md:w-24 md:h-24 object-contain flex-shrink-0 opacity-90"
-          />
+          <div className="flex items-center gap-3 flex-shrink-0">
+            {onExitAdmin && (
+              <button
+                onClick={onExitAdmin}
+                className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold border transition-all shadow-sm ${
+                  isDarkMode
+                    ? 'bg-red-500/10 border-red-500/30 text-red-400 hover:bg-red-500/20 hover:border-red-500/50'
+                    : 'bg-red-50 border-red-200 text-red-600 hover:bg-red-100 hover:border-red-300'
+                }`}
+                title="Exit Admin Panel and Return to Student Portal"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>Exit Admin</span>
+              </button>
+            )}
+            <img
+              src="/image.png"
+              alt="BUBT"
+              className="block w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 object-contain opacity-90"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Category Tabs Strip */}
+      <div className={`border-b ${isDarkMode ? 'bg-[#0f141c]/90 border-[#2f3336]/60' : 'bg-white/90 border-slate-200/90'} backdrop-blur-md sticky top-0 z-20 shadow-sm`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 overflow-x-auto scrollbar-none flex items-center gap-2">
+          {([
+            { id: 'dashboard', label: 'Dashboard & Users', icon: BarChart3 },
+            { id: 'alumni', label: 'Alumni Management', icon: GraduationCap, badge: pendingAlumni.length },
+            { id: 'notices', label: 'Notices & Broadcast', icon: Bell, badge: notices.filter(n => n.is_active).length },
+            { id: 'materials', label: 'Study Materials', icon: BookOpen },
+            { id: 'feedback', label: 'Feedback Inbox', icon: MessageSquare, badge: feedbackItems.filter(f => f.status === 'new').length },
+          ] as const).map((tabItem) => {
+            const Icon = tabItem.icon;
+            const isActive = currentTab === tabItem.id;
+            return (
+              <button
+                key={tabItem.id}
+                onClick={() => setTab(tabItem.id)}
+                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all select-none ${
+                  isActive
+                    ? isDarkMode
+                      ? 'bg-blue-600 text-white shadow-md shadow-blue-900/40'
+                      : 'bg-blue-600 text-white shadow-md shadow-blue-500/25'
+                    : isDarkMode
+                    ? 'bg-[#16181c] text-slate-300 hover:text-white border border-[#2f3336] hover:bg-[#20242a]'
+                    : 'bg-white text-slate-600 hover:text-slate-900 border border-slate-200 hover:bg-slate-50'
+                }`}
+              >
+                <Icon className="w-3.5 h-3.5 flex-shrink-0" />
+                <span>{tabItem.label}</span>
+                {!!tabItem.badge && tabItem.badge > 0 && (
+                  <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
+                    isActive ? 'bg-white/25 text-white' : 'bg-red-500 text-white'
+                  }`}>
+                    {tabItem.badge}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10 space-y-6 sm:space-y-8">
-        {/* SECTION 1: Quick Stats Dashboard */}
-        <div>
+        {/* TAB 1: Dashboard & Users */}
+        {currentTab === 'dashboard' && (
+          <>
+            {/* SECTION 1: Quick Stats Dashboard */}
+            <div>
           <div className="flex items-center gap-3 mb-5">
             <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-blue-500/20 text-blue-400' : 'bg-blue-100 text-blue-600'}`}>
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -817,9 +899,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             )}
           </div>
         </div>
+          </>
+        )}
 
-        {/* Alumni Outreach & Prospects Manager */}
-        <AlumniOutreachPanel isDarkMode={isDarkMode} />
+        {/* TAB 2: Alumni Management */}
+        {currentTab === 'alumni' && (
+          <>
+            {/* Alumni Outreach & Prospects Manager */}
+            <AlumniOutreachPanel isDarkMode={isDarkMode} />
 
         {/* Alumni Approval Section */}
         <div className={`group relative overflow-hidden rounded-xl lg:rounded-2xl transition-all duration-300 ${isDarkMode ? 'bg-gradient-to-br from-indigo-900/30 to-slate-800/40 backdrop-blur-xl border border-indigo-500/25' : 'bg-gradient-to-br from-indigo-50/80 to-white/60 backdrop-blur-xl border border-indigo-200/60'}`}>
@@ -939,9 +1026,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             )}
           </div>
         </div>
+          </>
+        )}
 
-        {/* Feedback Inbox Section */}
-        {(() => {
+        {/* TAB 5: Feedback Inbox */}
+        {currentTab === 'feedback' && (
+          <>
+            {/* Feedback Inbox Section */}
+            {(() => {
           const newCount = feedbackItems.filter((f) => f.status === 'new').length;
           const visible = feedbackFilter === 'all' ? feedbackItems : feedbackItems.filter((f) => f.status === feedbackFilter);
           return (
@@ -1041,9 +1133,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </div>
           );
         })()}
+          </>
+        )}
 
-        {/* Broadcast Push Notification Section */}
-        <div className={`group relative overflow-hidden rounded-xl lg:rounded-2xl transition-all duration-300 ${isDarkMode ? 'bg-gradient-to-br from-indigo-900/50 to-purple-900/50 backdrop-blur-xl border border-indigo-500/30 hover:border-indigo-400/50 hover:from-indigo-900/60 hover:to-purple-900/60 hover:shadow-lg hover:shadow-indigo-500/20' : 'bg-gradient-to-br from-indigo-50/80 to-purple-50/80 backdrop-blur-xl border border-indigo-200/50 hover:border-indigo-300/80 hover:shadow-lg hover:shadow-indigo-200/50'}`}>
+        {/* TAB 3: Notice & Notifications */}
+        {currentTab === 'notices' && (
+          <>
+            {/* Broadcast Push Notification Section */}
+            <div className={`group relative overflow-hidden rounded-xl lg:rounded-2xl transition-all duration-300 ${isDarkMode ? 'bg-gradient-to-br from-indigo-900/50 to-purple-900/50 backdrop-blur-xl border border-indigo-500/30 hover:border-indigo-400/50 hover:from-indigo-900/60 hover:to-purple-900/60 hover:shadow-lg hover:shadow-indigo-500/20' : 'bg-gradient-to-br from-indigo-50/80 to-purple-50/80 backdrop-blur-xl border border-indigo-200/50 hover:border-indigo-300/80 hover:shadow-lg hover:shadow-indigo-200/50'}`}>
           <div className={`absolute inset-0 ${isDarkMode ? 'bg-gradient-to-br from-indigo-500/5 to-transparent' : 'bg-gradient-to-br from-indigo-400/10 to-transparent'} opacity-0 group-hover:opacity-100 transition-opacity duration-300`}></div>
           <div className="relative z-10 p-4 sm:p-5 lg:p-6">
             <div className="flex items-center gap-3 mb-5">
@@ -1266,14 +1363,25 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             )}
           </div>
         </div>
+          </>
+        )}
 
-        {/* SECTION 5: Study Material Manager */}
-        {currentUserId && (
-          <MaterialManager
-            isDarkMode={isDarkMode}
-            currentUserId={currentUserId}
-            onPreviewFile={onPreviewFile}
-          />
+        {/* TAB 4: Study Materials */}
+        {currentTab === 'materials' && (
+          <>
+            {/* SECTION 5: Study Material Manager */}
+            {currentUserId ? (
+              <MaterialManager
+                isDarkMode={isDarkMode}
+                currentUserId={currentUserId}
+                onPreviewFile={onPreviewFile}
+              />
+            ) : (
+              <div className={`p-8 text-center text-sm rounded-2xl border ${isDarkMode ? 'border-[#2f3336] text-slate-400 bg-[#16181c]' : 'border-slate-200 text-slate-500 bg-white'}`}>
+                Please sign in with your admin account to manage study materials.
+              </div>
+            )}
+          </>
         )}
       </div>
 

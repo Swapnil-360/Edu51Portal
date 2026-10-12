@@ -1,6 +1,6 @@
 import React, { useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Home } from "lucide-react";
+import { Home, BarChart3, GraduationCap, Bell, BookOpen, MessageSquare, ArrowLeft } from "lucide-react";
 
 type BadgeType = "live" | "new" | "soon";
 
@@ -12,11 +12,13 @@ interface NavTab {
   isActive: boolean;
   icon?: React.ReactNode;
   hasRedDot?: boolean;
+  showLabelWithIcon?: boolean;
 }
 
 interface SlideNavProps {
   tabs: NavTab[];
   isDarkMode: boolean;
+  layoutId?: string;
 }
 
 function LiveDot() {
@@ -65,7 +67,7 @@ function SoonBadge({ isActive, isDarkMode }: { isActive: boolean; isDarkMode: bo
   );
 }
 
-function SlideNav({ tabs, isDarkMode }: SlideNavProps) {
+function SlideNav({ tabs, isDarkMode, layoutId }: SlideNavProps) {
   const [position, setPosition] = useState({ left: 0, width: 0, opacity: 0 });
 
   return (
@@ -83,6 +85,7 @@ function SlideNav({ tabs, isDarkMode }: SlideNavProps) {
           tab={tab}
           setPosition={setPosition}
           isDarkMode={isDarkMode}
+          layoutId={layoutId}
         />
       ))}
       <Cursor position={position} isDarkMode={isDarkMode} />
@@ -94,10 +97,12 @@ const NavTab = ({
   tab,
   setPosition,
   isDarkMode,
+  layoutId = "active-nav-pill",
 }: {
   tab: NavTab;
   setPosition: React.Dispatch<React.SetStateAction<{ left: number; width: number; opacity: number }>>;
   isDarkMode: boolean;
+  layoutId?: string;
 }) => {
   const ref = useRef<HTMLLIElement>(null);
 
@@ -120,7 +125,25 @@ const NavTab = ({
           : "font-medium text-slate-500 hover:text-slate-800"
       }`}
     >
-      {tab.icon ? tab.icon : (
+      {tab.icon && (!tab.label || tab.showLabelWithIcon) ? (
+        tab.showLabelWithIcon && tab.label ? (
+          <>
+            <span className="flex-shrink-0">{tab.icon}</span>
+            <span>{tab.label}</span>
+            {tab.badge === "live" && <LiveDot />}
+            {tab.badge === "new" && !tab.hasRedDot && <NewBadge isActive={tab.isActive} isDarkMode={isDarkMode} />}
+            {tab.badge === "soon" && <SoonBadge isActive={tab.isActive} isDarkMode={isDarkMode} />}
+            {tab.hasRedDot && (
+              <span className="relative flex h-2 w-2 ml-0.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500 shadow-[0_0_6px_#ef4444]"></span>
+              </span>
+            )}
+          </>
+        ) : (
+          tab.icon
+        )
+      ) : (
         <>
           {tab.badge === "live" && <LiveDot />}
           <span>{tab.label}</span>
@@ -138,7 +161,7 @@ const NavTab = ({
       {/* Active filled pill */}
       {tab.isActive && (
         <motion.span
-          layoutId="active-nav-pill"
+          layoutId={layoutId}
           className={`absolute inset-0 rounded-full -z-10 shadow-md ${
             isDarkMode ? "bg-white shadow-white/10" : "bg-[#17181c] shadow-black/20"
           }`}
@@ -324,3 +347,87 @@ export function AlumniNavHeader({
 
   return <SlideNav tabs={tabs} isDarkMode={isDarkMode} />;
 }
+
+export type AdminTabId = "dashboard" | "alumni" | "notices" | "materials" | "feedback";
+
+export interface AdminNavHeaderProps {
+  activeTab: AdminTabId;
+  isDarkMode: boolean;
+  onTabChange: (tab: AdminTabId) => void;
+  onExitAdmin: () => void;
+  pendingAlumniCount?: number;
+  newFeedbackCount?: number;
+}
+
+export function AdminNavHeader({
+  activeTab,
+  isDarkMode,
+  onTabChange,
+  onExitAdmin,
+  pendingAlumniCount = 0,
+  newFeedbackCount = 0,
+}: AdminNavHeaderProps) {
+  const tabs: NavTab[] = [
+    {
+      label: "Dashboard",
+      view: "dashboard",
+      icon: <BarChart3 className="w-3.5 h-3.5" />,
+      showLabelWithIcon: true,
+      isActive: activeTab === "dashboard",
+      onClick: () => onTabChange("dashboard"),
+    },
+    {
+      label: "Alumni Management",
+      view: "alumni",
+      icon: <GraduationCap className="w-3.5 h-3.5" />,
+      showLabelWithIcon: true,
+      isActive: activeTab === "alumni",
+      onClick: () => onTabChange("alumni"),
+      hasRedDot: pendingAlumniCount > 0,
+    },
+    {
+      label: "Notice & Notifications",
+      view: "notices",
+      icon: <Bell className="w-3.5 h-3.5" />,
+      showLabelWithIcon: true,
+      isActive: activeTab === "notices",
+      onClick: () => onTabChange("notices"),
+    },
+    {
+      label: "Study Materials",
+      view: "materials",
+      icon: <BookOpen className="w-3.5 h-3.5" />,
+      showLabelWithIcon: true,
+      isActive: activeTab === "materials",
+      onClick: () => onTabChange("materials"),
+    },
+    {
+      label: "Feedback",
+      view: "feedback",
+      icon: <MessageSquare className="w-3.5 h-3.5" />,
+      showLabelWithIcon: true,
+      isActive: activeTab === "feedback",
+      onClick: () => onTabChange("feedback"),
+      hasRedDot: newFeedbackCount > 0,
+    },
+  ];
+
+  return (
+    <div className="flex items-center gap-2">
+      <SlideNav tabs={tabs} isDarkMode={isDarkMode} layoutId="admin-active-nav-pill" />
+      <button
+        onClick={onExitAdmin}
+        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all duration-200 select-none shadow-sm ${
+          isDarkMode
+            ? "bg-red-500/10 border-red-500/30 text-red-400 hover:bg-red-500/20 hover:border-red-500/50 hover:text-red-300"
+            : "bg-red-50 border-red-200 text-red-600 hover:bg-red-100 hover:border-red-300 hover:text-red-700"
+        }`}
+        title="Exit Admin Panel"
+      >
+        <ArrowLeft className="w-3.5 h-3.5" />
+        <span>Exit Admin</span>
+      </button>
+    </div>
+  );
+}
+
