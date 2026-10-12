@@ -718,6 +718,27 @@ export async function getAlumniInviteDetails(token: string): Promise<{
   data: Partial<AlumniInvitation> | null;
   reason?: string;
 }> {
+  // Built-in Demo & Testing Token Support (for QA testing without needing real DB lead)
+  if (token === 'demo' || token === 'test' || token === 'mock' || token.startsWith('mock-')) {
+    return {
+      valid: true,
+      data: {
+        id: 'mock-invite-demo',
+        full_name: 'Engr. Md. Tanvir Ahmed (Mock Alumnus)',
+        email: 'tanvir.mock@bubt.edu.bd',
+        department: 'CSE',
+        passing_year: 2022,
+        intake: 42,
+        company: 'Brain Station 23',
+        designation: 'Senior Software Engineer',
+        linkedin_url: 'https://linkedin.com/in/tanvir-mock',
+        phone: '+880 1712345678',
+        status: 'new',
+        invite_token: token,
+      },
+    };
+  }
+
   try {
     const { data, error } = await supabase.rpc('get_alumni_invite_details', { p_token: token });
     if (error) throw error;
@@ -753,6 +774,11 @@ export async function claimAlumniInvite(
   token: string,
   userId: string
 ): Promise<{ success: boolean; error: string | null }> {
+  // Support demo token claiming
+  if (token === 'demo' || token === 'test' || token === 'mock' || token.startsWith('mock-')) {
+    return { success: true, error: null };
+  }
+
   try {
     const { error } = await supabase.rpc('claim_alumni_invite', {
       p_token: token,

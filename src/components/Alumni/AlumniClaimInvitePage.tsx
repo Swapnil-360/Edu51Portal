@@ -215,6 +215,26 @@ export const AlumniClaimInvitePage: React.FC<AlumniClaimInvitePageProps> = ({
       const cleanEmail = email.trim().toLowerCase();
       const cleanName = fullName.trim();
 
+      // Mock demo simulation mode: instant success & flow test
+      if (token === 'demo' || token === 'test' || token.startsWith('mock-')) {
+        setIsSuccess(true);
+        if (onSuccessLogin) {
+          onSuccessLogin({
+            id: 'mock-alumnus-' + Date.now(),
+            email: cleanEmail,
+            user_metadata: {
+              name: cleanName,
+              role: 'alumni',
+              department: department,
+            },
+          });
+        }
+        setTimeout(() => {
+          onNavigate('alumni');
+        }, 2800);
+        return;
+      }
+
       // 1. Sign up user via Supabase Auth
       const { data: authData, error: authErr } = await supabase.auth.signUp({
         email: cleanEmail,

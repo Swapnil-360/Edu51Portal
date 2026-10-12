@@ -3143,13 +3143,27 @@ Engr. Mahmudul Hasan, Intake 39, Textile Engineering, Senior Merchandiser at DBL
                   </div>
                 </div>
 
-                <div className={`p-3 rounded-xl border my-3.5 text-xs flex items-center gap-2.5 ${
+                <div className={`p-3 rounded-xl border my-3.5 text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 ${
                   isDarkMode ? 'bg-emerald-950/20 border-emerald-500/30 text-emerald-300' : 'bg-emerald-50 border-emerald-200 text-emerald-800'
                 }`}>
-                  <Sparkles className="w-4 h-4 shrink-0 text-emerald-400" />
-                  <span>
-                    <strong>VIP Bypass Active:</strong> When the alumnus registers with this link, their account will instantly be verified with full alumni status without needing admin manual review.
-                  </span>
+                  <div className="flex items-start sm:items-center gap-2">
+                    <Sparkles className="w-4 h-4 shrink-0 text-emerald-400 mt-0.5 sm:mt-0" />
+                    <span>
+                      <strong>VIP Bypass Active:</strong> Registration through this link auto-activates verified alumni status without manual admin review.
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const origin = typeof window !== 'undefined' ? window.location.origin : 'https://bubt.edu51portal.live';
+                      window.open(`${origin}/alumni-invite?token=demo`, '_blank');
+                    }}
+                    className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-cyan-600 hover:bg-cyan-500 text-white shrink-0 flex items-center gap-1 shadow-sm transition-all"
+                    title="Open live interactive claim page with pre-filled mock alumnus to test the full onboarding flow"
+                  >
+                    <span>Test Demo Flow</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </button>
                 </div>
 
                 <form onSubmit={handleGenerateInviteSubmit} className="space-y-3.5 text-xs">
