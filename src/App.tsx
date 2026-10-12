@@ -3671,7 +3671,7 @@ For any queries, contact your course instructors or the department.`,
             {/* Center: Admin header tabs (mobile + desktop) or Student tabs / mobile logo */}
             <div className="absolute left-1/2 -translate-x-1/2 flex items-center max-w-[calc(100vw-120px)] sm:max-w-none">
               {isAdmin && currentView === "admin" ? (
-                <nav className="flex items-center overflow-x-auto scrollbar-none py-1">
+                <nav className="flex items-center">
                   <AdminNavHeader
                     activeTab={adminTab}
                     isDarkMode={isDarkMode}

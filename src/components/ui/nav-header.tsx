@@ -411,13 +411,13 @@ export function AdminNavHeader({
   ];
 
   return (
-    <div className="flex items-center gap-1.5 sm:gap-3">
+    <div className="flex items-center gap-2 sm:gap-3">
       {/* Dynamic pill bar: selected shows full name, others show icon only */}
       <ul
-        className={`relative flex items-center p-1 rounded-full border shadow-sm transition-colors duration-200 select-none ${
+        className={`relative flex items-center rounded-full px-1.5 py-1.5 gap-1 border transition-colors duration-300 select-none ${
           isDarkMode
-            ? "bg-[#17181c]/90 border-[#2f3336] shadow-black/40"
-            : "bg-white/90 border-slate-200 shadow-slate-100"
+            ? "bg-[#16181c] border-[#2f3336] shadow-lg shadow-black/30"
+            : "bg-white border-slate-200 shadow-md shadow-black/8"
         }`}
       >
         {tabs.map((tab) => {
@@ -432,24 +432,24 @@ export function AdminNavHeader({
             >
               <button
                 type="button"
-                className={`relative flex items-center justify-center gap-1.5 rounded-full text-xs transition-all duration-200 outline-none focus:outline-none ${
+                className={`relative flex items-center justify-center gap-2 rounded-full text-sm transition-all duration-200 outline-none focus:outline-none ${
                   isActive
                     ? isDarkMode
-                      ? "px-3 sm:px-3.5 py-1.5 font-bold text-slate-900"
-                      : "px-3 sm:px-3.5 py-1.5 font-bold text-white"
+                      ? "px-4 py-2 font-bold text-slate-900 shadow-sm"
+                      : "px-4 py-2 font-bold text-white shadow-sm"
                     : isDarkMode
-                    ? "w-8 h-8 sm:w-9 sm:h-9 text-[#71767b] hover:text-[#e7e9ea] hover:bg-white/10"
-                    : "w-8 h-8 sm:w-9 sm:h-9 text-slate-500 hover:text-slate-800 hover:bg-slate-100"
+                    ? "w-10 h-10 text-[#71767b] hover:text-[#e7e9ea] hover:bg-white/10"
+                    : "w-10 h-10 text-slate-500 hover:text-slate-800 hover:bg-slate-100"
                 }`}
                 title={tab.label}
               >
                 {/* Tab Icon with badge */}
                 <span className="relative flex items-center justify-center flex-shrink-0">
-                  {tab.icon("w-3.5 h-3.5 sm:w-4 sm:h-4")}
+                  {tab.icon("w-[18px] h-[18px]")}
                   {!isActive && hasBadge && (
-                    <span className="absolute -top-1 -right-1 flex h-2 w-2">
+                    <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500 shadow-[0_0_6px_#ef4444]"></span>
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500 shadow-[0_0_8px_#ef4444]"></span>
                     </span>
                   )}
                 </span>
@@ -460,13 +460,13 @@ export function AdminNavHeader({
                     initial={{ opacity: 0, width: 0 }}
                     animate={{ opacity: 1, width: "auto" }}
                     exit={{ opacity: 0, width: 0 }}
-                    transition={{ duration: 0.2, ease: "easeOut" }}
-                    className="overflow-hidden whitespace-nowrap text-xs font-bold flex items-center gap-1"
+                    transition={{ duration: 0.22, ease: "easeOut" }}
+                    className="overflow-hidden whitespace-nowrap text-sm font-bold flex items-center gap-1.5"
                   >
                     <span className="hidden sm:inline">{tab.label}</span>
                     <span className="sm:hidden">{tab.shortLabel}</span>
                     {hasBadge && (
-                      <span className="ml-0.5 px-1.5 py-0.2 rounded-full text-[9px] font-black bg-red-500 text-white">
+                      <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-black bg-red-500 text-white">
                         {tab.badgeCount}
                       </span>
                     )}
@@ -488,9 +488,9 @@ export function AdminNavHeader({
               {/* Hover Tooltip for collapsed icons */}
               {!isActive && (
                 <div
-                  className={`pointer-events-none absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-md text-[10px] font-medium tracking-wide whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-30 shadow-lg ${
+                  className={`pointer-events-none absolute -bottom-9 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-lg text-xs font-medium tracking-wide whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all duration-150 z-30 shadow-xl ${
                     isDarkMode
-                      ? "bg-slate-800 text-slate-200 border border-[#2f3336]"
+                      ? "bg-[#1e2228] text-slate-200 border border-[#2f3336]"
                       : "bg-slate-900 text-white"
                   }`}
                 >
@@ -504,17 +504,17 @@ export function AdminNavHeader({
       </ul>
 
       {/* Exit Admin Button with proper breathing room & visual separator */}
-      <div className="flex items-center pl-1 sm:pl-3 ml-1 sm:ml-2 border-l border-slate-200 dark:border-[#2f3336]">
+      <div className="flex items-center pl-2 sm:pl-3 ml-1 sm:ml-2 border-l border-slate-200 dark:border-[#2f3336]">
         <button
           onClick={onExitAdmin}
-          className={`group flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all duration-200 select-none shadow-sm active:scale-95 whitespace-nowrap ${
+          className={`group flex items-center gap-2 h-10 px-4 py-2 rounded-full text-sm font-bold border transition-all duration-200 select-none shadow-sm active:scale-95 whitespace-nowrap ${
             isDarkMode
               ? "bg-rose-500/10 border-rose-500/30 text-rose-400 hover:bg-rose-500/20 hover:border-rose-500/50 hover:text-rose-300"
               : "bg-rose-50 border-rose-200 text-rose-600 hover:bg-rose-100 hover:border-rose-300 hover:text-rose-700"
           }`}
-          title="Exit Admin Panel"
+          title="Exit Admin to Student Portal"
         >
-          <ArrowLeft className="w-3.5 h-3.5 transition-transform duration-150 group-hover:-translate-x-0.5 flex-shrink-0" />
+          <ArrowLeft className="w-4 h-4 transition-transform duration-150 group-hover:-translate-x-0.5 flex-shrink-0" />
           <span className="hidden sm:inline">Exit Admin</span>
           <span className="sm:hidden">Exit</span>
         </button>
