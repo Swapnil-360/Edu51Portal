@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Plus, ChevronDown, ChevronUp, AlertCircle, Trash2, Edit2, BarChart3, BookOpen, Files, Users, TrendingUp, HardDrive, UsersRound, ShieldCheck, MessageSquare, RefreshCw, Bug, Lightbulb, Sparkles, Ban, GraduationCap, BadgeCheck, X, Loader2, Search, FlaskConical, ArrowLeft } from 'lucide-react';
+import { Bell, Plus, ChevronDown, ChevronUp, AlertCircle, Trash2, Edit2, BarChart3, BookOpen, Files, Users, TrendingUp, HardDrive, UsersRound, ShieldCheck, MessageSquare, RefreshCw, Bug, Lightbulb, Sparkles, Ban, GraduationCap, BadgeCheck, X, Loader2, Search, FlaskConical } from 'lucide-react';
 import MaterialManager from './MaterialManager';
 import { supabase, supabaseConfigured } from '../../lib/supabase';
 import { sendEmailNotification } from '../../lib/emailNotifications';
@@ -400,20 +400,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </p>
           </div>
           <div className="flex items-center gap-3 flex-shrink-0">
-            {onExitAdmin && (
-              <button
-                onClick={onExitAdmin}
-                className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold border transition-all shadow-sm ${
-                  isDarkMode
-                    ? 'bg-red-500/10 border-red-500/30 text-red-400 hover:bg-red-500/20 hover:border-red-500/50'
-                    : 'bg-red-50 border-red-200 text-red-600 hover:bg-red-100 hover:border-red-300'
-                }`}
-                title="Exit Admin Panel and Return to Student Portal"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                <span>Exit Admin</span>
-              </button>
-            )}
             <img
               src="/image.png"
               alt="BUBT"
