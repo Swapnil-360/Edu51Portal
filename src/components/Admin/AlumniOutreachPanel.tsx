@@ -29,6 +29,8 @@ import {
   Facebook,
   MessageCircle,
   Share2,
+  Link,
+  MessageSquare,
 } from 'lucide-react';
 import {
   AlumniInvitation,
@@ -78,6 +80,67 @@ export interface ParsedUniversalAlumnus {
   linkedin_url: string | null;
   email: string | null;
   source: 'Facebook' | 'LinkedIn' | 'Google / Web';
+}
+
+export function getVerifiedSocialLink(
+  url: string | null | undefined,
+  notes?: string | null
+): string | null {
+  if (!url || typeof url !== 'string') return null;
+  const trimmed = url.trim();
+  if (!trimmed || trimmed === '#' || trimmed === 'null' || trimmed === 'undefined') return null;
+
+  // Reject synthetic placeholder / guess suffixes seeded in older mocks
+  const isSynthetic =
+    trimmed.includes('-therap') ||
+    trimmed.includes('-chaldal') ||
+    trimmed.includes('-ebl') ||
+    trimmed.includes('-shohoz') ||
+    trimmed.includes('-walton') ||
+    trimmed.includes('-bkash') ||
+    trimmed.includes('-brainstation') ||
+    trimmed.includes('-tigerit');
+
+  if (isSynthetic) return null;
+
+  // Reject if notes indicate it was a mock guess
+  if (notes && notes.includes('Discovered from') && !trimmed.includes('facebook.com')) {
+    if (trimmed.includes('bd.linkedin.com/in/')) return null;
+  }
+
+  // Reject generic domain roots without an actual profile slug
+  const clean = trimmed.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '');
+  if (
+    clean === 'linkedin.com' ||
+    clean === 'linkedin.com/in' ||
+    clean === 'facebook.com' ||
+    clean === 'facebook.com/messages'
+  ) {
+    return null;
+  }
+
+  if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
+    return `https://${trimmed}`;
+  }
+
+  return trimmed;
+}
+
+export function buildSocialDmMessage(lead: {
+  full_name: string;
+  department?: string;
+  invite_token?: string;
+  intake?: number | null;
+  passing_year?: number | null;
+}): string {
+  const origin =
+    typeof window !== 'undefined' && window.location.origin
+      ? window.location.origin
+      : 'https://bubt.edu51portal.live';
+  const inviteUrl = `${origin}/alumni-invite?token=${lead.invite_token || ''}`;
+  const deptStr = lead.department ? `Department of ${lead.department}` : 'BUBT';
+
+  return `Assalamu Alaikum ${lead.full_name}! 🎓\n\nGreetings from Team CoreWe5 (BUBT Intake 51).\n\nWe've built Edu51Portal — the centralized official academic and alumni community platform for BUBT students and graduates (${deptStr}).\n\nYour official alumni profile has been pre-verified based on university records. We would be honored to have you join our verified directory with VIP pre-approval:\n\n👉 Claim & Activate Your Profile in 30 seconds:\n${inviteUrl}\n\nLooking forward to having you with us!`;
 }
 
 export function parseUniversalAlumniText(
@@ -341,6 +404,34 @@ export const AlumniOutreachPanel: React.FC<AlumniOutreachPanelProps> = ({ isDark
   const [singlePreviewMode, setSinglePreviewMode] = useState(false);
   const [saveAsDefaultTemplate, setSaveAsDefaultTemplate] = useState(false);
 
+  // Social DM Outreach Modal state
+  const [socialModalLead, setSocialModalLead] = useState<AlumniInvitation | null>(null);
+  const [socialDmDraft, setSocialDmDraft] = useState('');
+  const [copiedSocialDm, setCopiedSocialDm] = useState(false);
+
+  // Generate VIP Invite Link Modal state
+  const [isGenerateModalOpen, setIsGenerateModalOpen] = useState(false);
+  const [generateForm, setGenerateForm] = useState({
+    full_name: '',
+    department: 'CSE',
+    passing_year: new Date().getFullYear() - 2,
+    intake: '' as number | '',
+    company: '',
+    designation: '',
+    social_url: '',
+    email: '',
+    phone: '',
+    source_platform: 'Facebook',
+  });
+  const [generatedInviteResult, setGeneratedInviteResult] = useState<{
+    lead: AlumniInvitation;
+    inviteUrl: string;
+    dmMessage: string;
+  } | null>(null);
+  const [isGeneratingInvite, setIsGeneratingInvite] = useState(false);
+  const [copiedGeneratedDm, setCopiedGeneratedDm] = useState(false);
+  const [copiedGeneratedUrl, setCopiedGeneratedUrl] = useState(false);
+
   // Action busy states
   const [sendingId, setSendingId] = useState<string | null>(null);
   const [batchSending, setBatchSending] = useState(false);
@@ -398,6 +489,8 @@ export const AlumniOutreachPanel: React.FC<AlumniOutreachPanelProps> = ({ isDark
       isCsvModalOpen ||
       isUniversalCollectorOpen ||
       isTemplateModalOpen ||
+      isGenerateModalOpen ||
+      !!socialModalLead ||
       !!inviteModalLead;
     if (isAnyModalOpen) {
       document.body.style.overflow = 'hidden';
@@ -412,6 +505,8 @@ export const AlumniOutreachPanel: React.FC<AlumniOutreachPanelProps> = ({ isDark
     isCsvModalOpen,
     isUniversalCollectorOpen,
     isTemplateModalOpen,
+    isGenerateModalOpen,
+    socialModalLead,
     inviteModalLead,
   ]);
 
@@ -672,6 +767,94 @@ export const AlumniOutreachPanel: React.FC<AlumniOutreachPanelProps> = ({ isDark
   const handleCopyGoogleQuery = () => {
     navigator.clipboard.writeText(getGoogleSearchQuery());
     showToast('Google X-Ray search query copied to clipboard!');
+  };
+
+  const handleOpenSocialModal = (lead: AlumniInvitation) => {
+    setSocialModalLead(lead);
+    setSocialDmDraft(buildSocialDmMessage(lead));
+    setCopiedSocialDm(false);
+  };
+
+  const handleCopySocialDm = () => {
+    if (!socialDmDraft) return;
+    navigator.clipboard.writeText(socialDmDraft);
+    setCopiedSocialDm(true);
+    setTimeout(() => setCopiedSocialDm(false), 2500);
+    showToast('Social DM message copied to clipboard!');
+  };
+
+  const handleLaunchSocialWhatsApp = () => {
+    if (!socialModalLead) return;
+    navigator.clipboard.writeText(socialDmDraft);
+    const cleanPhone = socialModalLead.phone ? socialModalLead.phone.replace(/[^0-9]/g, '') : '';
+    const waUrl = cleanPhone
+      ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(socialDmDraft)}`
+      : `https://wa.me/?text=${encodeURIComponent(socialDmDraft)}`;
+    window.open(waUrl, '_blank');
+    showToast('DM message copied & opening WhatsApp!');
+  };
+
+  const handleLaunchSocialMessenger = () => {
+    if (!socialModalLead) return;
+    navigator.clipboard.writeText(socialDmDraft);
+    const verifiedUrl = getVerifiedSocialLink(socialModalLead.linkedin_url, socialModalLead.notes);
+    if (verifiedUrl && verifiedUrl.includes('facebook.com')) {
+      window.open(verifiedUrl, '_blank');
+      showToast('DM copied! Opening Facebook profile.');
+    } else {
+      window.open('https://www.facebook.com/messages/t/', '_blank');
+      showToast('DM copied! Opening Messenger.');
+    }
+  };
+
+  const handleGenerateInviteSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!generateForm.full_name.trim()) {
+      showToast('Alumnus full name is required', 'error');
+      return;
+    }
+    setIsGeneratingInvite(true);
+
+    const cleanName = generateForm.full_name.trim();
+    const slug = cleanName.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const finalEmail =
+      generateForm.email.trim() ||
+      `${slug}.${Math.random().toString(36).substring(2, 6)}@alumni.bubt.edu.bd`;
+
+    const verifiedSocial = getVerifiedSocialLink(generateForm.social_url);
+
+    const res = await createAlumniLead({
+      full_name: cleanName,
+      email: finalEmail,
+      department: generateForm.department,
+      passing_year: generateForm.passing_year ? Number(generateForm.passing_year) : null,
+      intake: generateForm.intake ? Number(generateForm.intake) : null,
+      company: generateForm.company.trim() || null,
+      designation: generateForm.designation.trim() || null,
+      linkedin_url: verifiedSocial || (generateForm.social_url.trim() ? generateForm.social_url.trim() : null),
+      phone: generateForm.phone.trim() || null,
+      notes: `Manual VIP invite generated by admin (${generateForm.source_platform || 'Online Discovery'})`,
+    });
+
+    setIsGeneratingInvite(false);
+
+    if (res.error || !res.data) {
+      showToast(res.error || 'Failed to generate invite link', 'error');
+    } else {
+      const origin =
+        typeof window !== 'undefined' && window.location.origin
+          ? window.location.origin
+          : 'https://bubt.edu51portal.live';
+      const inviteUrl = `${origin}/alumni-invite?token=${res.data.invite_token}`;
+      const dmText = buildSocialDmMessage(res.data);
+      setGeneratedInviteResult({
+        lead: res.data,
+        inviteUrl,
+        dmMessage: dmText,
+      });
+      showToast(`VIP Invite Link generated for ${cleanName}!`);
+      fetchLeads();
+    }
   };
 
   const handleShareWhatsApp = (item: AlumniInvitation) => {
@@ -964,6 +1147,29 @@ Engr. Mahmudul Hasan, Intake 39, Textile Engineering, Senior Merchandiser at DBL
               Import CSV
             </button>
             <button
+              onClick={() => {
+                setGeneratedInviteResult(null);
+                setGenerateForm({
+                  full_name: '',
+                  department: 'CSE',
+                  passing_year: new Date().getFullYear() - 2,
+                  intake: '',
+                  company: '',
+                  designation: '',
+                  social_url: '',
+                  email: '',
+                  phone: '',
+                  source_platform: 'Facebook Group / Post',
+                });
+                setIsGenerateModalOpen(true);
+              }}
+              className="px-3 py-2 rounded-lg text-xs font-bold bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white flex items-center gap-1.5 shadow-md transition-all"
+              title="Generate instant VIP invite link & Social DM copy for an alumnus found online"
+            >
+              <Link className="w-3.5 h-3.5" />
+              <span>Generate Invite Link</span>
+            </button>
+            <button
               onClick={() => setIsAddModalOpen(true)}
               className="px-3.5 py-2 rounded-lg text-xs font-bold bg-cyan-600 hover:bg-cyan-500 text-white flex items-center gap-1.5 shadow-lg shadow-cyan-600/20 transition-all"
             >
@@ -1179,35 +1385,41 @@ Engr. Mahmudul Hasan, Intake 39, Textile Engineering, Senior Merchandiser at DBL
                       <td className="py-3 px-3 min-w-[180px]">
                         <div className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-1.5">
                           {item.full_name}
-                          {item.linkedin_url && (
-                            <a
-                              href={item.linkedin_url}
-                              target="_blank"
-                              rel="noreferrer"
-                              title={
-                                item.linkedin_url.includes('facebook.com')
-                                  ? 'Facebook Profile'
-                                  : item.linkedin_url.includes('linkedin.com')
-                                  ? 'LinkedIn Profile'
-                                  : 'Web Profile'
-                              }
-                              className={`p-0.5 rounded transition-colors ${
-                                item.linkedin_url.includes('facebook.com')
-                                  ? 'text-blue-500 hover:text-blue-400'
-                                  : item.linkedin_url.includes('linkedin.com')
-                                  ? 'text-sky-500 hover:text-sky-400'
-                                  : 'text-slate-400 hover:text-cyan-400'
-                              }`}
-                            >
-                              {item.linkedin_url.includes('facebook.com') ? (
-                                <Facebook className="w-3.5 h-3.5" />
-                              ) : item.linkedin_url.includes('linkedin.com') ? (
-                                <Linkedin className="w-3.5 h-3.5" />
-                              ) : (
-                                <Globe className="w-3.5 h-3.5" />
-                              )}
-                            </a>
-                          )}
+                          {(() => {
+                            const verifiedUrl = getVerifiedSocialLink(item.linkedin_url, item.notes);
+                            if (!verifiedUrl) return null;
+                            const isFb = verifiedUrl.includes('facebook.com');
+                            const isLi = verifiedUrl.includes('linkedin.com');
+                            return (
+                              <a
+                                href={verifiedUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                title={
+                                  isFb
+                                    ? 'Verified Facebook Profile'
+                                    : isLi
+                                    ? 'Verified LinkedIn Profile'
+                                    : 'Verified Social Profile'
+                                }
+                                className={`p-0.5 rounded transition-colors ${
+                                  isFb
+                                    ? 'text-blue-500 hover:text-blue-400'
+                                    : isLi
+                                    ? 'text-sky-500 hover:text-sky-400'
+                                    : 'text-slate-400 hover:text-cyan-400'
+                                }`}
+                              >
+                                {isFb ? (
+                                  <Facebook className="w-3.5 h-3.5" />
+                                ) : isLi ? (
+                                  <Linkedin className="w-3.5 h-3.5" />
+                                ) : (
+                                  <Globe className="w-3.5 h-3.5" />
+                                )}
+                              </a>
+                            );
+                          })()}
                         </div>
                         <p className={`text-[11px] truncate ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
                           {item.email}
@@ -1304,37 +1516,19 @@ Engr. Mahmudul Hasan, Intake 39, Textile Engineering, Senior Merchandiser at DBL
                             </button>
                           )}
 
-                          {/* WhatsApp 1-Click Share Button */}
+                          {/* Social DM Ready Message Button */}
                           {item.status !== 'joined' && (
                             <button
-                              onClick={() => handleShareWhatsApp(item)}
-                              className={`p-1.5 rounded-lg transition-all ${
+                              onClick={() => handleOpenSocialModal(item)}
+                              className={`px-2 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
                                 isDarkMode
-                                  ? 'bg-emerald-950/40 hover:bg-emerald-900/60 text-emerald-400 border border-emerald-500/30'
-                                  : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200'
+                                  ? 'bg-emerald-950/40 hover:bg-emerald-900/60 text-emerald-300 border border-emerald-500/30'
+                                  : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200'
                               }`}
-                              title="Share Invite via WhatsApp (prepares pre-filled message)"
+                              title="Social Media Ready DM (Copy invitation text & link for Messenger / WhatsApp / DM)"
                             >
-                              <MessageCircle className="w-3.5 h-3.5" />
-                            </button>
-                          )}
-
-                          {/* Facebook / Messenger Share Button */}
-                          {item.status !== 'joined' && (
-                            <button
-                              onClick={() => handleShareFacebook(item)}
-                              className={`p-1.5 rounded-lg transition-all ${
-                                isDarkMode
-                                  ? 'bg-blue-950/40 hover:bg-blue-900/60 text-blue-400 border border-blue-500/30'
-                                  : 'bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200'
-                              }`}
-                              title={
-                                item.linkedin_url?.includes('facebook.com')
-                                  ? 'Share on Facebook (copies message & opens Facebook profile)'
-                                  : 'Share via Messenger (copies message & opens Messenger)'
-                              }
-                            >
-                              <Facebook className="w-3.5 h-3.5" />
+                              <MessageSquare className="w-3.5 h-3.5 text-emerald-400" />
+                              <span className="hidden sm:inline">Social DM</span>
                             </button>
                           )}
 
@@ -2735,6 +2929,554 @@ Engr. Mahmudul Hasan, Intake 39, Textile Engineering, Senior Merchandiser at DBL
                 </button>
               </div>
             </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* MODAL 7: Social Media Ready Outreach DM */}
+      {socialModalLead && createPortal(
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) setSocialModalLead(null); }}
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-200"
+        >
+          <div className={`w-full max-w-2xl rounded-2xl p-5 sm:p-6 border shadow-2xl relative max-h-[92vh] overflow-y-auto animate-in zoom-in-95 duration-200 ${
+            isDarkMode ? 'bg-[#161a23] border-slate-700 text-white' : 'bg-white border-slate-200 text-slate-900'
+          }`}>
+            <button
+              onClick={() => setSocialModalLead(null)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-white"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Header */}
+            <div className="flex items-center gap-2.5 mb-2">
+              <div className="p-2 rounded-lg bg-emerald-500/20 text-emerald-400">
+                <MessageSquare className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold flex items-center gap-2">
+                  Social DM Outreach · {socialModalLead.full_name}
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                    VIP Auto-Bypass
+                  </span>
+                </h3>
+                <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                  Ready-to-paste invitation message formatted with pre-verified claim link for Messenger or WhatsApp.
+                </p>
+              </div>
+            </div>
+
+            {/* Recipient Card */}
+            <div className={`p-3 rounded-xl border my-3.5 flex flex-wrap items-center justify-between gap-2.5 ${
+              isDarkMode ? 'bg-slate-900/80 border-slate-700/80' : 'bg-slate-50 border-slate-200'
+            }`}>
+              <div>
+                <span className="font-bold text-sm text-cyan-400">{socialModalLead.full_name}</span>
+                <span className="text-xs text-slate-400 ml-2">
+                  Dept: <strong>{socialModalLead.department}</strong>
+                  {socialModalLead.passing_year ? ` · Class of ${socialModalLead.passing_year}` : ''}
+                  {socialModalLead.intake ? ` (Intake ${socialModalLead.intake})` : ''}
+                </span>
+                <p className={`text-xs mt-0.5 ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                  {socialModalLead.designation || 'Alumnus'} {socialModalLead.company ? `at ${socialModalLead.company}` : ''}
+                  {socialModalLead.phone ? ` · 📞 ${socialModalLead.phone}` : ''}
+                </p>
+              </div>
+
+              {(() => {
+                const verifiedUrl = getVerifiedSocialLink(socialModalLead.linkedin_url, socialModalLead.notes);
+                if (!verifiedUrl) return null;
+                return (
+                  <a
+                    href={verifiedUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-sky-500/10 text-sky-400 border border-sky-500/30 hover:bg-sky-500/20 flex items-center gap-1.5"
+                  >
+                    {verifiedUrl.includes('facebook.com') ? (
+                      <Facebook className="w-3.5 h-3.5" />
+                    ) : verifiedUrl.includes('linkedin.com') ? (
+                      <Linkedin className="w-3.5 h-3.5" />
+                    ) : (
+                      <Globe className="w-3.5 h-3.5" />
+                    )}
+                    <span>View Social Profile</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                );
+              })()}
+            </div>
+
+            {/* Message Editor */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-slate-300">
+                  Direct Message Text (Editable)
+                </label>
+                <div className="flex items-center gap-1">
+                  <span className="text-[11px] text-slate-400 mr-1">Insert:</span>
+                  {[
+                    { label: '{{name}}', val: socialModalLead.full_name },
+                    { label: '{{dept}}', val: socialModalLead.department },
+                    {
+                      label: '{{link}}',
+                      val: `${typeof window !== 'undefined' ? window.location.origin : 'https://bubt.edu51portal.live'}/alumni-invite?token=${socialModalLead.invite_token}`,
+                    },
+                  ].map((chip) => (
+                    <button
+                      key={chip.label}
+                      type="button"
+                      onClick={() => setSocialDmDraft((prev) => prev + ' ' + chip.val)}
+                      className={`px-1.5 py-0.5 rounded text-[10px] font-mono ${
+                        isDarkMode ? 'bg-slate-800 text-cyan-300 hover:bg-slate-700' : 'bg-slate-100 text-cyan-800'
+                      }`}
+                    >
+                      {chip.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <textarea
+                rows={9}
+                value={socialDmDraft}
+                onChange={(e) => setSocialDmDraft(e.target.value)}
+                className={`w-full p-3.5 rounded-xl border font-sans text-xs sm:text-sm leading-relaxed outline-none ${
+                  isDarkMode
+                    ? 'bg-slate-900 border-slate-700 text-slate-100 focus:border-cyan-400'
+                    : 'bg-slate-50 border-slate-200 text-slate-900'
+                }`}
+              />
+            </div>
+
+            {/* Actions Bar */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 pt-4 mt-3 border-t border-slate-700/60">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleLaunchSocialWhatsApp}
+                  className="px-3 py-2 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center gap-1.5 transition-all shadow-sm"
+                  title="Copies message and opens WhatsApp"
+                >
+                  <MessageCircle className="w-3.5 h-3.5" />
+                  <span>Open WhatsApp</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleLaunchSocialMessenger}
+                  className="px-3 py-2 rounded-lg text-xs font-semibold bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center gap-1.5 transition-all shadow-sm"
+                  title="Copies message and opens Facebook Messenger"
+                >
+                  <Facebook className="w-3.5 h-3.5" />
+                  <span>Open Messenger</span>
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSocialModalLead(null)}
+                  className={`px-3.5 py-2 rounded-lg text-xs font-semibold ${
+                    isDarkMode ? 'bg-slate-800 text-slate-300 hover:bg-slate-700' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                  }`}
+                >
+                  Close
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCopySocialDm}
+                  className="px-4 py-2 rounded-lg text-xs font-bold bg-cyan-600 hover:bg-cyan-500 text-white shadow-lg flex items-center justify-center gap-1.5 transition-all"
+                >
+                  {copiedSocialDm ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-emerald-300" />
+                      <span>Copied to Clipboard!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3.5 h-3.5" />
+                      <span>Copy DM Message</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* MODAL 8: Generate Instant VIP Invite Link */}
+      {isGenerateModalOpen && createPortal(
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) setIsGenerateModalOpen(false); }}
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-200"
+        >
+          <div className={`w-full max-w-2xl rounded-2xl p-5 sm:p-6 border shadow-2xl relative max-h-[92vh] overflow-y-auto animate-in zoom-in-95 duration-200 ${
+            isDarkMode ? 'bg-[#161a23] border-slate-700 text-white' : 'bg-white border-slate-200 text-slate-900'
+          }`}>
+            <button
+              onClick={() => setIsGenerateModalOpen(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-white"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {!generatedInviteResult ? (
+              <div>
+                <div className="flex items-center gap-2.5 mb-1.5">
+                  <div className="p-2 rounded-lg bg-emerald-500/20 text-emerald-400">
+                    <Link className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold flex items-center gap-2">
+                      Generate Instant VIP Invite Link
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                        Admin Bypass
+                      </span>
+                    </h3>
+                    <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                      Generate a personalized claim link for an alumnus found on Facebook, LinkedIn, Google, or direct connection.
+                    </p>
+                  </div>
+                </div>
+
+                <div className={`p-3 rounded-xl border my-3.5 text-xs flex items-center gap-2.5 ${
+                  isDarkMode ? 'bg-emerald-950/20 border-emerald-500/30 text-emerald-300' : 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                }`}>
+                  <Sparkles className="w-4 h-4 shrink-0 text-emerald-400" />
+                  <span>
+                    <strong>VIP Bypass Active:</strong> When the alumnus registers with this link, their account will instantly be verified with full alumni status without needing admin manual review.
+                  </span>
+                </div>
+
+                <form onSubmit={handleGenerateInviteSubmit} className="space-y-3.5 text-xs">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-semibold mb-1">Alumnus Full Name *</label>
+                      <input
+                        type="text"
+                        required
+                        value={generateForm.full_name}
+                        onChange={(e) => setGenerateForm({ ...generateForm, full_name: e.target.value })}
+                        placeholder="e.g. Engr. Tanvir Ahmed"
+                        className={`w-full px-3 py-2 rounded-lg border outline-none ${
+                          isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'
+                        }`}
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-semibold mb-1">Department</label>
+                      <select
+                        value={generateForm.department}
+                        onChange={(e) => setGenerateForm({ ...generateForm, department: e.target.value })}
+                        className={`w-full px-3 py-2 rounded-lg border outline-none ${
+                          isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'
+                        }`}
+                      >
+                        {DEPARTMENTS.map((d) => (
+                          <option key={d} value={d}>{d}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-semibold mb-1">Passing / Graduation Year</label>
+                      <input
+                        type="number"
+                        value={generateForm.passing_year || ''}
+                        onChange={(e) => setGenerateForm({ ...generateForm, passing_year: Number(e.target.value) })}
+                        placeholder="2022"
+                        className={`w-full px-3 py-2 rounded-lg border outline-none ${
+                          isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'
+                        }`}
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-semibold mb-1">BUBT Intake (Optional)</label>
+                      <input
+                        type="number"
+                        value={generateForm.intake || ''}
+                        onChange={(e) => setGenerateForm({ ...generateForm, intake: e.target.value ? Number(e.target.value) : '' })}
+                        placeholder="e.g. 42"
+                        className={`w-full px-3 py-2 rounded-lg border outline-none ${
+                          isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'
+                        }`}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-semibold mb-1">Current Company</label>
+                      <input
+                        type="text"
+                        value={generateForm.company}
+                        onChange={(e) => setGenerateForm({ ...generateForm, company: e.target.value })}
+                        placeholder="e.g. Brain Station 23 / Therap BD"
+                        className={`w-full px-3 py-2 rounded-lg border outline-none ${
+                          isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'
+                        }`}
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-semibold mb-1">Job Designation</label>
+                      <input
+                        type="text"
+                        value={generateForm.designation}
+                        onChange={(e) => setGenerateForm({ ...generateForm, designation: e.target.value })}
+                        placeholder="e.g. Senior Software Engineer"
+                        className={`w-full px-3 py-2 rounded-lg border outline-none ${
+                          isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'
+                        }`}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-semibold mb-1">Discovered From</label>
+                      <select
+                        value={generateForm.source_platform}
+                        onChange={(e) => setGenerateForm({ ...generateForm, source_platform: e.target.value })}
+                        className={`w-full px-3 py-2 rounded-lg border outline-none ${
+                          isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'
+                        }`}
+                      >
+                        <option value="Facebook Group / Post">Facebook Group / Post</option>
+                        <option value="Facebook Profile Search">Facebook Profile Search</option>
+                        <option value="LinkedIn People Search">LinkedIn People Search</option>
+                        <option value="Google X-Ray Search">Google X-Ray Search</option>
+                        <option value="Batchmate Reference">Batchmate Reference</option>
+                        <option value="WhatsApp / Telegram">WhatsApp / Telegram</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block font-semibold mb-1">Social Profile Link (If any)</label>
+                      <input
+                        type="text"
+                        value={generateForm.social_url}
+                        onChange={(e) => setGenerateForm({ ...generateForm, social_url: e.target.value })}
+                        placeholder="https://facebook.com/username or linkedin.com/in/..."
+                        className={`w-full px-3 py-2 rounded-lg border outline-none ${
+                          isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'
+                        }`}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-semibold mb-1">Email (Optional)</label>
+                      <input
+                        type="email"
+                        value={generateForm.email}
+                        onChange={(e) => setGenerateForm({ ...generateForm, email: e.target.value })}
+                        placeholder="Leave blank to auto-generate tracking email"
+                        className={`w-full px-3 py-2 rounded-lg border outline-none ${
+                          isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'
+                        }`}
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-semibold mb-1">Phone / WhatsApp (Optional)</label>
+                      <input
+                        type="tel"
+                        value={generateForm.phone}
+                        onChange={(e) => setGenerateForm({ ...generateForm, phone: e.target.value })}
+                        placeholder="+8801..."
+                        className={`w-full px-3 py-2 rounded-lg border outline-none ${
+                          isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'
+                        }`}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end gap-2 pt-3">
+                    <button
+                      type="button"
+                      onClick={() => setIsGenerateModalOpen(false)}
+                      className={`px-4 py-2 rounded-lg font-medium ${
+                        isDarkMode ? 'bg-slate-800 text-slate-300' : 'bg-slate-100 text-slate-700'
+                      }`}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isGeneratingInvite}
+                      className="px-5 py-2 rounded-lg font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg flex items-center gap-1.5 disabled:opacity-50"
+                    >
+                      {isGeneratingInvite ? (
+                        <>
+                          <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-3.5 h-3.5" />
+                          Generate VIP Invite Link & DM
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            ) : (
+              /* Success & Generated DM Ready View */
+              <div className="space-y-4">
+                <div className="text-center py-2">
+                  <div className="w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto mb-2 border border-emerald-500/30">
+                    <CheckCircle2 className="w-7 h-7" />
+                  </div>
+                  <h3 className="text-lg font-bold">
+                    VIP Invite Link Generated for {generatedInviteResult.lead.full_name}!
+                  </h3>
+                  <p className={`text-xs mt-0.5 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                    BUBT {generatedInviteResult.lead.department} · {generatedInviteResult.lead.designation || 'Alumnus'} {generatedInviteResult.lead.company ? `@ ${generatedInviteResult.lead.company}` : ''}
+                  </p>
+                </div>
+
+                {/* VIP Bypass Banner */}
+                <div className={`p-3 rounded-xl border text-xs flex items-center gap-2 ${
+                  isDarkMode ? 'bg-emerald-950/30 border-emerald-500/40 text-emerald-300' : 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                }`}>
+                  <Sparkles className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>
+                    <strong>Verification Bypass Active:</strong> This alumnus is authorized. Upon registration through this link, their profile is immediately approved without any admin review required.
+                  </span>
+                </div>
+
+                {/* Direct Link Box */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 mb-1">
+                    Magic VIP Claim Link
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      readOnly
+                      value={generatedInviteResult.inviteUrl}
+                      className={`flex-1 px-3 py-2 rounded-xl text-xs font-mono border outline-none ${
+                        isDarkMode ? 'bg-slate-900 border-slate-700 text-cyan-300' : 'bg-slate-50 border-slate-200 text-cyan-800'
+                      }`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(generatedInviteResult.inviteUrl);
+                        setCopiedGeneratedUrl(true);
+                        setTimeout(() => setCopiedGeneratedUrl(false), 2000);
+                        showToast('Invite link copied!');
+                      }}
+                      className="px-3 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 flex items-center gap-1"
+                    >
+                      {copiedGeneratedUrl ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                      <span>{copiedGeneratedUrl ? 'Copied' : 'Copy'}</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Pre-Formatted Social DM */}
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs font-bold text-slate-300">
+                      Ready-to-Paste Social DM Message
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(generatedInviteResult.dmMessage);
+                        setCopiedGeneratedDm(true);
+                        setTimeout(() => setCopiedGeneratedDm(false), 2000);
+                        showToast('DM message copied to clipboard!');
+                      }}
+                      className="text-xs text-cyan-400 hover:underline flex items-center gap-1 font-semibold"
+                    >
+                      {copiedGeneratedDm ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                      <span>{copiedGeneratedDm ? 'Copied Message!' : 'Copy Entire DM'}</span>
+                    </button>
+                  </div>
+                  <textarea
+                    rows={7}
+                    readOnly
+                    value={generatedInviteResult.dmMessage}
+                    className={`w-full p-3 rounded-xl border font-sans text-xs sm:text-sm leading-relaxed outline-none ${
+                      isDarkMode ? 'bg-slate-900 border-slate-700 text-slate-200' : 'bg-slate-50 border-slate-200 text-slate-900'
+                    }`}
+                  />
+                </div>
+
+                {/* Quick Launch & Footer Actions */}
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 pt-3 border-t border-slate-700/60">
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(generatedInviteResult.dmMessage);
+                        const cleanPhone = generatedInviteResult.lead.phone ? generatedInviteResult.lead.phone.replace(/[^0-9]/g, '') : '';
+                        const waUrl = cleanPhone
+                          ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(generatedInviteResult.dmMessage)}`
+                          : `https://wa.me/?text=${encodeURIComponent(generatedInviteResult.dmMessage)}`;
+                        window.open(waUrl, '_blank');
+                      }}
+                      className="px-3 py-2 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white flex items-center gap-1.5"
+                    >
+                      <MessageCircle className="w-3.5 h-3.5" />
+                      <span>WhatsApp</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(generatedInviteResult.dmMessage);
+                        window.open('https://www.facebook.com/messages/t/', '_blank');
+                      }}
+                      className="px-3 py-2 rounded-lg text-xs font-semibold bg-blue-600 hover:bg-blue-500 text-white flex items-center gap-1.5"
+                    >
+                      <Facebook className="w-3.5 h-3.5" />
+                      <span>Messenger</span>
+                    </button>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setGeneratedInviteResult(null);
+                        setGenerateForm({
+                          full_name: '',
+                          department: 'CSE',
+                          passing_year: new Date().getFullYear() - 2,
+                          intake: '',
+                          company: '',
+                          designation: '',
+                          social_url: '',
+                          email: '',
+                          phone: '',
+                          source_platform: 'Facebook Group / Post',
+                        });
+                      }}
+                      className={`px-3 py-2 rounded-lg text-xs font-semibold ${
+                        isDarkMode ? 'bg-slate-800 text-slate-300 hover:bg-slate-700' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                      }`}
+                    >
+                      Generate Another
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsGenerateModalOpen(false)}
+                      className="px-4 py-2 rounded-lg text-xs font-bold bg-cyan-600 hover:bg-cyan-500 text-white shadow-lg"
+                    >
+                      Done & View Pipeline
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>,
         document.body

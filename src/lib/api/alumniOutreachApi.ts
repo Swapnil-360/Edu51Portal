@@ -108,7 +108,33 @@ export async function getAlumniInvitations(): Promise<{
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return { data: (data as AlumniInvitation[]) || [], error: null };
+
+    // Filter out dummy guess links seeded from mock directory that cause LinkedIn 404s
+    const guessCompanyTags = [
+      '-therap', '-chaldal', '-shohoz', '-ebl', '-pathao', '-optimizely',
+      '-brainstation', '-bs23', '-tigerit', '-bkash', '-grameenphone',
+      '-selise', '-nagad', '-walton', '-incepta', '-square', '-brac',
+      '-rajuk', '-dhk', '-idcol', '-monem', '-buet', '-bubt'
+    ];
+
+    const sanitized = (data || []).map((item: any) => {
+      let linkedin_url = item.linkedin_url;
+      if (linkedin_url) {
+        const lower = linkedin_url.toLowerCase();
+        if (
+          item.notes?.includes('Discovered from') ||
+          guessCompanyTags.some((tag) => lower.includes(tag))
+        ) {
+          linkedin_url = null;
+        }
+      }
+      return {
+        ...item,
+        linkedin_url,
+      };
+    });
+
+    return { data: (sanitized as AlumniInvitation[]) || [], error: null };
   } catch (err: any) {
     console.error('Error fetching alumni invitations:', err);
     return { data: [], error: err.message || 'Failed to fetch invitations' };
@@ -698,7 +724,22 @@ export async function getAlumniInviteDetails(token: string): Promise<{
     if (!data || !data.valid) {
       return { valid: false, data: null, reason: data?.reason || 'Invalid invitation token' };
     }
-    return { valid: true, data: data as Partial<AlumniInvitation> };
+
+    const payload = { ...data };
+    if (payload.linkedin_url) {
+      const lower = payload.linkedin_url.toLowerCase();
+      const guessCompanyTags = [
+        '-therap', '-chaldal', '-shohoz', '-ebl', '-pathao', '-optimizely',
+        '-brainstation', '-bs23', '-tigerit', '-bkash', '-grameenphone',
+        '-selise', '-nagad', '-walton', '-incepta', '-square', '-brac',
+        '-rajuk', '-dhk', '-idcol', '-monem', '-buet', '-bubt'
+      ];
+      if (guessCompanyTags.some((tag) => lower.includes(tag))) {
+        payload.linkedin_url = null;
+      }
+    }
+
+    return { valid: true, data: payload as Partial<AlumniInvitation> };
   } catch (err: any) {
     console.error('Token validation error:', err);
     return { valid: false, data: null, reason: err.message || 'Validation failed' };
