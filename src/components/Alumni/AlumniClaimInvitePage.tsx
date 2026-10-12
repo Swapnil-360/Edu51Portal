@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   GraduationCap,
   ShieldCheck,
@@ -102,27 +102,110 @@ export const AlumniClaimInvitePage: React.FC<AlumniClaimInvitePageProps> = ({
     validate();
   }, []);
 
+  const completionStats = useMemo(() => {
+    const checks = [
+      { key: 'fullName', valid: !!fullName.trim(), label: 'Full Legal Name' },
+      { key: 'department', valid: !!department, label: 'Department' },
+      { key: 'passingYear', valid: !!passingYear, label: 'Passing Year' },
+      { key: 'intake', valid: !!intake, label: 'Intake / Batch' },
+      { key: 'email', valid: !!email.trim() && email.includes('@'), label: 'Account Email' },
+      { key: 'password', valid: password.length >= 6 && password === confirmPassword, label: 'Password' },
+      { key: 'designation', valid: !!designation.trim(), label: 'Current Job Title' },
+      { key: 'company', valid: !!company.trim(), label: 'Company / Organization' },
+      { key: 'city', valid: !!city.trim(), label: 'City Location' },
+      { key: 'phone', valid: !!phone.trim(), label: 'Phone / WhatsApp' },
+      { key: 'social', valid: !!linkedinUrl.trim() || !!facebookUrl.trim(), label: 'Verified Social Link (LinkedIn/Facebook)' },
+      { key: 'bio', valid: bio.trim().length >= 15, label: 'Bio / Professional Journey' },
+      { key: 'careerTips', valid: careerTips.trim().length >= 10, label: 'Career Advice for Juniors' },
+    ];
+    const completedCount = checks.filter((c) => c.valid).length;
+    const totalCount = checks.length;
+    const percent = Math.round((completedCount / totalCount) * 100);
+    return { completedCount, totalCount, percent, checks };
+  }, [
+    fullName,
+    department,
+    passingYear,
+    intake,
+    email,
+    password,
+    confirmPassword,
+    designation,
+    company,
+    city,
+    phone,
+    linkedinUrl,
+    facebookUrl,
+    bio,
+    careerTips,
+  ]);
+
   const handleClaimAccount = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError(null);
 
     if (!token || !email.trim()) {
-      setFormError('Missing required invitation email data');
+      setFormError('Missing required invitation email data.');
       return;
     }
 
     if (!fullName.trim()) {
-      setFormError('Please enter your full name');
+      setFormError('Please enter your full academic name.');
+      return;
+    }
+
+    if (!passingYear) {
+      setFormError('Please enter your graduation / passing year.');
+      return;
+    }
+
+    if (!intake) {
+      setFormError('Please enter your BUBT intake number (e.g. 42).');
       return;
     }
 
     if (password.length < 6) {
-      setFormError('Password must be at least 6 characters long');
+      setFormError('Password must be at least 6 characters long.');
       return;
     }
 
     if (password !== confirmPassword) {
-      setFormError('Passwords do not match');
+      setFormError('Passwords do not match.');
+      return;
+    }
+
+    if (!designation.trim()) {
+      setFormError('Please enter your current job title / designation.');
+      return;
+    }
+
+    if (!company.trim()) {
+      setFormError('Please enter your company or organization name (or Self-Employed).');
+      return;
+    }
+
+    if (!city.trim()) {
+      setFormError('Please enter your city / location.');
+      return;
+    }
+
+    if (!phone.trim()) {
+      setFormError('Please enter your phone or WhatsApp number.');
+      return;
+    }
+
+    if (!linkedinUrl.trim() && !facebookUrl.trim()) {
+      setFormError('Please provide at least one valid social link (LinkedIn or Facebook profile URL).');
+      return;
+    }
+
+    if (!bio.trim() || bio.trim().length < 15) {
+      setFormError('Please share a brief summary of your journey (at least 15 characters).');
+      return;
+    }
+
+    if (!careerTips.trim() || careerTips.trim().length < 10) {
+      setFormError('Please share a piece of career advice for BUBT juniors (at least 10 characters).');
       return;
     }
 
@@ -341,11 +424,43 @@ export const AlumniClaimInvitePage: React.FC<AlumniClaimInvitePageProps> = ({
               </div>
             )}
 
+            {/* Live Profile Completeness Meter */}
+            <div className={`p-4 rounded-xl border transition-all ${
+              completionStats.percent === 100
+                ? isDarkMode ? 'bg-emerald-950/20 border-emerald-500/40' : 'bg-emerald-50 border-emerald-300'
+                : isDarkMode ? 'bg-slate-900/60 border-slate-700/80' : 'bg-slate-50 border-slate-200'
+            }`}>
+              <div className="flex items-center justify-between text-xs font-bold mb-1.5">
+                <span className="flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+                  Official Profile Completeness
+                </span>
+                <span className={completionStats.percent === 100 ? 'text-emerald-400 font-extrabold' : 'text-cyan-400'}>
+                  {completionStats.percent}% ({completionStats.completedCount}/{completionStats.totalCount} fields completed)
+                </span>
+              </div>
+              <div className="w-full h-2.5 rounded-full bg-slate-800 overflow-hidden">
+                <div
+                  className={`h-full transition-all duration-300 rounded-full ${
+                    completionStats.percent === 100
+                      ? 'bg-gradient-to-r from-emerald-500 to-teal-400'
+                      : 'bg-gradient-to-r from-cyan-500 to-blue-500'
+                  }`}
+                  style={{ width: `${completionStats.percent}%` }}
+                />
+              </div>
+              <p className="text-[11px] text-slate-400 mt-1.5">
+                {completionStats.percent === 100
+                  ? '✓ All profile fields are complete! Your verified VIP profile is ready for instant publication.'
+                  : 'Please complete all required fields below to publish a comprehensive, verified alumni profile.'}
+              </p>
+            </div>
+
             {/* SECTION 1: Academic Identity */}
             <div className="space-y-3">
               <div className="flex items-center gap-2 font-bold text-sm text-cyan-500 dark:text-cyan-400">
                 <GraduationCap className="w-4 h-4" />
-                <span>1. Academic Details (Pre-Verified)</span>
+                <span>1. Academic Credentials (Pre-Verified)</span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
@@ -367,6 +482,7 @@ export const AlumniClaimInvitePage: React.FC<AlumniClaimInvitePageProps> = ({
                   <label className="block font-semibold mb-1">Department *</label>
                   <select
                     value={department}
+                    required
                     onChange={(e) => setDepartment(e.target.value)}
                     className={`w-full px-3 py-2.5 rounded-xl border outline-none font-semibold ${
                       isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'
@@ -379,9 +495,10 @@ export const AlumniClaimInvitePage: React.FC<AlumniClaimInvitePageProps> = ({
                 </div>
 
                 <div>
-                  <label className="block font-semibold mb-1">Passing Year</label>
+                  <label className="block font-semibold mb-1">Passing Year *</label>
                   <input
                     type="number"
+                    required
                     value={passingYear}
                     onChange={(e) => setPassingYear(e.target.value ? Number(e.target.value) : '')}
                     placeholder="e.g. 2022"
@@ -392,9 +509,10 @@ export const AlumniClaimInvitePage: React.FC<AlumniClaimInvitePageProps> = ({
                 </div>
 
                 <div>
-                  <label className="block font-semibold mb-1">Intake / Batch (Optional)</label>
+                  <label className="block font-semibold mb-1">Intake / Batch *</label>
                   <input
                     type="number"
+                    required
                     value={intake}
                     onChange={(e) => setIntake(e.target.value ? Number(e.target.value) : '')}
                     placeholder="e.g. 42"
@@ -467,14 +585,15 @@ export const AlumniClaimInvitePage: React.FC<AlumniClaimInvitePageProps> = ({
             <div className="space-y-3 pt-2 border-t border-slate-800">
               <div className="flex items-center gap-2 font-bold text-sm text-cyan-500 dark:text-cyan-400">
                 <Briefcase className="w-4 h-4" />
-                <span>3. Professional Profile & Social Links</span>
+                <span>3. Professional Profile & Verified Social Links</span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block font-semibold mb-1">Current Job Title / Designation</label>
+                  <label className="block font-semibold mb-1">Current Job Title / Designation *</label>
                   <input
                     type="text"
+                    required
                     value={designation}
                     onChange={(e) => setDesignation(e.target.value)}
                     placeholder="e.g. Senior Software Engineer / Manager"
@@ -485,12 +604,13 @@ export const AlumniClaimInvitePage: React.FC<AlumniClaimInvitePageProps> = ({
                 </div>
 
                 <div>
-                  <label className="block font-semibold mb-1">Company / Organization</label>
+                  <label className="block font-semibold mb-1">Company / Organization *</label>
                   <input
                     type="text"
+                    required
                     value={company}
                     onChange={(e) => setCompany(e.target.value)}
-                    placeholder="e.g. Brain Station 23 / Therap BD"
+                    placeholder="e.g. Brain Station 23 / Therap BD (or Self-Employed)"
                     className={`w-full px-3 py-2.5 rounded-xl border outline-none ${
                       isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'
                     }`}
@@ -498,9 +618,10 @@ export const AlumniClaimInvitePage: React.FC<AlumniClaimInvitePageProps> = ({
                 </div>
 
                 <div>
-                  <label className="block font-semibold mb-1">City / Location</label>
+                  <label className="block font-semibold mb-1">City / Location *</label>
                   <input
                     type="text"
+                    required
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
                     placeholder="e.g. Dhaka, Bangladesh"
@@ -511,9 +632,10 @@ export const AlumniClaimInvitePage: React.FC<AlumniClaimInvitePageProps> = ({
                 </div>
 
                 <div>
-                  <label className="block font-semibold mb-1">Phone / WhatsApp Number (Optional)</label>
+                  <label className="block font-semibold mb-1">Phone / WhatsApp Number *</label>
                   <input
                     type="text"
+                    required
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="+880 17XXXXXXXX"
@@ -524,7 +646,9 @@ export const AlumniClaimInvitePage: React.FC<AlumniClaimInvitePageProps> = ({
                 </div>
 
                 <div>
-                  <label className="block font-semibold mb-1">Valid LinkedIn Profile URL (Optional)</label>
+                  <label className="block font-semibold mb-1">
+                    LinkedIn Profile URL {(!facebookUrl.trim() ? '*' : '(Optional)')}
+                  </label>
                   <input
                     type="url"
                     value={linkedinUrl}
@@ -537,7 +661,9 @@ export const AlumniClaimInvitePage: React.FC<AlumniClaimInvitePageProps> = ({
                 </div>
 
                 <div>
-                  <label className="block font-semibold mb-1">Valid Facebook Profile URL (Optional)</label>
+                  <label className="block font-semibold mb-1">
+                    Facebook Profile URL {(!linkedinUrl.trim() ? '*' : '(Optional)')}
+                  </label>
                   <input
                     type="url"
                     value={facebookUrl}
@@ -549,6 +675,9 @@ export const AlumniClaimInvitePage: React.FC<AlumniClaimInvitePageProps> = ({
                   />
                 </div>
               </div>
+              <p className="text-[11px] text-slate-400">
+                🔒 Note: At least one verified social profile link (LinkedIn or Facebook) is required to ensure directory authenticity.
+              </p>
             </div>
 
             {/* SECTION 4: Bio & Mentorship */}
@@ -559,12 +688,13 @@ export const AlumniClaimInvitePage: React.FC<AlumniClaimInvitePageProps> = ({
               </div>
 
               <div>
-                <label className="block font-semibold mb-1">Brief Bio / Journey (Optional)</label>
+                <label className="block font-semibold mb-1">Brief Bio / Professional Journey *</label>
                 <textarea
-                  rows={2}
+                  rows={3}
+                  required
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
-                  placeholder="Share a short summary of your professional journey since graduating from BUBT..."
+                  placeholder="Share a short summary of your professional journey since graduating from BUBT (minimum 15 characters)..."
                   className={`w-full p-3 rounded-xl border outline-none ${
                     isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'
                   }`}
@@ -572,12 +702,13 @@ export const AlumniClaimInvitePage: React.FC<AlumniClaimInvitePageProps> = ({
               </div>
 
               <div>
-                <label className="block font-semibold mb-1">Career Advice for Juniors (Optional)</label>
+                <label className="block font-semibold mb-1">Career Advice for Juniors *</label>
                 <textarea
-                  rows={2}
+                  rows={3}
+                  required
                   value={careerTips}
                   onChange={(e) => setCareerTips(e.target.value)}
-                  placeholder="What is one piece of advice you would give to current BUBT students?"
+                  placeholder="What is one key piece of advice you would give to current BUBT students (minimum 10 characters)?"
                   className={`w-full p-3 rounded-xl border outline-none ${
                     isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'
                   }`}
