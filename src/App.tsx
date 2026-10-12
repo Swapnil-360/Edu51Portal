@@ -3606,20 +3606,23 @@ For any queries, contact your course instructors or the department.`,
             {/* Left: Hamburger (mobile only) + Logo (desktop only) */}
             <div className="flex items-center gap-3 flex-shrink-0">
               {isAdmin && currentView === "admin" ? (
-                /* In admin mode: compact logo on mobile & desktop */
+                /* In admin mode: logo on mobile & desktop with ambient glow */
                 <button
                   onClick={() => goToView("home")}
-                  className="header-logo-btn flex items-center gap-0.1 focus:outline-none group"
+                  className="header-logo-btn flex items-center gap-1 focus:outline-none group"
                   title="Edu51Portal Home"
                 >
-                  <img
-                    src="/Edu51Portal.png"
-                    alt="Edu51Portal Logo"
-                    className="h-10 w-10 sm:h-12 sm:w-12 lg:h-16 lg:w-16 object-cover rounded-xl flex-shrink-0 drop-shadow-sm"
-                    width="64"
-                    height="64"
-                    decoding="async"
-                  />
+                  <div className="relative flex items-center justify-center flex-shrink-0">
+                    <div className="absolute -inset-1 sm:-inset-1.5 bg-gradient-to-r from-blue-600/35 via-red-500/25 to-purple-600/35 rounded-2xl blur-md opacity-80 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                    <img
+                      src="/Edu51Portal.png"
+                      alt="Edu51Portal Logo"
+                      className="relative h-12 w-12 sm:h-14 sm:w-14 lg:h-16 lg:w-16 object-cover rounded-xl flex-shrink-0 drop-shadow logo-glow-pulse"
+                      width="64"
+                      height="64"
+                      decoding="async"
+                    />
+                  </div>
                   <span
                     className={`hidden sm:inline text-lg lg:text-xl font-bold tracking-tight whitespace-nowrap ${isDarkMode ? "text-[#e7e9ea]" : "text-[#0f1419]"}`}
                     style={{ fontFamily: "'Exo 2', sans-serif" }}
@@ -3643,20 +3646,23 @@ For any queries, contact your course instructors or the department.`,
                     </svg>
                   </button>
 
-                  {/* Logo — desktop only (left-aligned) */}
+                  {/* Logo — desktop only (left-aligned) with radiant ambient glow */}
                   <button
                     onClick={() => goToView("home")}
-                    className="header-logo-btn hidden lg:flex items-center gap-0.1 focus:outline-none group"
+                    className="header-logo-btn hidden lg:flex items-center gap-1 focus:outline-none group"
                     title="Go to Home"
                   >
-                    <img
-                      src="/Edu51Portal.png"
-                      alt="Edu51Portal Logo"
-                      className="h-20 w-20 object-cover rounded-xl flex-shrink-0 drop-shadow-sm"
-                      width="84"
-                      height="84"
-                      decoding="async"
-                    />
+                    <div className="relative flex items-center justify-center flex-shrink-0">
+                      <div className="absolute -inset-1.5 sm:-inset-2 bg-gradient-to-r from-blue-600/35 via-red-500/25 to-purple-600/35 rounded-2xl blur-lg opacity-80 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                      <img
+                        src="/Edu51Portal.png"
+                        alt="Edu51Portal Logo"
+                        className="relative h-20 w-20 object-cover rounded-xl flex-shrink-0 drop-shadow logo-glow-pulse"
+                        width="84"
+                        height="84"
+                        decoding="async"
+                      />
+                    </div>
                     <span
                       className={`text-xl font-bold tracking-tight whitespace-nowrap ${isDarkMode ? "text-[#e7e9ea]" : "text-[#0f1419]"}`}
                       style={{ fontFamily: "'Exo 2', sans-serif" }}
@@ -3683,20 +3689,23 @@ For any queries, contact your course instructors or the department.`,
                 </nav>
               ) : (
                 <>
-                  {/* Mobile: centered logo */}
+                  {/* Mobile: centered logo with ambient glow */}
                   <button
                     onClick={() => goToView("home")}
-                    className="header-logo-btn flex lg:hidden items-center gap-0.1 focus:outline-none"
+                    className="header-logo-btn flex lg:hidden items-center gap-1 focus:outline-none group"
                     title="Go to Home"
                   >
-                    <img
-                      src="/Edu51Portal.png"
-                      alt="Edu51Portal Logo"
-                      className="h-14 w-14 object-cover rounded-xl drop-shadow-sm"
-                      width="54"
-                      height="54"
-                      decoding="async"
-                    />
+                    <div className="relative flex items-center justify-center flex-shrink-0">
+                      <div className="absolute -inset-1 bg-gradient-to-r from-blue-600/35 via-red-500/25 to-purple-600/35 rounded-xl blur-md opacity-80 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                      <img
+                        src="/Edu51Portal.png"
+                        alt="Edu51Portal Logo"
+                        className="relative h-14 w-14 object-cover rounded-xl drop-shadow logo-glow-pulse"
+                        width="54"
+                        height="54"
+                        decoding="async"
+                      />
+                    </div>
                     <span
                       className={`text-lg font-bold tracking-tight whitespace-nowrap ${isDarkMode ? "text-[#e7e9ea]" : "text-[#0f1419]"}`}
                       style={{ fontFamily: "'Exo 2', sans-serif" }}
