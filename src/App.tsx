@@ -670,6 +670,176 @@ function App() {
     };
   }, [authSession]);
 
+  // Dynamic navigation update indicators (resources unread count, teams update dot, faculty update dot)
+  const [unreadResourcesCount, setUnreadResourcesCount] = useState<number>(() => {
+    try {
+      const stored = localStorage.getItem("edu51five_unread_resources_count");
+      return stored ? Math.max(0, parseInt(stored, 10) || 0) : 0;
+    } catch {
+      return 0;
+    }
+  });
+  const [hasTeamUpdate, setHasTeamUpdate] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem("edu51five_has_team_update") === "true";
+    } catch {
+      return false;
+    }
+  });
+  const [hasFacultyUpdate, setHasFacultyUpdate] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem("edu51five_has_faculty_update") === "true";
+    } catch {
+      return false;
+    }
+  });
+
+  // Track unread shared resources count
+  useEffect(() => {
+    let cancelled = false;
+
+    const checkUnreadResources = async () => {
+      try {
+        const lastSeenTime = localStorage.getItem("edu51five_last_seen_resource_time");
+        let q = supabase
+          .from("team_files")
+          .select("id", { count: "exact", head: true })
+          .eq("visibility", "public");
+
+        if (lastSeenTime) {
+          q = q.gt("created_at", lastSeenTime);
+        }
+
+        const { count, error } = await q;
+        if (!cancelled && !error && count !== null) {
+          setUnreadResourcesCount(count);
+          try {
+            localStorage.setItem("edu51five_unread_resources_count", String(count));
+          } catch (_) {}
+        }
+      } catch (err) {
+        console.warn("Failed to check unread resources:", err);
+      }
+    };
+
+    checkUnreadResources();
+
+    // Listen for newly shared public files
+    const resourceChannel = supabase
+      .channel("public_resources_indicator")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "team_files",
+        },
+        (payload: any) => {
+          if (payload.new && payload.new.visibility === "public") {
+            setUnreadResourcesCount((prev) => {
+              const next = prev + 1;
+              try {
+                localStorage.setItem("edu51five_unread_resources_count", String(next));
+              } catch (_) {}
+              return next;
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      cancelled = true;
+      supabase.removeChannel(resourceChannel);
+    };
+  }, []);
+
+  // Track team updates (new teams / pending invitations)
+  useEffect(() => {
+    let cancelled = false;
+
+    const checkTeamUpdates = async () => {
+      try {
+        // 1. Check user invitations if logged in
+        if (authSession?.user?.id) {
+          const { count: invCount, error: invErr } = await supabase
+            .from("team_invitations")
+            .select("id", { count: "exact", head: true })
+            .eq("invitee_id", authSession.user.id)
+            .eq("status", "pending");
+
+          if (!cancelled && !invErr && invCount !== null && invCount > 0) {
+            setHasTeamUpdate(true);
+            return;
+          }
+        }
+
+        // 2. Check newly created teams since last visit
+        const lastSeenTeamsTime = localStorage.getItem("edu51five_last_seen_teams_time");
+        if (lastSeenTeamsTime) {
+          const { count: newTeamsCount, error: teamsErr } = await supabase
+            .from("teams")
+            .select("id", { count: "exact", head: true })
+            .gt("created_at", lastSeenTeamsTime);
+
+          if (!cancelled && !teamsErr && newTeamsCount !== null && newTeamsCount > 0) {
+            setHasTeamUpdate(true);
+          }
+        }
+      } catch (err) {
+        console.warn("Failed to check team updates:", err);
+      }
+    };
+
+    checkTeamUpdates();
+
+    const teamsChannel = supabase
+      .channel("teams_indicator_channel")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "teams",
+        },
+        () => {
+          setHasTeamUpdate(true);
+          try {
+            localStorage.setItem("edu51five_has_team_update", "true");
+          } catch (_) {}
+        }
+      )
+      .subscribe();
+
+    return () => {
+      cancelled = true;
+      supabase.removeChannel(teamsChannel);
+    };
+  }, [authSession]);
+
+  // Clear unread flags when visiting corresponding views
+  useEffect(() => {
+    if (currentView === "shared-resources") {
+      setUnreadResourcesCount(0);
+      try {
+        localStorage.setItem("edu51five_unread_resources_count", "0");
+        localStorage.setItem("edu51five_last_seen_resource_time", new Date().toISOString());
+      } catch (_) {}
+    } else if (currentView === "teams" || currentView === "team") {
+      setHasTeamUpdate(false);
+      try {
+        localStorage.removeItem("edu51five_has_team_update");
+        localStorage.setItem("edu51five_last_seen_teams_time", new Date().toISOString());
+      } catch (_) {}
+    } else if (currentView === "faculty") {
+      setHasFacultyUpdate(false);
+      try {
+        localStorage.removeItem("edu51five_has_faculty_update");
+        localStorage.setItem("edu51five_last_seen_faculty_time", new Date().toISOString());
+      } catch (_) {}
+    }
+  }, [currentView]);
+
   const _toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const _welcomeShown = useRef(false);
   function showMajorAccessNotification(
@@ -3594,221 +3764,248 @@ For any queries, contact your course instructors or the department.`,
 
       {/* Header */}
       {!["alumni-invite", "alumni-register"].includes(currentView) && (currentView !== "alumni" || alumniSubView !== "register") && (
-        <header
-          className={`fixed top-0 left-0 right-0 w-full z-50 transition-all duration-300 border-b backdrop-blur-md ${isDarkMode
-              ? "bg-[#000000]/80 border-[#2f3336]/50 text-white shadow-lg shadow-black/20"
-              : "bg-white/80 border-slate-200/50 text-gray-900 shadow-sm shadow-slate-100/10"
-            }`}
-        >
-        <div className={`w-full mx-auto ${isAdmin && currentView === "admin" ? "px-2 sm:px-6" : "px-4 sm:px-6"} lg:px-8 xl:px-12 relative`}>
-          <div className={`flex items-center justify-between h-[72px] lg:h-20 ${isAdmin && currentView === "admin" ? "gap-1.5 sm:gap-4" : "gap-4"}`}>
+        <header className="fixed top-2.5 sm:top-3.5 inset-x-0 z-50 px-2.5 sm:px-4 md:px-6 pointer-events-none transition-all duration-300">
+          <div className="max-w-7xl mx-auto relative pointer-events-auto">
+            {/* Ambient backlight glow for translucent glass depth */}
+            <div
+              className={`absolute -inset-0.5 rounded-full blur-lg opacity-40 pointer-events-none transition-opacity duration-300 ${
+                isDarkMode
+                  ? "bg-gradient-to-r from-blue-600/30 via-indigo-500/20 to-purple-600/30"
+                  : "bg-gradient-to-r from-blue-400/30 via-cyan-300/25 to-indigo-300/30"
+              }`}
+            />
+            {/* Real frosted glass capsule */}
+            <div
+              className={`relative rounded-full transition-all duration-300 nav-glass-capsule ${
+                isDarkMode ? "text-white" : "text-slate-900"
+              }`}
+            >
+              <div className="flex items-center justify-between h-14 sm:h-16 px-2.5 sm:px-4 md:px-5 gap-2 sm:gap-4 relative">
 
-            {/* Left: Hamburger (mobile only) + Logo (desktop only) */}
-            <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-              {isAdmin && currentView === "admin" ? (
-                /* In admin mode: compact logo on mobile & desktop */
-                <button
-                  onClick={() => goToView("home")}
-                  className="header-logo-btn flex items-center gap-1.5 focus:outline-none group"
-                  title="Edu51Portal Home"
-                >
-                  <img
-                    src="/Edu51Portal.png"
-                    alt="Edu51Portal Logo"
-                    className="h-10 w-10 sm:h-12 sm:w-12 lg:h-16 lg:w-16 object-cover rounded-xl flex-shrink-0 drop-shadow-sm"
-                    width="64"
-                    height="64"
-                    decoding="async"
-                  />
-                  <span
-                    className={`hidden lg:inline text-lg lg:text-xl font-bold tracking-tight whitespace-nowrap ${isDarkMode ? "text-[#e7e9ea]" : "text-[#0f1419]"}`}
-                    style={{ fontFamily: "'Exo 2', sans-serif" }}
-                  >
-                    Edu<span className="text-red-500">51</span>Portal
-                  </span>
-                </button>
-              ) : (
-                <>
-                  {/* Mobile hamburger */}
-                  <button
-                    onClick={() => setShowMobileMenu(!showMobileMenu)}
-                    className={`p-2 rounded-xl transition-all duration-200 lg:hidden ${isDarkMode
-                        ? "hover:bg-white/10 text-[#8b98a5]"
-                        : "hover:bg-black/5 text-slate-600"
-                      }`}
-                    title="Menu"
-                  >
-                    <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
-                    </svg>
-                  </button>
-
-                  {/* Logo — desktop only (left-aligned) */}
+              {/* Left: Hamburger (mobile only) + Logo */}
+              <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+                {isAdmin && currentView === "admin" ? (
+                  /* In admin mode: compact logo on mobile & desktop */
                   <button
                     onClick={() => goToView("home")}
-                    className="header-logo-btn hidden lg:flex items-center gap-0.1 focus:outline-none group"
-                    title="Go to Home"
+                    className="header-logo-btn flex items-center gap-2 focus:outline-none group pl-0.5 sm:pl-1"
+                    title="Edu51Portal Home"
                   >
                     <img
                       src="/Edu51Portal.png"
                       alt="Edu51Portal Logo"
-                      className="h-20 w-20 object-cover rounded-xl flex-shrink-0 drop-shadow-sm"
-                      width="84"
-                      height="84"
+                      className="h-[38px] w-[38px] sm:h-10 sm:w-10 min-w-[38px] sm:min-w-[40px] object-contain rounded-xl flex-shrink-0 drop-shadow-sm transition-transform group-hover:scale-105"
+                      width="40"
+                      height="40"
                       decoding="async"
                     />
                     <span
-                      className={`text-xl font-bold tracking-tight whitespace-nowrap ${isDarkMode ? "text-[#e7e9ea]" : "text-[#0f1419]"}`}
+                      className={`hidden sm:inline text-base sm:text-lg font-bold tracking-tight whitespace-nowrap ${isDarkMode ? "text-[#e7e9ea]" : "text-[#0f1419]"}`}
                       style={{ fontFamily: "'Exo 2', sans-serif" }}
                     >
                       Edu<span className="text-red-500">51</span>Portal
                     </span>
                   </button>
-                </>
-              )}
-            </div>
+                ) : (
+                  <>
+                    {/* Mobile hamburger */}
+                    <button
+                      onClick={() => setShowMobileMenu(!showMobileMenu)}
+                      className={`p-2 rounded-xl transition-all duration-200 lg:hidden ${isDarkMode
+                          ? "hover:bg-white/10 text-[#8b98a5]"
+                          : "hover:bg-black/5 text-slate-600"
+                        }`}
+                      title="Menu"
+                    >
+                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
+                      </svg>
+                    </button>
 
-            {/* Center: Admin header tabs (mobile + desktop) or Student tabs / mobile logo */}
-            {isAdmin && currentView === "admin" ? (
-              <div className="flex-1 min-w-0 flex items-center justify-center lg:absolute lg:left-1/2 lg:-translate-x-1/2 px-1">
-                <nav className="flex items-center max-w-full">
-                  <AdminNavHeader
-                    activeTab={adminTab}
-                    isDarkMode={isDarkMode}
-                    onTabChange={setAdminTab}
-                    onExitAdmin={handleExitAdmin}
-                    pendingAlumniCount={pendingAlumniCount}
-                    newFeedbackCount={feedbackItems.filter((f) => f.status === "new").length}
-                  />
-                </nav>
+                    {/* Logo — desktop only */}
+                    <button
+                      onClick={() => goToView("home")}
+                      className="header-logo-btn hidden lg:flex items-center gap-2 focus:outline-none group pl-1"
+                      title="Go to Home"
+                    >
+                      <img
+                        src="/Edu51Portal.png"
+                        alt="Edu51Portal Logo"
+                        className="h-8 w-8 sm:h-9 sm:w-9 object-contain rounded-xl flex-shrink-0 drop-shadow-sm transition-transform group-hover:scale-105"
+                        width="36"
+                        height="36"
+                        decoding="async"
+                      />
+                      <span
+                        className={`text-base sm:text-lg font-bold tracking-tight whitespace-nowrap ${isDarkMode ? "text-[#e7e9ea]" : "text-[#0f1419]"}`}
+                        style={{ fontFamily: "'Exo 2', sans-serif" }}
+                      >
+                        Edu<span className="text-red-500">51</span>Portal
+                      </span>
+                    </button>
+                  </>
+                )}
               </div>
-            ) : (
-              <div className="absolute left-1/2 -translate-x-1/2 flex items-center max-w-[calc(100vw-120px)] sm:max-w-none">
-                {/* Mobile: centered logo */}
-                <button
-                  onClick={() => goToView("home")}
-                  className="header-logo-btn flex lg:hidden items-center gap-0.1 focus:outline-none"
-                  title="Go to Home"
-                >
-                  <img
-                    src="/Edu51Portal.png"
-                    alt="Edu51Portal Logo"
-                    className="h-14 w-14 object-cover rounded-xl drop-shadow-sm"
-                    width="54"
-                    height="54"
-                    decoding="async"
-                  />
-                  <span
-                    className={`text-lg font-bold tracking-tight whitespace-nowrap ${isDarkMode ? "text-[#e7e9ea]" : "text-[#0f1419]"}`}
-                    style={{ fontFamily: "'Exo 2', sans-serif" }}
+
+              {/* Center: Admin header tabs (mobile + desktop) or Student tabs / mobile logo */}
+              {isAdmin && currentView === "admin" ? (
+                <div className="flex-1 min-w-0 flex items-center justify-center px-1 lg:flex-none lg:absolute lg:left-1/2 lg:-translate-x-1/2">
+                  <nav className="flex items-center max-w-full">
+                    <AdminNavHeader
+                      activeTab={adminTab}
+                      isDarkMode={isDarkMode}
+                      onTabChange={setAdminTab}
+                      pendingAlumniCount={pendingAlumniCount}
+                      newFeedbackCount={feedbackItems.filter((f) => f.status === "new").length}
+                    />
+                  </nav>
+                </div>
+              ) : (
+                <div className="flex-1 min-w-0 flex items-center justify-center px-1 lg:flex-none lg:absolute lg:left-1/2 lg:-translate-x-1/2">
+                  {/* Mobile: centered logo */}
+                  <button
+                    onClick={() => goToView("home")}
+                    className="header-logo-btn flex lg:hidden items-center gap-1.5 focus:outline-none"
+                    title="Go to Home"
                   >
-                    Edu<span className="text-red-500">51</span>Portal
-                  </span>
-                </button>
+                    <img
+                      src="/Edu51Portal.png"
+                      alt="Edu51Portal Logo"
+                      className="h-7 w-7 object-contain rounded-lg drop-shadow-sm"
+                      width="28"
+                      height="28"
+                      decoding="async"
+                    />
+                    <span
+                      className={`text-sm sm:text-base font-bold tracking-tight whitespace-nowrap ${isDarkMode ? "text-[#e7e9ea]" : "text-[#0f1419]"}`}
+                      style={{ fontFamily: "'Exo 2', sans-serif" }}
+                    >
+                      Edu<span className="text-red-500">51</span>Portal
+                    </span>
+                  </button>
 
-                {/* Desktop: sliding pill nav with home icon as first tab */}
-                <nav className="hidden lg:flex items-center">
-                  <AppNavHeader
-                    currentView={currentView}
-                    isDarkMode={isDarkMode}
-                    isLoggedIn={isLoggedIn}
-                    goToView={goToView}
-                    showMajorAccessNotification={showMajorAccessNotification}
-                    setShowSignInModal={setShowSignInModal}
-                    pendingConnectionsCount={pendingConnectionsCount}
-                    unreadMessagesCount={unreadMsgCount}
-                    isBanned={isBanned}
-                  />
-                </nav>
-              </div>
-            )}
+                  {/* Desktop: sliding pill nav */}
+                  <nav className="hidden lg:flex items-center">
+                    <AppNavHeader
+                      currentView={currentView}
+                      isDarkMode={isDarkMode}
+                      isLoggedIn={isLoggedIn}
+                      goToView={goToView}
+                      showMajorAccessNotification={showMajorAccessNotification}
+                      setShowSignInModal={setShowSignInModal}
+                      pendingConnectionsCount={pendingConnectionsCount}
+                      unreadMessagesCount={unreadMsgCount}
+                      unreadResourcesCount={unreadResourcesCount}
+                      hasTeamUpdate={hasTeamUpdate}
+                      hasFacultyUpdate={hasFacultyUpdate}
+                      unreadNoticesCount={unreadCount}
+                      isBanned={isBanned}
+                    />
+                  </nav>
+                </div>
+              )}
 
-            {/* Right: Auth buttons / User dropdown */}
-            <div className="flex items-center gap-2 justify-end flex-shrink-0">
-              {!isLoggedIn && (
-                <>
-                  {/* Desktop: full Login + Create Account buttons */}
-                  <div className="hidden lg:flex items-center gap-2">
+              {/* Right: Search + Auth buttons / User dropdown */}
+              <div className="flex items-center gap-1.5 sm:gap-2 justify-end flex-shrink-0 pr-0.5 sm:pr-1">
+                {/* Global Search - hidden in admin mode */}
+                {!(isAdmin && currentView === "admin") && (
+                  <button
+                    onClick={() => setShowGlobalSearch(true)}
+                    title="Search (Ctrl+K)"
+                    className={`flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200 ${isDarkMode
+                        ? "text-slate-400 hover:text-white hover:bg-white/10"
+                        : "text-slate-600 hover:text-slate-900 hover:bg-black/5"
+                      }`}
+                  >
+                    <Search className="h-4 w-4" />
+                  </button>
+                )}
+
+                {!isLoggedIn && (
+                  <>
+                    {/* Desktop: full Login + Sign Up pill */}
+                    <div className="hidden lg:flex items-center gap-2">
+                      <button
+                        onClick={() => setShowSignInModal(true)}
+                        className={`px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-all duration-200 ${isDarkMode
+                            ? "text-[#d9d9d9] hover:text-white hover:bg-white/10"
+                            : "text-slate-700 hover:text-slate-900 hover:bg-slate-100"
+                          }`}
+                      >
+                        Log In
+                      </button>
+                      <button
+                        onClick={() => {
+                          setIsEditingProfile(false);
+                          setShowSignUpModal(true);
+                        }}
+                        className="px-4 py-1.5 rounded-full text-xs sm:text-sm font-bold text-white bg-blue-600 hover:bg-blue-500 shadow-md shadow-blue-500/25 transition-all duration-150"
+                      >
+                        Sign Up
+                      </button>
+                    </div>
+
+                    {/* Mobile: single sign-in icon button */}
                     <button
                       onClick={() => setShowSignInModal(true)}
-                      className={`px-4 py-2 rounded-xl text-sm font-semibold border transition-all duration-200 ${isDarkMode
-                          ? "bg-[#16181c] text-[#d9d9d9] border-[#2f3336] hover:bg-[#2f3336] hover:text-white"
-                          : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:text-slate-900 shadow-sm"
+                      className={`lg:hidden flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200 ${isDarkMode
+                          ? "text-[#8b98a5] hover:text-white hover:bg-white/10"
+                          : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                        }`}
+                      title="Sign In"
+                    >
+                      <LogIn className="w-4 h-4" />
+                    </button>
+                  </>
+                )}
+
+                {/* User Dropdown Menu - visible when logged in */}
+                {isLoggedIn && (
+                  <div className="relative" ref={userDropdownRef}>
+                    <button
+                      onClick={() => setShowUserDropdown(!showUserDropdown)}
+                      title={userProfile.name || "Profile menu"}
+                      className={`flex items-center justify-center gap-1.5 sm:gap-2 p-1 sm:pl-1.5 sm:pr-2.5 sm:py-1 rounded-full transition-all duration-200 flex-shrink-0 ${isDarkMode
+                          ? "text-[#d9d9d9] hover:bg-white/10"
+                          : "text-slate-700 hover:bg-slate-900/5"
                         }`}
                     >
-                      Login
+                      <div className="w-8 h-8 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0 ring-1 ring-white/20">
+                        {userProfile.profilePic || userProfile.avatar_url ? (
+                          <img
+                            src={userProfile.profilePic || userProfile.avatar_url}
+                            alt={userProfile.name}
+                            className="w-full h-full object-cover block"
+                            width="32"
+                            height="32"
+                            decoding="async"
+                          />
+                        ) : (
+                          <User className="w-3.5 h-3.5 text-white" />
+                        )}
+                      </div>
+                      <div className="hidden sm:flex flex-col items-start leading-tight min-w-0">
+                        <span className="text-xs font-semibold max-w-[110px] truncate">{userProfile.name}</span>
+                        <span className={`text-[10px] max-w-[110px] truncate ${isDarkMode ? "text-slate-400" : "text-slate-400"}`}>
+                          {extractBubtId(userProfile.bubtEmail)}
+                        </span>
+                      </div>
+                      <svg
+                        className={`hidden sm:block w-3 h-3 opacity-50 transition-transform duration-200 flex-shrink-0 ${showUserDropdown ? "rotate-180" : ""}`}
+                        fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
                     </button>
-                    <button
-                      onClick={() => {
-                        setIsEditingProfile(false);
-                        setShowSignUpModal(true);
-                      }}
-                      className="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-md shadow-blue-500/25 transition-all duration-150"
-                    >
-                      Create Account
-                    </button>
-                  </div>
-
-                  {/* Mobile: single sign-in icon button */}
-                  <button
-                    onClick={() => setShowSignInModal(true)}
-                    className={`lg:hidden flex items-center justify-center w-9 h-9 rounded-full border transition-all duration-200 ${isDarkMode
-                        ? "bg-[#16181c] border-[#2f3336] text-[#8b98a5] hover:bg-[#2f3336] hover:text-white"
-                        : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50 shadow-sm"
-                      }`}
-                    title="Sign In"
-                  >
-                    <LogIn className="w-4 h-4" />
-                  </button>
-                </>
-              )}
-
-              {/* User Dropdown Menu - visible when logged in */}
-              {isLoggedIn && (
-                <div className="relative" ref={userDropdownRef}>
-                  <button
-                    onClick={() => setShowUserDropdown(!showUserDropdown)}
-                    title={userProfile.name || "Profile menu"}
-                    className={`flex items-center justify-center gap-0 sm:gap-2 p-0.5 sm:pl-1 sm:pr-3 sm:py-1 rounded-full border transition-all duration-200 flex-shrink-0 ${isDarkMode
-                        ? "bg-[#16181c] border-[#2f3336] text-[#d9d9d9] hover:bg-[#2f3336]"
-                        : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50 shadow-sm"
-                      }`}
-                  >
-                    <div className="w-9 h-9 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0">
-                      {userProfile.profilePic || userProfile.avatar_url ? (
-                        <img
-                          src={userProfile.profilePic || userProfile.avatar_url}
-                          alt={userProfile.name}
-                          className="w-full h-full object-cover block"
-                          width="36"
-                          height="36"
-                          decoding="async"
-                        />
-                      ) : (
-                        <User className="w-4 h-4 text-white" />
-                      )}
-                    </div>
-                    <div className="hidden sm:flex flex-col items-start leading-tight min-w-0">
-                      <span className="text-xs font-semibold max-w-[110px] truncate">{userProfile.name}</span>
-                      <span className={`text-[10px] max-w-[110px] truncate ${isDarkMode ? "text-slate-400" : "text-slate-400"}`}>
-                        {extractBubtId(userProfile.bubtEmail)}
-                      </span>
-                    </div>
-                    <svg
-                      className={`hidden sm:block w-3 h-3 opacity-50 transition-transform duration-200 flex-shrink-0 ${showUserDropdown ? "rotate-180" : ""}`}
-                      fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
 
                   {/* Dropdown Content */}
                   {showUserDropdown && (
                     <div
-                      className={`absolute right-0 mt-2 w-52 rounded-xl border shadow-xl py-2 z-50 transition-all duration-200 ${isDarkMode
-                          ? "bg-[#17181c] border-[#2f3336] text-[#d9d9d9]"
-                          : "bg-white border-slate-200 text-slate-700"
-                        }`}
+                      className={`absolute right-0 mt-2 w-52 rounded-2xl border shadow-2xl py-2 z-50 transition-all duration-200 ${
+                        isDarkMode
+                          ? "bg-[#0b0f1a]/85 backdrop-blur-2xl border-white/[0.14] text-[#d9d9d9] shadow-black/70"
+                          : "bg-white/85 backdrop-blur-2xl border-white/80 text-slate-700 shadow-slate-300/50"
+                      }`}
                     >
                       {/* User Info Header in Dropdown */}
                       <div className={`px-4 py-3 border-b ${isDarkMode ? "border-[#2f3336]" : "border-slate-100"}`}>
@@ -3946,19 +4143,6 @@ For any queries, contact your course instructors or the department.`,
                 </div>
               )}
 
-              {/* Global Search - hidden in admin mode */}
-              {!(isAdmin && currentView === "admin") && (
-                <button
-                  onClick={() => setShowGlobalSearch(true)}
-                  title="Search (Ctrl+K)"
-                  className={`flex items-center justify-center w-9 h-9 rounded-full border transition-all duration-200 ${isDarkMode
-                      ? "bg-[#16181c] border-[#2f3336] text-[#8b98a5] hover:bg-[#2f3336] hover:text-white"
-                      : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50 shadow-sm"
-                    }`}
-                >
-                  <Search className="h-4 w-4" />
-                </button>
-              )}
 
               {/* Notification Bell + Popover - hidden in admin mode */}
               {isLoggedIn && !(isAdmin && currentView === "admin") && (
@@ -3966,9 +4150,9 @@ For any queries, contact your course instructors or the department.`,
                   <button
                     onClick={toggleNoticePanel}
                     title="Notifications"
-                    className={`relative flex items-center justify-center w-9 h-9 rounded-full border transition-all duration-200 ${isDarkMode
-                        ? "bg-[#16181c] border-[#2f3336] text-[#8b98a5] hover:bg-[#2f3336] hover:text-white"
-                        : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50 shadow-sm"
+                    className={`relative flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200 ${isDarkMode
+                        ? "text-slate-400 hover:text-white hover:bg-white/10"
+                        : "text-slate-600 hover:text-slate-900 hover:bg-black/5"
                       }`}
                   >
                     <Bell className="h-4 w-4" />
@@ -3986,13 +4170,16 @@ For any queries, contact your course instructors or the department.`,
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
                         transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
-                        className={`notification-panel absolute right-0 mt-2 w-80 max-h-[420px] overflow-y-auto rounded-xl shadow-xl z-[120] ${isDarkMode
-                            ? "bg-[#000000]/95 backdrop-blur-md border border-[#2f3336]"
-                            : "bg-white/95 backdrop-blur-md border border-slate-200 shadow-slate-300/40"
-                          }`}
+                        className={`notification-panel absolute right-0 mt-2 w-80 max-h-[420px] overflow-y-auto rounded-2xl shadow-2xl z-[120] ${
+                          isDarkMode
+                            ? "bg-[#0b0f1a]/90 backdrop-blur-2xl border border-white/[0.14] shadow-black/70"
+                            : "bg-white/90 backdrop-blur-2xl border border-white/80 shadow-slate-300/50"
+                        }`}
                       >
                         {/* Header */}
-                        <div className={`sticky top-0 z-10 flex items-center justify-between px-4 py-3 border-b ${isDarkMode ? "border-[#2f3336] bg-black" : "border-slate-100 bg-white"}`}>
+                        <div className={`sticky top-0 z-10 flex items-center justify-between px-4 py-3 border-b ${
+                          isDarkMode ? "border-white/10 bg-[#0b0f1a]/95" : "border-slate-100 bg-white/95"
+                        }`}>
                           <div className="flex items-center gap-2">
                             <h3 className={`text-sm font-semibold ${isDarkMode ? "text-[#e7e9ea]" : "text-slate-900"}`}>Notifications</h3>
                             {(getUnreadNoticeCount() + mentionNotifications.length) > 0 && (
@@ -4164,7 +4351,8 @@ For any queries, contact your course instructors or the department.`,
             </div>
           </div>
         </div>
-      </header>
+      </div>
+    </header>
       )}
 
       {/* Sidebar Menu - Universal for all devices */}
@@ -4266,11 +4454,12 @@ For any queries, contact your course instructors or the department.`,
                     <div className="text-left flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <p className="font-semibold text-sm">Info Hub</p>
-                        <span
-                          className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold ${isDarkMode ? "bg-emerald-500 text-white" : "bg-emerald-500 text-white"}`}
-                        >
-                          NEW
-                        </span>
+                        {(hasFacultyUpdate || unreadCount > 0) && (
+                          <span className="relative flex h-2 w-2 ml-0.5">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500 shadow-[0_0_6px_#ef4444]"></span>
+                          </span>
+                        )}
                       </div>
                       <p
                         className={`text-xs ${isDarkMode ? "text-[#71767b]" : "text-gray-600"}`}
@@ -4310,9 +4499,12 @@ For any queries, contact your course instructors or the department.`,
                     <div className="text-left flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <p className="font-semibold text-sm">Team Building</p>
-                        <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500 text-white">
-                          NEW
-                        </span>
+                        {hasTeamUpdate && (
+                          <span className="relative flex h-2 w-2 ml-0.5">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500 shadow-[0_0_6px_#ef4444]"></span>
+                          </span>
+                        )}
                       </div>
                       <p
                         className={`text-xs ${isDarkMode ? "text-[#71767b]" : "text-gray-600"}`}
@@ -4348,7 +4540,14 @@ For any queries, contact your course instructors or the department.`,
                       </svg>
                     </div>
                     <div className="text-left flex-1 min-w-0">
-                      <p className="font-semibold text-sm">Shared Resources</p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-semibold text-sm">Shared Resources</p>
+                        {unreadResourcesCount > 0 && (
+                          <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-red-500 text-white animate-pulse">
+                            {unreadResourcesCount > 99 ? "99+" : unreadResourcesCount}
+                          </span>
+                        )}
+                      </div>
                       <p className={`text-xs ${isDarkMode ? "text-[#71767b]" : "text-gray-600"}`}>
                         Public files from all teams
                       </p>
@@ -4391,13 +4590,9 @@ For any queries, contact your course instructors or the department.`,
                     <div className="text-left flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <p className="font-semibold text-sm">My Network</p>
-                        {pendingConnectionsCount > 0 ? (
+                        {pendingConnectionsCount > 0 && (
                           <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-red-500 text-white animate-pulse">
                             {pendingConnectionsCount}
-                          </span>
-                        ) : (
-                          <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-sky-500 text-white">
-                            NEW
                           </span>
                         )}
                       </div>
@@ -4439,11 +4634,11 @@ For any queries, contact your course instructors or the department.`,
                     <div className="text-left flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <p className="font-semibold text-sm">Alumni Hub</p>
-                        <span
-                          className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold ${isDarkMode ? "bg-[#2f3336] text-[#8b98a5]" : "bg-slate-200 text-slate-600"}`}
-                        >
-                          SOON
-                        </span>
+                        {unreadMsgCount > 0 && (
+                          <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-red-500 text-white animate-pulse">
+                            {unreadMsgCount}
+                          </span>
+                        )}
                       </div>
                       <p
                         className={`text-xs ${isDarkMode ? "text-[#71767b]" : "text-gray-600"}`}
@@ -4777,7 +4972,7 @@ For any queries, contact your course instructors or the department.`,
       {/* Main Content - Enhanced Mobile Responsive Design */}
       {/* Also mounts when a modal is open in a feature view — modal is fixed inset-0 so home content stays hidden beneath it */}
       {(!["custom", "profile", "network", "teams", "team", "alumni", "alumni-invite", "alumni-register", "faculty", "shared-resources", "meet-team"].includes(currentView) || showNoticeModal || showMaterialViewer) && (
-        <main className="relative pt-[72px] lg:pt-20 min-h-screen [overflow-x:clip]">
+        <main className="relative pt-[74px] sm:pt-[80px] lg:pt-[86px] min-h-screen [overflow-x:clip]">
           {currentView === "home" && isDarkMode && <Tiles isDarkMode={isDarkMode} />}
 
           {/* ── Emergency notices — persistent marquee, always the first thing under the header ── */}

@@ -1073,79 +1073,116 @@ Engr. Mahmudul Hasan, Intake 39, Textile Engineering, Senior Merchandiser at DBL
     }
   };
 
+  const getInitials = (name: string) => {
+    const parts = name.trim().split(/\s+/).filter(Boolean);
+    if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+    return (name.slice(0, 2) || 'AL').toUpperCase();
+  };
+
   return (
-    <div className={`group relative overflow-hidden rounded-xl lg:rounded-2xl transition-all duration-300 ${
+    <div className={`relative overflow-hidden rounded-2xl transition-all duration-300 border ${
       isDarkMode
-        ? 'bg-gradient-to-br from-slate-900/80 to-slate-800/80 backdrop-blur-xl border border-cyan-500/20'
-        : 'bg-white/90 backdrop-blur-xl border border-cyan-200/80 shadow-sm'
+        ? 'bg-slate-900/60 backdrop-blur-2xl border-slate-800/80 shadow-2xl shadow-black/40'
+        : 'bg-white/95 backdrop-blur-xl border-slate-200/90 shadow-xl shadow-slate-200/40'
     }`}>
+      {/* Subtle ambient lighting gradients */}
+      <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-cyan-500/10 via-indigo-500/5 to-transparent pointer-events-none blur-3xl" />
+      <div className="absolute top-0 left-0 w-64 h-64 bg-gradient-to-br from-blue-500/5 to-transparent pointer-events-none blur-2xl" />
+
       {/* Toast Notification */}
       {actionMessage && (
-        <div className={`fixed bottom-6 right-6 z-50 px-4 py-3 rounded-xl shadow-2xl flex items-center gap-2.5 text-sm font-semibold transition-all ${
+        <div className={`fixed bottom-6 right-6 z-50 px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-2.5 text-sm font-semibold transition-all backdrop-blur-xl border animate-in slide-in-from-bottom-2 ${
           actionMessage.type === 'success'
-            ? 'bg-emerald-600 text-white shadow-emerald-500/20'
-            : 'bg-rose-600 text-white shadow-rose-500/20'
+            ? 'bg-emerald-600/95 border-emerald-500/50 text-white shadow-emerald-500/25'
+            : 'bg-rose-600/95 border-rose-500/50 text-white shadow-rose-500/25'
         }`}>
           {actionMessage.type === 'success' ? <Check className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
-          {actionMessage.text}
+          <span>{actionMessage.text}</span>
         </div>
       )}
 
-      <div className="p-4 sm:p-6 lg:p-7 space-y-6">
-        {/* Header Title */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2.5 mb-1.5">
-              <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-cyan-500/20 text-cyan-400' : 'bg-cyan-100 text-cyan-700'}`}>
+      <div className="relative z-10 p-4 sm:p-6 lg:p-7 space-y-6">
+        {/* Executive Header Bar */}
+        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-5 pb-5 border-b border-slate-200/70 dark:border-slate-800/70">
+          <div className="space-y-1.5 max-w-2xl">
+            <div className="flex items-center gap-3">
+              <div className={`p-2.5 rounded-xl border flex items-center justify-center shrink-0 ${
+                isDarkMode
+                  ? 'bg-gradient-to-br from-cyan-500/20 to-blue-600/10 border-cyan-500/30 text-cyan-400 shadow-lg shadow-cyan-500/10'
+                  : 'bg-gradient-to-br from-cyan-50 to-blue-50 border-cyan-200 text-cyan-700 shadow-sm'
+              }`}>
                 <GraduationCap className="w-5 h-5" />
               </div>
-              <h2 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-                Alumni Outreach & Concierge Invitations
-              </h2>
+              <div>
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  <h2 className={`text-xl sm:text-2xl font-black tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                    Alumni Outreach & Intelligence
+                  </h2>
+                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${
+                    isDarkMode
+                      ? 'bg-cyan-500/10 text-cyan-300 border-cyan-500/25'
+                      : 'bg-cyan-50 text-cyan-700 border-cyan-200'
+                  }`}>
+                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                    <span>{counts.total} Candidates</span>
+                  </span>
+                </div>
+              </div>
             </div>
-            <p className={`text-xs sm:text-sm ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-              Collect former students on LinkedIn and databases, send pre-filled invites with automated 72h cooldown protection, and bypass manual forms with 30-second onboarding.
+            <p className={`text-xs sm:text-sm leading-relaxed ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+              Multi-channel prospect collection across web networks, automated 72h cooldown dispatch, and frictionless VIP onboarding.
             </p>
           </div>
 
-          <div className="flex items-center flex-wrap gap-2">
+          {/* Action Toolbar */}
+          <div className="flex items-center flex-wrap gap-2 sm:gap-2.5">
             <button
               onClick={() => {
                 setTemplateDraft(getEmailTemplates());
                 setIsTemplateModalOpen(true);
               }}
-              className={`px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
-                isDarkMode ? 'bg-amber-950/40 hover:bg-amber-900/60 text-amber-300 border border-amber-500/30' : 'bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200'
+              className={`px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 border transition-all active:scale-95 ${
+                isDarkMode
+                  ? 'bg-slate-800/70 hover:bg-slate-800 text-slate-300 hover:text-white border-slate-700/80 shadow-sm'
+                  : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200 shadow-sm'
               }`}
-              title="View and edit alumni message body and email templates"
+              title="Inspect or customize invitation email templates and dynamic tags"
             >
-              <FileText className="w-3.5 h-3.5 text-amber-400" />
-              Email Template
+              <Mail className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Email Templates</span>
             </button>
+
             <button
               onClick={() => setIsUniversalCollectorOpen(true)}
-              className={`px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm ${
+              className={`px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 border transition-all active:scale-95 ${
                 isDarkMode
-                  ? 'bg-gradient-to-r from-indigo-950/70 to-sky-950/70 hover:from-indigo-900/80 hover:to-sky-900/80 text-sky-200 border border-sky-500/40'
-                  : 'bg-gradient-to-r from-sky-50 to-indigo-50 hover:from-sky-100 hover:to-indigo-100 text-indigo-700 border border-indigo-200'
+                  ? 'bg-slate-800/70 hover:bg-slate-800 text-slate-200 hover:text-white border-slate-700/80 shadow-sm'
+                  : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200 shadow-sm'
               }`}
               title="Prospect and extract alumni from Google X-Ray, Facebook groups, and LinkedIn directory"
             >
               <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
               <span>Universal Collector</span>
-              <span className="px-1.5 py-0.5 rounded text-[10px] bg-cyan-500/20 text-cyan-300 font-mono">
+              <span className={`px-1.5 py-0.2 rounded text-[10px] font-mono ${
+                isDarkMode ? 'bg-cyan-500/15 text-cyan-300' : 'bg-cyan-100 text-cyan-700'
+              }`}>
                 Google · FB · In
               </span>
             </button>
+
             <button
               onClick={() => setIsCsvModalOpen(true)}
-              className={`px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
-                isDarkMode ? 'bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200'
+              className={`px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 border transition-all active:scale-95 ${
+                isDarkMode
+                  ? 'bg-slate-800/70 hover:bg-slate-800 text-slate-300 hover:text-white border-slate-700/80 shadow-sm'
+                  : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200 shadow-sm'
               }`}
+              title="Bulk import alumnus leads from CSV text"
             >
-              <FileSpreadsheet className="w-3.5 h-3.5" />
-              Import CSV
+              <FileSpreadsheet className="w-3.5 h-3.5 text-slate-400" />
+              <span>Import CSV</span>
             </button>
+
             <button
               onClick={() => {
                 setGeneratedInviteResult(null);
@@ -1163,665 +1200,836 @@ Engr. Mahmudul Hasan, Intake 39, Textile Engineering, Senior Merchandiser at DBL
                 });
                 setIsGenerateModalOpen(true);
               }}
-              className="px-3 py-2 rounded-lg text-xs font-bold bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white flex items-center gap-1.5 shadow-md transition-all"
+              className={`px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 border transition-all active:scale-95 ${
+                isDarkMode
+                  ? 'bg-emerald-950/30 hover:bg-emerald-900/40 text-emerald-300 border-emerald-500/30 shadow-sm'
+                  : 'bg-emerald-50 hover:bg-emerald-100/80 text-emerald-800 border-emerald-200 shadow-sm'
+              }`}
               title="Generate instant VIP invite link & Social DM copy for an alumnus found online"
             >
-              <Link className="w-3.5 h-3.5" />
-              <span>Generate Invite Link</span>
+              <Link className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Instant VIP Link</span>
             </button>
+
             <button
               onClick={() => setIsAddModalOpen(true)}
-              className="px-3.5 py-2 rounded-lg text-xs font-bold bg-cyan-600 hover:bg-cyan-500 text-white flex items-center gap-1.5 shadow-lg shadow-cyan-600/20 transition-all"
+              className="px-3.5 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white flex items-center gap-1.5 shadow-lg shadow-cyan-600/25 active:scale-95 transition-all"
             >
               <Plus className="w-3.5 h-3.5" />
-              Add Prospect
+              <span>Add Prospect</span>
             </button>
           </div>
         </div>
 
-        {/* Sub-Tab Navigation Bar */}
-        <div className="flex items-center gap-2 border-b pb-3 border-slate-200 dark:border-slate-800">
-          <button
-            onClick={() => setActiveTab('outreach')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all ${
-              activeTab === 'outreach'
-                ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-600/25 ring-2 ring-cyan-500/20'
-                : isDarkMode
-                ? 'bg-slate-800/60 hover:bg-slate-800 text-slate-300'
-                : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
-            }`}
-          >
-            <Users className="w-4 h-4" />
-            <span>Outreach Pipeline ({counts.total})</span>
-          </button>
+        {/* Sub-Tab Navigation Bar (Modern Segmented Style) */}
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className={`p-1 rounded-xl border flex items-center gap-1 ${
+            isDarkMode ? 'bg-slate-950/60 border-slate-800/80' : 'bg-slate-100/80 border-slate-200'
+          }`}>
+            <button
+              onClick={() => setActiveTab('outreach')}
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
+                activeTab === 'outreach'
+                  ? isDarkMode
+                    ? 'bg-slate-800 text-white shadow-md border border-slate-700/60'
+                    : 'bg-white text-slate-900 shadow-sm border border-slate-200'
+                  : isDarkMode
+                  ? 'text-slate-400 hover:text-slate-200'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Users className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Outreach Pipeline</span>
+              <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-extrabold ${
+                activeTab === 'outreach'
+                  ? 'bg-cyan-500/20 text-cyan-300'
+                  : isDarkMode
+                  ? 'bg-slate-800 text-slate-400'
+                  : 'bg-slate-200 text-slate-600'
+              }`}>
+                {counts.total}
+              </span>
+            </button>
 
-          <button
-            onClick={() => {
-              setActiveTab('discovery');
-              if (discoveredAlumni.length === 0) {
-                handleRunDiscovery();
-              }
-            }}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all ${
-              activeTab === 'discovery'
-                ? 'bg-gradient-to-r from-sky-600 to-indigo-600 text-white shadow-lg shadow-indigo-600/25 ring-2 ring-indigo-500/20'
-                : isDarkMode
-                ? 'bg-slate-800/60 hover:bg-slate-800 text-slate-300'
-                : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
-            }`}
-          >
-            <Sparkles className="w-4 h-4 text-amber-300" />
-            <span>Multi-Department Auto-Discovery</span>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-400 text-slate-950 uppercase tracking-wider">
-              All Depts
-            </span>
-          </button>
+            <button
+              onClick={() => {
+                setActiveTab('discovery');
+                if (discoveredAlumni.length === 0) {
+                  handleRunDiscovery();
+                }
+              }}
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
+                activeTab === 'discovery'
+                  ? isDarkMode
+                    ? 'bg-slate-800 text-white shadow-md border border-slate-700/60'
+                    : 'bg-white text-slate-900 shadow-sm border border-slate-200'
+                  : isDarkMode
+                  ? 'text-slate-400 hover:text-slate-200'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+              <span>Multi-Faculty Directory</span>
+              <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                activeTab === 'discovery'
+                  ? 'bg-indigo-500/20 text-indigo-300'
+                  : isDarkMode
+                  ? 'bg-slate-800 text-slate-400'
+                  : 'bg-slate-200 text-slate-600'
+              }`}>
+                9 Faculties
+              </span>
+            </button>
+          </div>
+
+          <div className="hidden sm:flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+            <span className="w-2 h-2 rounded-full bg-emerald-400" />
+            <span>Autonomous 72h Cooldown Protection Active</span>
+          </div>
         </div>
 
         {/* Conditional Tab Rendering */}
         {activeTab === 'outreach' ? (
           <div className="space-y-6">
-            {/* Funnel Metrics */}
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 sm:gap-3">
-              <div className={`p-3.5 rounded-xl border ${isDarkMode ? 'bg-slate-800/40 border-slate-700/60' : 'bg-slate-50 border-slate-200'}`}>
-                <span className={`text-[11px] font-semibold uppercase tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Total Prospects</span>
-                <p className={`text-2xl font-black mt-1 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{counts.total}</p>
-              </div>
-              <div className={`p-3.5 rounded-xl border ${isDarkMode ? 'bg-blue-950/20 border-blue-500/20' : 'bg-blue-50/70 border-blue-200'}`}>
-                <span className={`text-[11px] font-semibold uppercase tracking-wider ${isDarkMode ? 'text-blue-300' : 'text-blue-600'}`}>New (Unsent)</span>
-            <p className={`text-2xl font-black mt-1 ${isDarkMode ? 'text-blue-400' : 'text-blue-700'}`}>{counts.new}</p>
-          </div>
-          <div className={`p-3.5 rounded-xl border ${isDarkMode ? 'bg-amber-950/20 border-amber-500/20' : 'bg-amber-50/70 border-amber-200'}`}>
-            <span className={`text-[11px] font-semibold uppercase tracking-wider ${isDarkMode ? 'text-amber-300' : 'text-amber-600'}`}>Pending (Invited)</span>
-            <p className={`text-2xl font-black mt-1 ${isDarkMode ? 'text-amber-400' : 'text-amber-700'}`}>{counts.invited}</p>
-          </div>
-          <div className={`p-3.5 rounded-xl border ${isDarkMode ? 'bg-emerald-950/20 border-emerald-500/20' : 'bg-emerald-50/70 border-emerald-200'}`}>
-            <span className={`text-[11px] font-semibold uppercase tracking-wider ${isDarkMode ? 'text-emerald-300' : 'text-emerald-600'}`}>Joined & Active</span>
-            <p className={`text-2xl font-black mt-1 ${isDarkMode ? 'text-emerald-400' : 'text-emerald-700'}`}>{counts.joined}</p>
-          </div>
-          <div className={`p-3.5 rounded-xl border ${isDarkMode ? 'bg-purple-950/20 border-purple-500/20' : 'bg-purple-50/70 border-purple-200'}`}>
-            <span className={`text-[11px] font-semibold uppercase tracking-wider ${isDarkMode ? 'text-purple-300' : 'text-purple-600'}`}>72h+ Re-invite Ready</span>
-            <p className={`text-2xl font-black mt-1 ${isDarkMode ? 'text-purple-400' : 'text-purple-700'}`}>{counts.eligible}</p>
-          </div>
-        </div>
-
-        {/* Filter and Batch Action Bar */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pt-2">
-          {/* Status Tabs */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
-            {[
-              { id: 'all', label: `All (${counts.total})` },
-              { id: 'new', label: `New (${counts.new})` },
-              { id: 'invited', label: `Invited (${counts.invited})` },
-              { id: 'eligible', label: `Ready for Reminder (${counts.eligible})` },
-              { id: 'joined', label: `Joined (${counts.joined})` },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setStatusFilter(tab.id as any)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
-                  statusFilter === tab.id
-                    ? 'bg-cyan-600 text-white shadow-md shadow-cyan-600/20'
-                    : isDarkMode
-                    ? 'bg-slate-800/60 hover:bg-slate-800 text-slate-300'
-                    : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Batch Actions */}
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => {
-                setTemplateDraft(getEmailTemplates());
-                setIsTemplateModalOpen(true);
-              }}
-              className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
-                isDarkMode ? 'bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200'
-              }`}
-              title="Inspect or customize default message body used for invitations"
-            >
-              <Edit3 className="w-3.5 h-3.5 text-amber-400" />
-              Edit Message Body
-            </button>
-            {counts.new > 0 && (
-              <button
-                onClick={handleSendAllNew}
-                disabled={batchSending}
-                className="px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white flex items-center gap-1.5 shadow-md transition-all disabled:opacity-50"
-              >
-                <Send className="w-3.5 h-3.5" />
-                Invite All New ({counts.new})
-              </button>
-            )}
-            {counts.eligible > 0 && (
-              <button
-                onClick={handleSendAllReminders}
-                disabled={batchSending}
-                className="px-3 py-1.5 rounded-lg text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white flex items-center gap-1.5 shadow-md transition-all disabled:opacity-50"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${batchSending ? 'animate-spin' : ''}`} />
-                Send Reminders ({counts.eligible})
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Search and Department Filter */}
-        <div className="flex flex-col sm:flex-row items-center gap-2.5">
-          <div className="relative flex-1 w-full">
-            <Search className={`w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`} />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by alumnus name, email, company, or job title..."
-              className={`w-full pl-9 pr-4 py-2 rounded-xl text-xs sm:text-sm border outline-none transition-all ${
+            {/* Executive KPI Funnel Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+              {/* Card 1: Total Prospects */}
+              <div className={`p-4 rounded-2xl border transition-all relative overflow-hidden group ${
                 isDarkMode
-                  ? 'bg-slate-900/60 border-slate-700/80 text-white placeholder-slate-500 focus:border-cyan-400'
-                  : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:border-cyan-600'
-              }`}
-            />
-          </div>
-
-          <select
-            value={deptFilter}
-            onChange={(e) => setDeptFilter(e.target.value)}
-            className={`w-full sm:w-44 px-3 py-2 rounded-xl text-xs sm:text-sm border outline-none font-medium ${
-              isDarkMode
-                ? 'bg-slate-900/60 border-slate-700/80 text-slate-200'
-                : 'bg-slate-50 border-slate-200 text-slate-800'
-            }`}
-          >
-            <option value="all">All Departments</option>
-            {DEPARTMENTS.map((d) => (
-              <option key={d} value={d}>{d}</option>
-            ))}
-          </select>
-        </div>
-
-        {/* Prospects Table / Grid */}
-        {loading ? (
-          <div className="py-12 text-center">
-            <RefreshCw className="w-6 h-6 animate-spin mx-auto text-cyan-500 mb-2" />
-            <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Loading alumni prospects...</p>
-          </div>
-        ) : filteredLeads.length === 0 ? (
-          <div className={`py-12 text-center rounded-xl border border-dashed ${
-            isDarkMode ? 'border-slate-800 text-slate-500' : 'border-slate-200 text-slate-400 bg-slate-50/50'
-          }`}>
-            <Users className="w-10 h-10 mx-auto mb-2 opacity-40" />
-            <p className="text-sm font-semibold">No alumni leads found</p>
-            <p className="text-xs mt-0.5">Try searching with a different keyword or add a new prospect.</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr className={`border-b ${isDarkMode ? 'border-slate-800 text-slate-400' : 'border-slate-200 text-slate-500'}`}>
-                  <th className="py-3 px-3 font-semibold">Alumnus</th>
-                  <th className="py-3 px-3 font-semibold">Department & Year</th>
-                  <th className="py-3 px-3 font-semibold">Current Career</th>
-                  <th className="py-3 px-3 font-semibold">Status & 72h Cooldown</th>
-                  <th className="py-3 px-3 font-semibold text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className={`divide-y ${isDarkMode ? 'divide-slate-800/60' : 'divide-slate-100'}`}>
-                {filteredLeads.map((item) => {
-                  const eligibility = checkReinviteEligibility(item);
-                  const isSendingThis = sendingId === item.id;
-
-                  return (
-                    <tr
-                      key={item.id}
-                      className={`transition-colors ${
-                        isDarkMode ? 'hover:bg-slate-800/30' : 'hover:bg-slate-50/80'
-                      }`}
-                    >
-                      {/* Alumnus Column */}
-                      <td className="py-3 px-3 min-w-[180px]">
-                        <div className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-1.5">
-                          {item.full_name}
-                          {(() => {
-                            const verifiedUrl = getVerifiedSocialLink(item.linkedin_url, item.notes);
-                            if (!verifiedUrl) return null;
-                            const isFb = verifiedUrl.includes('facebook.com');
-                            const isLi = verifiedUrl.includes('linkedin.com');
-                            return (
-                              <a
-                                href={verifiedUrl}
-                                target="_blank"
-                                rel="noreferrer"
-                                title={
-                                  isFb
-                                    ? 'Verified Facebook Profile'
-                                    : isLi
-                                    ? 'Verified LinkedIn Profile'
-                                    : 'Verified Social Profile'
-                                }
-                                className={`p-0.5 rounded transition-colors ${
-                                  isFb
-                                    ? 'text-blue-500 hover:text-blue-400'
-                                    : isLi
-                                    ? 'text-sky-500 hover:text-sky-400'
-                                    : 'text-slate-400 hover:text-cyan-400'
-                                }`}
-                              >
-                                {isFb ? (
-                                  <Facebook className="w-3.5 h-3.5" />
-                                ) : isLi ? (
-                                  <Linkedin className="w-3.5 h-3.5" />
-                                ) : (
-                                  <Globe className="w-3.5 h-3.5" />
-                                )}
-                              </a>
-                            );
-                          })()}
-                        </div>
-                        <p className={`text-[11px] truncate ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                          {item.email}
-                        </p>
-                      </td>
-
-                      {/* Dept & Year */}
-                      <td className="py-3 px-3 whitespace-nowrap">
-                        <span className="font-semibold text-cyan-600 dark:text-cyan-400">{item.department}</span>
-                        <div className={`text-[11px] ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                          {item.passing_year ? `Class of ${item.passing_year}` : 'Alumni'}
-                          {item.intake ? ` · Intake ${item.intake}` : ''}
-                        </div>
-                      </td>
-
-                      {/* Current Career */}
-                      <td className="py-3 px-3 min-w-[160px]">
-                        <p className="font-medium text-slate-800 dark:text-slate-200 truncate">
-                          {item.designation || 'Alumnus'}
-                        </p>
-                        <p className={`text-[11px] truncate flex items-center gap-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                          <Building className="w-3 h-3 flex-shrink-0" />
-                          {item.company || 'Not specified'}
-                        </p>
-                      </td>
-
-                      {/* Status & 72h Cooldown */}
-                      <td className="py-3 px-3 min-w-[180px]">
-                        {item.status === 'joined' ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                            <CheckCircle2 className="w-3 h-3" />
-                            Joined & Active
-                          </span>
-                        ) : item.status === 'new' ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30">
-                            New Lead
-                          </span>
-                        ) : item.status === 'already_registered' ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-500/20 text-slate-400 border border-slate-500/30">
-                            Existing User
-                          </span>
-                        ) : (
-                          <div>
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">
-                              Invited ({item.invite_count}x)
-                            </span>
-                            <div className="mt-1">
-                              {eligibility.eligible ? (
-                                <span className="text-[10px] text-purple-400 font-semibold flex items-center gap-1">
-                                  <Sparkles className="w-2.5 h-2.5" />
-                                  72h+ passed · Ready to re-invite
-                                </span>
-                              ) : (
-                                <span className={`text-[10px] flex items-center gap-1 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
-                                  <Clock className="w-2.5 h-2.5" />
-                                  {eligibility.remainingHours}h cooldown left
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        )}
-                      </td>
-
-                      {/* Actions */}
-                      <td className="py-3 px-3 text-right whitespace-nowrap">
-                        <div className="flex items-center justify-end gap-1.5">
-                          {/* Send / Re-invite Button */}
-                          {item.status !== 'joined' && item.status !== 'already_registered' && (
-                            <button
-                              onClick={() => handleOpenSendModal(item)}
-                              disabled={isSendingThis || !eligibility.eligible}
-                              className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all ${
-                                item.status === 'new'
-                                  ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-sm'
-                                  : eligibility.eligible
-                                  ? 'bg-purple-600 hover:bg-purple-500 text-white shadow-sm'
-                                  : 'bg-slate-700/40 text-slate-500 cursor-not-allowed'
-                              }`}
-                              title={eligibility.eligible ? 'Review & customize message body before sending' : eligibility.reason}
-                            >
-                              {isSendingThis ? (
-                                <RefreshCw className="w-3 h-3 animate-spin" />
-                              ) : item.status === 'new' ? (
-                                <>
-                                  <Mail className="w-3 h-3" />
-                                  Invite
-                                </>
-                              ) : (
-                                <>
-                                  <RefreshCw className="w-3 h-3" />
-                                  Re-invite
-                                </>
-                              )}
-                            </button>
-                          )}
-
-                          {/* Social DM Ready Message Button */}
-                          {item.status !== 'joined' && (
-                            <button
-                              onClick={() => handleOpenSocialModal(item)}
-                              className={`px-2 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
-                                isDarkMode
-                                  ? 'bg-emerald-950/40 hover:bg-emerald-900/60 text-emerald-300 border border-emerald-500/30'
-                                  : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200'
-                              }`}
-                              title="Social Media Ready DM (Copy invitation text & link for Messenger / WhatsApp / DM)"
-                            >
-                              <MessageSquare className="w-3.5 h-3.5 text-emerald-400" />
-                              <span className="hidden sm:inline">Social DM</span>
-                            </button>
-                          )}
-
-                          {/* Copy Link Button */}
-                          {item.status !== 'joined' && (
-                            <button
-                              onClick={() => handleCopyLink(item.invite_token, item.id)}
-                              className={`p-1.5 rounded-lg transition-all ${
-                                copiedId === item.id
-                                  ? 'bg-emerald-500/20 text-emerald-400'
-                                  : isDarkMode
-                                  ? 'bg-slate-800 hover:bg-slate-700 text-slate-300'
-                                  : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
-                              }`}
-                              title="Copy Magic Invite Link"
-                            >
-                              {copiedId === item.id ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                            </button>
-                          )}
-
-                          {/* Delete Lead */}
-                          <button
-                            onClick={() => handleDeleteLead(item.id, item.full_name)}
-                            className={`p-1.5 rounded-lg transition-all ${
-                              isDarkMode ? 'hover:bg-rose-500/20 text-slate-500 hover:text-rose-400' : 'hover:bg-rose-100 text-slate-400 hover:text-rose-600'
-                            }`}
-                            title="Delete Prospect"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-    ) : (
-      /* SUB-TAB 2: AUTO-DISCOVERY & MASS CAPTURE */
-      <div className="space-y-5">
-        {/* Discovery Controls Bar */}
-        <div className={`p-4 sm:p-5 rounded-2xl border space-y-4 ${
-          isDarkMode ? 'bg-slate-900/70 border-slate-700/80' : 'bg-slate-50 border-slate-200'
-        }`}>
-          <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <Sparkles className="w-4 h-4 text-cyan-400" />
-                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                  BUBT Multi-Department Graduate Directory & Discovery
-                </h3>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-cyan-500/15 text-cyan-400 border border-cyan-500/30">
-                  All 9 Departments
-                </span>
-              </div>
-              <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                Query verified BUBT graduates across all faculties, or prospect live profiles directly from Google, Facebook, and LinkedIn.
-              </p>
-            </div>
-
-            <div className="flex items-center gap-2 flex-wrap">
-              <button
-                onClick={handleCaptureAllSelected}
-                disabled={discoveryLoading || selectedDiscoveredIds.size === 0}
-                className="px-4 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white flex items-center gap-1.5 shadow-lg shadow-cyan-600/20 disabled:opacity-50 transition-all"
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-                Capture Selected ({selectedDiscoveredIds.size})
-              </button>
-              <button
-                onClick={() => setIsUniversalCollectorOpen(true)}
-                className={`px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 border transition-all ${
-                  isDarkMode ? 'bg-indigo-950/40 text-indigo-300 border-indigo-500/30 hover:bg-indigo-900/60' : 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100'
-                }`}
-              >
-                <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-                Universal Collector (Google · FB · In)
-              </button>
-            </div>
-          </div>
-
-          {/* Explanation Banner */}
-          <div className={`p-3 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs ${
-            isDarkMode ? 'bg-slate-800/50 border-slate-700/60 text-slate-300' : 'bg-sky-50/70 border-sky-200/80 text-sky-900'
-          }`}>
-            <div className="flex items-center gap-2">
-              <span className="text-sm">💡</span>
-              <span className="leading-snug">
-                <strong>How it works:</strong> The filter below searches our pre-indexed directory across all 9 departments. To discover <em>hundreds of fresh alumni</em> across Facebook groups, Google search, and LinkedIn, click <strong>Universal Collector</strong>!
-              </span>
-            </div>
-            <button
-              onClick={() => setIsUniversalCollectorOpen(true)}
-              className="text-[11px] font-bold text-sky-400 hover:underline shrink-0 flex items-center gap-1"
-            >
-              Open Universal Collector →
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
-            {/* Dept Selector */}
-            <div className="sm:col-span-3">
-              <select
-                value={discoveryDept}
-                onChange={(e) => setDiscoveryDept(e.target.value)}
-                className={`w-full px-3 py-2.5 rounded-xl text-xs font-semibold border outline-none ${
-                  isDarkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-800'
-                }`}
-              >
-                <option value="all">All Departments ({discoveredAlumni.length})</option>
-                {DEPARTMENTS.map((d) => (
-                  <option key={d} value={d}>{d}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Keyword Search */}
-            <div className="sm:col-span-7 relative">
-              <Search className={`w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`} />
-              <input
-                type="text"
-                value={discoveryKeyword}
-                onChange={(e) => setDiscoveryKeyword(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleRunDiscovery()}
-                placeholder="Filter by alumnus name, company (e.g. Brain Station, bKash, Walton), or role..."
-                className={`w-full pl-9 pr-3 py-2.5 rounded-xl text-xs border outline-none ${
-                  isDarkMode ? 'bg-slate-800 border-slate-700 text-white placeholder-slate-500' : 'bg-white border-slate-300 text-slate-900 placeholder-slate-400'
-                }`}
-              />
-            </div>
-
-            {/* Search Button */}
-            <div className="sm:col-span-2">
-              <button
-                onClick={handleRunDiscovery}
-                disabled={discoveryLoading}
-                className="w-full h-full py-2.5 rounded-xl text-xs font-bold bg-cyan-600 hover:bg-cyan-500 text-white flex items-center justify-center gap-1.5 shadow-md transition-all disabled:opacity-50"
-              >
-                <Search className={`w-3.5 h-3.5 ${discoveryLoading ? 'animate-spin' : ''}`} />
-                {discoveryLoading ? 'Filtering...' : 'Search Directory'}
-              </button>
-            </div>
-          </div>
-
-          {/* Select all & counts status */}
-          <div className="flex items-center justify-between text-xs pt-1">
-            <div className="flex items-center gap-2">
-              <label className="flex items-center gap-2 cursor-pointer font-semibold select-none">
-                <input
-                  type="checkbox"
-                  checked={discoveredAlumni.length > 0 && selectedDiscoveredIds.size === discoveredAlumni.length}
-                  onChange={handleToggleSelectAll}
-                  className="rounded text-cyan-600 focus:ring-cyan-500 w-3.5 h-3.5"
-                />
-                <span>Select All ({discoveredAlumni.length} Candidates)</span>
-              </label>
-            </div>
-            <span className={`text-[11px] ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-              {selectedDiscoveredIds.size} of {discoveredAlumni.length} selected
-            </span>
-          </div>
-        </div>
-
-        {/* Discovery Candidate Grid / Cards */}
-        {discoveryLoading ? (
-          <div className="py-16 text-center">
-            <RefreshCw className="w-8 h-8 animate-spin mx-auto text-cyan-400 mb-3" />
-            <p className="text-sm font-bold">Scanning BUBT alumni records across departments...</p>
-            <p className={`text-xs mt-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-              Checking CSE portal, multi-department graduate database, and online networks...
-            </p>
-          </div>
-        ) : discoveredAlumni.length === 0 ? (
-          <div className={`py-12 text-center rounded-2xl border border-dashed ${
-            isDarkMode ? 'border-slate-800 text-slate-400' : 'border-slate-300 text-slate-500 bg-slate-50'
-          }`}>
-            <GraduationCap className="w-10 h-10 mx-auto mb-2 opacity-50 text-cyan-400" />
-            <p className="text-sm font-bold">No alumni found for the selected criteria</p>
-            <p className="text-xs mt-1">Try switching department to "All Departments" or clearing the keyword filter.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
-            {discoveredAlumni.map((cand) => {
-              const isCaptured = isAlreadyCaptured(cand);
-              const isJustCaptured = capturedSuccessIds.has(cand.id);
-              const isCapturing = capturingIds.has(cand.id);
-              const isSelected = selectedDiscoveredIds.has(cand.id);
-
-              return (
-                <div
-                  key={cand.id}
-                  className={`p-4 rounded-xl border transition-all relative flex flex-col justify-between ${
-                    isSelected
-                      ? (isDarkMode ? 'bg-slate-800/80 border-cyan-500/50 shadow-lg shadow-cyan-950/20' : 'bg-cyan-50/50 border-cyan-400/60 shadow-sm')
-                      : (isDarkMode ? 'bg-slate-900/60 border-slate-800/80 hover:border-slate-700' : 'bg-white border-slate-200 hover:border-slate-300')
-                  }`}
-                >
-                  <div>
-                    <div className="flex items-start justify-between gap-2 mb-2">
-                      <label className="flex items-center gap-2 cursor-pointer flex-1">
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          onChange={() => handleToggleSelect(cand.id)}
-                          disabled={isCaptured || isJustCaptured}
-                          className="rounded text-cyan-600 focus:ring-cyan-500 w-3.5 h-3.5 mt-0.5"
-                        />
-                        <span className="font-bold text-sm leading-tight text-slate-900 dark:text-white">
-                          {cand.full_name}
-                        </span>
-                      </label>
-
-                      <span className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider shrink-0 ${
-                        cand.department === 'CSE'
-                          ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
-                          : cand.department === 'EEE'
-                          ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                          : cand.department === 'BBA'
-                          ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                          : cand.department === 'Civil'
-                          ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
-                          : cand.department === 'Textile'
-                          ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
-                          : cand.department === 'Law'
-                          ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
-                          : 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
-                      }`}>
-                        {cand.department}
-                      </span>
-                    </div>
-
-                    <div className={`text-xs space-y-1 mb-3 ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>
-                      <div className="flex items-center gap-1.5 font-medium">
-                        <Building className="w-3.5 h-3.5 opacity-60 text-cyan-400 shrink-0" />
-                        <span className="truncate">
-                          {cand.designation || 'Alumnus'} {cand.company ? `· ${cand.company}` : ''}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1.5 text-[11px] opacity-75">
-                        <GraduationCap className="w-3.5 h-3.5 opacity-60 shrink-0" />
-                        <span>
-                          {cand.intake ? `Intake ${cand.intake}` : 'BUBT Graduate'}
-                          {cand.passing_year ? ` · Class of ${cand.passing_year}` : ''}
-                        </span>
-                      </div>
-                      {cand.linkedin_url && (
-                        <div className="pt-1">
-                          <a
-                            href={cand.linkedin_url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center gap-1 text-[11px] text-sky-400 hover:underline"
-                          >
-                            <Linkedin className="w-3 h-3" />
-                            View LinkedIn Profile
-                          </a>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="pt-2 border-t border-slate-200/60 dark:border-slate-800/80 flex items-center justify-between gap-2 text-xs">
-                    <span className={`text-[10px] truncate max-w-[140px] ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`} title={cand.source}>
-                      {cand.source}
-                    </span>
-
-                    {isJustCaptured || isCaptured ? (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                        <CheckCircle2 className="w-3 h-3" />
-                        In Prospects
-                      </span>
-                    ) : (
-                      <button
-                        onClick={() => handleCaptureCandidate(cand)}
-                        disabled={isCapturing}
-                        className="px-3 py-1 rounded-lg text-xs font-bold bg-cyan-600 hover:bg-cyan-500 text-white flex items-center gap-1 shadow-sm transition-all disabled:opacity-50"
-                      >
-                        <Plus className={`w-3 h-3 ${isCapturing ? 'animate-spin' : ''}`} />
-                        {isCapturing ? 'Capturing...' : 'Capture'}
-                      </button>
-                    )}
+                  ? 'bg-slate-900/50 border-slate-800/80 hover:border-slate-700/80 hover:bg-slate-800/40'
+                  : 'bg-white border-slate-200/80 hover:border-slate-300 shadow-sm'
+              }`}>
+                <div className="flex items-center justify-between mb-2">
+                  <span className={`text-[10px] font-bold uppercase tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                    Total Prospects
+                  </span>
+                  <div className={`p-1.5 rounded-lg ${isDarkMode ? 'bg-cyan-500/10 text-cyan-400' : 'bg-cyan-50 text-cyan-600'}`}>
+                    <Users className="w-3.5 h-3.5" />
                   </div>
                 </div>
-              );
-            })}
+                <p className={`text-2xl sm:text-3xl font-black tracking-tight tabular-nums ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                  {counts.total}
+                </p>
+                <span className={`text-[11px] mt-1 block ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+                  All active candidate leads
+                </span>
+              </div>
+
+              {/* Card 2: New (Unsent) */}
+              <div className={`p-4 rounded-2xl border transition-all relative overflow-hidden group ${
+                isDarkMode
+                  ? 'bg-slate-900/50 border-slate-800/80 hover:border-blue-500/40 hover:bg-slate-800/40'
+                  : 'bg-white border-slate-200/80 hover:border-blue-300 shadow-sm'
+              }`}>
+                <div className="flex items-center justify-between mb-2">
+                  <span className={`text-[10px] font-bold uppercase tracking-wider ${isDarkMode ? 'text-blue-300/80' : 'text-blue-600'}`}>
+                    New (Unsent)
+                  </span>
+                  <div className={`p-1.5 rounded-lg ${isDarkMode ? 'bg-blue-500/10 text-blue-400' : 'bg-blue-50 text-blue-600'}`}>
+                    <Mail className="w-3.5 h-3.5" />
+                  </div>
+                </div>
+                <p className={`text-2xl sm:text-3xl font-black tracking-tight tabular-nums ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>
+                  {counts.new}
+                </p>
+                <span className={`text-[11px] mt-1 block ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+                  Ready for initial dispatch
+                </span>
+              </div>
+
+              {/* Card 3: Pending (Invited) */}
+              <div className={`p-4 rounded-2xl border transition-all relative overflow-hidden group ${
+                isDarkMode
+                  ? 'bg-slate-900/50 border-slate-800/80 hover:border-amber-500/40 hover:bg-slate-800/40'
+                  : 'bg-white border-slate-200/80 hover:border-amber-300 shadow-sm'
+              }`}>
+                <div className="flex items-center justify-between mb-2">
+                  <span className={`text-[10px] font-bold uppercase tracking-wider ${isDarkMode ? 'text-amber-300/80' : 'text-amber-600'}`}>
+                    Pending (Invited)
+                  </span>
+                  <div className={`p-1.5 rounded-lg ${isDarkMode ? 'bg-amber-500/10 text-amber-400' : 'bg-amber-50 text-amber-600'}`}>
+                    <Clock className="w-3.5 h-3.5" />
+                  </div>
+                </div>
+                <p className={`text-2xl sm:text-3xl font-black tracking-tight tabular-nums ${isDarkMode ? 'text-amber-400' : 'text-amber-600'}`}>
+                  {counts.invited}
+                </p>
+                <span className={`text-[11px] mt-1 block ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+                  In 72h cooldown window
+                </span>
+              </div>
+
+              {/* Card 4: Joined & Active */}
+              <div className={`p-4 rounded-2xl border transition-all relative overflow-hidden group ${
+                isDarkMode
+                  ? 'bg-slate-900/50 border-slate-800/80 hover:border-emerald-500/40 hover:bg-slate-800/40'
+                  : 'bg-white border-slate-200/80 hover:border-emerald-300 shadow-sm'
+              }`}>
+                <div className="flex items-center justify-between mb-2">
+                  <span className={`text-[10px] font-bold uppercase tracking-wider ${isDarkMode ? 'text-emerald-300/80' : 'text-emerald-600'}`}>
+                    Joined & Active
+                  </span>
+                  <div className={`p-1.5 rounded-lg ${isDarkMode ? 'bg-emerald-500/10 text-emerald-400' : 'bg-emerald-50 text-emerald-600'}`}>
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                  </div>
+                </div>
+                <p className={`text-2xl sm:text-3xl font-black tracking-tight tabular-nums ${isDarkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>
+                  {counts.joined}
+                </p>
+                <span className={`text-[11px] mt-1 block ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+                  Claimed & registered users
+                </span>
+              </div>
+
+              {/* Card 5: 72h+ Re-invite Ready */}
+              <div className={`p-4 rounded-2xl border transition-all relative overflow-hidden group col-span-2 sm:col-span-1 ${
+                isDarkMode
+                  ? 'bg-slate-900/50 border-slate-800/80 hover:border-purple-500/40 hover:bg-slate-800/40'
+                  : 'bg-white border-slate-200/80 hover:border-purple-300 shadow-sm'
+              }`}>
+                <div className="flex items-center justify-between mb-2">
+                  <span className={`text-[10px] font-bold uppercase tracking-wider ${isDarkMode ? 'text-purple-300/80' : 'text-purple-600'}`}>
+                    Re-invite Ready
+                  </span>
+                  <div className={`p-1.5 rounded-lg ${isDarkMode ? 'bg-purple-500/10 text-purple-400' : 'bg-purple-50 text-purple-600'}`}>
+                    <RefreshCw className="w-3.5 h-3.5" />
+                  </div>
+                </div>
+                <p className={`text-2xl sm:text-3xl font-black tracking-tight tabular-nums ${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`}>
+                  {counts.eligible}
+                </p>
+                <span className={`text-[11px] mt-1 block ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+                  Cooldown expired (72h+)
+                </span>
+              </div>
+            </div>
+
+            {/* Unified Command & Filter Toolbar */}
+            <div className={`p-3.5 sm:p-4 rounded-2xl border space-y-3 ${
+              isDarkMode ? 'bg-slate-900/40 border-slate-800/80' : 'bg-white border-slate-200/80 shadow-sm'
+            }`}>
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+                {/* Search Input */}
+                <div className="relative flex-1 min-w-0">
+                  <Search className={`w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`} />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Filter by alumnus name, email, company, job designation..."
+                    className={`w-full pl-10 pr-9 py-2.5 rounded-xl text-xs sm:text-sm border outline-none transition-all ${
+                      isDarkMode
+                        ? 'bg-slate-950/60 border-slate-800 text-white placeholder-slate-500 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/30'
+                        : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:border-cyan-600 focus:ring-1 focus:ring-cyan-500/20'
+                    }`}
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-md text-slate-400 hover:text-white"
+                      title="Clear search"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Dept Selector & Batch Actions */}
+                <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                  <select
+                    value={deptFilter}
+                    onChange={(e) => setDeptFilter(e.target.value)}
+                    className={`w-full sm:w-44 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm border outline-none font-semibold ${
+                      isDarkMode
+                        ? 'bg-slate-950/60 border-slate-800 text-slate-200 focus:border-cyan-500'
+                        : 'bg-slate-50 border-slate-200 text-slate-800 focus:border-cyan-600'
+                    }`}
+                  >
+                    <option value="all">All Departments</option>
+                    {DEPARTMENTS.map((d) => (
+                      <option key={d} value={d}>{d}</option>
+                    ))}
+                  </select>
+
+                  {counts.new > 0 && (
+                    <button
+                      onClick={handleSendAllNew}
+                      disabled={batchSending}
+                      className="px-3.5 py-2.5 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white flex items-center gap-1.5 shadow-md shadow-blue-600/20 active:scale-95 transition-all disabled:opacity-50 shrink-0"
+                    >
+                      <Send className="w-3.5 h-3.5" />
+                      <span>Invite All New ({counts.new})</span>
+                    </button>
+                  )}
+
+                  {counts.eligible > 0 && (
+                    <button
+                      onClick={handleSendAllReminders}
+                      disabled={batchSending}
+                      className="px-3.5 py-2.5 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white flex items-center gap-1.5 shadow-md shadow-purple-600/20 active:scale-95 transition-all disabled:opacity-50 shrink-0"
+                    >
+                      <RefreshCw className={`w-3.5 h-3.5 ${batchSending ? 'animate-spin' : ''}`} />
+                      <span>Send Reminders ({counts.eligible})</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Status Filters Bar */}
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none pt-1 border-t border-slate-200/60 dark:border-slate-800/60">
+                {[
+                  { id: 'all', label: 'All', count: counts.total },
+                  { id: 'new', label: 'New Leads', count: counts.new },
+                  { id: 'invited', label: 'Invited', count: counts.invited },
+                  { id: 'eligible', label: 'Ready for Reminder', count: counts.eligible },
+                  { id: 'joined', label: 'Joined', count: counts.joined },
+                ].map((tab) => {
+                  const isSelected = statusFilter === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => setStatusFilter(tab.id as any)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 ${
+                        isSelected
+                          ? 'bg-cyan-600 text-white shadow-md shadow-cyan-600/25'
+                          : isDarkMode
+                          ? 'bg-slate-800/40 hover:bg-slate-800 text-slate-400 hover:text-slate-200'
+                          : 'bg-slate-100 hover:bg-slate-200/80 text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      <span>{tab.label}</span>
+                      <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                        isSelected
+                          ? 'bg-white/20 text-white'
+                          : isDarkMode
+                          ? 'bg-slate-700/60 text-slate-300'
+                          : 'bg-slate-200 text-slate-700'
+                      }`}>
+                        {tab.count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Modern Prospects Table */}
+            {loading ? (
+              <div className="py-16 text-center">
+                <RefreshCw className="w-8 h-8 animate-spin mx-auto text-cyan-500 mb-3" />
+                <p className="text-sm font-bold text-slate-800 dark:text-slate-200">Loading alumni outreach prospects...</p>
+                <p className={`text-xs mt-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                  Connecting to Supabase and evaluating 72-hour cooldown states...
+                </p>
+              </div>
+            ) : filteredLeads.length === 0 ? (
+              <div className={`py-16 text-center rounded-2xl border border-dashed ${
+                isDarkMode ? 'border-slate-800 text-slate-400 bg-slate-950/20' : 'border-slate-200 text-slate-500 bg-slate-50/50'
+              }`}>
+                <Users className="w-12 h-12 mx-auto mb-3 opacity-30 text-cyan-400" />
+                <p className="text-sm font-bold">No alumni prospects found</p>
+                <p className="text-xs mt-1 text-slate-500">
+                  Try clearing search filters or import new candidates from Universal Collector or CSV.
+                </p>
+              </div>
+            ) : (
+              <div className={`rounded-2xl border overflow-hidden transition-all ${
+                isDarkMode ? 'border-slate-800/80 bg-slate-950/40' : 'border-slate-200 bg-white'
+              }`}>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className={`border-b text-[11px] font-bold uppercase tracking-wider ${
+                        isDarkMode ? 'border-slate-800/80 text-slate-400 bg-slate-900/60' : 'border-slate-200 text-slate-500 bg-slate-50'
+                      }`}>
+                        <th className="py-3.5 px-4">Alumnus Profile</th>
+                        <th className="py-3.5 px-4">Department & Class</th>
+                        <th className="py-3.5 px-4">Current Career</th>
+                        <th className="py-3.5 px-4">Status & Cooldown</th>
+                        <th className="py-3.5 px-4 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className={`divide-y ${isDarkMode ? 'divide-slate-800/60' : 'divide-slate-100'}`}>
+                      {filteredLeads.map((item) => {
+                        const eligibility = checkReinviteEligibility(item);
+                        const isSendingThis = sendingId === item.id;
+
+                        return (
+                          <tr
+                            key={item.id}
+                            className={`transition-colors ${
+                              isDarkMode ? 'hover:bg-cyan-500/[0.04]' : 'hover:bg-slate-50/80'
+                            }`}
+                          >
+                            {/* Alumnus Profile Column */}
+                            <td className="py-3.5 px-4 min-w-[200px]">
+                              <div className="flex items-center gap-3">
+                                <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 border ${
+                                  isDarkMode
+                                    ? 'bg-gradient-to-br from-cyan-500/20 to-blue-600/20 text-cyan-300 border-cyan-500/30'
+                                    : 'bg-gradient-to-br from-cyan-100 to-blue-100 text-cyan-800 border-cyan-200'
+                                }`}>
+                                  {getInitials(item.full_name)}
+                                </div>
+                                <div className="min-w-0">
+                                  <div className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-1.5">
+                                    <span className="truncate">{item.full_name}</span>
+                                    {(() => {
+                                      const verifiedUrl = getVerifiedSocialLink(item.linkedin_url, item.notes);
+                                      if (!verifiedUrl) return null;
+                                      const isFb = verifiedUrl.includes('facebook.com');
+                                      const isLi = verifiedUrl.includes('linkedin.com');
+                                      return (
+                                        <a
+                                          href={verifiedUrl}
+                                          target="_blank"
+                                          rel="noreferrer"
+                                          title={
+                                            isFb
+                                              ? 'Verified Facebook Profile'
+                                              : isLi
+                                              ? 'Verified LinkedIn Profile'
+                                              : 'Verified Social Profile'
+                                          }
+                                          className={`p-0.5 rounded transition-colors ${
+                                            isFb
+                                              ? 'text-blue-500 hover:text-blue-400'
+                                              : isLi
+                                              ? 'text-sky-500 hover:text-sky-400'
+                                              : 'text-slate-400 hover:text-cyan-400'
+                                          }`}
+                                        >
+                                          {isFb ? (
+                                            <Facebook className="w-3.5 h-3.5" />
+                                          ) : isLi ? (
+                                            <Linkedin className="w-3.5 h-3.5" />
+                                          ) : (
+                                            <Globe className="w-3.5 h-3.5" />
+                                          )}
+                                        </a>
+                                      );
+                                    })()}
+                                  </div>
+                                  <p className={`text-[11px] truncate ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                                    {item.email}
+                                  </p>
+                                </div>
+                              </div>
+                            </td>
+
+                            {/* Department & Class */}
+                            <td className="py-3.5 px-4 whitespace-nowrap">
+                              <div className="space-y-0.5">
+                                <span className={`inline-flex px-2 py-0.5 rounded-md text-[11px] font-bold border ${
+                                  isDarkMode ? 'bg-cyan-500/10 text-cyan-300 border-cyan-500/25' : 'bg-cyan-50 text-cyan-700 border-cyan-200'
+                                }`}>
+                                  {item.department}
+                                </span>
+                                <div className={`text-[11px] font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                                  {item.passing_year ? `Class of ${item.passing_year}` : 'Graduate'}
+                                  {item.intake ? ` · Intake ${item.intake}` : ''}
+                                </div>
+                              </div>
+                            </td>
+
+                            {/* Current Career */}
+                            <td className="py-3.5 px-4 min-w-[170px]">
+                              <div className="space-y-0.5">
+                                <p className="font-semibold text-slate-900 dark:text-slate-200 truncate">
+                                  {item.designation || 'Alumnus'}
+                                </p>
+                                <p className={`text-[11px] truncate flex items-center gap-1.5 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                                  <Building className="w-3 h-3 flex-shrink-0 text-slate-500" />
+                                  <span className="truncate">{item.company || 'Not specified'}</span>
+                                </p>
+                              </div>
+                            </td>
+
+                            {/* Status & 72h Cooldown */}
+                            <td className="py-3.5 px-4 min-w-[180px]">
+                              {item.status === 'joined' ? (
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                                  Active Member
+                                </span>
+                              ) : item.status === 'new' ? (
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-blue-500/15 text-blue-400 border border-blue-500/30">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+                                  New Lead
+                                </span>
+                              ) : item.status === 'already_registered' ? (
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-500/15 text-slate-400 border border-slate-500/30">
+                                  Registered
+                                </span>
+                              ) : (
+                                <div className="space-y-1">
+                                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                                    Invited ({item.invite_count}x)
+                                  </span>
+                                  <div>
+                                    {eligibility.eligible ? (
+                                      <span className="text-[10px] text-purple-400 font-semibold flex items-center gap-1">
+                                        <Sparkles className="w-3 h-3 text-purple-400" />
+                                        72h+ cleared · Ready to re-invite
+                                      </span>
+                                    ) : (
+                                      <span className={`text-[10px] flex items-center gap-1 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+                                        <Clock className="w-3 h-3" />
+                                        {eligibility.remainingHours}h cooldown left
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+                            </td>
+
+                            {/* Actions */}
+                            <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                              <div className="flex items-center justify-end gap-1.5">
+                                {/* Send / Re-invite */}
+                                {item.status !== 'joined' && item.status !== 'already_registered' && (
+                                  <button
+                                    onClick={() => handleOpenSendModal(item)}
+                                    disabled={isSendingThis || !eligibility.eligible}
+                                    className={`px-2.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                                      item.status === 'new'
+                                        ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-sm shadow-blue-600/20 active:scale-95'
+                                        : eligibility.eligible
+                                        ? 'bg-purple-600 hover:bg-purple-500 text-white shadow-sm shadow-purple-600/20 active:scale-95'
+                                        : 'bg-slate-800/40 text-slate-600 cursor-not-allowed border border-slate-800'
+                                    }`}
+                                    title={eligibility.eligible ? 'Review & customize message body before sending' : eligibility.reason}
+                                  >
+                                    {isSendingThis ? (
+                                      <RefreshCw className="w-3 h-3 animate-spin" />
+                                    ) : item.status === 'new' ? (
+                                      <>
+                                        <Mail className="w-3 h-3" />
+                                        <span>Invite</span>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <RefreshCw className="w-3 h-3" />
+                                        <span>Re-invite</span>
+                                      </>
+                                    )}
+                                  </button>
+                                )}
+
+                                {/* Social DM Ready Message Button */}
+                                {item.status !== 'joined' && (
+                                  <button
+                                    onClick={() => handleOpenSocialModal(item)}
+                                    className={`px-2.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 border transition-all active:scale-95 ${
+                                      isDarkMode
+                                        ? 'bg-emerald-950/30 hover:bg-emerald-900/40 text-emerald-300 border-emerald-500/30 shadow-sm'
+                                        : 'bg-emerald-50 hover:bg-emerald-100/80 text-emerald-800 border-emerald-200 shadow-sm'
+                                    }`}
+                                    title="Social Media Ready DM (Copy invitation text & link for Messenger / WhatsApp / DM)"
+                                  >
+                                    <MessageSquare className="w-3.5 h-3.5 text-emerald-400" />
+                                    <span className="hidden sm:inline">Social DM</span>
+                                  </button>
+                                )}
+
+                                {/* Copy Magic Link Button */}
+                                {item.status !== 'joined' && (
+                                  <button
+                                    onClick={() => handleCopyLink(item.invite_token, item.id)}
+                                    className={`p-1.5 rounded-xl border transition-all active:scale-95 ${
+                                      copiedId === item.id
+                                        ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
+                                        : isDarkMode
+                                        ? 'bg-slate-800/60 hover:bg-slate-800 text-slate-300 border-slate-700/80'
+                                        : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
+                                    }`}
+                                    title="Copy Magic Invite Link"
+                                  >
+                                    {copiedId === item.id ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                                  </button>
+                                )}
+
+                                {/* Delete Lead */}
+                                <button
+                                  onClick={() => handleDeleteLead(item.id, item.full_name)}
+                                  className={`p-1.5 rounded-xl border border-transparent transition-all active:scale-95 ${
+                                    isDarkMode
+                                      ? 'hover:bg-rose-500/20 text-slate-500 hover:text-rose-400 hover:border-rose-500/30'
+                                      : 'hover:bg-rose-50 text-slate-400 hover:text-rose-600 hover:border-rose-200'
+                                  }`}
+                                  title="Delete Prospect"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          /* SUB-TAB 2: AUTO-DISCOVERY & MASS CAPTURE */
+          <div className="space-y-5">
+            {/* Discovery Controls Bar */}
+            <div className={`p-4 sm:p-5 rounded-2xl border space-y-4 ${
+              isDarkMode ? 'bg-slate-900/40 border-slate-800/80' : 'bg-slate-50 border-slate-200'
+            }`}>
+              <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <Sparkles className="w-4 h-4 text-cyan-400" />
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                      BUBT Multi-Department Graduate Directory & Discovery
+                    </h3>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-cyan-500/15 text-cyan-400 border border-cyan-500/30">
+                      All 9 Faculties
+                    </span>
+                  </div>
+                  <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                    Query verified BUBT graduates across all faculties, or prospect live profiles directly from Google, Facebook, and LinkedIn.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2 flex-wrap">
+                  <button
+                    onClick={handleCaptureAllSelected}
+                    disabled={discoveryLoading || selectedDiscoveredIds.size === 0}
+                    className="px-4 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white flex items-center gap-1.5 shadow-lg shadow-cyan-600/20 active:scale-95 disabled:opacity-50 transition-all"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>Capture Selected ({selectedDiscoveredIds.size})</span>
+                  </button>
+                  <button
+                    onClick={() => setIsUniversalCollectorOpen(true)}
+                    className={`px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 border transition-all active:scale-95 ${
+                      isDarkMode ? 'bg-indigo-950/40 text-indigo-300 border-indigo-500/30 hover:bg-indigo-900/60' : 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100'
+                    }`}
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+                    <span>Universal Collector (Google · FB · In)</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Explanation Banner */}
+              <div className={`p-3 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs ${
+                isDarkMode ? 'bg-slate-950/60 border-slate-800 text-slate-300' : 'bg-sky-50/70 border-sky-200/80 text-sky-900'
+              }`}>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm">💡</span>
+                  <span className="leading-snug">
+                    <strong>How it works:</strong> Search our pre-indexed directory across all 9 faculties below, or launch <strong>Universal Collector</strong> to prospect directly from social networks.
+                  </span>
+                </div>
+                <button
+                  onClick={() => setIsUniversalCollectorOpen(true)}
+                  className="text-[11px] font-bold text-sky-400 hover:underline shrink-0 flex items-center gap-1"
+                >
+                  Open Universal Collector →
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
+                {/* Dept Selector */}
+                <div className="sm:col-span-3">
+                  <select
+                    value={discoveryDept}
+                    onChange={(e) => setDiscoveryDept(e.target.value)}
+                    className={`w-full px-3 py-2.5 rounded-xl text-xs font-semibold border outline-none ${
+                      isDarkMode ? 'bg-slate-950/60 border-slate-800 text-white focus:border-cyan-500' : 'bg-white border-slate-300 text-slate-800 focus:border-cyan-600'
+                    }`}
+                  >
+                    <option value="all">All Departments ({discoveredAlumni.length})</option>
+                    {DEPARTMENTS.map((d) => (
+                      <option key={d} value={d}>{d}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Keyword Search */}
+                <div className="sm:col-span-7 relative">
+                  <Search className={`w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`} />
+                  <input
+                    type="text"
+                    value={discoveryKeyword}
+                    onChange={(e) => setDiscoveryKeyword(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleRunDiscovery()}
+                    placeholder="Filter by alumnus name, company (e.g. Brain Station, bKash, Walton), or role..."
+                    className={`w-full pl-9 pr-3 py-2.5 rounded-xl text-xs border outline-none ${
+                      isDarkMode ? 'bg-slate-950/60 border-slate-800 text-white placeholder-slate-500 focus:border-cyan-500' : 'bg-white border-slate-300 text-slate-900 placeholder-slate-400 focus:border-cyan-600'
+                    }`}
+                  />
+                </div>
+
+                {/* Search Button */}
+                <div className="sm:col-span-2">
+                  <button
+                    onClick={handleRunDiscovery}
+                    disabled={discoveryLoading}
+                    className="w-full h-full py-2.5 rounded-xl text-xs font-bold bg-cyan-600 hover:bg-cyan-500 text-white flex items-center justify-center gap-1.5 shadow-md active:scale-95 transition-all disabled:opacity-50"
+                  >
+                    <Search className={`w-3.5 h-3.5 ${discoveryLoading ? 'animate-spin' : ''}`} />
+                    <span>{discoveryLoading ? 'Filtering...' : 'Search'}</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Select all & counts status */}
+              <div className="flex items-center justify-between text-xs pt-1">
+                <div className="flex items-center gap-2">
+                  <label className="flex items-center gap-2 cursor-pointer font-semibold select-none">
+                    <input
+                      type="checkbox"
+                      checked={discoveredAlumni.length > 0 && selectedDiscoveredIds.size === discoveredAlumni.length}
+                      onChange={handleToggleSelectAll}
+                      className="rounded text-cyan-600 focus:ring-cyan-500 w-3.5 h-3.5"
+                    />
+                    <span>Select All ({discoveredAlumni.length} Candidates)</span>
+                  </label>
+                </div>
+                <span className={`text-[11px] ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                  {selectedDiscoveredIds.size} of {discoveredAlumni.length} selected
+                </span>
+              </div>
+            </div>
+
+            {/* Discovery Candidate Grid / Cards */}
+            {discoveryLoading ? (
+              <div className="py-16 text-center">
+                <RefreshCw className="w-8 h-8 animate-spin mx-auto text-cyan-400 mb-3" />
+                <p className="text-sm font-bold text-slate-800 dark:text-slate-200">Scanning BUBT alumni records across departments...</p>
+                <p className={`text-xs mt-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                  Checking CSE portal, multi-department graduate database, and online networks...
+                </p>
+              </div>
+            ) : discoveredAlumni.length === 0 ? (
+              <div className={`py-12 text-center rounded-2xl border border-dashed ${
+                isDarkMode ? 'border-slate-800 text-slate-400' : 'border-slate-300 text-slate-500 bg-slate-50'
+              }`}>
+                <GraduationCap className="w-10 h-10 mx-auto mb-2 opacity-50 text-cyan-400" />
+                <p className="text-sm font-bold">No alumni found for the selected criteria</p>
+                <p className="text-xs mt-1">Try switching department to "All Departments" or clearing the keyword filter.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+                {discoveredAlumni.map((cand) => {
+                  const isCaptured = isAlreadyCaptured(cand);
+                  const isJustCaptured = capturedSuccessIds.has(cand.id);
+                  const isCapturing = capturingIds.has(cand.id);
+                  const isSelected = selectedDiscoveredIds.has(cand.id);
+
+                  return (
+                    <div
+                      key={cand.id}
+                      className={`p-4 rounded-2xl border transition-all relative flex flex-col justify-between ${
+                        isSelected
+                          ? isDarkMode
+                            ? 'bg-slate-900/90 border-cyan-500/50 shadow-lg shadow-cyan-950/20'
+                            : 'bg-cyan-50/50 border-cyan-400/60 shadow-sm'
+                          : isDarkMode
+                          ? 'bg-slate-900/50 border-slate-800/80 hover:border-slate-700/80 hover:bg-slate-800/30'
+                          : 'bg-white border-slate-200 hover:border-slate-300 shadow-sm'
+                      }`}
+                    >
+                      <div>
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                          <label className="flex items-center gap-2 cursor-pointer flex-1">
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => handleToggleSelect(cand.id)}
+                              disabled={isCaptured || isJustCaptured}
+                              className="rounded text-cyan-600 focus:ring-cyan-500 w-3.5 h-3.5 mt-0.5"
+                            />
+                            <span className="font-bold text-sm leading-tight text-slate-900 dark:text-white">
+                              {cand.full_name}
+                            </span>
+                          </label>
+
+                          <span className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider shrink-0 ${
+                            cand.department === 'CSE'
+                              ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                              : cand.department === 'EEE'
+                              ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                              : cand.department === 'BBA'
+                              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                              : cand.department === 'Civil'
+                              ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
+                              : cand.department === 'Textile'
+                              ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
+                              : cand.department === 'Law'
+                              ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+                              : 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
+                          }`}>
+                            {cand.department}
+                          </span>
+                        </div>
+
+                        <div className={`text-xs space-y-1 mb-3 ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>
+                          <div className="flex items-center gap-1.5 font-medium">
+                            <Building className="w-3.5 h-3.5 opacity-60 text-cyan-400 shrink-0" />
+                            <span className="truncate">
+                              {cand.designation || 'Alumnus'} {cand.company ? `· ${cand.company}` : ''}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-[11px] opacity-75">
+                            <GraduationCap className="w-3.5 h-3.5 opacity-60 shrink-0" />
+                            <span>
+                              {cand.intake ? `Intake ${cand.intake}` : 'BUBT Graduate'}
+                              {cand.passing_year ? ` · Class of ${cand.passing_year}` : ''}
+                            </span>
+                          </div>
+                          {cand.linkedin_url && (
+                            <div className="pt-1">
+                              <a
+                                href={cand.linkedin_url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-1 text-[11px] text-sky-400 hover:underline"
+                              >
+                                <Linkedin className="w-3 h-3" />
+                                <span>View LinkedIn Profile</span>
+                              </a>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="pt-2 border-t border-slate-200/60 dark:border-slate-800/80 flex items-center justify-between gap-2 text-xs">
+                        <span className={`text-[10px] truncate max-w-[140px] ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`} title={cand.source}>
+                          {cand.source}
+                        </span>
+
+                        {isJustCaptured || isCaptured ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                            <CheckCircle2 className="w-3 h-3" />
+                            <span>In Prospects</span>
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => handleCaptureCandidate(cand)}
+                            disabled={isCapturing}
+                            className="px-3 py-1 rounded-xl text-xs font-bold bg-cyan-600 hover:bg-cyan-500 text-white flex items-center gap-1 shadow-sm active:scale-95 transition-all disabled:opacity-50"
+                          >
+                            <Plus className={`w-3 h-3 ${isCapturing ? 'animate-spin' : ''}`} />
+                            <span>{isCapturing ? 'Capturing...' : 'Capture'}</span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
       </div>
-    )}
-  </div>
 
       {/* MODAL 1: Add Single Prospect */}
       {isAddModalOpen && createPortal(

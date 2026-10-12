@@ -1,6 +1,6 @@
 import React, { useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Home, BarChart3, GraduationCap, Bell, BookOpen, MessageSquare, ArrowLeft, History } from "lucide-react";
+import { Home, BarChart3, GraduationCap, Bell, BookOpen, MessageSquare, History } from "lucide-react";
 
 type BadgeType = "live" | "new" | "soon";
 
@@ -12,6 +12,7 @@ interface NavTab {
   isActive: boolean;
   icon?: React.ReactNode;
   hasRedDot?: boolean;
+  unreadCount?: number;
   showLabelWithIcon?: boolean;
 }
 
@@ -30,23 +31,41 @@ function LiveDot() {
   );
 }
 
-function NewBadge({ isActive, isDarkMode }: { isActive: boolean; isDarkMode: boolean }) {
-  return (
-    <span
-      className={`relative overflow-hidden px-1.5 py-0.5 rounded-full text-[9px] font-bold leading-none tracking-wide ${
-        isActive
-          ? isDarkMode
-            ? "bg-emerald-500 text-white"        // dark mode: white pill → green badge
-            : "bg-white/25 text-white"            // light mode: dark pill → white badge
-          : isDarkMode
-          ? "bg-emerald-400 text-slate-900"
-          : "bg-emerald-500 text-white"
-      }`}
-    >
-      <span className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/40 to-transparent" />
-      NEW
-    </span>
-  );
+function TabIndicator({
+  unreadCount,
+  hasRedDot,
+  isActive,
+  isDarkMode,
+}: {
+  unreadCount?: number;
+  hasRedDot?: boolean;
+  isActive: boolean;
+  isDarkMode: boolean;
+}) {
+  if (unreadCount !== undefined && unreadCount > 0) {
+    return (
+      <span
+        className={`ml-1 px-1.5 min-w-[17px] h-[17px] rounded-full text-[10px] font-black flex items-center justify-center leading-none transition-all ${
+          isActive
+            ? "bg-red-500 text-white"
+            : "bg-red-500 text-white shadow-[0_0_8px_rgba(239,68,68,0.55)]"
+        }`}
+      >
+        {unreadCount > 99 ? "99+" : unreadCount}
+      </span>
+    );
+  }
+
+  if (hasRedDot) {
+    return (
+      <span className="relative flex h-2 w-2 ml-1 items-center justify-center">
+        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500 shadow-[0_0_6px_#ef4444]" />
+      </span>
+    );
+  }
+
+  return null;
 }
 
 function SoonBadge({ isActive, isDarkMode }: { isActive: boolean; isDarkMode: boolean }) {
@@ -72,11 +91,7 @@ function SlideNav({ tabs, isDarkMode, layoutId }: SlideNavProps) {
 
   return (
     <ul
-      className={`relative flex items-center rounded-full px-1.5 py-1.5 gap-0.5 border transition-colors duration-300 ${
-        isDarkMode
-          ? "bg-[#16181c] border-[#2f3336] shadow-lg shadow-black/30"
-          : "bg-white border-slate-200 shadow-md shadow-black/8"
-      }`}
+      className="relative flex items-center p-0.5 gap-1 sm:gap-1.5 select-none"
       onMouseLeave={() => setPosition((pv) => ({ ...pv, opacity: 0 }))}
     >
       {tabs.map((tab) => (
@@ -121,8 +136,8 @@ const NavTab = ({
             ? "font-bold text-slate-900"
             : "font-bold text-white"
           : isDarkMode
-          ? "font-medium text-[#71767b] hover:text-[#e7e9ea]"
-          : "font-medium text-slate-500 hover:text-slate-800"
+          ? "font-semibold text-slate-300 hover:text-white"
+          : "font-semibold text-slate-600 hover:text-slate-900"
       }`}
     >
       {tab.icon && (!tab.label || tab.showLabelWithIcon) ? (
@@ -131,14 +146,13 @@ const NavTab = ({
             <span className="flex-shrink-0">{tab.icon}</span>
             <span>{tab.label}</span>
             {tab.badge === "live" && <LiveDot />}
-            {tab.badge === "new" && !tab.hasRedDot && <NewBadge isActive={tab.isActive} isDarkMode={isDarkMode} />}
             {tab.badge === "soon" && <SoonBadge isActive={tab.isActive} isDarkMode={isDarkMode} />}
-            {tab.hasRedDot && (
-              <span className="relative flex h-2 w-2 ml-0.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500 shadow-[0_0_6px_#ef4444]"></span>
-              </span>
-            )}
+            <TabIndicator
+              unreadCount={tab.unreadCount}
+              hasRedDot={tab.hasRedDot}
+              isActive={tab.isActive}
+              isDarkMode={isDarkMode}
+            />
           </>
         ) : (
           tab.icon
@@ -147,14 +161,13 @@ const NavTab = ({
         <>
           {tab.badge === "live" && <LiveDot />}
           <span>{tab.label}</span>
-          {tab.badge === "new" && !tab.hasRedDot && <NewBadge isActive={tab.isActive} isDarkMode={isDarkMode} />}
           {tab.badge === "soon" && <SoonBadge isActive={tab.isActive} isDarkMode={isDarkMode} />}
-          {tab.hasRedDot && (
-            <span className="relative flex h-2 w-2 ml-0.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500 shadow-[0_0_6px_#ef4444]"></span>
-            </span>
-          )}
+          <TabIndicator
+            unreadCount={tab.unreadCount}
+            hasRedDot={tab.hasRedDot}
+            isActive={tab.isActive}
+            isDarkMode={isDarkMode}
+          />
         </>
       )}
 
@@ -183,13 +196,13 @@ const Cursor = ({
     animate={position}
     transition={{ type: "spring", stiffness: 350, damping: 30 }}
     className={`absolute z-0 h-8 rounded-full pointer-events-none ${
-      isDarkMode ? "bg-[#2f3336]/60" : "bg-slate-100"
+      isDarkMode ? "bg-white/10" : "bg-slate-900/5"
     }`}
   />
 );
 
 // Wired-up version for App.tsx
-interface AppNavHeaderProps {
+export interface AppNavHeaderProps {
   currentView: string;
   isDarkMode: boolean;
   isLoggedIn: boolean;
@@ -198,6 +211,10 @@ interface AppNavHeaderProps {
   setShowSignInModal: (v: boolean) => void;
   pendingConnectionsCount?: number;
   unreadMessagesCount?: number;
+  unreadResourcesCount?: number;
+  hasTeamUpdate?: boolean;
+  hasFacultyUpdate?: boolean;
+  unreadNoticesCount?: number;
   isBanned?: boolean;
 }
 
@@ -210,6 +227,10 @@ export function AppNavHeader({
   setShowSignInModal,
   pendingConnectionsCount = 0,
   unreadMessagesCount = 0,
+  unreadResourcesCount = 0,
+  hasTeamUpdate = false,
+  hasFacultyUpdate = false,
+  unreadNoticesCount = 0,
   isBanned = false,
 }: AppNavHeaderProps) {
   const requireLogin = (view: string, label: string) => {
@@ -242,42 +263,44 @@ export function AppNavHeader({
       icon: <Home className="h-4 w-4" />,
       isActive: currentView === "home",
       onClick: () => goToView("home"),
+      hasRedDot: unreadNoticesCount > 0,
     },
     {
       label: "Info Hub",
       view: "faculty",
-      badge: "new",
       isActive: currentView === "faculty",
       onClick: () => goToView("faculty"),
+      hasRedDot: hasFacultyUpdate || unreadNoticesCount > 0,
     },
     {
       label: "Teams",
       view: "teams",
-      badge: "new",
       isActive: currentView === "teams" || currentView === "team",
       onClick: () => requireLogin("teams", "Team Building"),
+      hasRedDot: hasTeamUpdate,
     },
     {
       label: "Network",
       view: "network",
-      badge: "new",
       isActive: currentView === "network",
       onClick: () => requireLogin("network", "My Network"),
+      unreadCount: pendingConnectionsCount > 0 ? pendingConnectionsCount : undefined,
       hasRedDot: pendingConnectionsCount > 0,
     },
     {
       label: "Resources",
       view: "shared-resources",
-      badge: "new",
       isActive: currentView === "shared-resources",
       onClick: () => requireLogin("shared-resources", "Shared Resources"),
+      unreadCount: unreadResourcesCount > 0 ? unreadResourcesCount : undefined,
+      hasRedDot: unreadResourcesCount > 0,
     },
     {
       label: "Alumni",
       view: "alumni",
-      badge: "new",
       isActive: currentView === "alumni",
       onClick: () => requireLogin("alumni", "Alumni Hub"),
+      unreadCount: unreadMessagesCount > 0 ? unreadMessagesCount : undefined,
       hasRedDot: unreadMessagesCount > 0,
     },
     {
@@ -291,12 +314,15 @@ export function AppNavHeader({
   return <SlideNav tabs={tabs} isDarkMode={isDarkMode} />;
 }
 
-interface AlumniNavHeaderProps {
+export interface AlumniNavHeaderProps {
   currentView: string;
   isDarkMode: boolean;
   goToView: (view: string) => void;
   pendingConnectionsCount?: number;
   unreadMessagesCount?: number;
+  unreadResourcesCount?: number;
+  hasFacultyUpdate?: boolean;
+  unreadNoticesCount?: number;
 }
 
 export function AlumniNavHeader({
@@ -305,6 +331,9 @@ export function AlumniNavHeader({
   goToView,
   pendingConnectionsCount = 0,
   unreadMessagesCount = 0,
+  unreadResourcesCount = 0,
+  hasFacultyUpdate = false,
+  unreadNoticesCount = 0,
 }: AlumniNavHeaderProps) {
   const tabs: NavTab[] = [
     {
@@ -313,20 +342,21 @@ export function AlumniNavHeader({
       icon: <Home className="h-4 w-4" />,
       isActive: currentView === "home",
       onClick: () => goToView("home"),
+      hasRedDot: unreadNoticesCount > 0,
     },
     {
       label: "Officials & Faculty",
       view: "faculty",
-      badge: "new",
       isActive: currentView === "faculty",
       onClick: () => goToView("faculty"),
+      hasRedDot: hasFacultyUpdate || unreadNoticesCount > 0,
     },
     {
       label: "Network",
       view: "network",
-      badge: "new",
       isActive: currentView === "network",
       onClick: () => goToView("network"),
+      unreadCount: pendingConnectionsCount > 0 ? pendingConnectionsCount : undefined,
       hasRedDot: pendingConnectionsCount > 0,
     },
     {
@@ -334,14 +364,16 @@ export function AlumniNavHeader({
       view: "messages",
       isActive: currentView === "messages",
       onClick: () => goToView("messages"),
+      unreadCount: unreadMessagesCount > 0 ? unreadMessagesCount : undefined,
       hasRedDot: unreadMessagesCount > 0,
     },
     {
       label: "Resources",
       view: "resources",
-      badge: "new",
       isActive: currentView === "resources",
       onClick: () => goToView("resources"),
+      unreadCount: unreadResourcesCount > 0 ? unreadResourcesCount : undefined,
+      hasRedDot: unreadResourcesCount > 0,
     },
   ];
 
@@ -354,7 +386,7 @@ export interface AdminNavHeaderProps {
   activeTab: AdminTabId;
   isDarkMode: boolean;
   onTabChange: (tab: AdminTabId) => void;
-  onExitAdmin: () => void;
+  onExitAdmin?: () => void;
   pendingAlumniCount?: number;
   newFeedbackCount?: number;
 }
@@ -371,7 +403,6 @@ export function AdminNavHeader({
   activeTab,
   isDarkMode,
   onTabChange,
-  onExitAdmin,
   pendingAlumniCount = 0,
   newFeedbackCount = 0,
 }: AdminNavHeaderProps) {
@@ -417,15 +448,9 @@ export function AdminNavHeader({
   ];
 
   return (
-    <div className="flex items-center gap-1 sm:gap-2.5 max-w-full">
-      {/* Dynamic pill bar: selected shows full name, others show icon only - no scrollbars */}
-      <ul
-        className={`relative flex items-center rounded-full p-0.5 sm:p-1.5 gap-0.5 sm:gap-1 border transition-colors duration-300 select-none overflow-hidden ${
-          isDarkMode
-            ? "bg-[#16181c] border-[#2f3336] shadow-lg shadow-black/30"
-            : "bg-white border-slate-200 shadow-md shadow-black/8"
-        }`}
-      >
+    <div className="flex items-center justify-center max-w-full">
+      {/* Seamless inline tab row sitting directly inside floating capsule */}
+      <ul className="relative flex items-center p-0.5 gap-0.5 sm:gap-1 select-none overflow-hidden">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
           const hasBadge = (tab.badgeCount ?? 0) > 0;
@@ -438,24 +463,24 @@ export function AdminNavHeader({
             >
               <button
                 type="button"
-                className={`relative flex items-center justify-center gap-1.5 sm:gap-2 rounded-full transition-all duration-200 outline-none focus:outline-none ${
+                className={`relative flex items-center justify-center gap-1 sm:gap-2 rounded-full transition-all duration-200 outline-none focus:outline-none cursor-pointer ${
                   isActive
                     ? isDarkMode
-                      ? "px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-bold text-slate-900 shadow-sm"
-                      : "px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-bold text-white shadow-sm"
+                      ? "px-2.5 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-bold text-slate-900 shadow-sm"
+                      : "px-2.5 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-bold text-white shadow-sm"
                     : isDarkMode
-                    ? "w-9 h-9 sm:w-10 sm:h-10 text-[#71767b] hover:text-[#e7e9ea] hover:bg-white/10"
-                    : "w-9 h-9 sm:w-10 sm:h-10 text-slate-500 hover:text-slate-800 hover:bg-slate-100"
+                    ? "w-[30px] h-[30px] sm:w-10 sm:h-10 text-slate-400 hover:text-white hover:bg-white/10"
+                    : "w-[30px] h-[30px] sm:w-10 sm:h-10 text-slate-500 hover:text-slate-900 hover:bg-slate-900/5"
                 }`}
                 title={tab.label}
               >
                 {/* Tab Icon with badge */}
                 <span className="relative flex items-center justify-center flex-shrink-0">
-                  {tab.icon("w-4 h-4 sm:w-[18px] sm:h-[18px]")}
+                  {tab.icon("w-3.5 h-3.5 sm:w-5 sm:h-5")}
                   {!isActive && hasBadge && (
-                    <span className="absolute -top-1 -right-1 flex h-2 w-2 sm:h-2.5 sm:w-2.5">
+                    <span className="absolute -top-0.5 -right-0.5 flex h-2 w-2 sm:h-2.5 sm:w-2.5">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 sm:h-2.5 sm:w-2.5 bg-red-500 shadow-[0_0_8px_#ef4444]"></span>
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 sm:h-2 sm:w-2 bg-red-500 shadow-[0_0_8px_#ef4444]"></span>
                     </span>
                   )}
                 </span>
@@ -484,7 +509,9 @@ export function AdminNavHeader({
                   <motion.span
                     layoutId="admin-active-nav-pill"
                     className={`absolute inset-0 rounded-full -z-10 shadow-md ${
-                      isDarkMode ? "bg-white shadow-white/10" : "bg-[#17181c] shadow-black/20"
+                      isDarkMode
+                        ? "bg-white shadow-[0_2px_14px_rgba(255,255,255,0.25)]"
+                        : "bg-slate-900 shadow-[0_2px_14px_rgba(0,0,0,0.22)]"
                     }`}
                     transition={{ type: "spring", stiffness: 450, damping: 35 }}
                   />
@@ -508,24 +535,8 @@ export function AdminNavHeader({
           );
         })}
       </ul>
-
-      {/* Exit Admin Button - hidden on mobile since it's already inside the profile button tab */}
-      <div className="hidden sm:flex items-center pl-1.5 sm:pl-3 ml-0.5 sm:ml-2 border-l border-slate-200 dark:border-[#2f3336] flex-shrink-0">
-        <button
-          onClick={onExitAdmin}
-          className={`group flex items-center gap-1.5 sm:gap-2 h-8 sm:h-10 px-2.5 sm:px-4 py-1 sm:py-2 rounded-full text-xs sm:text-sm font-bold border transition-all duration-200 select-none shadow-sm active:scale-95 whitespace-nowrap flex-shrink-0 ${
-            isDarkMode
-              ? "bg-rose-500/10 border-rose-500/30 text-rose-400 hover:bg-rose-500/20 hover:border-rose-500/50 hover:text-rose-300"
-              : "bg-rose-50 border-rose-200 text-rose-600 hover:bg-rose-100 hover:border-rose-300 hover:text-rose-700"
-          }`}
-          title="Exit Admin to Student Portal"
-        >
-          <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform duration-150 group-hover:-translate-x-0.5 flex-shrink-0" />
-          <span className="hidden sm:inline">Exit Admin</span>
-          <span className="sm:hidden">Exit</span>
-        </button>
-      </div>
     </div>
   );
 }
+
 
