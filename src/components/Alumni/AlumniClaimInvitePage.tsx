@@ -361,14 +361,14 @@ export const AlumniClaimInvitePage: React.FC<AlumniClaimInvitePageProps> = ({
               alt="Edu51Portal Logo"
               className="w-10 h-10 object-contain rounded-xl border border-red-500/30"
             />
-            <span className="text-xl font-bold tracking-tight text-white" style={{ fontFamily: "'Exo 2', sans-serif" }}>
+            <span className={`text-xl font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`} style={{ fontFamily: "'Exo 2', sans-serif" }}>
               Edu<span className="text-red-500">51</span>Portal
             </span>
           </div>
           <div className="w-14 h-14 rounded-2xl bg-red-500/10 text-red-500 flex items-center justify-center mx-auto mb-4 border border-red-500/20">
             <AlertCircle className="w-7 h-7" />
           </div>
-          <h2 className="text-xl font-bold mb-2 text-white" style={{ fontFamily: "'Exo 2', sans-serif" }}>
+          <h2 className={`text-xl font-bold mb-2 ${isDarkMode ? 'text-white' : 'text-slate-900'}`} style={{ fontFamily: "'Exo 2', sans-serif" }}>
             Invitation Expired or Invalid
           </h2>
           <p className={`text-xs mb-6 ${isDarkMode ? 'text-slate-400' : 'text-slate-600'} leading-relaxed`}>
@@ -391,7 +391,7 @@ export const AlumniClaimInvitePage: React.FC<AlumniClaimInvitePageProps> = ({
             </button>
           </div>
           <p className="text-[11px] text-slate-500 mt-6">
-            Presented by Team <strong className="text-white">CoreWe5</strong> · BUBT Intake 51
+            Presented by Team <strong className={isDarkMode ? 'text-white' : 'text-slate-900 font-bold'}>CoreWe5</strong> · BUBT Intake 51
           </p>
         </div>
       </div>
@@ -410,7 +410,7 @@ export const AlumniClaimInvitePage: React.FC<AlumniClaimInvitePageProps> = ({
               alt="Edu51Portal Logo"
               className="w-10 h-10 object-contain rounded-xl border border-red-500/30"
             />
-            <span className="text-xl font-bold tracking-tight text-white" style={{ fontFamily: "'Exo 2', sans-serif" }}>
+            <span className={`text-xl font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`} style={{ fontFamily: "'Exo 2', sans-serif" }}>
               Edu<span className="text-red-500">51</span>Portal
             </span>
           </div>
@@ -421,11 +421,11 @@ export const AlumniClaimInvitePage: React.FC<AlumniClaimInvitePageProps> = ({
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
             Verification Bypass Activated
           </span>
-          <h2 className="text-2xl font-black mb-2 text-white" style={{ fontFamily: "'Exo 2', sans-serif" }}>
+          <h2 className={`text-2xl font-black mb-2 ${isDarkMode ? 'text-white' : 'text-slate-900'}`} style={{ fontFamily: "'Exo 2', sans-serif" }}>
             Welcome to BUBT Alumni Directory!
           </h2>
           <p className={`text-xs mb-6 ${isDarkMode ? 'text-slate-300' : 'text-slate-600'} leading-relaxed`}>
-            Your official profile has been <strong className="text-emerald-400">instantly verified</strong> and published. Current students and fellow graduates can now discover and connect with you.
+            Your official profile has been <strong className="text-emerald-500 font-bold">instantly verified</strong> and published. Current students and fellow graduates can now discover and connect with you.
           </p>
           <button
             onClick={() => onNavigate('alumni')}
@@ -435,12 +435,15 @@ export const AlumniClaimInvitePage: React.FC<AlumniClaimInvitePageProps> = ({
             Enter Alumni Hub & Directory <ArrowRight className="w-4 h-4" />
           </button>
           <p className="text-[11px] text-slate-500 mt-6">
-            Presented by Team <strong className="text-white">CoreWe5</strong> · BUBT Intake 51
+            Presented by Team <strong className={isDarkMode ? 'text-white' : 'text-slate-900 font-bold'}>CoreWe5</strong> · BUBT Intake 51
           </p>
         </div>
       </div>
     );
   }
+
+  const labelCls = `block font-semibold mb-1 ${isDarkMode ? 'text-slate-200' : 'text-slate-700'}`;
+  const sectionDividerCls = `space-y-3 pt-4 border-t ${isDarkMode ? 'border-[#1d2638]' : 'border-slate-200'}`;
 
   return (
     <div className={`min-h-screen py-8 px-4 sm:px-6 lg:px-8 flex flex-col items-center ${isDarkMode ? 'bg-[#000000]' : 'bg-slate-50'}`}>
@@ -458,19 +461,23 @@ export const AlumniClaimInvitePage: React.FC<AlumniClaimInvitePageProps> = ({
           />
           <div>
             <span
-              className="text-xl font-bold tracking-tight text-white block leading-none"
+              className={`text-xl font-bold tracking-tight block leading-none ${isDarkMode ? 'text-white' : 'text-slate-900'}`}
               style={{ fontFamily: "'Exo 2', sans-serif" }}
             >
               Edu<span className="text-red-500">51</span>Portal
             </span>
-            <span className="text-[10px] text-slate-400 font-medium tracking-wide">
+            <span className={`text-[10px] font-medium tracking-wide ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
               Official BUBT Academic & Alumni Platform
             </span>
           </div>
         </button>
         <button
           onClick={() => onNavigate('alumni')}
-          className="text-xs font-semibold px-3 py-1.5 rounded-xl border border-[#1d2638] hover:border-red-500/50 text-slate-300 hover:text-white transition-all bg-[#0c1017]"
+          className={`text-xs font-semibold px-3 py-1.5 rounded-xl border transition-all ${
+            isDarkMode
+              ? 'border-[#1d2638] hover:border-red-500/50 text-slate-300 hover:text-white bg-[#0c1017]'
+              : 'border-slate-300 hover:border-red-500/50 text-slate-700 hover:text-slate-900 bg-white shadow-sm'
+          }`}
         >
           Browse Directory →
         </button>
@@ -517,7 +524,7 @@ export const AlumniClaimInvitePage: React.FC<AlumniClaimInvitePageProps> = ({
             <ShieldCheck className="w-3.5 h-3.5" />
           </div>
           <div className="leading-relaxed">
-            <strong className="text-emerald-400">Instant Verified Alumni Status:</strong> Standard registration requires manual administrative review. By claiming this official invitation, your alumni badge is <strong className="text-white">immediately activated</strong> and published to the directory without queue delays.
+            <strong className="text-emerald-500 font-bold">Instant Verified Alumni Status:</strong> Standard registration requires manual administrative review. By claiming this official invitation, your alumni badge is <strong className={isDarkMode ? 'text-white' : 'text-slate-900 font-bold'}>immediately activated</strong> and published to the directory without queue delays.
           </div>
         </div>
 
@@ -537,15 +544,15 @@ export const AlumniClaimInvitePage: React.FC<AlumniClaimInvitePageProps> = ({
                 : isDarkMode ? 'bg-[#070b12] border-[#1d2638]' : 'bg-slate-50 border-slate-200'
             }`}>
               <div className="flex items-center justify-between text-xs font-bold mb-2">
-                <span className="flex items-center gap-1.5 text-slate-200">
+                <span className={`flex items-center gap-1.5 ${isDarkMode ? 'text-slate-200' : 'text-slate-700'}`}>
                   <Sparkles className="w-3.5 h-3.5 text-red-500" />
                   Official Profile Completeness
                 </span>
-                <span className={completionStats.percent === 100 ? 'text-emerald-400 font-extrabold' : 'text-red-500 font-bold'}>
+                <span className={completionStats.percent === 100 ? 'text-emerald-500 font-extrabold' : 'text-red-500 font-bold'}>
                   {completionStats.percent}% ({completionStats.completedCount}/{completionStats.totalCount} fields completed)
                 </span>
               </div>
-              <div className="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
+              <div className={`w-full h-2 rounded-full overflow-hidden ${isDarkMode ? 'bg-slate-800' : 'bg-slate-200'}`}>
                 <div
                   className={`h-full transition-all duration-500 rounded-full ${
                     completionStats.percent === 100
@@ -555,7 +562,7 @@ export const AlumniClaimInvitePage: React.FC<AlumniClaimInvitePageProps> = ({
                   style={{ width: `${completionStats.percent}%` }}
                 />
               </div>
-              <p className="text-[11px] text-slate-400 mt-2">
+              <p className={`text-[11px] mt-2 ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
                 {completionStats.percent === 100
                   ? '✓ All fields completed! Your verified VIP profile is ready for instant publication.'
                   : 'Please complete all required fields below to publish an official, verified alumni profile.'}
@@ -571,7 +578,7 @@ export const AlumniClaimInvitePage: React.FC<AlumniClaimInvitePageProps> = ({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block font-semibold mb-1 text-slate-200">Full Academic Name *</label>
+                  <label className={labelCls}>Full Academic Name *</label>
                   <input
                     type="text"
                     required
@@ -587,7 +594,7 @@ export const AlumniClaimInvitePage: React.FC<AlumniClaimInvitePageProps> = ({
                 </div>
 
                 <div>
-                  <label className="block font-semibold mb-1 text-slate-200">Department *</label>
+                  <label className={labelCls}>Department *</label>
                   <select
                     value={department}
                     required
@@ -599,13 +606,13 @@ export const AlumniClaimInvitePage: React.FC<AlumniClaimInvitePageProps> = ({
                     }`}
                   >
                     {DEPARTMENTS.map((d) => (
-                      <option key={d} value={d} className="bg-[#0c1017] text-white">{d}</option>
+                      <option key={d} value={d} className={isDarkMode ? 'bg-[#0c1017] text-white' : 'bg-white text-slate-900'}>{d}</option>
                     ))}
                   </select>
                 </div>
 
                 <div>
-                  <label className="block font-semibold mb-1 text-slate-200">Passing Year *</label>
+                  <label className={labelCls}>Passing Year *</label>
                   <input
                     type="number"
                     required
@@ -621,7 +628,7 @@ export const AlumniClaimInvitePage: React.FC<AlumniClaimInvitePageProps> = ({
                 </div>
 
                 <div>
-                  <label className="block font-semibold mb-1 text-slate-200">Intake / Batch *</label>
+                  <label className={labelCls}>Intake / Batch *</label>
                   <input
                     type="number"
                     required
@@ -639,14 +646,14 @@ export const AlumniClaimInvitePage: React.FC<AlumniClaimInvitePageProps> = ({
             </div>
 
             {/* SECTION 2: Security & Login */}
-            <div className="space-y-3 pt-4 border-t border-[#1d2638]">
+            <div className={sectionDividerCls}>
               <div className="flex items-center gap-2 font-bold text-sm text-red-500" style={{ fontFamily: "'Exo 2', sans-serif" }}>
                 <Lock className="w-4 h-4 text-red-500" />
                 <span>2. Account Security & Login Credentials</span>
               </div>
 
               <div>
-                <label className="block font-semibold mb-1 text-slate-200">Account Email *</label>
+                <label className={labelCls}>Account Email *</label>
                 <input
                   type="email"
                   required
@@ -659,14 +666,14 @@ export const AlumniClaimInvitePage: React.FC<AlumniClaimInvitePageProps> = ({
                       : 'bg-white border-slate-300 text-slate-900 focus:border-red-500 focus:ring-1 focus:ring-red-500/30'
                   }`}
                 />
-                <span className="text-[10px] text-slate-500 mt-1 block">
+                <span className={`text-[10px] mt-1 block ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
                   You will use this email address to log into Edu51Portal.
                 </span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block font-semibold mb-1 text-slate-200">Create Password *</label>
+                  <label className={labelCls}>Create Password *</label>
                   <input
                     type="password"
                     required
@@ -683,7 +690,7 @@ export const AlumniClaimInvitePage: React.FC<AlumniClaimInvitePageProps> = ({
                 </div>
 
                 <div>
-                  <label className="block font-semibold mb-1 text-slate-200">Confirm Password *</label>
+                  <label className={labelCls}>Confirm Password *</label>
                   <input
                     type="password"
                     required
@@ -702,7 +709,7 @@ export const AlumniClaimInvitePage: React.FC<AlumniClaimInvitePageProps> = ({
             </div>
 
             {/* SECTION 3: Career & Social Media */}
-            <div className="space-y-3 pt-4 border-t border-[#1d2638]">
+            <div className={sectionDividerCls}>
               <div className="flex items-center gap-2 font-bold text-sm text-red-500" style={{ fontFamily: "'Exo 2', sans-serif" }}>
                 <Briefcase className="w-4 h-4 text-red-500" />
                 <span>3. Professional Profile & Verified Social Links</span>
@@ -710,7 +717,7 @@ export const AlumniClaimInvitePage: React.FC<AlumniClaimInvitePageProps> = ({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block font-semibold mb-1 text-slate-200">Current Job Title / Designation *</label>
+                  <label className={labelCls}>Current Job Title / Designation *</label>
                   <input
                     type="text"
                     required
@@ -726,7 +733,7 @@ export const AlumniClaimInvitePage: React.FC<AlumniClaimInvitePageProps> = ({
                 </div>
 
                 <div>
-                  <label className="block font-semibold mb-1 text-slate-200">Company / Organization *</label>
+                  <label className={labelCls}>Company / Organization *</label>
                   <input
                     type="text"
                     required
@@ -742,7 +749,7 @@ export const AlumniClaimInvitePage: React.FC<AlumniClaimInvitePageProps> = ({
                 </div>
 
                 <div>
-                  <label className="block font-semibold mb-1 text-slate-200">City / Location *</label>
+                  <label className={labelCls}>City / Location *</label>
                   <input
                     type="text"
                     required
@@ -758,7 +765,7 @@ export const AlumniClaimInvitePage: React.FC<AlumniClaimInvitePageProps> = ({
                 </div>
 
                 <div>
-                  <label className="block font-semibold mb-1 text-slate-200">Phone / WhatsApp Number *</label>
+                  <label className={labelCls}>Phone / WhatsApp Number *</label>
                   <input
                     type="text"
                     required
@@ -774,7 +781,7 @@ export const AlumniClaimInvitePage: React.FC<AlumniClaimInvitePageProps> = ({
                 </div>
 
                 <div>
-                  <label className="block font-semibold mb-1 text-slate-200">
+                  <label className={labelCls}>
                     LinkedIn Profile URL {(!facebookUrl.trim() ? '*' : '(Optional)')}
                   </label>
                   <input
@@ -791,7 +798,7 @@ export const AlumniClaimInvitePage: React.FC<AlumniClaimInvitePageProps> = ({
                 </div>
 
                 <div>
-                  <label className="block font-semibold mb-1 text-slate-200">
+                  <label className={labelCls}>
                     Facebook Profile URL {(!linkedinUrl.trim() ? '*' : '(Optional)')}
                   </label>
                   <input
@@ -807,20 +814,20 @@ export const AlumniClaimInvitePage: React.FC<AlumniClaimInvitePageProps> = ({
                   />
                 </div>
               </div>
-              <p className="text-[11px] text-slate-400">
+              <p className={`text-[11px] ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
                 🔒 Note: At least one verified social profile link (LinkedIn or Facebook) is required to ensure official directory authenticity.
               </p>
             </div>
 
             {/* SECTION 4: Bio & Mentorship */}
-            <div className="space-y-3 pt-4 border-t border-[#1d2638]">
+            <div className={sectionDividerCls}>
               <div className="flex items-center gap-2 font-bold text-sm text-red-500" style={{ fontFamily: "'Exo 2', sans-serif" }}>
                 <BookOpen className="w-4 h-4 text-red-500" />
                 <span>4. Bio, Career Advice & Student Mentorship</span>
               </div>
 
               <div>
-                <label className="block font-semibold mb-1 text-slate-200">Brief Bio / Professional Journey *</label>
+                <label className={labelCls}>Brief Bio / Professional Journey *</label>
                 <textarea
                   rows={3}
                   required
@@ -836,7 +843,7 @@ export const AlumniClaimInvitePage: React.FC<AlumniClaimInvitePageProps> = ({
               </div>
 
               <div>
-                <label className="block font-semibold mb-1 text-slate-200">Career Advice for Juniors *</label>
+                <label className={labelCls}>Career Advice for Juniors *</label>
                 <textarea
                   rows={3}
                   required
@@ -864,8 +871,10 @@ export const AlumniClaimInvitePage: React.FC<AlumniClaimInvitePageProps> = ({
                   className="mt-0.5 rounded border-slate-700 text-red-600 focus:ring-red-500 w-4 h-4 accent-red-600"
                 />
                 <div>
-                  <span className="font-bold block text-sm text-white">Open to Mentoring BUBT Juniors</span>
-                  <span className={isDarkMode ? 'text-slate-400 text-xs' : 'text-slate-500 text-xs'}>
+                  <span className={`font-bold block text-sm ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                    Open to Mentoring BUBT Juniors
+                  </span>
+                  <span className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
                     Allow verified BUBT current students to view your tips and reach out for career guidance or resume advice.
                   </span>
                 </div>
@@ -892,7 +901,7 @@ export const AlumniClaimInvitePage: React.FC<AlumniClaimInvitePageProps> = ({
                   </>
                 )}
               </button>
-              <p className="text-[11px] text-center text-slate-500 mt-2">
+              <p className={`text-[11px] text-center mt-2 ${isDarkMode ? 'text-slate-500' : 'text-slate-600'}`}>
                 Pre-approved VIP bypass: Your account is verified instantly without administrative review.
               </p>
             </div>
@@ -900,15 +909,15 @@ export const AlumniClaimInvitePage: React.FC<AlumniClaimInvitePageProps> = ({
 
           {/* Footer Attribution */}
           <div className={`pt-6 border-t flex flex-col sm:flex-row items-center justify-between gap-3 text-xs ${
-            isDarkMode ? 'border-[#1d2638] text-slate-400' : 'border-slate-200 text-slate-500'
+            isDarkMode ? 'border-[#1d2638] text-slate-400' : 'border-slate-200 text-slate-600'
           }`}>
             <div className="flex items-center gap-2">
-              <span>Presented by Team <strong className="text-white font-bold">CoreWe5</strong> · BUBT Intake 51</span>
+              <span>Presented by Team <strong className={isDarkMode ? 'text-white font-bold' : 'text-slate-900 font-bold'}>CoreWe5</strong> · BUBT Intake 51</span>
             </div>
             <button
               type="button"
               onClick={() => onNavigate('meet-team')}
-              className="inline-flex items-center gap-1.5 font-bold text-red-500 hover:text-red-400 transition-colors"
+              className="inline-flex items-center gap-1.5 font-bold text-red-500 hover:text-red-600 transition-colors"
             >
               Meet Our Team <ExternalLink className="w-3.5 h-3.5" />
             </button>

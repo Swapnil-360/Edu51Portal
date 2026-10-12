@@ -228,11 +228,16 @@ export default function AlumniRegisterForm({
     }
   };
 
-  const pageBg = "bg-[#000000]";
-  const textColor = "text-white";
-  const subColor = "text-slate-400";
-  const cardBg = "bg-[#0c1017] border-[#1d2638] shadow-2xl";
-  const inputBg = "bg-[#070b12] border-[#1d2638]";
+  const pageBg = isDarkMode ? "bg-[#000000]" : "bg-slate-50";
+  const textColor = isDarkMode ? "text-white" : "text-slate-900";
+  const subColor = isDarkMode ? "text-slate-400" : "text-slate-600";
+  const cardBg = isDarkMode
+    ? "bg-[#0c1017] border-[#1d2638] shadow-2xl"
+    : "bg-white border-slate-200 shadow-xl";
+  const inputBg = isDarkMode
+    ? "bg-[#070b12] border-[#1d2638] text-white placeholder-slate-500"
+    : "bg-white border-slate-300 text-slate-900 placeholder-slate-400";
+  const borderDivider = isDarkMode ? "border-[#1d2638]" : "border-slate-200";
   const focusBorder = "focus:border-red-500 focus:ring-1 focus:ring-red-500/30";
 
   if (success) {
@@ -247,7 +252,7 @@ export default function AlumniRegisterForm({
               className="w-10 h-10 object-contain rounded-xl border border-red-500/30 shadow-md shadow-red-950/40"
             />
             <span
-              className="text-xl font-bold tracking-tight text-white"
+              className={`text-xl font-bold tracking-tight ${textColor}`}
               style={{ fontFamily: "'Exo 2', sans-serif" }}
             >
               Edu<span className="text-red-500">51</span>Portal
@@ -263,15 +268,15 @@ export default function AlumniRegisterForm({
           </span>
 
           <h2
-            className="text-2xl font-bold text-white mb-2"
+            className={`text-2xl font-bold mb-2 ${textColor}`}
             style={{ fontFamily: "'Exo 2', sans-serif" }}
           >
             Welcome to the Network!
           </h2>
 
-          <p className="text-xs text-slate-300 leading-relaxed mb-6">
+          <p className={`text-xs leading-relaxed mb-6 ${subColor}`}>
             Thank you for registering as a BUBT alumnus! Your profile has been saved and is currently{" "}
-            <strong className="text-white">pending administrative verification</strong>. Once reviewed by an administrator, your badge will be active and your profile will appear in the public alumni directory.
+            <strong className={textColor}>pending administrative verification</strong>. Once reviewed by an administrator, your badge will be active and your profile will appear in the public alumni directory.
           </p>
 
           <button
@@ -283,7 +288,7 @@ export default function AlumniRegisterForm({
           </button>
 
           <p className="text-[11px] text-slate-500 mt-6">
-            Presented by Team <strong className="text-white">CoreWe5</strong> · BUBT Intake 51
+            Presented by Team <strong className={textColor}>CoreWe5</strong> · BUBT Intake 51
           </p>
         </div>
       </div>
@@ -302,12 +307,12 @@ export default function AlumniRegisterForm({
           />
           <div>
             <span
-              className="text-lg font-bold tracking-tight text-white block leading-tight"
+              className={`text-lg font-bold tracking-tight block leading-tight ${textColor}`}
               style={{ fontFamily: "'Exo 2', sans-serif" }}
             >
               Edu<span className="text-red-500">51</span>Portal
             </span>
-            <span className="text-[10px] text-slate-400 font-medium tracking-wide">
+            <span className={`text-[10px] font-medium tracking-wide ${subColor}`}>
               Official BUBT Academic & Alumni Registry
             </span>
           </div>
@@ -315,7 +320,11 @@ export default function AlumniRegisterForm({
 
         <button
           onClick={onBack}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border border-[#1d2638] text-slate-300 hover:text-white hover:border-red-500/50 bg-[#0c1017] transition-all"
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
+            isDarkMode
+              ? "border-[#1d2638] text-slate-300 hover:text-white hover:border-red-500/50 bg-[#0c1017]"
+              : "border-slate-300 text-slate-700 hover:text-slate-900 hover:border-red-500/50 bg-white shadow-sm"
+          }`}
         >
           <ArrowLeft className="h-3.5 w-3.5" />
           Back to Directory
@@ -325,25 +334,25 @@ export default function AlumniRegisterForm({
       {/* Main Registration Card */}
       <div className={`max-w-2xl w-full rounded-2xl border p-6 md:p-8 flex flex-col gap-6 ${cardBg}`}>
         {/* Card Header */}
-        <div className="border-b border-[#1d2638] pb-4">
+        <div className={`border-b ${borderDivider} pb-4`}>
           <div className="flex items-center justify-between flex-wrap gap-2 mb-2">
             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-red-500/15 text-red-400 border border-red-500/30">
               <Sparkles className="w-3 h-3 text-red-400" />
               Official BUBT Graduate Registration
             </span>
-            <span className="text-[11px] text-slate-400 font-medium">
+            <span className={`text-[11px] font-medium ${subColor}`}>
               Intake 1 – Present
             </span>
           </div>
 
           <h2
-            className="text-2xl font-bold flex items-center gap-2 text-white"
+            className={`text-2xl font-bold flex items-center gap-2 ${textColor}`}
             style={{ fontFamily: "'Exo 2', sans-serif" }}
           >
             <ShieldCheck className="h-6 w-6 text-red-500" />
             Join the Alumni Community
           </h2>
-          <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+          <p className={`text-xs mt-1 leading-relaxed ${subColor}`}>
             Create your permanent profile on the Edu51Portal Alumni Registry. Inspire BUBT juniors, mentor rising talents, and connect with fellow graduates across industries.
           </p>
         </div>
@@ -444,7 +453,7 @@ export default function AlumniRegisterForm({
           </div>
 
           {/* SECTION 2: Academic Background */}
-          <div className="space-y-3 border-t border-[#1d2638] pt-4">
+          <div className={`space-y-3 border-t ${borderDivider} pt-4`}>
             <div
               className="flex items-center gap-2 font-bold text-xs uppercase tracking-wider text-red-500"
               style={{ fontFamily: "'Exo 2', sans-serif" }}
@@ -465,7 +474,7 @@ export default function AlumniRegisterForm({
                   className={`w-full px-3 py-2.5 rounded-xl text-sm border outline-none transition-colors ${inputBg} ${textColor} ${focusBorder}`}
                 >
                   {DEPARTMENTS.map((dept) => (
-                    <option key={dept} value={dept} className="bg-[#0c1017] text-white">
+                    <option key={dept} value={dept} className={isDarkMode ? "bg-[#0c1017] text-white" : "bg-white text-slate-900"}>
                       {dept}
                     </option>
                   ))}
@@ -512,7 +521,7 @@ export default function AlumniRegisterForm({
           </div>
 
           {/* SECTION 3: Professional Career */}
-          <div className="space-y-3 border-t border-[#1d2638] pt-4">
+          <div className={`space-y-3 border-t ${borderDivider} pt-4`}>
             <div
               className="flex items-center gap-2 font-bold text-xs uppercase tracking-wider text-red-500"
               style={{ fontFamily: "'Exo 2', sans-serif" }}
@@ -561,7 +570,7 @@ export default function AlumniRegisterForm({
           </div>
 
           {/* SECTION 4: Social Links & Contact */}
-          <div className="space-y-3 border-t border-[#1d2638] pt-4">
+          <div className={`space-y-3 border-t ${borderDivider} pt-4`}>
             <div
               className="flex items-center gap-2 font-bold text-xs uppercase tracking-wider text-red-500"
               style={{ fontFamily: "'Exo 2', sans-serif" }}
@@ -619,7 +628,7 @@ export default function AlumniRegisterForm({
           </div>
 
           {/* SECTION 5: Journey & Advice */}
-          <div className="space-y-4 border-t border-[#1d2638] pt-4">
+          <div className={`space-y-4 border-t ${borderDivider} pt-4`}>
             <div
               className="flex items-center gap-2 font-bold text-xs uppercase tracking-wider text-red-500"
               style={{ fontFamily: "'Exo 2', sans-serif" }}
@@ -657,12 +666,14 @@ export default function AlumniRegisterForm({
             </div>
 
             {/* Mentorship Availability Checkbox */}
-            <div className="flex items-center justify-between p-3.5 rounded-xl bg-[#070b12] border border-[#1d2638]">
+            <div className={`flex items-center justify-between p-3.5 rounded-xl border ${
+              isDarkMode ? 'bg-[#070b12] border-[#1d2638]' : 'bg-slate-50 border-slate-200'
+            }`}>
               <div className="flex flex-col">
                 <span className={`text-xs font-semibold ${textColor}`}>
                   Open for Student Mentorship
                 </span>
-                <span className="text-[11px] text-slate-400">
+                <span className={`text-[11px] ${subColor}`}>
                   Allow juniors to connect with you for career guidance and advice.
                 </span>
               </div>
@@ -679,11 +690,15 @@ export default function AlumniRegisterForm({
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center gap-3 border-t border-[#1d2638] pt-5">
+          <div className={`flex items-center gap-3 border-t ${borderDivider} pt-5`}>
             <button
               type="button"
               onClick={onBack}
-              className="flex-1 py-3 rounded-xl text-xs font-semibold border border-[#1d2638] hover:bg-[#121824] text-slate-300 transition-colors"
+              className={`flex-1 py-3 rounded-xl text-xs font-semibold border transition-colors ${
+                isDarkMode
+                  ? "border-[#1d2638] hover:bg-[#121824] text-slate-300"
+                  : "border-slate-300 hover:bg-slate-100 text-slate-700"
+              }`}
             >
               Cancel
             </button>
@@ -709,8 +724,8 @@ export default function AlumniRegisterForm({
         </form>
 
         {/* Footer Attribution */}
-        <div className="pt-4 border-t border-[#1d2638] text-center text-xs text-slate-500">
-          Presented by Team <strong className="text-white font-bold">CoreWe5</strong> · BUBT Intake 51
+        <div className={`pt-4 border-t ${borderDivider} text-center text-xs ${subColor}`}>
+          Presented by Team <strong className={textColor}>CoreWe5</strong> · BUBT Intake 51
         </div>
       </div>
     </div>
