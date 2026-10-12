@@ -3600,31 +3600,31 @@ For any queries, contact your course instructors or the department.`,
               : "bg-white/80 border-slate-200/50 text-gray-900 shadow-sm shadow-slate-100/10"
             }`}
         >
-        <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 relative">
-          <div className="flex items-center justify-between h-[72px] lg:h-20 gap-4">
+        <div className={`w-full mx-auto ${isAdmin && currentView === "admin" ? "px-2 sm:px-6" : "px-4 sm:px-6"} lg:px-8 xl:px-12 relative`}>
+          <div className={`flex items-center justify-between h-[72px] lg:h-20 ${isAdmin && currentView === "admin" ? "gap-1.5 sm:gap-4" : "gap-4"}`}>
 
             {/* Left: Hamburger (mobile only) + Logo (desktop only) */}
-            <div className="flex items-center gap-3 flex-shrink-0">
+            <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
               {isAdmin && currentView === "admin" ? (
                 /* In admin mode: compact logo on mobile & desktop */
                 <button
                   onClick={() => goToView("home")}
-                  className="header-logo-btn flex items-center gap-0.1 focus:outline-none group"
+                  className="header-logo-btn flex items-center gap-1.5 focus:outline-none group"
                   title="Edu51Portal Home"
                 >
                   <img
                     src="/Edu51Portal.png"
                     alt="Edu51Portal Logo"
-                    className="h-10 w-10 sm:h-12 sm:w-12 lg:h-16 lg:w-16 object-cover rounded-xl flex-shrink-0 drop-shadow-sm"
+                    className="h-8 w-8 sm:h-12 sm:w-12 lg:h-16 lg:w-16 object-cover rounded-xl flex-shrink-0 drop-shadow-sm"
                     width="64"
                     height="64"
                     decoding="async"
                   />
                   <span
-                    className={`hidden sm:inline text-lg lg:text-xl font-bold tracking-tight whitespace-nowrap ${isDarkMode ? "text-[#e7e9ea]" : "text-[#0f1419]"}`}
+                    className={`hidden lg:inline text-lg lg:text-xl font-bold tracking-tight whitespace-nowrap ${isDarkMode ? "text-[#e7e9ea]" : "text-[#0f1419]"}`}
                     style={{ fontFamily: "'Exo 2', sans-serif" }}
                   >
-                    Edu<span className="text-red-500">51</span><span className="hidden lg:inline">Portal</span>
+                    Edu<span className="text-red-500">51</span>Portal
                   </span>
                 </button>
               ) : (
@@ -3669,9 +3669,9 @@ For any queries, contact your course instructors or the department.`,
             </div>
 
             {/* Center: Admin header tabs (mobile + desktop) or Student tabs / mobile logo */}
-            <div className="absolute left-1/2 -translate-x-1/2 flex items-center max-w-[calc(100vw-120px)] sm:max-w-none">
-              {isAdmin && currentView === "admin" ? (
-                <nav className="flex items-center">
+            {isAdmin && currentView === "admin" ? (
+              <div className="flex-1 min-w-0 flex items-center justify-center lg:absolute lg:left-1/2 lg:-translate-x-1/2 px-1">
+                <nav className="flex items-center max-w-full">
                   <AdminNavHeader
                     activeTab={adminTab}
                     isDarkMode={isDarkMode}
@@ -3681,47 +3681,47 @@ For any queries, contact your course instructors or the department.`,
                     newFeedbackCount={feedbackItems.filter((f) => f.status === "new").length}
                   />
                 </nav>
-              ) : (
-                <>
-                  {/* Mobile: centered logo */}
-                  <button
-                    onClick={() => goToView("home")}
-                    className="header-logo-btn flex lg:hidden items-center gap-0.1 focus:outline-none"
-                    title="Go to Home"
+              </div>
+            ) : (
+              <div className="absolute left-1/2 -translate-x-1/2 flex items-center max-w-[calc(100vw-120px)] sm:max-w-none">
+                {/* Mobile: centered logo */}
+                <button
+                  onClick={() => goToView("home")}
+                  className="header-logo-btn flex lg:hidden items-center gap-0.1 focus:outline-none"
+                  title="Go to Home"
+                >
+                  <img
+                    src="/Edu51Portal.png"
+                    alt="Edu51Portal Logo"
+                    className="h-14 w-14 object-cover rounded-xl drop-shadow-sm"
+                    width="54"
+                    height="54"
+                    decoding="async"
+                  />
+                  <span
+                    className={`text-lg font-bold tracking-tight whitespace-nowrap ${isDarkMode ? "text-[#e7e9ea]" : "text-[#0f1419]"}`}
+                    style={{ fontFamily: "'Exo 2', sans-serif" }}
                   >
-                    <img
-                      src="/Edu51Portal.png"
-                      alt="Edu51Portal Logo"
-                      className="h-14 w-14 object-cover rounded-xl drop-shadow-sm"
-                      width="54"
-                      height="54"
-                      decoding="async"
-                    />
-                    <span
-                      className={`text-lg font-bold tracking-tight whitespace-nowrap ${isDarkMode ? "text-[#e7e9ea]" : "text-[#0f1419]"}`}
-                      style={{ fontFamily: "'Exo 2', sans-serif" }}
-                    >
-                      Edu<span className="text-red-500">51</span>Portal
-                    </span>
-                  </button>
+                    Edu<span className="text-red-500">51</span>Portal
+                  </span>
+                </button>
 
-                  {/* Desktop: sliding pill nav with home icon as first tab */}
-                  <nav className="hidden lg:flex items-center">
-                    <AppNavHeader
-                      currentView={currentView}
-                      isDarkMode={isDarkMode}
-                      isLoggedIn={isLoggedIn}
-                      goToView={goToView}
-                      showMajorAccessNotification={showMajorAccessNotification}
-                      setShowSignInModal={setShowSignInModal}
-                      pendingConnectionsCount={pendingConnectionsCount}
-                      unreadMessagesCount={unreadMsgCount}
-                      isBanned={isBanned}
-                    />
-                  </nav>
-                </>
-              )}
-            </div>
+                {/* Desktop: sliding pill nav with home icon as first tab */}
+                <nav className="hidden lg:flex items-center">
+                  <AppNavHeader
+                    currentView={currentView}
+                    isDarkMode={isDarkMode}
+                    isLoggedIn={isLoggedIn}
+                    goToView={goToView}
+                    showMajorAccessNotification={showMajorAccessNotification}
+                    setShowSignInModal={setShowSignInModal}
+                    pendingConnectionsCount={pendingConnectionsCount}
+                    unreadMessagesCount={unreadMsgCount}
+                    isBanned={isBanned}
+                  />
+                </nav>
+              </div>
+            )}
 
             {/* Right: Auth buttons / User dropdown */}
             <div className="flex items-center gap-2 justify-end flex-shrink-0">
@@ -3768,7 +3768,8 @@ For any queries, contact your course instructors or the department.`,
                 <div className="relative" ref={userDropdownRef}>
                   <button
                     onClick={() => setShowUserDropdown(!showUserDropdown)}
-                    className={`flex items-center gap-2 pl-1 pr-3 py-1 rounded-full border transition-all duration-200 ${isDarkMode
+                    title={userProfile.name || "Profile menu"}
+                    className={`flex items-center justify-center gap-0 sm:gap-2 p-0.5 sm:pl-1 sm:pr-3 sm:py-1 rounded-full border transition-all duration-200 flex-shrink-0 ${isDarkMode
                         ? "bg-[#16181c] border-[#2f3336] text-[#d9d9d9] hover:bg-[#2f3336]"
                         : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50 shadow-sm"
                       }`}
@@ -3794,7 +3795,7 @@ For any queries, contact your course instructors or the department.`,
                       </span>
                     </div>
                     <svg
-                      className={`w-3 h-3 opacity-50 transition-transform duration-200 flex-shrink-0 ${showUserDropdown ? "rotate-180" : ""}`}
+                      className={`hidden sm:block w-3 h-3 opacity-50 transition-transform duration-200 flex-shrink-0 ${showUserDropdown ? "rotate-180" : ""}`}
                       fill="none" stroke="currentColor" viewBox="0 0 24 24"
                     >
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -3945,20 +3946,22 @@ For any queries, contact your course instructors or the department.`,
                 </div>
               )}
 
-              {/* Global Search */}
-              <button
-                onClick={() => setShowGlobalSearch(true)}
-                title="Search (Ctrl+K)"
-                className={`flex items-center justify-center w-9 h-9 rounded-full border transition-all duration-200 ${isDarkMode
-                    ? "bg-[#16181c] border-[#2f3336] text-[#8b98a5] hover:bg-[#2f3336] hover:text-white"
-                    : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50 shadow-sm"
-                  }`}
-              >
-                <Search className="h-4 w-4" />
-              </button>
+              {/* Global Search - hidden in admin mode */}
+              {!(isAdmin && currentView === "admin") && (
+                <button
+                  onClick={() => setShowGlobalSearch(true)}
+                  title="Search (Ctrl+K)"
+                  className={`flex items-center justify-center w-9 h-9 rounded-full border transition-all duration-200 ${isDarkMode
+                      ? "bg-[#16181c] border-[#2f3336] text-[#8b98a5] hover:bg-[#2f3336] hover:text-white"
+                      : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50 shadow-sm"
+                    }`}
+                >
+                  <Search className="h-4 w-4" />
+                </button>
+              )}
 
-              {/* Notification Bell + Popover */}
-              {isLoggedIn && (
+              {/* Notification Bell + Popover - hidden in admin mode */}
+              {isLoggedIn && !(isAdmin && currentView === "admin") && (
                 <div className="relative">
                   <button
                     onClick={toggleNoticePanel}

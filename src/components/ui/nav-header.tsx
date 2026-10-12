@@ -1,6 +1,6 @@
 import React, { useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Home, BarChart3, GraduationCap, Bell, BookOpen, MessageSquare, ArrowLeft } from "lucide-react";
+import { Home, BarChart3, GraduationCap, Bell, BookOpen, MessageSquare, ArrowLeft, History } from "lucide-react";
 
 type BadgeType = "live" | "new" | "soon";
 
@@ -348,7 +348,7 @@ export function AlumniNavHeader({
   return <SlideNav tabs={tabs} isDarkMode={isDarkMode} />;
 }
 
-export type AdminTabId = "dashboard" | "alumni" | "notices" | "materials" | "feedback";
+export type AdminTabId = "dashboard" | "alumni" | "notices" | "materials" | "feedback" | "logs";
 
 export interface AdminNavHeaderProps {
   activeTab: AdminTabId;
@@ -408,13 +408,19 @@ export function AdminNavHeader({
       icon: (cls) => <MessageSquare className={cls} />,
       badgeCount: newFeedbackCount,
     },
+    {
+      id: "logs",
+      label: "Audit & Activity Logs",
+      shortLabel: "Logs",
+      icon: (cls) => <History className={cls} />,
+    },
   ];
 
   return (
-    <div className="flex items-center gap-2 sm:gap-3">
-      {/* Dynamic pill bar: selected shows full name, others show icon only */}
+    <div className="flex items-center gap-1 sm:gap-2.5 max-w-full">
+      {/* Dynamic pill bar: selected shows full name, others show icon only - no scrollbars */}
       <ul
-        className={`relative flex items-center rounded-full px-1.5 py-1.5 gap-1 border transition-colors duration-300 select-none ${
+        className={`relative flex items-center rounded-full p-0.5 sm:p-1.5 gap-0.5 sm:gap-1 border transition-colors duration-300 select-none overflow-hidden ${
           isDarkMode
             ? "bg-[#16181c] border-[#2f3336] shadow-lg shadow-black/30"
             : "bg-white border-slate-200 shadow-md shadow-black/8"
@@ -428,28 +434,28 @@ export function AdminNavHeader({
             <li
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
-              className="relative group z-10"
+              className="relative group z-10 flex-shrink-0"
             >
               <button
                 type="button"
-                className={`relative flex items-center justify-center gap-2 rounded-full text-sm transition-all duration-200 outline-none focus:outline-none ${
+                className={`relative flex items-center justify-center gap-1 sm:gap-2 rounded-full transition-all duration-200 outline-none focus:outline-none ${
                   isActive
                     ? isDarkMode
-                      ? "px-4 py-2 font-bold text-slate-900 shadow-sm"
-                      : "px-4 py-2 font-bold text-white shadow-sm"
+                      ? "px-2 py-1 sm:px-4 sm:py-2 text-[11px] sm:text-sm font-bold text-slate-900 shadow-sm"
+                      : "px-2 py-1 sm:px-4 sm:py-2 text-[11px] sm:text-sm font-bold text-white shadow-sm"
                     : isDarkMode
-                    ? "w-10 h-10 text-[#71767b] hover:text-[#e7e9ea] hover:bg-white/10"
-                    : "w-10 h-10 text-slate-500 hover:text-slate-800 hover:bg-slate-100"
+                    ? "w-7 h-7 sm:w-10 sm:h-10 text-[#71767b] hover:text-[#e7e9ea] hover:bg-white/10"
+                    : "w-7 h-7 sm:w-10 sm:h-10 text-slate-500 hover:text-slate-800 hover:bg-slate-100"
                 }`}
                 title={tab.label}
               >
                 {/* Tab Icon with badge */}
                 <span className="relative flex items-center justify-center flex-shrink-0">
-                  {tab.icon("w-[18px] h-[18px]")}
+                  {tab.icon("w-3.5 h-3.5 sm:w-[18px] sm:h-[18px]")}
                   {!isActive && hasBadge && (
-                    <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+                    <span className="absolute -top-1 -right-1 flex h-2 w-2 sm:h-2.5 sm:w-2.5">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500 shadow-[0_0_8px_#ef4444]"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 sm:h-2.5 sm:w-2.5 bg-red-500 shadow-[0_0_8px_#ef4444]"></span>
                     </span>
                   )}
                 </span>
@@ -461,12 +467,12 @@ export function AdminNavHeader({
                     animate={{ opacity: 1, width: "auto" }}
                     exit={{ opacity: 0, width: 0 }}
                     transition={{ duration: 0.22, ease: "easeOut" }}
-                    className="overflow-hidden whitespace-nowrap text-sm font-bold flex items-center gap-1.5"
+                    className="overflow-hidden whitespace-nowrap text-[11px] sm:text-sm font-bold flex items-center gap-1"
                   >
                     <span className="hidden sm:inline">{tab.label}</span>
                     <span className="sm:hidden">{tab.shortLabel}</span>
                     {hasBadge && (
-                      <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-black bg-red-500 text-white">
+                      <span className="ml-0.5 px-1.5 py-0.2 rounded-full text-[9px] sm:text-[10px] font-black bg-red-500 text-white">
                         {tab.badgeCount}
                       </span>
                     )}
@@ -503,18 +509,18 @@ export function AdminNavHeader({
         })}
       </ul>
 
-      {/* Exit Admin Button with proper breathing room & visual separator */}
-      <div className="flex items-center pl-2 sm:pl-3 ml-1 sm:ml-2 border-l border-slate-200 dark:border-[#2f3336]">
+      {/* Exit Admin Button - hidden on mobile since it's already inside the profile button tab */}
+      <div className="hidden sm:flex items-center pl-1.5 sm:pl-3 ml-0.5 sm:ml-2 border-l border-slate-200 dark:border-[#2f3336] flex-shrink-0">
         <button
           onClick={onExitAdmin}
-          className={`group flex items-center gap-2 h-10 px-4 py-2 rounded-full text-sm font-bold border transition-all duration-200 select-none shadow-sm active:scale-95 whitespace-nowrap ${
+          className={`group flex items-center gap-1.5 sm:gap-2 h-8 sm:h-10 px-2.5 sm:px-4 py-1 sm:py-2 rounded-full text-xs sm:text-sm font-bold border transition-all duration-200 select-none shadow-sm active:scale-95 whitespace-nowrap flex-shrink-0 ${
             isDarkMode
               ? "bg-rose-500/10 border-rose-500/30 text-rose-400 hover:bg-rose-500/20 hover:border-rose-500/50 hover:text-rose-300"
               : "bg-rose-50 border-rose-200 text-rose-600 hover:bg-rose-100 hover:border-rose-300 hover:text-rose-700"
           }`}
           title="Exit Admin to Student Portal"
         >
-          <ArrowLeft className="w-4 h-4 transition-transform duration-150 group-hover:-translate-x-0.5 flex-shrink-0" />
+          <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform duration-150 group-hover:-translate-x-0.5 flex-shrink-0" />
           <span className="hidden sm:inline">Exit Admin</span>
           <span className="sm:hidden">Exit</span>
         </button>
