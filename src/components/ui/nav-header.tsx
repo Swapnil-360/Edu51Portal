@@ -438,20 +438,20 @@ export function AdminNavHeader({
             >
               <button
                 type="button"
-                className={`relative flex items-center justify-center gap-1 sm:gap-2 rounded-full transition-all duration-200 outline-none focus:outline-none ${
+                className={`relative flex items-center justify-center gap-1.5 sm:gap-2 rounded-full transition-all duration-200 outline-none focus:outline-none ${
                   isActive
                     ? isDarkMode
-                      ? "px-2 py-1 sm:px-4 sm:py-2 text-[11px] sm:text-sm font-bold text-slate-900 shadow-sm"
-                      : "px-2 py-1 sm:px-4 sm:py-2 text-[11px] sm:text-sm font-bold text-white shadow-sm"
+                      ? "px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-bold text-slate-900 shadow-sm"
+                      : "px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-bold text-white shadow-sm"
                     : isDarkMode
-                    ? "w-7 h-7 sm:w-10 sm:h-10 text-[#71767b] hover:text-[#e7e9ea] hover:bg-white/10"
-                    : "w-7 h-7 sm:w-10 sm:h-10 text-slate-500 hover:text-slate-800 hover:bg-slate-100"
+                    ? "w-9 h-9 sm:w-10 sm:h-10 text-[#71767b] hover:text-[#e7e9ea] hover:bg-white/10"
+                    : "w-9 h-9 sm:w-10 sm:h-10 text-slate-500 hover:text-slate-800 hover:bg-slate-100"
                 }`}
                 title={tab.label}
               >
                 {/* Tab Icon with badge */}
                 <span className="relative flex items-center justify-center flex-shrink-0">
-                  {tab.icon("w-3.5 h-3.5 sm:w-[18px] sm:h-[18px]")}
+                  {tab.icon("w-4 h-4 sm:w-[18px] sm:h-[18px]")}
                   {!isActive && hasBadge && (
                     <span className="absolute -top-1 -right-1 flex h-2 w-2 sm:h-2.5 sm:w-2.5">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
@@ -467,7 +467,7 @@ export function AdminNavHeader({
                     animate={{ opacity: 1, width: "auto" }}
                     exit={{ opacity: 0, width: 0 }}
                     transition={{ duration: 0.22, ease: "easeOut" }}
-                    className="overflow-hidden whitespace-nowrap text-[11px] sm:text-sm font-bold flex items-center gap-1"
+                    className="overflow-hidden whitespace-nowrap text-xs sm:text-sm font-bold flex items-center gap-1"
                   >
                     <span className="hidden sm:inline">{tab.label}</span>
                     <span className="sm:hidden">{tab.shortLabel}</span>

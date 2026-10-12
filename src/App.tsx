@@ -3615,7 +3615,7 @@ For any queries, contact your course instructors or the department.`,
                   <img
                     src="/Edu51Portal.png"
                     alt="Edu51Portal Logo"
-                    className="h-8 w-8 sm:h-12 sm:w-12 lg:h-16 lg:w-16 object-cover rounded-xl flex-shrink-0 drop-shadow-sm"
+                    className="h-10 w-10 sm:h-12 sm:w-12 lg:h-16 lg:w-16 object-cover rounded-xl flex-shrink-0 drop-shadow-sm"
                     width="64"
                     height="64"
                     decoding="async"
@@ -3774,14 +3774,14 @@ For any queries, contact your course instructors or the department.`,
                         : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50 shadow-sm"
                       }`}
                   >
-                    <div className="w-8 h-8 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0">
+                    <div className="w-9 h-9 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0">
                       {userProfile.profilePic || userProfile.avatar_url ? (
                         <img
                           src={userProfile.profilePic || userProfile.avatar_url}
                           alt={userProfile.name}
                           className="w-full h-full object-cover block"
-                          width="32"
-                          height="32"
+                          width="36"
+                          height="36"
                           decoding="async"
                         />
                       ) : (
