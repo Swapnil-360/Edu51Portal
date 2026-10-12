@@ -423,46 +423,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         </div>
       </div>
 
-      {/* Category Tabs Strip */}
-      <div className={`border-b ${isDarkMode ? 'bg-[#0f141c]/90 border-[#2f3336]/60' : 'bg-white/90 border-slate-200/90'} backdrop-blur-md sticky top-0 z-20 shadow-sm`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 overflow-x-auto scrollbar-none flex items-center gap-2">
-          {([
-            { id: 'dashboard', label: 'Dashboard & Users', icon: BarChart3 },
-            { id: 'alumni', label: 'Alumni Management', icon: GraduationCap, badge: pendingAlumni.length },
-            { id: 'notices', label: 'Notices & Broadcast', icon: Bell, badge: notices.filter(n => n.is_active).length },
-            { id: 'materials', label: 'Study Materials', icon: BookOpen },
-            { id: 'feedback', label: 'Feedback Inbox', icon: MessageSquare, badge: feedbackItems.filter(f => f.status === 'new').length },
-          ] as const).map((tabItem) => {
-            const Icon = tabItem.icon;
-            const isActive = currentTab === tabItem.id;
-            return (
-              <button
-                key={tabItem.id}
-                onClick={() => setTab(tabItem.id)}
-                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all select-none ${
-                  isActive
-                    ? isDarkMode
-                      ? 'bg-blue-600 text-white shadow-md shadow-blue-900/40'
-                      : 'bg-blue-600 text-white shadow-md shadow-blue-500/25'
-                    : isDarkMode
-                    ? 'bg-[#16181c] text-slate-300 hover:text-white border border-[#2f3336] hover:bg-[#20242a]'
-                    : 'bg-white text-slate-600 hover:text-slate-900 border border-slate-200 hover:bg-slate-50'
-                }`}
-              >
-                <Icon className="w-3.5 h-3.5 flex-shrink-0" />
-                <span>{tabItem.label}</span>
-                {!!tabItem.badge && tabItem.badge > 0 && (
-                  <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
-                    isActive ? 'bg-white/25 text-white' : 'bg-red-500 text-white'
-                  }`}>
-                    {tabItem.badge}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      </div>
+
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10 space-y-6 sm:space-y-8">
         {/* TAB 1: Dashboard & Users */}

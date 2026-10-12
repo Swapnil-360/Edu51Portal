@@ -3605,70 +3605,73 @@ For any queries, contact your course instructors or the department.`,
 
             {/* Left: Hamburger (mobile only) + Logo (desktop only) */}
             <div className="flex items-center gap-3 flex-shrink-0">
-              {/* Mobile hamburger */}
-              <button
-                onClick={() => setShowMobileMenu(!showMobileMenu)}
-                className={`p-2 rounded-xl transition-all duration-200 lg:hidden ${isDarkMode
-                    ? "hover:bg-white/10 text-[#8b98a5]"
-                    : "hover:bg-black/5 text-slate-600"
-                  }`}
-                title="Menu"
-              >
-                <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
-                </svg>
-              </button>
-
-              {/* Logo — desktop only (left-aligned) */}
-              <button
-                onClick={() => goToView("home")}
-                className="header-logo-btn hidden lg:flex items-center gap-0.1 focus:outline-none group"
-                title="Go to Home"
-              >
-                <img
-                  src="/Edu51Portal.png"
-                  alt="Edu51Portal Logo"
-                  className="h-20 w-20 object-cover rounded-xl flex-shrink-0 drop-shadow-sm"
-                  width="84"
-                  height="84"
-                  decoding="async"
-                />
-                <span
-                  className={`text-xl font-bold tracking-tight whitespace-nowrap ${isDarkMode ? "text-[#e7e9ea]" : "text-[#0f1419]"}`}
-                  style={{ fontFamily: "'Exo 2', sans-serif" }}
+              {isAdmin && currentView === "admin" ? (
+                /* In admin mode: compact logo on mobile & desktop */
+                <button
+                  onClick={() => goToView("home")}
+                  className="header-logo-btn flex items-center gap-0.1 focus:outline-none group"
+                  title="Edu51Portal Home"
                 >
-                  Edu<span className="text-red-500">51</span>Portal
-                </span>
-              </button>
+                  <img
+                    src="/Edu51Portal.png"
+                    alt="Edu51Portal Logo"
+                    className="h-10 w-10 sm:h-12 sm:w-12 lg:h-16 lg:w-16 object-cover rounded-xl flex-shrink-0 drop-shadow-sm"
+                    width="64"
+                    height="64"
+                    decoding="async"
+                  />
+                  <span
+                    className={`hidden sm:inline text-lg lg:text-xl font-bold tracking-tight whitespace-nowrap ${isDarkMode ? "text-[#e7e9ea]" : "text-[#0f1419]"}`}
+                    style={{ fontFamily: "'Exo 2', sans-serif" }}
+                  >
+                    Edu<span className="text-red-500">51</span><span className="hidden lg:inline">Portal</span>
+                  </span>
+                </button>
+              ) : (
+                <>
+                  {/* Mobile hamburger */}
+                  <button
+                    onClick={() => setShowMobileMenu(!showMobileMenu)}
+                    className={`p-2 rounded-xl transition-all duration-200 lg:hidden ${isDarkMode
+                        ? "hover:bg-white/10 text-[#8b98a5]"
+                        : "hover:bg-black/5 text-slate-600"
+                      }`}
+                    title="Menu"
+                  >
+                    <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
+                    </svg>
+                  </button>
+
+                  {/* Logo — desktop only (left-aligned) */}
+                  <button
+                    onClick={() => goToView("home")}
+                    className="header-logo-btn hidden lg:flex items-center gap-0.1 focus:outline-none group"
+                    title="Go to Home"
+                  >
+                    <img
+                      src="/Edu51Portal.png"
+                      alt="Edu51Portal Logo"
+                      className="h-20 w-20 object-cover rounded-xl flex-shrink-0 drop-shadow-sm"
+                      width="84"
+                      height="84"
+                      decoding="async"
+                    />
+                    <span
+                      className={`text-xl font-bold tracking-tight whitespace-nowrap ${isDarkMode ? "text-[#e7e9ea]" : "text-[#0f1419]"}`}
+                      style={{ fontFamily: "'Exo 2', sans-serif" }}
+                    >
+                      Edu<span className="text-red-500">51</span>Portal
+                    </span>
+                  </button>
+                </>
+              )}
             </div>
 
-            {/* Center: Logo (mobile, absolute center) + Pill nav (desktop, absolute center) */}
-            <div className="absolute left-1/2 -translate-x-1/2 flex items-center">
-              {/* Mobile: centered logo */}
-              <button
-                onClick={() => goToView("home")}
-                className="header-logo-btn flex lg:hidden items-center gap-0.1 focus:outline-none"
-                title="Go to Home"
-              >
-                <img
-                  src="/Edu51Portal.png"
-                  alt="Edu51Portal Logo"
-                  className="h-14 w-14 object-cover rounded-xl drop-shadow-sm"
-                  width="54"
-                  height="54"
-                  decoding="async"
-                />
-                <span
-                  className={`text-lg font-bold tracking-tight whitespace-nowrap ${isDarkMode ? "text-[#e7e9ea]" : "text-[#0f1419]"}`}
-                  style={{ fontFamily: "'Exo 2', sans-serif" }}
-                >
-                  Edu<span className="text-red-500">51</span>Portal
-                </span>
-              </button>
-
-              {/* Desktop: Admin header tabs when in admin view; student tabs otherwise */}
-              <nav className="hidden lg:flex items-center">
-                {isAdmin && currentView === "admin" ? (
+            {/* Center: Admin header tabs (mobile + desktop) or Student tabs / mobile logo */}
+            <div className="absolute left-1/2 -translate-x-1/2 flex items-center max-w-[calc(100vw-120px)] sm:max-w-none">
+              {isAdmin && currentView === "admin" ? (
+                <nav className="flex items-center overflow-x-auto scrollbar-none py-1">
                   <AdminNavHeader
                     activeTab={adminTab}
                     isDarkMode={isDarkMode}
@@ -3677,20 +3680,47 @@ For any queries, contact your course instructors or the department.`,
                     pendingAlumniCount={pendingAlumniCount}
                     newFeedbackCount={feedbackItems.filter((f) => f.status === "new").length}
                   />
-                ) : (
-                  <AppNavHeader
-                    currentView={currentView}
-                    isDarkMode={isDarkMode}
-                    isLoggedIn={isLoggedIn}
-                    goToView={goToView}
-                    showMajorAccessNotification={showMajorAccessNotification}
-                    setShowSignInModal={setShowSignInModal}
-                    pendingConnectionsCount={pendingConnectionsCount}
-                    unreadMessagesCount={unreadMsgCount}
-                    isBanned={isBanned}
-                  />
-                )}
-              </nav>
+                </nav>
+              ) : (
+                <>
+                  {/* Mobile: centered logo */}
+                  <button
+                    onClick={() => goToView("home")}
+                    className="header-logo-btn flex lg:hidden items-center gap-0.1 focus:outline-none"
+                    title="Go to Home"
+                  >
+                    <img
+                      src="/Edu51Portal.png"
+                      alt="Edu51Portal Logo"
+                      className="h-14 w-14 object-cover rounded-xl drop-shadow-sm"
+                      width="54"
+                      height="54"
+                      decoding="async"
+                    />
+                    <span
+                      className={`text-lg font-bold tracking-tight whitespace-nowrap ${isDarkMode ? "text-[#e7e9ea]" : "text-[#0f1419]"}`}
+                      style={{ fontFamily: "'Exo 2', sans-serif" }}
+                    >
+                      Edu<span className="text-red-500">51</span>Portal
+                    </span>
+                  </button>
+
+                  {/* Desktop: sliding pill nav with home icon as first tab */}
+                  <nav className="hidden lg:flex items-center">
+                    <AppNavHeader
+                      currentView={currentView}
+                      isDarkMode={isDarkMode}
+                      isLoggedIn={isLoggedIn}
+                      goToView={goToView}
+                      showMajorAccessNotification={showMajorAccessNotification}
+                      setShowSignInModal={setShowSignInModal}
+                      pendingConnectionsCount={pendingConnectionsCount}
+                      unreadMessagesCount={unreadMsgCount}
+                      isBanned={isBanned}
+                    />
+                  </nav>
+                </>
+              )}
             </div>
 
             {/* Right: Auth buttons / User dropdown */}
@@ -3731,18 +3761,6 @@ For any queries, contact your course instructors or the department.`,
                     <LogIn className="w-4 h-4" />
                   </button>
                 </>
-              )}
-
-              {/* Mobile quick Exit Admin button */}
-              {isAdmin && currentView === "admin" && (
-                <button
-                  onClick={handleExitAdmin}
-                  className="lg:hidden flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-semibold text-rose-500 bg-rose-500/10 border border-rose-500/20 hover:bg-rose-500/20 transition-all"
-                  title="Exit Admin to Student Portal"
-                >
-                  <LogOut className="w-3.5 h-3.5" />
-                  <span>Exit</span>
-                </button>
               )}
 
               {/* User Dropdown Menu - visible when logged in */}

@@ -359,6 +359,14 @@ export interface AdminNavHeaderProps {
   newFeedbackCount?: number;
 }
 
+interface AdminTabConfig {
+  id: AdminTabId;
+  label: string;
+  shortLabel: string;
+  icon: (className: string) => React.ReactNode;
+  badgeCount?: number;
+}
+
 export function AdminNavHeader({
   activeTab,
   isDarkMode,
@@ -367,66 +375,150 @@ export function AdminNavHeader({
   pendingAlumniCount = 0,
   newFeedbackCount = 0,
 }: AdminNavHeaderProps) {
-  const tabs: NavTab[] = [
+  const tabs: AdminTabConfig[] = [
     {
+      id: "dashboard",
       label: "Dashboard",
-      view: "dashboard",
-      icon: <BarChart3 className="w-3.5 h-3.5" />,
-      showLabelWithIcon: true,
-      isActive: activeTab === "dashboard",
-      onClick: () => onTabChange("dashboard"),
+      shortLabel: "Dashboard",
+      icon: (cls) => <BarChart3 className={cls} />,
     },
     {
+      id: "alumni",
       label: "Alumni Management",
-      view: "alumni",
-      icon: <GraduationCap className="w-3.5 h-3.5" />,
-      showLabelWithIcon: true,
-      isActive: activeTab === "alumni",
-      onClick: () => onTabChange("alumni"),
-      hasRedDot: pendingAlumniCount > 0,
+      shortLabel: "Alumni",
+      icon: (cls) => <GraduationCap className={cls} />,
+      badgeCount: pendingAlumniCount,
     },
     {
+      id: "notices",
       label: "Notice & Notifications",
-      view: "notices",
-      icon: <Bell className="w-3.5 h-3.5" />,
-      showLabelWithIcon: true,
-      isActive: activeTab === "notices",
-      onClick: () => onTabChange("notices"),
+      shortLabel: "Notices",
+      icon: (cls) => <Bell className={cls} />,
     },
     {
+      id: "materials",
       label: "Study Materials",
-      view: "materials",
-      icon: <BookOpen className="w-3.5 h-3.5" />,
-      showLabelWithIcon: true,
-      isActive: activeTab === "materials",
-      onClick: () => onTabChange("materials"),
+      shortLabel: "Materials",
+      icon: (cls) => <BookOpen className={cls} />,
     },
     {
+      id: "feedback",
       label: "Feedback",
-      view: "feedback",
-      icon: <MessageSquare className="w-3.5 h-3.5" />,
-      showLabelWithIcon: true,
-      isActive: activeTab === "feedback",
-      onClick: () => onTabChange("feedback"),
-      hasRedDot: newFeedbackCount > 0,
+      shortLabel: "Feedback",
+      icon: (cls) => <MessageSquare className={cls} />,
+      badgeCount: newFeedbackCount,
     },
   ];
 
   return (
-    <div className="flex items-center gap-2">
-      <SlideNav tabs={tabs} isDarkMode={isDarkMode} layoutId="admin-active-nav-pill" />
-      <button
-        onClick={onExitAdmin}
-        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all duration-200 select-none shadow-sm ${
+    <div className="flex items-center gap-1.5 sm:gap-3">
+      {/* Dynamic pill bar: selected shows full name, others show icon only */}
+      <ul
+        className={`relative flex items-center p-1 rounded-full border shadow-sm transition-colors duration-200 select-none ${
           isDarkMode
-            ? "bg-red-500/10 border-red-500/30 text-red-400 hover:bg-red-500/20 hover:border-red-500/50 hover:text-red-300"
-            : "bg-red-50 border-red-200 text-red-600 hover:bg-red-100 hover:border-red-300 hover:text-red-700"
+            ? "bg-[#17181c]/90 border-[#2f3336] shadow-black/40"
+            : "bg-white/90 border-slate-200 shadow-slate-100"
         }`}
-        title="Exit Admin Panel"
       >
-        <ArrowLeft className="w-3.5 h-3.5" />
-        <span>Exit Admin</span>
-      </button>
+        {tabs.map((tab) => {
+          const isActive = activeTab === tab.id;
+          const hasBadge = (tab.badgeCount ?? 0) > 0;
+
+          return (
+            <li
+              key={tab.id}
+              onClick={() => onTabChange(tab.id)}
+              className="relative group z-10"
+            >
+              <button
+                type="button"
+                className={`relative flex items-center justify-center gap-1.5 rounded-full text-xs transition-all duration-200 outline-none focus:outline-none ${
+                  isActive
+                    ? isDarkMode
+                      ? "px-3 sm:px-3.5 py-1.5 font-bold text-slate-900"
+                      : "px-3 sm:px-3.5 py-1.5 font-bold text-white"
+                    : isDarkMode
+                    ? "w-8 h-8 sm:w-9 sm:h-9 text-[#71767b] hover:text-[#e7e9ea] hover:bg-white/10"
+                    : "w-8 h-8 sm:w-9 sm:h-9 text-slate-500 hover:text-slate-800 hover:bg-slate-100"
+                }`}
+                title={tab.label}
+              >
+                {/* Tab Icon with badge */}
+                <span className="relative flex items-center justify-center flex-shrink-0">
+                  {tab.icon("w-3.5 h-3.5 sm:w-4 sm:h-4")}
+                  {!isActive && hasBadge && (
+                    <span className="absolute -top-1 -right-1 flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500 shadow-[0_0_6px_#ef4444]"></span>
+                    </span>
+                  )}
+                </span>
+
+                {/* Selected tab: show full name */}
+                {isActive && (
+                  <motion.span
+                    initial={{ opacity: 0, width: 0 }}
+                    animate={{ opacity: 1, width: "auto" }}
+                    exit={{ opacity: 0, width: 0 }}
+                    transition={{ duration: 0.2, ease: "easeOut" }}
+                    className="overflow-hidden whitespace-nowrap text-xs font-bold flex items-center gap-1"
+                  >
+                    <span className="hidden sm:inline">{tab.label}</span>
+                    <span className="sm:hidden">{tab.shortLabel}</span>
+                    {hasBadge && (
+                      <span className="ml-0.5 px-1.5 py-0.2 rounded-full text-[9px] font-black bg-red-500 text-white">
+                        {tab.badgeCount}
+                      </span>
+                    )}
+                  </motion.span>
+                )}
+
+                {/* Active pill background */}
+                {isActive && (
+                  <motion.span
+                    layoutId="admin-active-nav-pill"
+                    className={`absolute inset-0 rounded-full -z-10 shadow-md ${
+                      isDarkMode ? "bg-white shadow-white/10" : "bg-[#17181c] shadow-black/20"
+                    }`}
+                    transition={{ type: "spring", stiffness: 450, damping: 35 }}
+                  />
+                )}
+              </button>
+
+              {/* Hover Tooltip for collapsed icons */}
+              {!isActive && (
+                <div
+                  className={`pointer-events-none absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-md text-[10px] font-medium tracking-wide whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-30 shadow-lg ${
+                    isDarkMode
+                      ? "bg-slate-800 text-slate-200 border border-[#2f3336]"
+                      : "bg-slate-900 text-white"
+                  }`}
+                >
+                  {tab.label}
+                  {hasBadge && ` (${tab.badgeCount})`}
+                </div>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+
+      {/* Exit Admin Button with proper breathing room & visual separator */}
+      <div className="flex items-center pl-1 sm:pl-3 ml-1 sm:ml-2 border-l border-slate-200 dark:border-[#2f3336]">
+        <button
+          onClick={onExitAdmin}
+          className={`group flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all duration-200 select-none shadow-sm active:scale-95 whitespace-nowrap ${
+            isDarkMode
+              ? "bg-rose-500/10 border-rose-500/30 text-rose-400 hover:bg-rose-500/20 hover:border-rose-500/50 hover:text-rose-300"
+              : "bg-rose-50 border-rose-200 text-rose-600 hover:bg-rose-100 hover:border-rose-300 hover:text-rose-700"
+          }`}
+          title="Exit Admin Panel"
+        >
+          <ArrowLeft className="w-3.5 h-3.5 transition-transform duration-150 group-hover:-translate-x-0.5 flex-shrink-0" />
+          <span className="hidden sm:inline">Exit Admin</span>
+          <span className="sm:hidden">Exit</span>
+        </button>
+      </div>
     </div>
   );
 }
