@@ -13,7 +13,8 @@ import {
   Users,
   BookOpen,
   LogIn,
-  MessageSquare
+  MessageSquare,
+  GraduationCap
 } from "lucide-react";
 import { AlumniNavHeader } from "../ui/nav-header";
 import AlumniHomePage from "./pages/AlumniHomePage";
@@ -21,6 +22,7 @@ import AlumniNetworkPage from "./pages/AlumniNetworkPage";
 import AlumniResourcesPage from "./pages/AlumniResourcesPage";
 import AlumniProfilePage from "./pages/AlumniProfilePage";
 import AlumniMessagesPage from "./pages/AlumniMessagesPage";
+import { FacultyDirectoryPage } from "../Faculty/FacultyDirectoryPage";
 import { supabase } from "../../lib/supabase";
 import { markAllNotificationsRead } from "../../lib/api/notificationsApi";
 
@@ -177,6 +179,14 @@ export default function AlumniDashboard({
         return <AlumniMessagesPage isDarkMode={isDarkMode} authSession={authSession} userProfile={userProfile} />;
       case "profile":
         return <AlumniProfilePage isDarkMode={isDarkMode} authSession={authSession} />;
+      case "faculty":
+        return (
+          <FacultyDirectoryPage
+            isDarkMode={isDarkMode}
+            onClose={() => setCurrentView("home")}
+            hideNotices={true}
+          />
+        );
       default:
         return <AlumniHomePage isDarkMode={isDarkMode} userProfile={userProfile} authSession={authSession} />;
     }
@@ -472,6 +482,17 @@ export default function AlumniDashboard({
                 >
                   <Home className="w-5 h-5 text-slate-400" />
                   <span className="font-semibold text-sm">Home</span>
+                </button>
+
+                {/* Officials & Faculty */}
+                <button
+                  onClick={() => { setCurrentView("faculty"); setShowMobileMenu(false); }}
+                  className={`w-full flex items-center gap-3 p-3.5 rounded-lg border text-left ${
+                    isDarkMode ? "hover:bg-[#16181c]/50 border-[#2f3336]/50" : "hover:bg-slate-100/50 border-gray-200/50"
+                  } ${currentView === "faculty" ? (isDarkMode ? "bg-[#16181c]" : "bg-slate-100") : ""}`}
+                >
+                  <GraduationCap className="w-5 h-5 text-slate-400" />
+                  <span className="font-semibold text-sm">Officials & Faculty</span>
                 </button>
 
                 {/* Network */}

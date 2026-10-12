@@ -688,10 +688,10 @@ export function SignUpModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
+    <div className="fixed inset-0 z-[120] overflow-y-auto">
       <div
         onClick={onClose}
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/90 backdrop-blur-md"
       />
       <div className="min-h-screen flex items-center justify-center p-4">
         <div

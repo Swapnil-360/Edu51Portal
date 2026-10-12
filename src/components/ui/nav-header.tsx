@@ -292,7 +292,7 @@ export function AlumniNavHeader({
       onClick: () => goToView("home"),
     },
     {
-      label: "Info Hub",
+      label: "Officials & Faculty",
       view: "faculty",
       badge: "new",
       isActive: currentView === "faculty",

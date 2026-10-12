@@ -195,6 +195,7 @@ function App() {
     | "meet-team"
     | "faculty"
     | "alumni-invite"
+    | "alumni-register"
   >(() => {
     const path = window.location.pathname;
     if (path === "/admin") return "admin";
@@ -218,6 +219,7 @@ function App() {
     if (path === "/meet-team") return "meet-team";
     if (path === "/info-hub" || path === "/info" || path === "/faculty" || path === "/varsity") return "faculty";
     if (path === "/alumni-invite" || path === "/alumni/invite") return "alumni-invite";
+    if (path === "/alumni-register" || path === "/alumni/register" || path === "/register-alumni") return "alumni-register";
     // Always treat root, /home, or empty as home
     if (path === "/" || path === "/home" || path === "" || !path) return "home";
     // Fallback: if path is not recognized, force home view
@@ -264,7 +266,8 @@ function App() {
         | "shared-resources"
         | "meet-team"
         | "faculty"
-        | "alumni-invite",
+        | "alumni-invite"
+        | "alumni-register",
       extra?: string | null,
       bypassAdminCheck = false,
     ) => {
@@ -302,6 +305,7 @@ function App() {
       else if (view === "meet-team") path = "/meet-team";
       else if (view === "faculty") path = "/info-hub";
       else if (view === "alumni-invite") path = "/alumni-invite";
+      else if (view === "alumni-register") path = "/alumni-register";
       else if (view === "home") path = "/home";
       window.history.pushState({}, "", path);
       // Dismiss any lingering toast when navigating away
@@ -3586,12 +3590,13 @@ For any queries, contact your course instructors or the department.`,
       )}
 
       {/* Header */}
-      <header
-        className={`fixed top-0 left-0 right-0 w-full z-50 transition-all duration-300 border-b backdrop-blur-md ${isDarkMode
-            ? "bg-[#000000]/80 border-[#2f3336]/50 text-white shadow-lg shadow-black/20"
-            : "bg-white/80 border-slate-200/50 text-gray-900 shadow-sm shadow-slate-100/10"
-          }`}
-      >
+      {!["alumni-invite", "alumni-register"].includes(currentView) && (currentView !== "alumni" || alumniSubView !== "register") && (
+        <header
+          className={`fixed top-0 left-0 right-0 w-full z-50 transition-all duration-300 border-b backdrop-blur-md ${isDarkMode
+              ? "bg-[#000000]/80 border-[#2f3336]/50 text-white shadow-lg shadow-black/20"
+              : "bg-white/80 border-slate-200/50 text-gray-900 shadow-sm shadow-slate-100/10"
+            }`}
+        >
         <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 relative">
           <div className="flex items-center justify-between h-[72px] lg:h-20 gap-4">
 
@@ -4113,9 +4118,10 @@ For any queries, contact your course instructors or the department.`,
           </div>
         </div>
       </header>
+      )}
 
       {/* Sidebar Menu - Universal for all devices */}
-      {showMobileMenu && (
+      {showMobileMenu && !["alumni-invite", "alumni-register"].includes(currentView) && (currentView !== "alumni" || alumniSubView !== "register") && (
         <>
           {/* Overlay */}
           <div
@@ -4723,7 +4729,7 @@ For any queries, contact your course instructors or the department.`,
 
       {/* Main Content - Enhanced Mobile Responsive Design */}
       {/* Also mounts when a modal is open in a feature view — modal is fixed inset-0 so home content stays hidden beneath it */}
-      {(!["custom", "profile", "network", "teams", "team", "alumni", "faculty", "shared-resources", "meet-team"].includes(currentView) || showNoticeModal || showMaterialViewer) && (
+      {(!["custom", "profile", "network", "teams", "team", "alumni", "alumni-invite", "alumni-register", "faculty", "shared-resources", "meet-team"].includes(currentView) || showNoticeModal || showMaterialViewer) && (
         <main className="relative pt-[72px] lg:pt-20 min-h-screen [overflow-x:clip]">
           {currentView === "home" && isDarkMode && <Tiles isDarkMode={isDarkMode} />}
 
@@ -8442,9 +8448,9 @@ For any queries, contact your course instructors or the department.`,
 
         {/* ── Alumni Claim VIP Invitation Page ── */}
         {currentView === "alumni-invite" && (
-          <main className="fixed top-[72px] lg:top-20 inset-x-0 bottom-0 z-40 overflow-y-auto overscroll-y-contain">
+          <main className="fixed inset-0 z-[100] overflow-y-auto overscroll-y-contain bg-[#000000]">
             <Suspense fallback={
-              <div className={`h-full flex items-center justify-center p-6 ${isDarkMode ? "bg-[#000000]" : "bg-slate-50"}`}>
+              <div className={`h-full min-h-screen flex items-center justify-center p-6 ${isDarkMode ? "bg-[#000000]" : "bg-slate-50"}`}>
                 <AppLoader />
               </div>
             }>
@@ -8464,9 +8470,30 @@ For any queries, contact your course instructors or the department.`,
           </main>
         )}
 
+        {/* ── Alumni Direct Registration Page ── */}
+        {currentView === "alumni-register" && (
+          <main className="fixed inset-0 z-[100] overflow-y-auto overscroll-y-contain bg-[#000000]">
+            <Suspense fallback={
+              <div className={`h-full min-h-screen flex items-center justify-center p-6 ${isDarkMode ? "bg-[#000000]" : "bg-slate-50"}`}>
+                <AppLoader />
+              </div>
+            }>
+              <AlumniRegisterForm
+                isDarkMode={isDarkMode}
+                userId={authSession?.user?.id || ""}
+                userEmail={authSession?.user?.email || ""}
+                onBack={() => goToView("alumni")}
+                onSubmitSuccess={() => {
+                  goToView("alumni");
+                }}
+              />
+            </Suspense>
+          </main>
+        )}
+
         {/* ── V2: Alumni Hub ── */}
-        {currentView === "alumni" && authSession?.user?.id && (
-          <main className="fixed top-[72px] lg:top-20 inset-x-0 bottom-0 z-40 overflow-y-auto overscroll-y-contain">
+        {currentView === "alumni" && (
+          <main className={alumniSubView === "register" ? "fixed inset-0 z-[100] overflow-y-auto overscroll-y-contain bg-[#000000]" : "fixed top-[72px] lg:top-20 inset-x-0 bottom-0 z-40 overflow-y-auto overscroll-y-contain"}>
             <Suspense fallback={
               <div className={`h-full flex items-center justify-center p-6 ${isDarkMode ? "bg-[#000000]" : "bg-slate-50"}`}>
                 <AppLoader />
@@ -8481,12 +8508,7 @@ For any queries, contact your course instructors or the department.`,
                     setAlumniSubView("profile");
                   }}
                   onRegisterClick={() => {
-                    if (!authSession?.user) {
-                      setMajorAccessMessage("Please sign in to register as alumni");
-                      setShowSignInModal(true);
-                    } else {
-                      setAlumniSubView("register");
-                    }
+                    setAlumniSubView("register");
                   }}
                   onClose={() => goToView("home")}
                   authSession={authSession}
@@ -8505,11 +8527,11 @@ For any queries, contact your course instructors or the department.`,
                   userProfile={userProfile}
                 />
               )}
-              {alumniSubView === "register" && authSession?.user && (
+              {alumniSubView === "register" && (
                 <AlumniRegisterForm
                   isDarkMode={isDarkMode}
-                  userId={authSession.user.id}
-                  userEmail={authSession.user.email || ""}
+                  userId={authSession?.user?.id || ""}
+                  userEmail={authSession?.user?.email || ""}
                   onBack={() => setAlumniSubView("directory")}
                   onSubmitSuccess={() => {
                     setAlumniSubView("directory");

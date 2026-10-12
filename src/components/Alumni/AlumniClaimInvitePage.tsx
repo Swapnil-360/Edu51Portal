@@ -351,7 +351,7 @@ export const AlumniClaimInvitePage: React.FC<AlumniClaimInvitePageProps> = ({
 
   if (errorMessage || !inviteData) {
     return (
-      <div className={`min-h-[85vh] flex items-center justify-center p-6 ${isDarkMode ? 'bg-[#000000]' : 'bg-slate-50'}`}>
+      <div className={`min-h-screen flex items-center justify-center p-6 ${isDarkMode ? 'bg-[#000000]' : 'bg-slate-50'}`}>
         <div className={`max-w-md w-full p-8 rounded-2xl border text-center shadow-2xl ${
           isDarkMode ? 'bg-[#0c1017] border-[#1d2638] text-white' : 'bg-white border-slate-200 text-slate-900'
         }`}>
@@ -400,7 +400,7 @@ export const AlumniClaimInvitePage: React.FC<AlumniClaimInvitePageProps> = ({
 
   if (isSuccess) {
     return (
-      <div className={`min-h-[85vh] flex items-center justify-center p-6 ${isDarkMode ? 'bg-[#000000]' : 'bg-slate-50'}`}>
+      <div className={`min-h-screen flex items-center justify-center p-6 ${isDarkMode ? 'bg-[#000000]' : 'bg-slate-50'}`}>
         <div className={`max-w-lg w-full p-8 rounded-2xl border text-center shadow-2xl ${
           isDarkMode ? 'bg-[#0c1017] border-emerald-500/30 text-white shadow-emerald-950/20' : 'bg-white border-emerald-300 text-slate-900 shadow-xl'
         }`}>
@@ -443,7 +443,7 @@ export const AlumniClaimInvitePage: React.FC<AlumniClaimInvitePageProps> = ({
   }
 
   return (
-    <div className={`min-h-[85vh] py-8 px-4 sm:px-6 lg:px-8 flex flex-col items-center ${isDarkMode ? 'bg-[#000000]' : 'bg-slate-50'}`}>
+    <div className={`min-h-screen py-8 px-4 sm:px-6 lg:px-8 flex flex-col items-center ${isDarkMode ? 'bg-[#000000]' : 'bg-slate-50'}`}>
       {/* Top Brand Bar */}
       <div className="flex items-center justify-between py-3 px-2 max-w-3xl w-full mb-4">
         <button

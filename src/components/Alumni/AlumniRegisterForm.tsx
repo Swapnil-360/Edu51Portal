@@ -1,14 +1,46 @@
 import React, { useState } from "react";
-import { ArrowLeft, CheckCircle2, ShieldCheck, Loader2 } from "lucide-react";
+import {
+  ArrowLeft,
+  CheckCircle2,
+  ShieldCheck,
+  Loader2,
+  Lock,
+  Eye,
+  EyeOff,
+  Sparkles,
+  Building,
+  Briefcase,
+  Mail,
+  User,
+  MapPin,
+  Globe,
+  Linkedin,
+  Facebook,
+  Phone,
+  GraduationCap,
+} from "lucide-react";
 import { supabase, supabaseConfigured } from "../../lib/supabase";
 
 interface Props {
   isDarkMode: boolean;
-  userId: string;
-  userEmail: string;
+  userId?: string;
+  userEmail?: string;
   onBack: () => void;
   onSubmitSuccess: () => void;
 }
+
+const DEPARTMENTS = [
+  "CSE",
+  "EEE",
+  "Civil",
+  "Textile",
+  "BBA",
+  "Economics",
+  "English",
+  "Law",
+  "Mathematics",
+  "Other",
+];
 
 export default function AlumniRegisterForm({
   isDarkMode,
@@ -17,20 +49,28 @@ export default function AlumniRegisterForm({
   onBack,
   onSubmitSuccess,
 }: Props) {
-  const cachedName = localStorage.getItem("userProfileName") || "";
-  const cachedMajor = localStorage.getItem("userProfileMajor") || "CSE";
+  // Privacy & Fresh Form: Never auto-fill with cached student profile from localStorage
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState(userEmail || "");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
-  const [fullName, setFullName] = useState(cachedName);
-  const [email, setEmail] = useState(userEmail || localStorage.getItem("userProfileBubtEmail") || "");
+  const [major, setMajor] = useState("CSE");
   const [gradYear, setGradYear] = useState<number | "">(2024);
-  const [major, setMajor] = useState(cachedMajor);
+  const [intake, setIntake] = useState<number | "">("");
+
   const [role, setRole] = useState("");
   const [company, setCompany] = useState("");
   const [location, setLocation] = useState("Dhaka, Bangladesh");
+
   const [linkedinUrl, setLinkedinUrl] = useState("");
+  const [facebookUrl, setFacebookUrl] = useState("");
+  const [phone, setPhone] = useState("");
+
   const [bio, setBio] = useState("");
   const [careerTips, setCareerTips] = useState("");
-  const [mentorship, setMentorship] = useState(false);
+  const [mentorship, setMentorship] = useState(true);
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -40,56 +80,146 @@ export default function AlumniRegisterForm({
     if (success) {
       const timer = setTimeout(() => {
         onSubmitSuccess();
-      }, 2000);
+      }, 3000);
       return () => clearTimeout(timer);
     }
   }, [success, onSubmitSuccess]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!userId) {
-      setError("You must be logged in to register your alumni profile.");
+    setError(null);
+
+    // Required fields check
+    if (!fullName.trim() || !email.trim() || !gradYear || !major.trim()) {
+      setError("Please fill out all required academic fields marked with *.");
       return;
     }
-    if (!fullName.trim() || !email.trim() || !gradYear || !major.trim()) {
-      setError("Please fill out all required fields.");
-      return;
+
+    // Password validation for new sign-ups
+    if (!userId) {
+      if (!password || password.length < 6) {
+        setError("Password must be at least 6 characters long.");
+        return;
+      }
+      if (password !== confirmPassword) {
+        setError("Passwords do not match. Please verify and re-enter.");
+        return;
+      }
     }
 
     setSubmitting(true);
-    setError(null);
-
-    const profileData = {
-      id: userId,
-      full_name: fullName.trim(),
-      email: email.trim(),
-      avatar_url: localStorage.getItem("userProfilePic") || null,
-      graduation_year: Number(gradYear),
-      major: major,
-      job_title: role.trim() || null,
-      company_name: company.trim() || null,
-      city: location.trim() || null,
-      linkedin_url: linkedinUrl.trim() || null,
-      bio: bio.trim() || null,
-      career_tips: careerTips.trim() || null,
-      is_verified: false, // Default is unverified, pending admin action
-      is_available_for_mentorship: mentorship,
-      updated_at: new Date().toISOString(),
-    };
 
     try {
+      const cleanEmail = email.trim().toLowerCase();
+      const cleanName = fullName.trim();
+      let activeUserId = userId;
+
       if (!supabaseConfigured) {
-        // Mock success in offline mode
+        // Offline demo mode
         await new Promise((resolve) => setTimeout(resolve, 800));
         setSuccess(true);
-      } else {
-        const { error: insertErr } = await supabase
-          .from("alumni_profiles")
-          .upsert(profileData); // Use upsert so they can update or recreate if needed
-
-        if (insertErr) throw insertErr;
-        setSuccess(true);
+        return;
       }
+
+      // 1. If not logged in, create user via Supabase Auth
+      if (!activeUserId) {
+        const { data: authData, error: authErr } = await supabase.auth.signUp({
+          email: cleanEmail,
+          password: password,
+          options: {
+            data: {
+              name: cleanName,
+              role: "alumni",
+              department: major,
+            },
+          },
+        });
+
+        if (authErr) {
+          if (authErr.message.toLowerCase().includes("already registered")) {
+            setError(
+              "An account with this email already exists. Please sign in or use another email."
+            );
+            setSubmitting(false);
+            return;
+          }
+          throw authErr;
+        }
+
+        activeUserId = authData.user?.id;
+      }
+
+      if (!activeUserId) {
+        throw new Error("Unable to establish account session. Please try again.");
+      }
+
+      // 2. Insert / Upsert into profiles table
+      const profileRecord = {
+        id: activeUserId,
+        name: cleanName,
+        bubt_email: cleanEmail,
+        role: "alumni",
+        is_alumni: true,
+        is_verified: false,
+        department: major,
+        section: "Alumni",
+        major: major,
+        phone: phone.trim() || null,
+        created_at: new Date().toISOString(),
+      };
+
+      await supabase.from("profiles").upsert(profileRecord, { onConflict: "id" });
+
+      // 3. Upsert into alumni_profiles table
+      const alumniProfileRecord = {
+        id: activeUserId,
+        full_name: cleanName,
+        email: cleanEmail,
+        graduation_year: Number(gradYear),
+        major: major,
+        job_title: role.trim() || null,
+        company_name: company.trim() || null,
+        city: location.trim() || null,
+        linkedin_url: linkedinUrl.trim() || null,
+        facebook_url: facebookUrl.trim() || null,
+        phone: phone.trim() || null,
+        bio: bio.trim() || null,
+        career_tips: careerTips.trim() || null,
+        is_verified: false, // Default is pending admin verification
+        is_available_for_mentorship: mentorship,
+        updated_at: new Date().toISOString(),
+      };
+
+      const { error: alumniErr } = await supabase
+        .from("alumni_profiles")
+        .upsert(alumniProfileRecord, { onConflict: "id" });
+
+      if (alumniErr) throw alumniErr;
+
+      // 4. Send in-app notification to all admins for approval
+      try {
+        const { data: admins } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("is_admin", true);
+
+        if (admins && admins.length > 0) {
+          const notifications = admins.map((admin) => ({
+            user_id: admin.id,
+            type: "alumni_approval",
+            title: "New Alumni Registration",
+            body: `${cleanName} (${major}, Class of ${gradYear}) submitted their alumni profile and is pending verification.`,
+            actor_id: activeUserId,
+            actor_name: cleanName,
+            read: false,
+          }));
+          await supabase.from("notifications").insert(notifications);
+        }
+      } catch (notifErr) {
+        console.warn("Non-fatal: Failed to send admin notification:", notifErr);
+      }
+
+      setSuccess(true);
     } catch (err: any) {
       console.error("Error registering alumni profile:", err);
       setError(err?.message || "Failed to submit registration. Please try again.");
@@ -98,48 +228,61 @@ export default function AlumniRegisterForm({
     }
   };
 
-  const pageBg = isDarkMode ? "bg-[#000000]" : "bg-slate-50";
-  const textColor = isDarkMode ? "text-white" : "text-slate-900";
-  const subColor = isDarkMode ? "text-slate-400" : "text-slate-500";
-  const cardBg = isDarkMode ? "bg-[#0c1017] border-[#1d2638] shadow-2xl" : "bg-white border-slate-200 shadow-sm";
-  const inputBg = isDarkMode ? "bg-[#070b12] border-[#1d2638]" : "bg-white border-slate-300";
+  const pageBg = "bg-[#000000]";
+  const textColor = "text-white";
+  const subColor = "text-slate-400";
+  const cardBg = "bg-[#0c1017] border-[#1d2638] shadow-2xl";
+  const inputBg = "bg-[#070b12] border-[#1d2638]";
   const focusBorder = "focus:border-red-500 focus:ring-1 focus:ring-red-500/30";
 
   if (success) {
     return (
-      <div className={`min-h-screen pb-12 ${pageBg}`}>
-        <div className="max-w-md mx-auto px-4 pt-16 text-center flex flex-col items-center gap-5">
-          <div className="flex items-center gap-2.5 mb-2">
+      <div className={`min-h-screen py-16 px-4 flex items-center justify-center ${pageBg}`}>
+        <div className={`max-w-md w-full p-8 rounded-2xl border text-center shadow-2xl ${cardBg}`}>
+          {/* Brand Wordmark */}
+          <div className="flex items-center justify-center gap-2.5 mb-6">
             <img
               src="/Edu51Portal.png"
               alt="Edu51Portal Logo"
               className="w-10 h-10 object-contain rounded-xl border border-red-500/30 shadow-md shadow-red-950/40"
             />
-            <span className="text-xl font-bold tracking-tight text-white" style={{ fontFamily: "'Exo 2', sans-serif" }}>
+            <span
+              className="text-xl font-bold tracking-tight text-white"
+              style={{ fontFamily: "'Exo 2', sans-serif" }}
+            >
               Edu<span className="text-red-500">51</span>Portal
             </span>
           </div>
 
-          <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shadow-lg shadow-emerald-950/20">
+          <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 mx-auto mb-4 shadow-lg shadow-emerald-950/20">
             <CheckCircle2 className="h-10 w-10 animate-bounce" />
           </div>
-          <div className="space-y-2">
-            <h2 className={`text-2xl font-bold text-white`} style={{ fontFamily: "'Exo 2', sans-serif" }}>
-              Registration Submitted!
-            </h2>
-            <p className={`text-xs ${subColor} leading-relaxed max-w-sm`}>
-              Thank you for registering! Your profile has been submitted and is currently <strong className="text-white">pending verification</strong>.
-              Once verified by an admin, it will appear in the public alumni directory.
-            </p>
-          </div>
-          <button
-            onClick={onSubmitSuccess}
-            className="w-full mt-4 py-3 rounded-xl bg-gradient-to-r from-red-600 via-rose-600 to-red-500 hover:from-red-500 hover:to-rose-500 text-white text-xs font-bold transition-all shadow-xl shadow-red-600/30"
+
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 mb-3">
+            Registration Submitted Successfully
+          </span>
+
+          <h2
+            className="text-2xl font-bold text-white mb-2"
             style={{ fontFamily: "'Exo 2', sans-serif" }}
           >
-            Back to Alumni Directory
+            Welcome to the Network!
+          </h2>
+
+          <p className="text-xs text-slate-300 leading-relaxed mb-6">
+            Thank you for registering as a BUBT alumnus! Your profile has been saved and is currently{" "}
+            <strong className="text-white">pending administrative verification</strong>. Once reviewed by an administrator, your badge will be active and your profile will appear in the public alumni directory.
+          </p>
+
+          <button
+            onClick={onSubmitSuccess}
+            className="w-full py-3.5 rounded-xl bg-gradient-to-r from-red-600 via-rose-600 to-red-500 hover:from-red-500 hover:to-rose-500 text-white text-xs font-bold transition-all shadow-xl shadow-red-600/30"
+            style={{ fontFamily: "'Exo 2', sans-serif" }}
+          >
+            Return to Alumni Directory
           </button>
-          <p className="text-[11px] text-slate-500 mt-2">
+
+          <p className="text-[11px] text-slate-500 mt-6">
             Presented by Team <strong className="text-white">CoreWe5</strong> · BUBT Intake 51
           </p>
         </div>
@@ -148,61 +291,80 @@ export default function AlumniRegisterForm({
   }
 
   return (
-    <div className={`min-h-screen pb-12 ${pageBg}`}>
-      <div className="max-w-2xl mx-auto px-4 pt-6">
-        {/* Top Brand Navigation Bar */}
-        <div className="flex items-center justify-between py-3 mb-4">
-          <div className="flex items-center gap-3">
-            <img
-              src="/Edu51Portal.png"
-              alt="Edu51Portal Logo"
-              className="w-10 h-10 object-contain rounded-xl border border-red-500/40 shadow-md shadow-red-950/40"
-            />
-            <div>
-              <span
-                className="text-lg font-bold tracking-tight text-white block leading-tight"
-                style={{ fontFamily: "'Exo 2', sans-serif" }}
-              >
-                Edu<span className="text-red-500">51</span>Portal
-              </span>
-              <span className="text-[10px] text-slate-400 font-medium tracking-wide">
-                Official BUBT Academic & Alumni Registry
-              </span>
-            </div>
+    <div className={`min-h-screen py-8 px-4 sm:px-6 lg:px-8 flex flex-col items-center ${pageBg}`}>
+      {/* Top Brand Navigation Bar */}
+      <div className="flex items-center justify-between py-3 px-2 max-w-2xl w-full mb-4">
+        <div className="flex items-center gap-3">
+          <img
+            src="/Edu51Portal.png"
+            alt="Edu51Portal Logo"
+            className="w-10 h-10 object-contain rounded-xl border border-red-500/40 shadow-md shadow-red-950/40"
+          />
+          <div>
+            <span
+              className="text-lg font-bold tracking-tight text-white block leading-tight"
+              style={{ fontFamily: "'Exo 2', sans-serif" }}
+            >
+              Edu<span className="text-red-500">51</span>Portal
+            </span>
+            <span className="text-[10px] text-slate-400 font-medium tracking-wide">
+              Official BUBT Academic & Alumni Registry
+            </span>
           </div>
-          <button
-            onClick={onBack}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
-              isDarkMode
-                ? "border-[#1d2638] text-slate-300 hover:text-white hover:border-red-500/50 bg-[#0c1017]"
-                : "border-slate-200 text-slate-700 hover:bg-slate-100 bg-white"
-            }`}
-          >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            Back to Directory
-          </button>
         </div>
 
-        {/* Form Container */}
-        <div className={`rounded-2xl border p-6 md:p-8 flex flex-col gap-6 ${cardBg}`}>
-          <div className="border-b border-[#1d2638] pb-4">
-            <h2 className="text-xl font-bold flex items-center gap-2 text-white" style={{ fontFamily: "'Exo 2', sans-serif" }}>
-              <ShieldCheck className="h-6 w-6 text-red-500" />
-              Register as BUBT Alumni
-            </h2>
-            <p className={`text-xs ${subColor} mt-1 leading-relaxed`}>
-              Join the official Edu51Portal Alumni Directory. Share your professional milestones, guide juniors, and connect with BUBT graduates.
-            </p>
+        <button
+          onClick={onBack}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border border-[#1d2638] text-slate-300 hover:text-white hover:border-red-500/50 bg-[#0c1017] transition-all"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" />
+          Back to Directory
+        </button>
+      </div>
+
+      {/* Main Registration Card */}
+      <div className={`max-w-2xl w-full rounded-2xl border p-6 md:p-8 flex flex-col gap-6 ${cardBg}`}>
+        {/* Card Header */}
+        <div className="border-b border-[#1d2638] pb-4">
+          <div className="flex items-center justify-between flex-wrap gap-2 mb-2">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-red-500/15 text-red-400 border border-red-500/30">
+              <Sparkles className="w-3 h-3 text-red-400" />
+              Official BUBT Graduate Registration
+            </span>
+            <span className="text-[11px] text-slate-400 font-medium">
+              Intake 1 – Present
+            </span>
           </div>
 
-          {error && (
-            <div className="px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
-              {error}
-            </div>
-          )}
+          <h2
+            className="text-2xl font-bold flex items-center gap-2 text-white"
+            style={{ fontFamily: "'Exo 2', sans-serif" }}
+          >
+            <ShieldCheck className="h-6 w-6 text-red-500" />
+            Join the Alumni Community
+          </h2>
+          <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+            Create your permanent profile on the Edu51Portal Alumni Registry. Inspire BUBT juniors, mentor rising talents, and connect with fellow graduates across industries.
+          </p>
+        </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Required Fields Group */}
+        {error && (
+          <div className="px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs leading-relaxed">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* SECTION 1: Credentials (if not logged in) */}
+          <div className="space-y-3">
+            <div
+              className="flex items-center gap-2 font-bold text-xs uppercase tracking-wider text-red-500"
+              style={{ fontFamily: "'Exo 2', sans-serif" }}
+            >
+              <User className="w-3.5 h-3.5" />
+              <span>1. Basic Information</span>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Full Name */}
               <div className="space-y-1">
@@ -215,23 +377,99 @@ export default function AlumniRegisterForm({
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="e.g. Tariqul Islam"
-                  className={`w-full px-3 py-2 rounded-xl text-sm border outline-none transition-colors ${inputBg} ${textColor} ${focusBorder}`}
+                  className={`w-full px-3 py-2.5 rounded-xl text-sm border outline-none transition-colors ${inputBg} ${textColor} ${focusBorder}`}
                 />
               </div>
 
               {/* Email */}
               <div className="space-y-1">
                 <label className={`text-xs font-semibold ${textColor}`}>
-                  Contact Email <span className="text-red-500">*</span>
+                  Contact / Academic Email <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="e.g. yourname@gmail.com"
-                  className={`w-full px-3 py-2 rounded-xl text-sm border outline-none transition-colors ${inputBg} ${textColor} ${focusBorder}`}
+                  placeholder="e.g. alumni@domain.com"
+                  className={`w-full px-3 py-2.5 rounded-xl text-sm border outline-none transition-colors ${inputBg} ${textColor} ${focusBorder}`}
                 />
+              </div>
+            </div>
+
+            {/* Password Creation (Only if not already authenticated) */}
+            {!userId && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <label className={`text-xs font-semibold ${textColor}`}>
+                      Create Password <span className="text-red-500">*</span>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="text-[10px] text-slate-400 hover:text-white flex items-center gap-1"
+                    >
+                      {showPassword ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                      {showPassword ? "Hide" : "Show"}
+                    </button>
+                  </div>
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    required
+                    minLength={6}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="At least 6 characters"
+                    className={`w-full px-3 py-2.5 rounded-xl text-sm border outline-none transition-colors ${inputBg} ${textColor} ${focusBorder}`}
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className={`text-xs font-semibold ${textColor}`}>
+                    Confirm Password <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    required
+                    minLength={6}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Re-enter password"
+                    className={`w-full px-3 py-2.5 rounded-xl text-sm border outline-none transition-colors ${inputBg} ${textColor} ${focusBorder}`}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* SECTION 2: Academic Background */}
+          <div className="space-y-3 border-t border-[#1d2638] pt-4">
+            <div
+              className="flex items-center gap-2 font-bold text-xs uppercase tracking-wider text-red-500"
+              style={{ fontFamily: "'Exo 2', sans-serif" }}
+            >
+              <GraduationCap className="w-3.5 h-3.5" />
+              <span>2. Academic Background</span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Department */}
+              <div className="space-y-1">
+                <label className={`text-xs font-semibold ${textColor}`}>
+                  Department <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={major}
+                  onChange={(e) => setMajor(e.target.value)}
+                  className={`w-full px-3 py-2.5 rounded-xl text-sm border outline-none transition-colors ${inputBg} ${textColor} ${focusBorder}`}
+                >
+                  {DEPARTMENTS.map((dept) => (
+                    <option key={dept} value={dept} className="bg-[#0c1017] text-white">
+                      {dept}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               {/* Graduation Year */}
@@ -245,120 +483,187 @@ export default function AlumniRegisterForm({
                   min={2000}
                   max={2030}
                   value={gradYear}
-                  onChange={(e) => setGradYear(e.target.value === "" ? "" : Number(e.target.value))}
+                  onChange={(e) =>
+                    setGradYear(e.target.value === "" ? "" : Number(e.target.value))
+                  }
                   placeholder="e.g. 2024"
-                  className={`w-full px-3 py-2 rounded-xl text-sm border outline-none transition-colors ${inputBg} ${textColor} ${focusBorder}`}
+                  className={`w-full px-3 py-2.5 rounded-xl text-sm border outline-none transition-colors ${inputBg} ${textColor} ${focusBorder}`}
                 />
               </div>
 
-              {/* Major */}
+              {/* Intake */}
               <div className="space-y-1">
                 <label className={`text-xs font-semibold ${textColor}`}>
-                  Department / Major <span className="text-red-500">*</span>
+                  Intake (Optional)
                 </label>
-                <select
-                  value={major}
-                  onChange={(e) => setMajor(e.target.value)}
-                  className={`w-full px-3 py-2 rounded-xl text-sm border outline-none transition-colors ${inputBg} ${textColor} ${focusBorder}`}
-                >
-                  <option value="CSE" className="bg-[#0c1017] text-white">CSE</option>
-                  <option value="EEE" className="bg-[#0c1017] text-white">EEE</option>
-                  <option value="BBA" className="bg-[#0c1017] text-white">BBA</option>
-                  <option value="Textile" className="bg-[#0c1017] text-white">Textile</option>
-                  <option value="Civil" className="bg-[#0c1017] text-white">Civil</option>
-                  <option value="Economics" className="bg-[#0c1017] text-white">Economics</option>
-                  <option value="English" className="bg-[#0c1017] text-white">English</option>
-                  <option value="Law" className="bg-[#0c1017] text-white">Law</option>
-                  <option value="Mathematics" className="bg-[#0c1017] text-white">Mathematics</option>
-                  <option value="Other" className="bg-[#0c1017] text-white">Other</option>
-                </select>
+                <input
+                  type="number"
+                  min={1}
+                  max={100}
+                  value={intake}
+                  onChange={(e) =>
+                    setIntake(e.target.value === "" ? "" : Number(e.target.value))
+                  }
+                  placeholder="e.g. 51"
+                  className={`w-full px-3 py-2.5 rounded-xl text-sm border outline-none transition-colors ${inputBg} ${textColor} ${focusBorder}`}
+                />
               </div>
             </div>
+          </div>
 
-            {/* Professional Details Group */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-[#1d2638] pt-4">
-              {/* Current Role */}
+          {/* SECTION 3: Professional Career */}
+          <div className="space-y-3 border-t border-[#1d2638] pt-4">
+            <div
+              className="flex items-center gap-2 font-bold text-xs uppercase tracking-wider text-red-500"
+              style={{ fontFamily: "'Exo 2', sans-serif" }}
+            >
+              <Briefcase className="w-3.5 h-3.5" />
+              <span>3. Professional Career</span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Role */}
               <div className="space-y-1">
-                <label className={`text-xs font-semibold ${textColor}`}>Current Job Title</label>
+                <label className={`text-xs font-semibold ${textColor}`}>Current Job Title / Designation</label>
                 <input
                   type="text"
                   value={role}
                   onChange={(e) => setRole(e.target.value)}
-                  placeholder="e.g. Software Engineer"
-                  className={`w-full px-3 py-2 rounded-xl text-sm border outline-none transition-colors ${inputBg} ${textColor} ${focusBorder}`}
+                  placeholder="e.g. Software Engineer / Data Scientist"
+                  className={`w-full px-3 py-2.5 rounded-xl text-sm border outline-none transition-colors ${inputBg} ${textColor} ${focusBorder}`}
                 />
               </div>
 
-              {/* Current Company */}
+              {/* Company */}
               <div className="space-y-1">
-                <label className={`text-xs font-semibold ${textColor}`}>Current Company</label>
+                <label className={`text-xs font-semibold ${textColor}`}>Company / Organization</label>
                 <input
                   type="text"
                   value={company}
                   onChange={(e) => setCompany(e.target.value)}
-                  placeholder="e.g. Brain Station 23 / Google"
-                  className={`w-full px-3 py-2 rounded-xl text-sm border outline-none transition-colors ${inputBg} ${textColor} ${focusBorder}`}
+                  placeholder="e.g. Brain Station 23 / Therap / Google"
+                  className={`w-full px-3 py-2.5 rounded-xl text-sm border outline-none transition-colors ${inputBg} ${textColor} ${focusBorder}`}
                 />
               </div>
 
               {/* Location */}
-              <div className="space-y-1">
-                <label className={`text-xs font-semibold ${textColor}`}>Location</label>
+              <div className="space-y-1 md:col-span-2">
+                <label className={`text-xs font-semibold ${textColor}`}>Current City / Country</label>
                 <input
                   type="text"
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                   placeholder="e.g. Dhaka, Bangladesh"
-                  className={`w-full px-3 py-2 rounded-xl text-sm border outline-none transition-colors ${inputBg} ${textColor} ${focusBorder}`}
+                  className={`w-full px-3 py-2.5 rounded-xl text-sm border outline-none transition-colors ${inputBg} ${textColor} ${focusBorder}`}
                 />
               </div>
+            </div>
+          </div>
 
-              {/* LinkedIn URL */}
+          {/* SECTION 4: Social Links & Contact */}
+          <div className="space-y-3 border-t border-[#1d2638] pt-4">
+            <div
+              className="flex items-center gap-2 font-bold text-xs uppercase tracking-wider text-red-500"
+              style={{ fontFamily: "'Exo 2', sans-serif" }}
+            >
+              <Globe className="w-3.5 h-3.5" />
+              <span>4. Social Links & Connectivity</span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* LinkedIn */}
               <div className="space-y-1">
-                <label className={`text-xs font-semibold ${textColor}`}>LinkedIn Profile URL</label>
+                <label className={`text-xs font-semibold ${textColor} flex items-center gap-1`}>
+                  <Linkedin className="w-3.5 h-3.5 text-blue-400" />
+                  <span>LinkedIn Profile</span>
+                </label>
                 <input
                   type="url"
                   value={linkedinUrl}
                   onChange={(e) => setLinkedinUrl(e.target.value)}
-                  placeholder="e.g. https://linkedin.com/in/username"
-                  className={`w-full px-3 py-2 rounded-xl text-sm border outline-none transition-colors ${inputBg} ${textColor} ${focusBorder}`}
+                  placeholder="https://linkedin.com/in/username"
+                  className={`w-full px-3 py-2.5 rounded-xl text-sm border outline-none transition-colors ${inputBg} ${textColor} ${focusBorder}`}
+                />
+              </div>
+
+              {/* Facebook */}
+              <div className="space-y-1">
+                <label className={`text-xs font-semibold ${textColor} flex items-center gap-1`}>
+                  <Facebook className="w-3.5 h-3.5 text-blue-500" />
+                  <span>Facebook Profile</span>
+                </label>
+                <input
+                  type="url"
+                  value={facebookUrl}
+                  onChange={(e) => setFacebookUrl(e.target.value)}
+                  placeholder="https://facebook.com/username"
+                  className={`w-full px-3 py-2.5 rounded-xl text-sm border outline-none transition-colors ${inputBg} ${textColor} ${focusBorder}`}
+                />
+              </div>
+
+              {/* Phone / WhatsApp */}
+              <div className="space-y-1">
+                <label className={`text-xs font-semibold ${textColor} flex items-center gap-1`}>
+                  <Phone className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>WhatsApp / Phone</span>
+                </label>
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="+880 17XXXXXXXX"
+                  className={`w-full px-3 py-2.5 rounded-xl text-sm border outline-none transition-colors ${inputBg} ${textColor} ${focusBorder}`}
                 />
               </div>
             </div>
+          </div>
 
-            {/* Bio and Tips */}
-            <div className="space-y-4 border-t border-[#1d2638] pt-4">
-              {/* Bio */}
-              <div className="space-y-1">
-                <label className={`text-xs font-semibold ${textColor}`}>Short Biography</label>
-                <textarea
-                  value={bio}
-                  onChange={(e) => setBio(e.target.value)}
-                  placeholder="Tell students about your journey, interests, and background..."
-                  rows={3}
-                  className={`w-full px-3 py-2 rounded-xl text-sm border outline-none transition-colors resize-none ${inputBg} ${textColor} ${focusBorder}`}
-                />
-              </div>
-
-              {/* Career Tips */}
-              <div className="space-y-1">
-                <label className={`text-xs font-semibold ${textColor}`}>Career Advice & Tips for Students</label>
-                <textarea
-                  value={careerTips}
-                  onChange={(e) => setCareerTips(e.target.value)}
-                  placeholder="What should students focus on? (e.g. learning DSA, networking, internship strategies...)"
-                  rows={3}
-                  className={`w-full px-3 py-2 rounded-xl text-sm border outline-none transition-colors resize-none ${inputBg} ${textColor} ${focusBorder}`}
-                />
-              </div>
+          {/* SECTION 5: Journey & Advice */}
+          <div className="space-y-4 border-t border-[#1d2638] pt-4">
+            <div
+              className="flex items-center gap-2 font-bold text-xs uppercase tracking-wider text-red-500"
+              style={{ fontFamily: "'Exo 2', sans-serif" }}
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>5. Mentorship & Guidance</span>
             </div>
 
-            {/* Mentorship Toggle */}
-            <div className="flex items-center justify-between border-t border-[#1d2638] pt-4 pb-2">
+            {/* Bio */}
+            <div className="space-y-1">
+              <label className={`text-xs font-semibold ${textColor}`}>
+                Brief Summary of Your Journey
+              </label>
+              <textarea
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+                placeholder="Share a short summary of your career journey, tech stack, or professional accomplishments..."
+                rows={3}
+                className={`w-full px-3 py-2.5 rounded-xl text-sm border outline-none transition-colors resize-none ${inputBg} ${textColor} ${focusBorder}`}
+              />
+            </div>
+
+            {/* Career Tips */}
+            <div className="space-y-1">
+              <label className={`text-xs font-semibold ${textColor}`}>
+                Career Advice for BUBT Juniors
+              </label>
+              <textarea
+                value={careerTips}
+                onChange={(e) => setCareerTips(e.target.value)}
+                placeholder="What advice would you give to current students? (e.g. learning DSA, portfolio building, internships...)"
+                rows={3}
+                className={`w-full px-3 py-2.5 rounded-xl text-sm border outline-none transition-colors resize-none ${inputBg} ${textColor} ${focusBorder}`}
+              />
+            </div>
+
+            {/* Mentorship Availability Checkbox */}
+            <div className="flex items-center justify-between p-3.5 rounded-xl bg-[#070b12] border border-[#1d2638]">
               <div className="flex flex-col">
-                <span className={`text-xs font-semibold ${textColor}`}>Available for Mentorship</span>
-                <span className={`text-[10px] ${subColor}`}>
-                  Allow current students to connect with you via email for career advice.
+                <span className={`text-xs font-semibold ${textColor}`}>
+                  Open for Student Mentorship
+                </span>
+                <span className="text-[11px] text-slate-400">
+                  Allow juniors to connect with you for career guidance and advice.
                 </span>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
@@ -368,43 +673,44 @@ export default function AlumniRegisterForm({
                   onChange={(e) => setMentorship(e.target.checked)}
                   className="sr-only peer"
                 />
-                <div
-                  className={`w-9 h-5 rounded-full transition-colors ${
-                    isDarkMode ? "bg-slate-800" : "bg-slate-200"
-                  } peer-checked:bg-red-500 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full`}
-                ></div>
+                <div className="w-10 h-5 bg-slate-800 peer-checked:bg-red-500 rounded-full transition-colors after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5" />
               </label>
             </div>
-
-            {/* Submit Buttons */}
-            <div className="flex gap-3 border-t border-[#1d2638] pt-4">
-              <button
-                type="button"
-                onClick={onBack}
-                className={`flex-1 py-2.5 rounded-xl text-xs font-semibold border ${
-                  isDarkMode
-                    ? "border-[#1d2638] hover:bg-[#121824] text-slate-300"
-                    : "border-slate-300 hover:bg-slate-100 text-slate-700"
-                } transition-colors`}
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={submitting}
-                className="flex-1 py-3 rounded-xl bg-gradient-to-r from-red-600 via-rose-600 to-red-500 hover:from-red-500 hover:to-rose-500 disabled:opacity-50 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-lg shadow-red-600/30"
-                style={{ fontFamily: "'Exo 2', sans-serif" }}
-              >
-                {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-                Submit Registration
-              </button>
-            </div>
-          </form>
-
-          {/* Footer Attribution */}
-          <div className="pt-4 border-t border-[#1d2638] text-center text-xs text-slate-500">
-            Presented by Team <strong className="text-white font-bold">CoreWe5</strong> · BUBT Intake 51
           </div>
+
+          {/* Action Buttons */}
+          <div className="flex items-center gap-3 border-t border-[#1d2638] pt-5">
+            <button
+              type="button"
+              onClick={onBack}
+              className="flex-1 py-3 rounded-xl text-xs font-semibold border border-[#1d2638] hover:bg-[#121824] text-slate-300 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="flex-1 py-3.5 rounded-xl bg-gradient-to-r from-red-600 via-rose-600 to-red-500 hover:from-red-500 hover:to-rose-500 disabled:opacity-50 text-white text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-red-600/30"
+              style={{ fontFamily: "'Exo 2', sans-serif" }}
+            >
+              {submitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Submitting Registration...</span>
+                </>
+              ) : (
+                <>
+                  <ShieldCheck className="h-4 w-4" />
+                  <span>Complete Alumni Registration</span>
+                </>
+              )}
+            </button>
+          </div>
+        </form>
+
+        {/* Footer Attribution */}
+        <div className="pt-4 border-t border-[#1d2638] text-center text-xs text-slate-500">
+          Presented by Team <strong className="text-white font-bold">CoreWe5</strong> · BUBT Intake 51
         </div>
       </div>
     </div>

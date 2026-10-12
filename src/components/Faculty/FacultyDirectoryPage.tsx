@@ -26,6 +26,7 @@ import noticesDataRaw from "../../data/recentNotices.json";
 interface FacultyDirectoryPageProps {
   isDarkMode: boolean;
   onClose: () => void;
+  hideNotices?: boolean;
 }
 
 type Tab = "faculty" | "officials" | "notices";
@@ -58,6 +59,7 @@ const DEPARTMENT_OPTIONS = [
 export const FacultyDirectoryPage: React.FC<FacultyDirectoryPageProps> = ({
   isDarkMode,
   onClose,
+  hideNotices = false,
 }) => {
   const [tab, setTab] = useState<Tab>("faculty");
   const [selectedDept, setSelectedDept] = useState<string>("all");
@@ -143,10 +145,12 @@ export const FacultyDirectoryPage: React.FC<FacultyDirectoryPageProps> = ({
         <div className="flex items-center justify-between mb-4 gap-3">
           <div className="min-w-0 flex-1">
             <h1 className={`text-xl sm:text-2xl font-bold ${titleColor}`}>
-              Info Hub
+              {hideNotices ? "Officials & Faculty Directory" : "Info Hub"}
             </h1>
             <p className={`text-xs sm:text-sm mt-0.5 ${subColor} break-words`}>
-              BUBT university directory for faculty members, administrative offices, and official circulars
+              {hideNotices
+                ? "Official BUBT university directory for 472 verified faculty members and administrative leadership"
+                : "BUBT university directory for faculty members, administrative offices, and official circulars"}
             </p>
           </div>
 
@@ -174,7 +178,7 @@ export const FacultyDirectoryPage: React.FC<FacultyDirectoryPageProps> = ({
           >
             {tabBtn("faculty", "Faculty", 472)}
             {tabBtn("officials", "Officials", 11)}
-            {tabBtn("notices", "Notices", noticesCount)}
+            {!hideNotices && tabBtn("notices", "Notices", noticesCount)}
           </div>
         </div>
 
@@ -309,7 +313,7 @@ export const FacultyDirectoryPage: React.FC<FacultyDirectoryPageProps> = ({
         )}
 
         {/* ── TAB 3: NOTICES & CIRCULARS ── */}
-        {tab === "notices" && (
+        {!hideNotices && tab === "notices" && (
           <UniversityNoticesFeed
             notices={universityNotices}
             isDarkMode={isDarkMode}
