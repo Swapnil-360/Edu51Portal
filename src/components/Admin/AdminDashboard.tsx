@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Plus, ChevronDown, ChevronUp, AlertCircle, Trash2, Edit2, BarChart3, BookOpen, Files, Users, TrendingUp, HardDrive, UsersRound, ShieldCheck, MessageSquare, RefreshCw, Bug, Lightbulb, Sparkles, Ban, GraduationCap, BadgeCheck, X, Loader2, Search, FlaskConical } from 'lucide-react';
+import {
+  Bell, Plus, ChevronDown, ChevronUp, AlertCircle, Trash2, Edit2, BarChart3,
+  BookOpen, Files, Users, TrendingUp, HardDrive, UsersRound, ShieldCheck,
+  MessageSquare, RefreshCw, Bug, Lightbulb, Sparkles, Ban, GraduationCap,
+  BadgeCheck, X, Loader2, Search, FlaskConical, Calendar, Database, Activity,
+  CheckCircle2, AlertTriangle, Layers, Server, ArrowUpRight
+} from 'lucide-react';
 import MaterialManager from './MaterialManager';
 import { supabase, supabaseConfigured } from '../../lib/supabase';
 import { sendEmailNotification } from '../../lib/emailNotifications';
@@ -80,8 +86,12 @@ const STORAGE_LIMIT_BYTES = 1024 * 1024 * 1024;
 
 function formatBytes(bytes: number): string {
   if (!bytes || bytes < 1024) return `${bytes || 0} B`;
-  const mb = bytes / 1024 / 1024;
+  const kb = bytes / 1024;
+  if (kb < 1024) return `${kb.toFixed(1)} KB`;
+  const mb = kb / 1024;
   if (mb < 1024) return `${mb.toFixed(mb < 10 ? 2 : 1)} MB`;
+  const gb = mb / 1024;
+  return `${gb.toFixed(2)} GB`;
 }
 
 /**
@@ -128,6 +138,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   onTabChange,
   onExitAdmin,
   onPendingAlumniCountChange,
+  coursesCount = 0,
+  materialsCount = 0,
+  currentWeek = 1,
+  totalWeeks = 20,
   onlineUsers = 0,
   storageBytes = 0,
   storageByBucket = [],
@@ -373,6 +387,64 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const testAlumniCount = testUsers.filter((u) => u.is_alumni).length;
   const totalTestCount = testUsers.length;
 
+  const verifiedAlumniCount = (adminUsers || []).filter((u) => u.is_alumni && u.is_verified).length;
+  const totalAlumniCount = realAlumniCount + testAlumniCount;
+  const alumniVerificationRate = totalAlumniCount > 0
+    ? Math.round((verifiedAlumniCount / totalAlumniCount) * 100)
+    : 0;
+
+  const bannedUsersCount = (adminUsers || []).filter((u) => u.is_banned).length;
+  const adminStaffCount = (adminUsers || []).filter((u) => u.is_admin || u.is_owner).length;
+
+  // Academic semester progression calculations
+  const safeCurrentWeek = Math.max(1, currentWeek || 1);
+  const safeTotalWeeks = Math.max(1, totalWeeks || 20);
+  const semesterProgressPct = Math.min(100, Math.round((safeCurrentWeek / safeTotalWeeks) * 100));
+
+  const getSemesterPhaseInfo = (week: number) => {
+    if (week <= 4) {
+      return {
+        label: 'Early Semester',
+        sub: 'Enrollment & Course Setup',
+        color: 'from-emerald-500 to-teal-400',
+        badgeBg: isDarkMode ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' : 'bg-emerald-100 text-emerald-800 border-emerald-200',
+      };
+    }
+    if (week <= 9) {
+      return {
+        label: 'Midterm Phase',
+        sub: 'Lectures & Midterm Exams',
+        color: 'from-amber-500 to-orange-400',
+        badgeBg: isDarkMode ? 'bg-amber-500/20 text-amber-300 border-amber-500/30' : 'bg-amber-100 text-amber-800 border-amber-200',
+      };
+    }
+    if (week <= 15) {
+      return {
+        label: 'Advanced Term',
+        sub: 'Lab Projects & Term Work',
+        color: 'from-blue-500 to-indigo-500',
+        badgeBg: isDarkMode ? 'bg-blue-500/20 text-blue-300 border-blue-500/30' : 'bg-blue-100 text-blue-800 border-blue-200',
+      };
+    }
+    return {
+      label: 'Finals Window',
+      sub: 'Final Exams & Grading',
+      color: 'from-purple-500 to-rose-400',
+      badgeBg: isDarkMode ? 'bg-purple-500/20 text-purple-300 border-purple-500/30' : 'bg-purple-100 text-purple-800 border-purple-200',
+    };
+  };
+
+  const semesterPhase = getSemesterPhaseInfo(safeCurrentWeek);
+
+  const remainingStorageBytes = Math.max(0, STORAGE_LIMIT_BYTES - storageBytes);
+
+  const BUCKET_THEMES: Record<string, { bg: string; dot: string; text: string }> = {
+    materials: { bg: 'bg-blue-500', dot: 'bg-blue-400', text: 'text-blue-400' },
+    avatars: { bg: 'bg-purple-500', dot: 'bg-purple-400', text: 'text-purple-400' },
+    routines: { bg: 'bg-amber-500', dot: 'bg-amber-400', text: 'text-amber-400' },
+    notices: { bg: 'bg-emerald-500', dot: 'bg-emerald-400', text: 'text-emerald-400' },
+  };
+
   const filteredUsers = (adminUsers || []).filter((u) => {
     const isMock = isMockOrTestAccount(u);
     if (userCategoryFilter === 'real' && isMock) return false;
@@ -421,209 +493,361 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           <>
             {/* SECTION 1: Quick Stats Dashboard */}
             <div>
-          <div className="flex items-center gap-3 mb-5">
-            <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-blue-500/20 text-blue-400' : 'bg-blue-100 text-blue-600'}`}>
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-            </div>
-            <h2 className={`text-lg sm:text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-              Platform Statistics
-            </h2>
-          </div>
-          
-          {/* Main Counter Metrics Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3">
-            {/* Real Students Card */}
-            <div
-              onClick={() => setUserCategoryFilter(userCategoryFilter === 'real' ? 'all' : 'real')}
-              title="Click to view real student accounts in user list"
-              className={`group relative overflow-hidden rounded-xl transition-all duration-300 cursor-pointer ${
-                userCategoryFilter === 'real'
-                  ? isDarkMode ? 'ring-2 ring-blue-400 bg-blue-950/40 border border-blue-400' : 'ring-2 ring-blue-500 bg-blue-100/90 border border-blue-400'
-                  : isDarkMode ? 'bg-gradient-to-br from-slate-700/40 to-slate-800/40 backdrop-blur-xl border border-blue-500/20 hover:border-blue-400/40' : 'bg-gradient-to-br from-blue-50/80 to-blue-100/80 backdrop-blur-xl border border-blue-200/50 hover:border-blue-300/80'
-              }`}
-            >
-              <div className="relative z-10 p-3 sm:p-4">
-                <div className="flex items-start justify-between mb-3">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
+                <div className="flex items-center gap-3">
+                  <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-blue-500/20 text-blue-400' : 'bg-blue-100 text-blue-600'}`}>
+                    <Activity className="w-5 h-5" />
+                  </div>
                   <div>
-                    <p className={`text-xs font-semibold uppercase tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Students</p>
-                    <span className={`inline-block text-[9px] font-semibold px-1.5 py-0.2 rounded ${isDarkMode ? 'bg-blue-500/20 text-blue-300' : 'bg-blue-100 text-blue-700'}`}>
-                      Real
-                    </span>
-                  </div>
-                  <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-blue-500/20 text-blue-400 group-hover:bg-blue-500/30' : 'bg-blue-200 text-blue-600 group-hover:bg-blue-300'} transition-all group-hover:scale-110`}>
-                    <Users className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <h2 className={`text-lg sm:text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                      Executive Platform Telemetry
+                    </h2>
+                    <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                      Academic semester progression, multi-bucket storage, and platform health
+                    </p>
                   </div>
                 </div>
-                <p className={`text-2xl sm:text-3xl font-black ${isDarkMode ? 'text-blue-300' : 'text-blue-600'}`}>{realStudentsCount}</p>
-                <div className={`mt-2 h-1 w-8 rounded-full ${isDarkMode ? 'bg-gradient-to-r from-blue-500 to-blue-400' : 'bg-gradient-to-r from-blue-500 to-blue-600'}`}></div>
-                {testStudentsCount > 0 && (
-                  <p className={`mt-1 text-[10px] ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                    +{testStudentsCount} test excluded
-                  </p>
-                )}
+                <div className="flex items-center gap-2 self-start sm:self-auto">
+                  <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
+                    isDarkMode ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30' : 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                  }`}>
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    Supabase Live Sync Active
+                  </span>
+                </div>
               </div>
-            </div>
-
-            {/* Real Alumni Card */}
-            <div
-              onClick={() => setUserCategoryFilter(userCategoryFilter === 'real' ? 'all' : 'real')}
-              title="Click to view real alumni accounts in user list"
-              className={`group relative overflow-hidden rounded-xl transition-all duration-300 cursor-pointer ${
-                userCategoryFilter === 'real'
-                  ? isDarkMode ? 'ring-2 ring-violet-400 bg-violet-950/40 border border-violet-400' : 'ring-2 ring-violet-500 bg-violet-100/90 border border-violet-400'
-                  : isDarkMode ? 'bg-gradient-to-br from-slate-700/40 to-slate-800/40 backdrop-blur-xl border border-violet-500/20 hover:border-violet-400/40' : 'bg-gradient-to-br from-violet-50/80 to-violet-100/80 backdrop-blur-xl border border-violet-200/50 hover:border-violet-300/80'
-              }`}
-            >
-              <div className="relative z-10 p-3 sm:p-4">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <p className={`text-xs font-semibold uppercase tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Alumni</p>
-                    <span className={`inline-block text-[9px] font-semibold px-1.5 py-0.2 rounded ${isDarkMode ? 'bg-violet-500/20 text-violet-300' : 'bg-violet-100 text-violet-700'}`}>
-                      Real
-                    </span>
-                  </div>
-                  <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-violet-500/20 text-violet-400 group-hover:bg-violet-500/30' : 'bg-violet-200 text-violet-600 group-hover:bg-violet-300'} transition-all group-hover:scale-110`}>
-                    <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5" />
-                  </div>
-                </div>
-                <p className={`text-2xl sm:text-3xl font-black ${isDarkMode ? 'text-violet-300' : 'text-violet-600'}`}>{realAlumniCount}</p>
-                <div className={`mt-2 h-1 w-8 rounded-full ${isDarkMode ? 'bg-gradient-to-r from-violet-500 to-violet-400' : 'bg-gradient-to-r from-violet-500 to-violet-600'}`}></div>
-                {testAlumniCount > 0 && (
-                  <p className={`mt-1 text-[10px] ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                    +{testAlumniCount} test excluded
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {/* Mock / Test Accounts Card */}
-            <div
-              onClick={() => setUserCategoryFilter(userCategoryFilter === 'mock' ? 'all' : 'mock')}
-              title="Click to view only Mock & Test accounts in user list"
-              className={`group relative overflow-hidden rounded-xl transition-all duration-300 cursor-pointer ${
-                userCategoryFilter === 'mock'
-                  ? isDarkMode ? 'ring-2 ring-amber-400 bg-amber-950/40 border border-amber-400' : 'ring-2 ring-amber-500 bg-amber-100/90 border border-amber-400'
-                  : isDarkMode ? 'bg-gradient-to-br from-slate-700/40 to-slate-800/40 backdrop-blur-xl border border-amber-500/25 hover:border-amber-400/50' : 'bg-gradient-to-br from-amber-50/80 to-amber-100/80 backdrop-blur-xl border border-amber-200/60 hover:border-amber-300/90'
-              }`}
-            >
-              <div className="relative z-10 p-3 sm:p-4">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <p className={`text-xs font-semibold uppercase tracking-wider ${isDarkMode ? 'text-amber-300/80' : 'text-amber-800'}`}>Mock / Test</p>
-                    <span className={`inline-block text-[9px] font-bold px-1.5 py-0.5 rounded-full ${isDarkMode ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-amber-200 text-amber-800 border border-amber-300'}`}>
-                      TEST DATA
-                    </span>
-                  </div>
-                  <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-amber-500/20 text-amber-400 group-hover:bg-amber-500/30' : 'bg-amber-200 text-amber-700 group-hover:bg-amber-300'} transition-all group-hover:scale-110`}>
-                    <FlaskConical className="w-4 h-4 sm:w-5 sm:h-5" />
-                  </div>
-                </div>
-                <p className={`text-2xl sm:text-3xl font-black ${isDarkMode ? 'text-amber-300' : 'text-amber-700'}`}>{totalTestCount}</p>
-                <div className={`mt-2 h-1 w-8 rounded-full ${isDarkMode ? 'bg-gradient-to-r from-amber-500 to-amber-400' : 'bg-gradient-to-r from-amber-500 to-amber-600'}`}></div>
-                <p className={`mt-1 text-[10px] font-medium ${isDarkMode ? 'text-amber-400/80' : 'text-amber-700'}`}>
-                  {testStudentsCount} std · {testAlumniCount} alm
-                </p>
-              </div>
-            </div>
-
-            {/* Teams Card */}
-            <div className={`group relative overflow-hidden rounded-xl transition-all duration-300 ${isDarkMode ? 'bg-gradient-to-br from-slate-700/40 to-slate-800/40 backdrop-blur-xl border border-emerald-500/20 hover:border-emerald-400/40' : 'bg-gradient-to-br from-emerald-50/80 to-emerald-100/80 backdrop-blur-xl border border-emerald-200/50 hover:border-emerald-300/80'}`}>
-              <div className="relative z-10 p-3 sm:p-4">
-                <div className="flex items-start justify-between mb-3">
-                  <p className={`text-xs font-semibold uppercase tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Teams</p>
-                  <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-emerald-500/20 text-emerald-400 group-hover:bg-emerald-500/30' : 'bg-emerald-200 text-emerald-600 group-hover:bg-emerald-300'} transition-all group-hover:scale-110`}>
-                    <UsersRound className="w-4 h-4 sm:w-5 sm:h-5" />
-                  </div>
-                </div>
-                <p className={`text-2xl sm:text-3xl font-black ${isDarkMode ? 'text-emerald-300' : 'text-emerald-600'}`}>{teamsCount}</p>
-                <div className={`mt-2 h-1 w-8 rounded-full ${isDarkMode ? 'bg-gradient-to-r from-emerald-500 to-emerald-400' : 'bg-gradient-to-r from-emerald-500 to-emerald-600'}`}></div>
-              </div>
-            </div>
-
-            {/* Active Now Card (realtime) */}
-            <div className={`col-span-2 sm:col-span-1 group relative overflow-hidden rounded-xl transition-all duration-300 ${isDarkMode ? 'bg-gradient-to-br from-slate-700/40 to-slate-800/40 backdrop-blur-xl border border-purple-500/20 hover:border-purple-400/40' : 'bg-gradient-to-br from-purple-50/80 to-purple-100/80 backdrop-blur-xl border border-purple-200/50 hover:border-purple-300/80'}`}>
-              <div className="relative z-10 p-3 sm:p-4">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <p className={`text-xs font-semibold uppercase tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Active</p>
-                    <span className={`inline-block mt-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full ${isDarkMode ? 'bg-green-500/30 text-green-300' : 'bg-green-200 text-green-700'}`}>
-                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-400 mr-1 animate-pulse"></span>
-                      LIVE
-                    </span>
-                  </div>
-                  <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-purple-500/20 text-purple-400 group-hover:bg-purple-500/30' : 'bg-purple-200 text-purple-600 group-hover:bg-purple-300'} transition-all group-hover:scale-110`}>
-                    <Users className="w-4 h-4 sm:w-5 sm:h-5" />
-                  </div>
-                </div>
-                <p className={`text-2xl sm:text-3xl font-black ${isDarkMode ? 'text-purple-300' : 'text-purple-600'}`}>{onlineUsers}</p>
-                <div className={`mt-2 h-1 w-8 rounded-full ${isDarkMode ? 'bg-gradient-to-r from-purple-500 to-purple-400' : 'bg-gradient-to-r from-purple-500 to-purple-600'}`}></div>
-              </div>
-            </div>
-          </div>
-
-          {/* System & Resource Usage Gauges */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 sm:gap-3 mt-2.5 sm:mt-3">
-            {/* Storage Used Card */}
-            <div title={storageTooltip} className={`group relative overflow-hidden rounded-xl transition-all duration-300 ${isDarkMode ? 'bg-gradient-to-br from-slate-700/40 to-slate-800/40 backdrop-blur-xl border border-cyan-500/20 hover:border-cyan-400/40' : 'bg-gradient-to-br from-cyan-50/80 to-cyan-100/80 backdrop-blur-xl border border-cyan-200/50 hover:border-cyan-300/80'}`}>
-              <div className="relative z-10 p-3 sm:p-4">
-                <div className="flex items-start justify-between mb-2">
-                  <div>
-                    <p className={`text-xs font-semibold uppercase tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Storage Used</p>
-                  </div>
-                  <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-cyan-500/20 text-cyan-400 group-hover:bg-cyan-500/30' : 'bg-cyan-200 text-cyan-600 group-hover:bg-cyan-300'} transition-all group-hover:scale-110`}>
-                    <HardDrive className="w-4 h-4 sm:w-5 sm:h-5" />
-                  </div>
-                </div>
-                <p className={`text-xl sm:text-2xl font-black ${isDarkMode ? 'text-cyan-300' : 'text-cyan-700'} transition-colors`}>
-                  {formatBytes(storageBytes)}
-                  <span className={`text-sm font-semibold ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}> / 1 GB</span>
-                </p>
-                {/* Gauge */}
-                <div className={`mt-2.5 h-2 rounded-full overflow-hidden ${isDarkMode ? 'bg-[#2f3336]' : 'bg-slate-200'}`}>
-                  <div className={`h-full rounded-full transition-all duration-500 ${storageBarColor}`} style={{ width: `${Math.max(2, storagePct)}%` }} />
-                </div>
-                <p className={`mt-1.5 text-[10px] ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>
-                  {storagePct.toFixed(1)}% used · hover for per-bucket breakdown
-                </p>
-              </div>
-            </div>
-
-            {/* AI Usage Card — tracks combined usage against Gemini's free-tier
-                project cap (250 req/day), since our own 30/user/day limit
-                won't stop the shared project ceiling from being hit first. */}
-            {(() => {
-              const aiPct = aiUsage ? Math.min(100, (aiUsage.totalMessages / GEMINI_FREE_TIER_DAILY_LIMIT) * 100) : 0;
-              const aiBarColor = aiPct >= 90 ? 'bg-red-500' : aiPct >= 70 ? 'bg-amber-500' : 'bg-pink-500';
-              return (
+              
+              {/* Main Counter Metrics Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3">
+                {/* Real Students Card */}
                 <div
-                  title="Combined AI chat requests today vs. Gemini's free-tier daily project limit"
-                  className={`group relative overflow-hidden rounded-xl transition-all duration-300 ${isDarkMode ? 'bg-gradient-to-br from-slate-700/40 to-slate-800/40 backdrop-blur-xl border border-pink-500/20 hover:border-pink-400/40' : 'bg-gradient-to-br from-pink-50/80 to-pink-100/80 backdrop-blur-xl border border-pink-200/50 hover:border-pink-300/80'}`}
+                  onClick={() => setUserCategoryFilter(userCategoryFilter === 'real' ? 'all' : 'real')}
+                  title="Click to filter real student accounts in user list"
+                  className={`group relative overflow-hidden rounded-xl transition-all duration-300 cursor-pointer ${
+                    userCategoryFilter === 'real'
+                      ? isDarkMode ? 'ring-2 ring-blue-400 bg-blue-950/40 border border-blue-400 shadow-lg shadow-blue-500/10' : 'ring-2 ring-blue-500 bg-blue-100/90 border border-blue-400 shadow-md'
+                      : isDarkMode ? 'bg-gradient-to-br from-slate-700/40 to-slate-800/40 backdrop-blur-xl border border-blue-500/20 hover:border-blue-400/40' : 'bg-gradient-to-br from-blue-50/80 to-blue-100/80 backdrop-blur-xl border border-blue-200/50 hover:border-blue-300/80'
+                  }`}
                 >
                   <div className="relative z-10 p-3 sm:p-4">
                     <div className="flex items-start justify-between mb-2">
-                      <p className={`text-xs font-semibold uppercase tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>AI Usage Today</p>
-                      <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-pink-500/20 text-pink-400 group-hover:bg-pink-500/30' : 'bg-pink-200 text-pink-600 group-hover:bg-pink-300'} transition-all group-hover:scale-110`}>
-                        <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />
+                      <div>
+                        <p className={`text-xs font-semibold uppercase tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Students</p>
+                        <span className={`inline-block text-[9px] font-bold px-1.5 py-0.2 rounded ${isDarkMode ? 'bg-blue-500/20 text-blue-300' : 'bg-blue-100 text-blue-700'}`}>
+                          {realUsers.length > 0 ? Math.round((realStudentsCount / realUsers.length) * 100) : 0}% Cohort
+                        </span>
+                      </div>
+                      <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-blue-500/20 text-blue-400 group-hover:bg-blue-500/30' : 'bg-blue-200 text-blue-600 group-hover:bg-blue-300'} transition-all group-hover:scale-110`}>
+                        <Users className="w-4 h-4 sm:w-5 sm:h-5" />
                       </div>
                     </div>
-                    <p className={`text-xl sm:text-2xl font-black ${isDarkMode ? 'text-pink-300' : 'text-pink-700'} transition-colors`}>
-                      {aiUsage ? aiUsage.totalMessages : '—'}
-                      <span className={`text-sm font-semibold ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}> / {GEMINI_FREE_TIER_DAILY_LIMIT} requests</span>
-                    </p>
-                    <div className={`mt-2.5 h-2 rounded-full overflow-hidden ${isDarkMode ? 'bg-[#2f3336]' : 'bg-slate-200'}`}>
-                      <div className={`h-full rounded-full transition-all duration-500 ${aiBarColor}`} style={{ width: `${Math.max(2, aiPct)}%` }} />
+                    <p className={`text-2xl sm:text-3xl font-black ${isDarkMode ? 'text-blue-300' : 'text-blue-600'}`}>{realStudentsCount}</p>
+                    <div className={`mt-2 h-1 w-8 rounded-full ${isDarkMode ? 'bg-gradient-to-r from-blue-500 to-blue-400' : 'bg-gradient-to-r from-blue-500 to-blue-600'}`}></div>
+                    {testStudentsCount > 0 && (
+                      <p className={`mt-1 text-[10px] ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                        +{testStudentsCount} test excluded
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Real Alumni Card */}
+                <div
+                  onClick={() => setUserCategoryFilter(userCategoryFilter === 'real' ? 'all' : 'real')}
+                  title="Click to filter real alumni accounts in user list"
+                  className={`group relative overflow-hidden rounded-xl transition-all duration-300 cursor-pointer ${
+                    userCategoryFilter === 'real'
+                      ? isDarkMode ? 'ring-2 ring-violet-400 bg-violet-950/40 border border-violet-400 shadow-lg shadow-violet-500/10' : 'ring-2 ring-violet-500 bg-violet-100/90 border border-violet-400 shadow-md'
+                      : isDarkMode ? 'bg-gradient-to-br from-slate-700/40 to-slate-800/40 backdrop-blur-xl border border-violet-500/20 hover:border-violet-400/40' : 'bg-gradient-to-br from-violet-50/80 to-violet-100/80 backdrop-blur-xl border border-violet-200/50 hover:border-violet-300/80'
+                  }`}
+                >
+                  <div className="relative z-10 p-3 sm:p-4">
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <p className={`text-xs font-semibold uppercase tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Alumni</p>
+                        <span className={`inline-block text-[9px] font-bold px-1.5 py-0.2 rounded ${isDarkMode ? 'bg-violet-500/20 text-violet-300' : 'bg-violet-100 text-violet-700'}`}>
+                          {verifiedAlumniCount} Verified
+                        </span>
+                      </div>
+                      <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-violet-500/20 text-violet-400 group-hover:bg-violet-500/30' : 'bg-violet-200 text-violet-600 group-hover:bg-violet-300'} transition-all group-hover:scale-110`}>
+                        <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5" />
+                      </div>
                     </div>
-                    <p className={`mt-1.5 text-[10px] ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>
-                      {aiUsage ? `${aiPct.toFixed(0)}% of free-tier cap · ${aiUsage.activeUsers} user${aiUsage.activeUsers === 1 ? '' : 's'} active` : 'Loading…'}
+                    <p className={`text-2xl sm:text-3xl font-black ${isDarkMode ? 'text-violet-300' : 'text-violet-600'}`}>{realAlumniCount}</p>
+                    <div className={`mt-2 h-1 w-8 rounded-full ${isDarkMode ? 'bg-gradient-to-r from-violet-500 to-violet-400' : 'bg-gradient-to-r from-violet-500 to-violet-600'}`}></div>
+                    {testAlumniCount > 0 && (
+                      <p className={`mt-1 text-[10px] ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                        +{testAlumniCount} test excluded
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Mock / Test Accounts Card */}
+                <div
+                  onClick={() => setUserCategoryFilter(userCategoryFilter === 'mock' ? 'all' : 'mock')}
+                  title="Click to isolate mock and test accounts"
+                  className={`group relative overflow-hidden rounded-xl transition-all duration-300 cursor-pointer ${
+                    userCategoryFilter === 'mock'
+                      ? isDarkMode ? 'ring-2 ring-amber-400 bg-amber-950/40 border border-amber-400 shadow-lg shadow-amber-500/10' : 'ring-2 ring-amber-500 bg-amber-100/90 border border-amber-400 shadow-md'
+                      : isDarkMode ? 'bg-gradient-to-br from-slate-700/40 to-slate-800/40 backdrop-blur-xl border border-amber-500/25 hover:border-amber-400/50' : 'bg-gradient-to-br from-amber-50/80 to-amber-100/80 backdrop-blur-xl border border-amber-200/60 hover:border-amber-300/90'
+                  }`}
+                >
+                  <div className="relative z-10 p-3 sm:p-4">
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <p className={`text-xs font-semibold uppercase tracking-wider ${isDarkMode ? 'text-amber-300/80' : 'text-amber-800'}`}>Mock / Test</p>
+                        <span className={`inline-block text-[9px] font-bold px-1.5 py-0.5 rounded-full ${isDarkMode ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-amber-200 text-amber-800 border border-amber-300'}`}>
+                          TEST DATA
+                        </span>
+                      </div>
+                      <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-amber-500/20 text-amber-400 group-hover:bg-amber-500/30' : 'bg-amber-200 text-amber-700 group-hover:bg-amber-300'} transition-all group-hover:scale-110`}>
+                        <FlaskConical className="w-4 h-4 sm:w-5 sm:h-5" />
+                      </div>
+                    </div>
+                    <p className={`text-2xl sm:text-3xl font-black ${isDarkMode ? 'text-amber-300' : 'text-amber-700'}`}>{totalTestCount}</p>
+                    <div className={`mt-2 h-1 w-8 rounded-full ${isDarkMode ? 'bg-gradient-to-r from-amber-500 to-amber-400' : 'bg-gradient-to-r from-amber-500 to-amber-600'}`}></div>
+                    <p className={`mt-1 text-[10px] font-medium ${isDarkMode ? 'text-amber-400/80' : 'text-amber-700'}`}>
+                      {testStudentsCount} std · {testAlumniCount} alm
                     </p>
                   </div>
                 </div>
-              );
-            })()}
-          </div>
-        </div>
+
+                {/* Teams Card */}
+                <div className={`group relative overflow-hidden rounded-xl transition-all duration-300 ${isDarkMode ? 'bg-gradient-to-br from-slate-700/40 to-slate-800/40 backdrop-blur-xl border border-emerald-500/20 hover:border-emerald-400/40' : 'bg-gradient-to-br from-emerald-50/80 to-emerald-100/80 backdrop-blur-xl border border-emerald-200/50 hover:border-emerald-300/80'}`}>
+                  <div className="relative z-10 p-3 sm:p-4">
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <p className={`text-xs font-semibold uppercase tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Teams</p>
+                        <span className={`inline-block text-[9px] font-semibold px-1.5 py-0.2 rounded ${isDarkMode ? 'bg-emerald-500/20 text-emerald-300' : 'bg-emerald-100 text-emerald-700'}`}>
+                          Spaces
+                        </span>
+                      </div>
+                      <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-emerald-500/20 text-emerald-400 group-hover:bg-emerald-500/30' : 'bg-emerald-200 text-emerald-600 group-hover:bg-emerald-300'} transition-all group-hover:scale-110`}>
+                        <UsersRound className="w-4 h-4 sm:w-5 sm:h-5" />
+                      </div>
+                    </div>
+                    <p className={`text-2xl sm:text-3xl font-black ${isDarkMode ? 'text-emerald-300' : 'text-emerald-600'}`}>{teamsCount}</p>
+                    <div className={`mt-2 h-1 w-8 rounded-full ${isDarkMode ? 'bg-gradient-to-r from-emerald-500 to-emerald-400' : 'bg-gradient-to-r from-emerald-500 to-emerald-600'}`}></div>
+                    <p className={`mt-1 text-[10px] ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                      Active study groups
+                    </p>
+                  </div>
+                </div>
+
+                {/* Active Now Card (realtime) */}
+                <div className={`col-span-2 sm:col-span-1 group relative overflow-hidden rounded-xl transition-all duration-300 ${isDarkMode ? 'bg-gradient-to-br from-slate-700/40 to-slate-800/40 backdrop-blur-xl border border-purple-500/20 hover:border-purple-400/40' : 'bg-gradient-to-br from-purple-50/80 to-purple-100/80 backdrop-blur-xl border border-purple-200/50 hover:border-purple-300/80'}`}>
+                  <div className="relative z-10 p-3 sm:p-4">
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <p className={`text-xs font-semibold uppercase tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Active Now</p>
+                        <span className={`inline-block mt-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full ${isDarkMode ? 'bg-green-500/30 text-green-300' : 'bg-green-200 text-green-700'}`}>
+                          <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-400 mr-1 animate-pulse"></span>
+                          LIVE
+                        </span>
+                      </div>
+                      <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-purple-500/20 text-purple-400 group-hover:bg-purple-500/30' : 'bg-purple-200 text-purple-600 group-hover:bg-purple-300'} transition-all group-hover:scale-110`}>
+                        <Users className="w-4 h-4 sm:w-5 sm:h-5" />
+                      </div>
+                    </div>
+                    <p className={`text-2xl sm:text-3xl font-black ${isDarkMode ? 'text-purple-300' : 'text-purple-600'}`}>{onlineUsers}</p>
+                    <div className={`mt-2 h-1 w-8 rounded-full ${isDarkMode ? 'bg-gradient-to-r from-purple-500 to-purple-400' : 'bg-gradient-to-r from-purple-500 to-purple-600'}`}></div>
+                    <p className={`mt-1 text-[10px] ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                      Active peer sessions
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Executive Telemetry Grid: Academic Pulse + Storage Allocations + AI Engine */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3 mt-2.5 sm:mt-3">
+                {/* 1. Academic Semester Lifecycle & Pulse Card */}
+                <div className={`group relative overflow-hidden rounded-xl transition-all duration-300 ${isDarkMode ? 'bg-gradient-to-br from-slate-700/40 to-slate-800/40 backdrop-blur-xl border border-indigo-500/20 hover:border-indigo-400/40' : 'bg-gradient-to-br from-indigo-50/80 to-blue-50/80 backdrop-blur-xl border border-indigo-200/50 hover:border-indigo-300/80'}`}>
+                  <div className="relative z-10 p-3 sm:p-4">
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <p className={`text-xs font-semibold uppercase tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Semester Lifecycle</p>
+                      </div>
+                      <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-indigo-500/20 text-indigo-400 group-hover:bg-indigo-500/30' : 'bg-indigo-200 text-indigo-600 group-hover:bg-indigo-300'} transition-all group-hover:scale-110`}>
+                        <Calendar className="w-4 h-4 sm:w-5 sm:h-5" />
+                      </div>
+                    </div>
+                    <div className="flex items-baseline justify-between">
+                      <p className={`text-xl sm:text-2xl font-black ${isDarkMode ? 'text-indigo-300' : 'text-indigo-700'} transition-colors`}>
+                        Week {safeCurrentWeek}
+                        <span className={`text-sm font-semibold ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}> / {safeTotalWeeks}</span>
+                      </p>
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${semesterPhase.badgeBg}`}>
+                        {semesterPhase.label}
+                      </span>
+                    </div>
+
+                    {/* Semester Progress Gauge */}
+                    <div className={`mt-2.5 h-2.5 rounded-full overflow-hidden ${isDarkMode ? 'bg-[#2f3336]' : 'bg-slate-200'}`}>
+                      <div
+                        className="h-full rounded-full transition-all duration-500 bg-gradient-to-r from-indigo-500 via-blue-500 to-cyan-400"
+                        style={{ width: `${Math.max(4, semesterProgressPct)}%` }}
+                      />
+                    </div>
+
+                    {/* Sub metrics grid */}
+                    <div className="mt-2.5 grid grid-cols-3 gap-1.5 pt-1 border-t border-slate-700/20">
+                      <div className={`px-2 py-1 rounded-md text-center ${isDarkMode ? 'bg-slate-800/50' : 'bg-white/70'}`}>
+                        <p className={`text-[9px] uppercase font-bold tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Courses</p>
+                        <p className={`text-xs font-extrabold ${isDarkMode ? 'text-indigo-300' : 'text-indigo-600'}`}>{coursesCount}</p>
+                      </div>
+                      <div className={`px-2 py-1 rounded-md text-center ${isDarkMode ? 'bg-slate-800/50' : 'bg-white/70'}`}>
+                        <p className={`text-[9px] uppercase font-bold tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Materials</p>
+                        <p className={`text-xs font-extrabold ${isDarkMode ? 'text-blue-300' : 'text-blue-600'}`}>{materialsCount}</p>
+                      </div>
+                      <div className={`px-2 py-1 rounded-md text-center ${isDarkMode ? 'bg-slate-800/50' : 'bg-white/70'}`}>
+                        <p className={`text-[9px] uppercase font-bold tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Density</p>
+                        <p className={`text-xs font-extrabold ${isDarkMode ? 'text-cyan-300' : 'text-cyan-600'}`}>
+                          {(materialsCount / Math.max(1, coursesCount)).toFixed(1)}/c
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2. Storage Quota & Bucket Allocations Card */}
+                <div title={storageTooltip} className={`group relative overflow-hidden rounded-xl transition-all duration-300 ${isDarkMode ? 'bg-gradient-to-br from-slate-700/40 to-slate-800/40 backdrop-blur-xl border border-cyan-500/20 hover:border-cyan-400/40' : 'bg-gradient-to-br from-cyan-50/80 to-cyan-100/80 backdrop-blur-xl border border-cyan-200/50 hover:border-cyan-300/80'}`}>
+                  <div className="relative z-10 p-3 sm:p-4">
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <p className={`text-xs font-semibold uppercase tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Storage Telemetry</p>
+                      </div>
+                      <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-cyan-500/20 text-cyan-400 group-hover:bg-cyan-500/30' : 'bg-cyan-200 text-cyan-600 group-hover:bg-cyan-300'} transition-all group-hover:scale-110`}>
+                        <Database className="w-4 h-4 sm:w-5 sm:h-5" />
+                      </div>
+                    </div>
+                    <div className="flex items-baseline justify-between">
+                      <p className={`text-xl sm:text-2xl font-black ${isDarkMode ? 'text-cyan-300' : 'text-cyan-700'} transition-colors`}>
+                        {formatBytes(storageBytes)}
+                        <span className={`text-sm font-semibold ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}> / 1 GB</span>
+                      </p>
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                        storagePct > 85
+                          ? isDarkMode ? 'bg-red-500/20 text-red-300 border border-red-500/30' : 'bg-red-100 text-red-700'
+                          : storagePct > 60
+                            ? isDarkMode ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-amber-100 text-amber-700'
+                            : isDarkMode ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30' : 'bg-cyan-100 text-cyan-700'
+                      }`}>
+                        {storagePct.toFixed(1)}% Quota
+                      </span>
+                    </div>
+
+                    {/* Segmented multi-bucket Gauge */}
+                    <div className={`mt-2.5 h-2.5 rounded-full overflow-hidden flex ${isDarkMode ? 'bg-[#2f3336]' : 'bg-slate-200'}`}>
+                      {storageByBucket && storageByBucket.length > 0 && storageBytes > 0 ? (
+                        storageByBucket.map((b) => {
+                          const theme = BUCKET_THEMES[b.bucket.toLowerCase()] || { bg: 'bg-cyan-500' };
+                          const segmentPct = Math.max(1, (b.bytes / STORAGE_LIMIT_BYTES) * 100);
+                          return (
+                            <div
+                              key={b.bucket}
+                              style={{ width: `${segmentPct}%` }}
+                              className={`h-full ${theme.bg} transition-all duration-500 first:rounded-l-full last:rounded-r-full`}
+                              title={`${b.bucket}: ${formatBytes(b.bytes)} (${b.files} files)`}
+                            />
+                          );
+                        })
+                      ) : (
+                        <div
+                          className={`h-full rounded-full transition-all duration-500 ${storageBarColor}`}
+                          style={{ width: `${Math.max(2, storagePct)}%` }}
+                        />
+                      )}
+                    </div>
+
+                    {/* Bucket breakdown pills */}
+                    <div className="mt-2.5 flex flex-wrap items-center gap-1.5 pt-1 border-t border-slate-700/20">
+                      {storageByBucket && storageByBucket.length > 0 ? (
+                        storageByBucket.map((b) => {
+                          const theme = BUCKET_THEMES[b.bucket.toLowerCase()] || { dot: 'bg-cyan-400', text: 'text-cyan-400' };
+                          return (
+                            <span
+                              key={b.bucket}
+                              className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold ${
+                                isDarkMode ? 'bg-slate-800/60 border border-slate-700/50 text-slate-300' : 'bg-white border border-slate-200 text-slate-700'
+                              }`}
+                            >
+                              <span className={`w-1.5 h-1.5 rounded-full ${theme.dot}`} />
+                              <span className="capitalize">{b.bucket}:</span>
+                              <span className="font-bold">{formatBytes(b.bytes)}</span>
+                              <span className={`text-[9px] ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>({b.files}f)</span>
+                            </span>
+                          );
+                        })
+                      ) : (
+                        <span className={`text-[10px] ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                          {formatBytes(remainingStorageBytes)} available · Cloud quota optimal
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* 3. AI Usage & Platform Health Card */}
+                {(() => {
+                  const aiPct = aiUsage ? Math.min(100, (aiUsage.totalMessages / GEMINI_FREE_TIER_DAILY_LIMIT) * 100) : 0;
+                  const aiBarColor = aiPct >= 90 ? 'bg-red-500' : aiPct >= 70 ? 'bg-amber-500' : 'bg-pink-500';
+                  return (
+                    <div
+                      title="Combined AI chat requests today vs. Gemini's free-tier daily project limit"
+                      className={`group relative overflow-hidden rounded-xl transition-all duration-300 ${isDarkMode ? 'bg-gradient-to-br from-slate-700/40 to-slate-800/40 backdrop-blur-xl border border-pink-500/20 hover:border-pink-400/40' : 'bg-gradient-to-br from-pink-50/80 to-pink-100/80 backdrop-blur-xl border border-pink-200/50 hover:border-pink-300/80'}`}
+                    >
+                      <div className="relative z-10 p-3 sm:p-4">
+                        <div className="flex items-start justify-between mb-2">
+                          <p className={`text-xs font-semibold uppercase tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>AI & Platform Health</p>
+                          <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-pink-500/20 text-pink-400 group-hover:bg-pink-500/30' : 'bg-pink-200 text-pink-600 group-hover:bg-pink-300'} transition-all group-hover:scale-110`}>
+                            <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />
+                          </div>
+                        </div>
+                        <div className="flex items-baseline justify-between">
+                          <p className={`text-xl sm:text-2xl font-black ${isDarkMode ? 'text-pink-300' : 'text-pink-700'} transition-colors`}>
+                            {aiUsage ? aiUsage.totalMessages : '—'}
+                            <span className={`text-sm font-semibold ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}> / {GEMINI_FREE_TIER_DAILY_LIMIT} req</span>
+                          </p>
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                            aiPct >= 90
+                              ? isDarkMode ? 'bg-red-500/20 text-red-300 border border-red-500/30' : 'bg-red-100 text-red-700'
+                              : aiPct >= 70
+                                ? isDarkMode ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-amber-100 text-amber-700'
+                                : isDarkMode ? 'bg-pink-500/20 text-pink-300 border border-pink-500/30' : 'bg-pink-100 text-pink-700'
+                          }`}>
+                            {aiPct.toFixed(0)}% Daily Cap
+                          </span>
+                        </div>
+                        <div className={`mt-2.5 h-2.5 rounded-full overflow-hidden ${isDarkMode ? 'bg-[#2f3336]' : 'bg-slate-200'}`}>
+                          <div className={`h-full rounded-full transition-all duration-500 ${aiBarColor}`} style={{ width: `${Math.max(2, aiPct)}%` }} />
+                        </div>
+                        
+                        {/* Governance Health Micro Grid */}
+                        <div className="mt-2.5 grid grid-cols-3 gap-1.5 pt-1 border-t border-slate-700/20">
+                          <div className={`px-2 py-1 rounded-md text-center ${isDarkMode ? 'bg-slate-800/50' : 'bg-white/70'}`}>
+                            <p className={`text-[9px] uppercase font-bold tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>AI Users</p>
+                            <p className={`text-xs font-extrabold ${isDarkMode ? 'text-pink-300' : 'text-pink-600'}`}>{aiUsage?.activeUsers ?? 0}</p>
+                          </div>
+                          <div className={`px-2 py-1 rounded-md text-center ${isDarkMode ? 'bg-slate-800/50' : 'bg-white/70'}`}>
+                            <p className={`text-[9px] uppercase font-bold tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Alm. Verif</p>
+                            <p className={`text-xs font-extrabold ${isDarkMode ? 'text-violet-300' : 'text-violet-600'}`}>
+                              {alumniVerificationRate}%
+                            </p>
+                          </div>
+                          <div className={`px-2 py-1 rounded-md text-center ${isDarkMode ? 'bg-slate-800/50' : 'bg-white/70'}`}>
+                            <p className={`text-[9px] uppercase font-bold tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Security</p>
+                            <p className={`text-xs font-extrabold ${bannedUsersCount > 0 ? (isDarkMode ? 'text-red-400' : 'text-red-600') : (isDarkMode ? 'text-emerald-300' : 'text-emerald-600')}`}>
+                              {bannedUsersCount > 0 ? `${bannedUsersCount} Ban` : 'Clean'}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
 
         {/* Admin Users Management Section */}
         <div className={`group relative overflow-hidden rounded-xl lg:rounded-2xl transition-all duration-300 ${isDarkMode ? 'bg-gradient-to-br from-amber-900/30 to-slate-800/40 backdrop-blur-xl border border-amber-500/25' : 'bg-gradient-to-br from-amber-50/80 to-white/60 backdrop-blur-xl border border-amber-200/60'}`}>
