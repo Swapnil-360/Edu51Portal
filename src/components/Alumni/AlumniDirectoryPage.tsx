@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, GraduationCap, SearchX, Inbox, Calendar, MessageSquare, BookOpen, Globe, Lock, Download, FileText, Loader2, Sparkles, Eye, EyeOff, Search as SearchIcon } from "lucide-react";
+import { ArrowLeft, GraduationCap, ShieldCheck, SearchX, Inbox, Calendar, MessageSquare, BookOpen, Globe, Lock, Download, FileText, Loader2, Sparkles, Eye, EyeOff, Search as SearchIcon } from "lucide-react";
 import { useAlumni } from "../../hooks/useAlumni";
 import AlumniFilter from "./AlumniFilter";
 import AlumniCard from "./AlumniCard";
@@ -269,14 +269,22 @@ export default function AlumniDirectoryPage({
     <div className={`min-h-screen pb-12 ${pageBg}`}>
       <div className="max-w-5xl mx-auto px-4 pt-6">
         {/* Header Section */}
-        <div className="flex items-center justify-between gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
-            <h1 className={`text-xl font-bold flex items-center gap-2 ${textColor}`}>
-              <GraduationCap className="h-6 w-6 text-[#1e9df1]" />
+            <h1 className={`text-xl font-bold flex items-center gap-2 ${textColor}`} style={{ fontFamily: "'Exo 2', sans-serif" }}>
+              <GraduationCap className="h-6 w-6 text-red-500" />
               Alumni Hub
             </h1>
-            <p className={`text-xs ${subColor}`}>Connect with BUBT alumni and find mentorship</p>
+            <p className={`text-xs ${subColor}`}>Connect with BUBT alumni and discover mentorship</p>
           </div>
+          <button
+            onClick={onRegisterClick}
+            className="self-start sm:self-auto flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-red-600 via-rose-600 to-red-500 hover:from-red-500 hover:to-rose-500 text-white text-xs font-bold transition-all shadow-md shadow-red-600/25 active:scale-95"
+            style={{ fontFamily: "'Exo 2', sans-serif" }}
+          >
+            <ShieldCheck className="w-4 h-4" />
+            Register as Alumni
+          </button>
         </div>
 
         {/* Tab Switcher */}
@@ -286,7 +294,7 @@ export default function AlumniDirectoryPage({
               onClick={() => setActiveTab("directory")}
               className={`pb-3 font-semibold border-b-2 transition-all cursor-pointer ${
                 activeTab === "directory"
-                  ? "border-[#1e9df1] text-[#1e9df1]"
+                  ? "border-red-500 text-red-500 font-bold"
                   : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
               }`}
             >
@@ -296,7 +304,7 @@ export default function AlumniDirectoryPage({
               onClick={() => setActiveTab("requests")}
               className={`pb-3 font-semibold border-b-2 transition-all cursor-pointer ${
                 activeTab === "requests"
-                  ? "border-[#1e9df1] text-[#1e9df1]"
+                  ? "border-red-500 text-red-500 font-bold"
                   : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
               }`}
             >
@@ -306,13 +314,13 @@ export default function AlumniDirectoryPage({
               onClick={() => setActiveTab("messages")}
               className={`pb-3 font-semibold border-b-2 transition-all cursor-pointer flex items-center gap-1.5 ${
                 activeTab === "messages"
-                  ? "border-[#1e9df1] text-[#1e9df1]"
+                  ? "border-red-500 text-red-500 font-bold"
                   : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
               }`}
             >
               <span>Messages</span>
               {unreadMsgCount > 0 && (
-                <span className="px-1.5 py-0.5 rounded-full text-[9px] font-extrabold bg-[#1e9df1] text-white">
+                <span className="px-1.5 py-0.5 rounded-full text-[9px] font-extrabold bg-red-500 text-white">
                   {unreadMsgCount}
                 </span>
               )}
@@ -321,7 +329,7 @@ export default function AlumniDirectoryPage({
               onClick={() => setActiveTab("resources")}
               className={`pb-3 font-semibold border-b-2 transition-all cursor-pointer ${
                 activeTab === "resources"
-                  ? "border-[#1e9df1] text-[#1e9df1]"
+                  ? "border-red-500 text-red-500 font-bold"
                   : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
               }`}
             >

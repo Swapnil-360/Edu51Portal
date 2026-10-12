@@ -117,9 +117,9 @@ export default function AlumniProfilePage({ id, isDarkMode, onBack, authSession,
   const pageBg = isDarkMode ? "bg-[#000000]" : "bg-slate-50";
   const textColor = isDarkMode ? "text-white" : "text-slate-900";
   const subColor = isDarkMode ? "text-slate-400" : "text-slate-500";
-  const cardBg = isDarkMode ? "bg-[#17181c] border-[#2f3336]/50" : "bg-white border-slate-200 shadow-sm";
-  const actionBtnCls = `flex items-center gap-2 px-4 py-2 rounded-lg border text-xs font-semibold transition-colors shadow-sm ${
-    isDarkMode ? "bg-[#16181c] border-[#2f3336] text-white hover:bg-[#2f3336]" : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
+  const cardBg = isDarkMode ? "bg-[#0c1017] border-[#1d2638] shadow-2xl" : "bg-white border-slate-200 shadow-sm";
+  const actionBtnCls = `flex items-center gap-2 px-4 py-2 rounded-xl border text-xs font-semibold transition-colors shadow-sm ${
+    isDarkMode ? "bg-[#070b12] border-[#1d2638] text-white hover:border-red-500/40" : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
   }`;
 
   if (loading) {
@@ -139,7 +139,7 @@ export default function AlumniProfilePage({ id, isDarkMode, onBack, authSession,
         <p className="text-red-400 text-sm mb-4">{error || "Profile not found."}</p>
         <button
           onClick={onBack}
-          className="px-4 py-2 rounded-lg bg-[#1e9df1] text-white text-xs font-semibold hover:bg-[#1677cc]"
+          className="px-4 py-2 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white text-xs font-bold shadow-md shadow-red-600/20"
         >
           Back to Directory
         </button>
@@ -165,7 +165,8 @@ export default function AlumniProfilePage({ id, isDarkMode, onBack, authSession,
           <div className="flex flex-col md:flex-row items-center md:items-start gap-5 text-center md:text-left">
             {/* Big Avatar */}
             <div
-              className="w-24 h-24 rounded-full overflow-hidden bg-gradient-to-br from-[#1e9df1] to-[#1677cc] flex items-center justify-center text-3xl font-bold text-white shadow-md flex-shrink-0"
+              className="w-24 h-24 rounded-2xl overflow-hidden bg-gradient-to-br from-red-600 to-rose-600 flex items-center justify-center text-3xl font-bold text-white shadow-xl shadow-red-950/40 flex-shrink-0"
+              style={{ fontFamily: "'Exo 2', sans-serif" }}
             >
               {alumni.avatar_url ? (
                 <img src={alumni.avatar_url} alt={alumni.full_name} className="w-full h-full object-cover" />
@@ -179,11 +180,11 @@ export default function AlumniProfilePage({ id, isDarkMode, onBack, authSession,
             {/* Name and Basic Role */}
             <div className="flex-1 min-w-0 space-y-2">
               <div className="flex flex-col md:flex-row md:items-center gap-2 justify-center md:justify-start">
-                <h2 className={`text-2xl font-bold ${textColor}`}>
+                <h2 className={`text-2xl font-bold ${textColor}`} style={{ fontFamily: "'Exo 2', sans-serif" }}>
                   {alumni.full_name}
                 </h2>
                 {alumni.is_verified && (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#1e9df1]/10 text-[#1e9df1] border border-[#1e9df1]/20 self-center">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 self-center">
                     <ShieldCheck className="h-3 w-3" />
                     Verified Alumni
                   </span>
@@ -191,12 +192,12 @@ export default function AlumniProfilePage({ id, isDarkMode, onBack, authSession,
               </div>
 
               {alumni.job_title ? (
-                <p className={`text-base font-semibold ${isDarkMode ? "text-[#1e9df1]" : "text-[#1677cc]"}`}>
+                <p className={`text-base font-semibold ${isDarkMode ? "text-rose-400" : "text-red-600"}`}>
                   {alumni.job_title}
                   {alumni.company_name ? ` at ${alumni.company_name}` : ""}
                 </p>
               ) : (
-                <p className={`text-sm italic ${subColor}`}>Graduate</p>
+                <p className={`text-sm italic ${subColor}`}>BUBT Graduate</p>
               )}
 
               {/* Info Badges */}
@@ -260,7 +261,7 @@ export default function AlumniProfilePage({ id, isDarkMode, onBack, authSession,
                   </span>
                   <button
                     onClick={() => setShowChat(true)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1e9df1]/10 text-[#1e9df1] border border-[#1e9df1]/20 hover:bg-[#1e9df1]/20 text-xs font-bold transition-all cursor-pointer shadow-sm"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-500/10 text-red-400 border border-red-500/25 hover:bg-red-500/20 text-xs font-bold transition-all cursor-pointer shadow-sm"
                   >
                     <MessageSquare className="w-3.5 h-3.5" />
                     Message
@@ -273,7 +274,8 @@ export default function AlumniProfilePage({ id, isDarkMode, onBack, authSession,
               ) : (
                 <button
                   onClick={() => setShowModal(true)}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#1e9df1] hover:bg-[#1677cc] text-white text-xs font-semibold transition-colors shadow-sm cursor-pointer"
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white text-xs font-bold transition-all shadow-md shadow-red-600/25 cursor-pointer active:scale-95"
+                  style={{ fontFamily: "'Exo 2', sans-serif" }}
                 >
                   Request Mentorship
                 </button>

@@ -12,16 +12,17 @@ export default function AlumniCard({ alumni, isDarkMode, onViewProfile }: Props)
 
   return (
     <div
-      className={`h-full rounded-xl border p-4 flex flex-col justify-between overflow-hidden transition-all duration-200 ${
+      className={`h-full rounded-2xl border p-4 sm:p-5 flex flex-col justify-between overflow-hidden transition-all duration-200 ${
         isDarkMode
-          ? "bg-[#17181c] border-[#2f3336]/50 hover:border-[#38444d] hover:shadow-lg hover:shadow-black/20"
-          : "bg-white border-slate-200 hover:border-slate-300 hover:shadow-md hover:shadow-slate-100"
+          ? "bg-[#0c1017] border-[#1d2638] hover:border-red-500/40 hover:shadow-xl hover:shadow-red-950/20"
+          : "bg-white border-slate-200 hover:border-red-500/30 hover:shadow-md hover:shadow-slate-100"
       }`}
     >
       <div className="flex items-start gap-3">
         {/* Avatar/Initials */}
         <div
-          className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 bg-gradient-to-br from-[#1e9df1] to-[#1677cc] flex items-center justify-center text-lg font-bold text-white shadow-sm"
+          className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 bg-gradient-to-br from-red-600 to-rose-600 flex items-center justify-center text-lg font-bold text-white shadow-md shadow-red-950/30"
+          style={{ fontFamily: "'Exo 2', sans-serif" }}
         >
           {alumni.avatar_url ? (
             <img src={alumni.avatar_url} alt={alumni.full_name} className="w-full h-full object-cover" loading="lazy" />
@@ -34,16 +35,16 @@ export default function AlumniCard({ alumni, isDarkMode, onViewProfile }: Props)
 
         {/* Details */}
         <div className="flex-1 min-w-0">
-          <h3 className={`text-sm font-semibold truncate block ${title}`}>
+          <h3 className={`text-sm font-bold truncate block ${title}`}>
             {alumni.full_name}
           </h3>
           {alumni.job_title ? (
-            <p className={`text-xs truncate font-medium ${isDarkMode ? "text-[#1e9df1]" : "text-[#1677cc]"}`}>
+            <p className={`text-xs truncate font-medium ${isDarkMode ? "text-rose-400" : "text-red-600"}`}>
               {alumni.job_title}
               {alumni.company_name ? ` at ${alumni.company_name}` : ""}
             </p>
           ) : (
-            <p className={`text-xs truncate italic ${sub}`}>Graduate</p>
+            <p className={`text-xs truncate italic ${sub}`}>BUBT Graduate</p>
           )}
           <p className={`text-xs mt-0.5 font-medium ${sub}`}>
             Class of {alumni.graduation_year} · <span className="uppercase">{alumni.major}</span>
@@ -58,8 +59,8 @@ export default function AlumniCard({ alumni, isDarkMode, onViewProfile }: Props)
               key={s}
               className={`px-2 py-0.5 rounded-full text-[10px] font-medium border capitalize ${
                 isDarkMode
-                  ? "bg-[#061622] text-[#1e9df1] border-[#1e9df1]/30"
-                  : "bg-[#e8f4fd] text-[#1677cc] border-[#1e9df1]/30"
+                  ? "bg-red-500/10 text-rose-300 border-red-500/20"
+                  : "bg-red-50 text-red-700 border-red-200"
               }`}
             >
               {s}
@@ -73,21 +74,22 @@ export default function AlumniCard({ alumni, isDarkMode, onViewProfile }: Props)
         </div>
       )}
 
-      <div className="mt-4 pt-3 border-t border-[#2f3336]/10 flex items-center justify-between gap-2">
+      <div className="mt-4 pt-3 border-t border-[#1d2638] flex items-center justify-between gap-2">
         {/* Available for Mentorship Badge */}
         {alumni.is_available_for_mentorship ? (
-          <span className="px-2 py-0.5 rounded-full text-[9px] font-semibold bg-green-500/10 text-green-400 border border-green-500/20 whitespace-nowrap">
+          <span className="px-2 py-0.5 rounded-full text-[9px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 whitespace-nowrap">
             Available for Mentorship
           </span>
         ) : (
-          <span className="px-2 py-0.5 rounded-full text-[9px] font-medium bg-slate-500/10 text-slate-400 border border-slate-500/10 whitespace-nowrap">
-            Not mentoring currently
+          <span className="px-2 py-0.5 rounded-full text-[9px] font-medium bg-slate-500/10 text-slate-400 border border-slate-500/20 whitespace-nowrap">
+            Not mentoring
           </span>
         )}
 
         <button
           onClick={() => onViewProfile(alumni.id)}
-          className="px-2.5 py-1 rounded-lg bg-[#1e9df1] text-white text-xs font-semibold hover:bg-[#1677cc] transition-colors whitespace-nowrap shadow-sm"
+          className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white text-xs font-bold transition-all whitespace-nowrap shadow-sm shadow-red-600/20 active:scale-95"
+          style={{ fontFamily: "'Exo 2', sans-serif" }}
         >
           View Profile
         </button>
