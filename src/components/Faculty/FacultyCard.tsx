@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Mail, Phone, ExternalLink, Copy, Check, Award, BookOpen, User, Building2 } from "lucide-react";
 import type { FacultyMember } from "../../types/faculty";
 
@@ -17,6 +17,10 @@ export const FacultyCard: React.FC<FacultyCardProps> = ({
 }) => {
   const [copiedEmail, setCopiedEmail] = useState(false);
   const [imgError, setImgError] = useState(false);
+
+  useEffect(() => {
+    setImgError(false);
+  }, [member.img]);
 
   const handleCopyEmail = (e: React.MouseEvent) => {
     e.stopPropagation();
