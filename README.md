@@ -37,7 +37,7 @@ Academic portal for **BUBT Intake 51 – Section 5** students. Built as a fast, 
 - **LinkedIn-style Profiles** — avatar, cover photo, headline, education, experience, skills
 - **Connections** — send / accept connection requests, discovery feed
 - **Team Building** — create and discover teams (2–7 members), roles, invitations, join requests, announcements
-- **Alumni Hub** — BUBT alumni directory (admin-verified)
+- **Alumni Hub** — BUBT verified alumni network, community feed, department filters, suggested mentors carousel, and 1:1 mentorship requests with guest browsing
 
 ### Platform & Reliability
 - **Live Data Sync** — automated weekly GitHub Actions workflow (`sync-faculty.yml`) + Node scraper (`scripts/sync-bubt-data.js`) syncing live university records.

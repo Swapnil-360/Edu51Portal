@@ -109,6 +109,7 @@ import {
   Send,
   Mail,
   Search,
+  MessageSquare,
 } from "lucide-react";
 const ProfilePage = lazy(() => import("./components/Profile/ProfilePage"));
 const NetworkPage = lazy(() => import("./components/Network/NetworkPage"));
@@ -237,6 +238,7 @@ function App() {
   });
 
   const [alumniSubView, setAlumniSubView] = useState<"directory" | "profile" | "register">("directory");
+  const [alumniInitialTab, setAlumniInitialTab] = useState<string>("directory");
   const [selectedAlumniId, setSelectedAlumniId] = useState<string | null>(null);
   const [adminExitConfirm, setAdminExitConfirm] = useState<{ view: any; extra: string | null } | null>(null);
 
@@ -300,6 +302,9 @@ function App() {
         path = "/alumni";
         setAlumniSubView("directory");
         setSelectedAlumniId(null);
+        if (extra) {
+          setAlumniInitialTab(extra);
+        }
       }
       else if (view === "shared-resources") path = "/shared-resources";
       else if (view === "meet-team") path = "/meet-team";
@@ -854,7 +859,7 @@ function App() {
   // Redirect guest users trying to access login-only views directly via URL/history
   useEffect(() => {
     if (!authLoading && !isLoggedIn) {
-      const loginRequiredViews = ["custom", "network", "teams", "team", "alumni", "shared-resources"];
+      const loginRequiredViews = ["custom", "network", "teams", "team", "shared-resources"];
       if (loginRequiredViews.includes(currentView) || (currentView === "profile" && !viewedUsername)) {
         setCurrentView("home");
         window.history.replaceState({}, "", "/home");
@@ -2687,9 +2692,9 @@ Best of luck with your studies!
   // Handle email contact - Open Gmail compose directly
   const handleEmailClick = () => {
     const email = "edu51portal.noreply@gmail.com";
-    const subject = encodeURIComponent("Edu51Portal Platform Contact");
+    const subject = encodeURIComponent("Want to talk about Edu51Portal");
     const body = encodeURIComponent(
-      "Hi Support Team,\n\nI need help with the Edu51Portal platform.\n\nBest regards",
+      "Hi Swapnil & CoreWe5 team,\n\nI want to talk about Edu51Portal.\n\nBest regards,",
     );
 
     // Open Gmail compose in new tab
@@ -4607,22 +4612,13 @@ For any queries, contact your course instructors or the department.`,
                   {/* Alumni Hub */}
                   <button
                     onClick={() => {
-                      if (!isLoggedIn) {
-                        showMajorAccessNotification(
-                          "error",
-                          "Please sign in to access Alumni Hub",
-                        );
-                        setShowSignInModal(true);
-                        setShowMobileMenu(false);
-                        return;
-                      }
                       goToView("alumni");
                       setShowMobileMenu(false);
                     }}
                     className={`w-full flex items-center gap-3 p-3 sm:p-4 rounded-lg transition-all duration-300 border ${isDarkMode
                         ? "hover:bg-amber-900/30 border-[#2f3336]/50 hover:border-amber-500/50 text-gray-100"
                         : "hover:bg-amber-50 border-gray-200/50 hover:border-amber-300 text-gray-900"
-                      } ${!isLoggedIn ? "opacity-60" : ""} ${currentView === "alumni" ? (isDarkMode ? "bg-amber-950/40 border-amber-600/60" : "bg-amber-100/50 border-amber-300") : ""}`}
+                      } ${currentView === "alumni" ? (isDarkMode ? "bg-amber-950/40 border-amber-600/60" : "bg-amber-100/50 border-amber-300") : ""}`}
                   >
                     <div
                       className={`p-2 rounded-lg flex-shrink-0 ${isDarkMode ? "bg-amber-900/40" : "bg-amber-100"}`}
@@ -5227,13 +5223,13 @@ For any queries, contact your course instructors or the department.`,
                   className={`rounded-2xl border overflow-hidden transition-colors duration-300 ${isDarkMode ? "bg-[#17181c] border-[#2f3336]/50" : "bg-white border-slate-200"
                     }`}
                 >
-                  <div className="px-6 pt-8 pb-6">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                  <div className="px-4 py-6 sm:px-6 sm:pt-8 sm:pb-6">
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-4 sm:gap-x-8 gap-y-6 sm:gap-y-8">
 
                       {/* Col 1 — Brand */}
-                      <div className="sm:col-span-2 lg:col-span-1">
-                        <div className="flex items-center gap-2 mb-3">
-                          <img src="/Edu51Portal.png" alt="Edu51Portal Logo" className="w-8 h-8 rounded-lg object-contain" />
+                      <div className="col-span-2 lg:col-span-1">
+                        <div className="flex items-center gap-2 mb-2 sm:mb-3">
+                          <img src="/Edu51Portal.png" alt="Edu51Portal Logo" className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg object-contain" />
                           <span
                             className={`text-base font-bold tracking-tight ${isDarkMode ? "text-white" : "text-slate-900"}`}
                             style={{ fontFamily: "'Exo 2', sans-serif" }}
@@ -5241,24 +5237,30 @@ For any queries, contact your course instructors or the department.`,
                             Edu<span className="text-[#ef4444]">51</span>Portal
                           </span>
                         </div>
-                        <p className={`text-xs leading-relaxed mb-4 ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
+                        <p className={`text-xs leading-relaxed mb-3 sm:mb-4 max-w-md ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
                           BUBT Academic Excellence Platform — your all-in-one academic hub for courses, routines, and campus resources.
                         </p>
                         <div className="flex items-center gap-2">
-                          <div
-                            className={`w-8 h-8 rounded-lg flex items-center justify-center ${isDarkMode ? "bg-[#16181c] text-slate-400" : "bg-slate-100 text-slate-500"}`}
+                          <button
+                            onClick={handleFacebookClick}
+                            title="Facebook Profile"
+                            aria-label="Facebook Profile"
+                            className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors cursor-pointer ${isDarkMode ? "bg-[#16181c] hover:bg-blue-600 text-slate-400 hover:text-white" : "bg-slate-100 hover:bg-blue-600 text-slate-500 hover:text-white"}`}
                           >
                             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                               <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
                             </svg>
-                          </div>
-                          <div
-                            className={`w-8 h-8 rounded-lg flex items-center justify-center ${isDarkMode ? "bg-[#16181c] text-slate-400" : "bg-slate-100 text-slate-500"}`}
+                          </button>
+                          <button
+                            onClick={handleWhatsAppClick}
+                            title="WhatsApp Chat (+8801318090383)"
+                            aria-label="WhatsApp Chat"
+                            className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors cursor-pointer ${isDarkMode ? "bg-[#16181c] hover:bg-emerald-600 text-slate-400 hover:text-white" : "bg-slate-100 hover:bg-emerald-600 text-slate-500 hover:text-white"}`}
                           >
                             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                               <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
                             </svg>
-                          </div>
+                          </button>
                           <button
                             onClick={handleEmailClick}
                             title="Email Support" aria-label="Email Support"
@@ -5271,78 +5273,140 @@ For any queries, contact your course instructors or the department.`,
                         </div>
                       </div>
 
-                      {/* Col 2 — About */}
-                      <div>
-                        <h4 className={`text-xs font-semibold uppercase tracking-wider mb-3 ${isDarkMode ? "text-[#8b98a5]" : "text-slate-700"}`}>About</h4>
-                        <ul className={`space-y-2 text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
-                          <li>BUBT University</li>
-                          <li>All Departments & Sections</li>
-                          <li>Academic Resource Hub</li>
-                          <li>Exam Routines & Notices</li>
-                          <li>Course Materials & Tracker</li>
-                          <li>AI Study Assistant</li>
+                      {/* Col 2 — Academic Portal */}
+                      <div className="col-span-1">
+                        <h4 className={`text-xs font-bold uppercase tracking-wider mb-2.5 sm:mb-3 ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                          Academic Portal
+                        </h4>
+                        <ul className={`space-y-1.5 sm:space-y-2 text-xs ${isDarkMode ? "text-slate-400" : "text-slate-500"}`}>
                           <li>
-                            <button onClick={() => goToView("meet-team")} className="font-semibold text-[#ef4444] hover:underline underline-offset-2 transition-colors hover:text-red-600">
-                              Meet Our Team
+                            <button onClick={() => goToView("home")} className="hover:text-[#1e9df1] transition-colors cursor-pointer text-left">
+                              Study Materials &amp; Courses
                             </button>
+                          </li>
+                          <li>
+                            <button onClick={() => goToView("alumni")} className="hover:text-[#1e9df1] transition-colors cursor-pointer text-left">
+                              Alumni Hub &amp; Network
+                            </button>
+                          </li>
+                          <li>
+                            <button onClick={() => goToView("teams")} className="hover:text-[#1e9df1] transition-colors cursor-pointer text-left">
+                              Student Teams &amp; Projects
+                            </button>
+                          </li>
+                          <li>
+                            <span className="opacity-75">All Departments &amp; Sections</span>
                           </li>
                         </ul>
                       </div>
 
-                      {/* Col 3 — Support */}
-                      <div>
-                        <h4 className={`text-xs font-semibold uppercase tracking-wider mb-3 ${isDarkMode ? "text-[#8b98a5]" : "text-slate-700"}`}>Support</h4>
-                        <ul className="space-y-2">
-                          <li>
-                            <button onClick={() => setShowFeedbackModal(true)} className={`text-xs font-semibold hover:underline underline-offset-2 transition-colors ${isDarkMode ? "text-blue-400 hover:text-blue-300" : "text-blue-600 hover:text-blue-700"}`}>
-                              Send Feedback
-                            </button>
-                          </li>
-                          <li>
+                      {/* Col 3 — Campus Directory & Builder Team */}
+                      <div className="col-span-1 space-y-3.5 sm:space-y-4">
+                        {/* Campus Directory */}
+                        <div>
+                          <h4 className={`text-xs font-bold uppercase tracking-wider mb-1.5 sm:mb-2 ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                            Campus Directory
+                          </h4>
+                          <ul className="space-y-1.5 text-xs">
+                            <li>
+                              <button
+                                onClick={() => goToView("faculty")}
+                                className="hover:text-[#1e9df1] transition-colors cursor-pointer flex items-center gap-1.5 font-semibold text-purple-400 hover:text-purple-300 text-left"
+                              >
+                                <GraduationCap className="w-3.5 h-3.5 flex-shrink-0" />
+                                <span>Officials &amp; Faculty Directory</span>
+                              </button>
+                            </li>
+                            <li>
+                              <a
+                                href="https://www.bubt.edu.bd"
+                                target="_blank"
+                                rel="noreferrer"
+                                className="hover:text-[#1e9df1] transition-colors cursor-pointer flex items-center gap-1 text-slate-400 hover:text-white"
+                              >
+                                <span>BUBT Official Website</span>
+                                <ExternalLink className="w-3 h-3 opacity-60 flex-shrink-0" />
+                              </a>
+                            </li>
+                            <li>
+                              <a
+                                href="https://annex.bubt.edu.bd"
+                                target="_blank"
+                                rel="noreferrer"
+                                className="hover:text-[#1e9df1] transition-colors cursor-pointer flex items-center gap-1 text-slate-400 hover:text-white"
+                              >
+                                <span>BUBT Annex Portal</span>
+                                <ExternalLink className="w-3 h-3 opacity-60 flex-shrink-0" />
+                              </a>
+                            </li>
+                          </ul>
+                        </div>
+
+                        {/* Builder Team */}
+                        <div>
+                          <h4 className={`text-xs font-bold uppercase tracking-wider mb-1 ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                            Builder Team
+                          </h4>
+                          <div>
                             <button
-                              onClick={() => handleEmailClick()}
-                              className={`text-xs hover:underline underline-offset-2 transition-colors ${isDarkMode ? "text-slate-400 hover:text-blue-400" : "text-slate-500 hover:text-blue-600"}`}
+                              onClick={() => goToView("meet-team")}
+                              className="font-semibold text-[#ef4444] hover:underline underline-offset-2 transition-colors hover:text-red-500 cursor-pointer text-xs inline-flex items-center gap-1 text-left"
                             >
-                              Contact Support
+                              <span>Meet the Team (CoreWe5)</span>
                             </button>
-                          </li>
-                        </ul>
+                          </div>
+                        </div>
                       </div>
 
-                      {/* Col 4 — Legal */}
-                      <div>
-                        <h4 className={`text-xs font-semibold uppercase tracking-wider mb-3 ${isDarkMode ? "text-[#8b98a5]" : "text-slate-700"}`}>Legal</h4>
-                        <ul className="space-y-2">
-                          <li>
-                            <button onClick={() => goToView("terms")} className={`text-xs hover:underline underline-offset-2 transition-colors ${isDarkMode ? "text-slate-400 hover:text-blue-400" : "text-slate-500 hover:text-blue-600"}`}>
-                              Terms &amp; Conditions
-                            </button>
-                          </li>
-                          <li>
-                            <button onClick={() => goToView("privacy")} className={`text-xs hover:underline underline-offset-2 transition-colors ${isDarkMode ? "text-slate-400 hover:text-blue-400" : "text-slate-500 hover:text-blue-600"}`}>
-                              Privacy Policy
-                            </button>
-                          </li>
-                          <li>
-                            <button onClick={() => goToView("cookie-policy")} className={`text-xs hover:underline underline-offset-2 transition-colors ${isDarkMode ? "text-slate-400 hover:text-blue-400" : "text-slate-500 hover:text-blue-600"}`}>
-                              Cookie Policy
-                            </button>
-                          </li>
-                          <li>
-                            <button onClick={() => goToView("disclaimer")} className={`text-xs hover:underline underline-offset-2 transition-colors ${isDarkMode ? "text-slate-400 hover:text-blue-400" : "text-slate-500 hover:text-blue-600"}`}>
-                              Disclaimer
-                            </button>
-                          </li>
-                        </ul>
+                      {/* Col 4 — Support & Legal */}
+                      <div className="col-span-2 lg:col-span-1 pt-3 lg:pt-0 border-t border-slate-700/20 lg:border-t-0">
+                        <div className="grid grid-cols-2 lg:grid-cols-1 gap-4 sm:gap-6 lg:gap-4">
+                          <div>
+                            <h4 className={`text-xs font-bold uppercase tracking-wider mb-2 ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                              Support
+                            </h4>
+                            <div className="space-y-2">
+                              <button
+                                onClick={() => setShowFeedbackModal(true)}
+                                className="w-full py-2 px-3 rounded-lg text-xs font-semibold text-white bg-[#1e9df1] hover:bg-[#1a8cd8] transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-sm active:scale-[0.99]"
+                              >
+                                <MessageSquare className="w-3.5 h-3.5 flex-shrink-0" />
+                                <span>Send Feedback</span>
+                              </button>
+                              <button
+                                onClick={handleEmailClick}
+                                className={`text-xs hover:underline underline-offset-2 transition-colors flex items-center gap-1.5 ${isDarkMode ? "text-slate-400 hover:text-blue-400" : "text-slate-500 hover:text-blue-600"}`}
+                              >
+                                <Mail className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+                                <span>Contact Support</span>
+                              </button>
+                            </div>
+                          </div>
+
+                          <div>
+                            <h4 className={`text-xs font-bold uppercase tracking-wider mb-1.5 ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                              Legal
+                            </h4>
+                            <div className="flex flex-col sm:flex-row lg:flex-row flex-wrap gap-x-2.5 gap-y-1 text-xs">
+                              <button onClick={() => goToView("terms")} className="text-slate-400 hover:text-white transition-colors cursor-pointer text-left">Terms</button>
+                              <span className="text-slate-600 hidden sm:inline lg:inline">·</span>
+                              <button onClick={() => goToView("privacy")} className="text-slate-400 hover:text-white transition-colors cursor-pointer text-left">Privacy</button>
+                              <span className="text-slate-600 hidden sm:inline lg:inline">·</span>
+                              <button onClick={() => goToView("cookie-policy")} className="text-slate-400 hover:text-white transition-colors cursor-pointer text-left">Cookies</button>
+                              <span className="text-slate-600 hidden sm:inline lg:inline">·</span>
+                              <button onClick={() => goToView("disclaimer")} className="text-slate-400 hover:text-white transition-colors cursor-pointer text-left">Disclaimer</button>
+                            </div>
+                          </div>
+                        </div>
                       </div>
 
                     </div>
                   </div>
 
                   {/* Bottom bar */}
-                  <div className={`px-6 py-4 border-t flex flex-col sm:flex-row items-center justify-between gap-2 transition-colors duration-300 ${isDarkMode ? "border-[#2f3336]/50 bg-[#16181c]/40" : "border-slate-100 bg-slate-50"}`}>
+                  <div className={`px-4 sm:px-6 py-3.5 sm:py-4 border-t flex flex-col sm:flex-row items-center justify-between gap-2 transition-colors duration-300 text-center sm:text-left ${isDarkMode ? "border-[#2f3336]/50 bg-[#16181c]/40" : "border-slate-100 bg-slate-50"}`}>
                     <p className={`text-xs ${isDarkMode ? "text-slate-500" : "text-slate-400"}`}>
-                      © {new Date().getFullYear()} Edu<span className="text-[#ef4444]">51</span>Portal · BUBT · All rights reserved.
+                      © {new Date().getFullYear()} Edu<span className="text-[#ef4444]">51</span>Portal · Built with 💖 by <span className={`font-semibold ${isDarkMode ? "text-slate-300" : "text-slate-700"}`}>CoreWe5(intake-51)</span> · All rights reserved.
                     </p>
                     <div className="flex items-center gap-3">
                       <button onClick={() => goToView("terms")} className={`text-xs hover:underline underline-offset-2 transition-colors ${isDarkMode ? "text-slate-500 hover:text-[#8b98a5]" : "text-slate-400 hover:text-slate-600"}`}>
@@ -8662,6 +8726,10 @@ For any queries, contact your course instructors or the department.`,
                 setCurrentFileName(name);
                 setShowFileViewer(true);
               }}
+              onViewPost={(_postId) => {
+                setAlumniInitialTab("feed");
+                goToView("alumni", "feed");
+              }}
             />
           </main>
         )}
@@ -8749,6 +8817,7 @@ For any queries, contact your course instructors or the department.`,
                 <AlumniDirectoryPage
                   isDarkMode={isDarkMode}
                   isLoggedIn={!!authSession?.user}
+                  initialTab={alumniInitialTab}
                   onViewProfile={(id) => {
                     setSelectedAlumniId(id);
                     setAlumniSubView("profile");
@@ -8759,6 +8828,8 @@ For any queries, contact your course instructors or the department.`,
                   onClose={() => goToView("home")}
                   authSession={authSession}
                   unreadMsgCount={unreadMsgCount}
+                  userProfile={userProfile}
+                  onRequireLogin={() => setShowSignInModal(true)}
                 />
               )}
               {alumniSubView === "profile" && selectedAlumniId && (

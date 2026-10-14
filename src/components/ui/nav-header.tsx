@@ -1,6 +1,6 @@
 import React, { useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Home, BarChart3, GraduationCap, Bell, BookOpen, MessageSquare, History } from "lucide-react";
+import { Home, BarChart3, GraduationCap, Bell, BookOpen, MessageSquare, History, Rss } from "lucide-react";
 
 type BadgeType = "live" | "new" | "soon";
 
@@ -299,7 +299,7 @@ export function AppNavHeader({
       label: "Alumni",
       view: "alumni",
       isActive: currentView === "alumni",
-      onClick: () => requireLogin("alumni", "Alumni Hub"),
+      onClick: () => goToView("alumni"),
       unreadCount: unreadMessagesCount > 0 ? unreadMessagesCount : undefined,
       hasRedDot: unreadMessagesCount > 0,
     },
@@ -345,11 +345,12 @@ export function AlumniNavHeader({
       hasRedDot: unreadNoticesCount > 0,
     },
     {
-      label: "Officials & Faculty",
-      view: "faculty",
-      isActive: currentView === "faculty",
-      onClick: () => goToView("faculty"),
-      hasRedDot: hasFacultyUpdate || unreadNoticesCount > 0,
+      label: "Feed",
+      view: "resources",
+      isActive: currentView === "resources",
+      onClick: () => goToView("resources"),
+      unreadCount: unreadResourcesCount > 0 ? unreadResourcesCount : undefined,
+      hasRedDot: unreadResourcesCount > 0,
     },
     {
       label: "Network",
@@ -366,14 +367,6 @@ export function AlumniNavHeader({
       onClick: () => goToView("messages"),
       unreadCount: unreadMessagesCount > 0 ? unreadMessagesCount : undefined,
       hasRedDot: unreadMessagesCount > 0,
-    },
-    {
-      label: "Resources",
-      view: "resources",
-      isActive: currentView === "resources",
-      onClick: () => goToView("resources"),
-      unreadCount: unreadResourcesCount > 0 ? unreadResourcesCount : undefined,
-      hasRedDot: unreadResourcesCount > 0,
     },
   ];
 

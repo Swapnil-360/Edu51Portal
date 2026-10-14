@@ -43,8 +43,10 @@ See [`PRD.md`](./PRD.md) for how the two Study Materials flows differ technicall
 ### Alumni & Mentorship (expanded well beyond original directory scope)
 - [x] Alumni self-service profile (skills, achievements, portfolio, social links, contact mode, work experience)
 - [x] Mentorship request → accept → 1:1 mentor chat flow
-- [x] Suggested Mentors (major + skill/interest overlap scoring)
-- [x] Alumni resource sharing (career tips, job guides, study material, industry insights)
+- [x] Suggested Mentors carousel (`SuggestedMentorCard.tsx`) with departmental & skill scoring
+- [x] Alumni Community Feed (full-width feed stream, live reactions, comments, attachments)
+- [x] Guest mode accessibility: Info Hub & Alumni Hub open to unauthenticated users; Feed default; reactions & comments gated with sign-in modal
+- [x] Unified Feed toolbar matching `AlumniFilter` with department dropdown, live search, and post count / author toggles
 - [x] **Admin Alumni Approval Queue** — new alumni gated behind `is_verified` until admin-approved
 - [x] **Alumni Outreach & Concierge Onboarding** — admin prospecting, LinkedIn search assistant, 72h cooldown re-invites, and 30-second pre-filled profile claiming (`/alumni-invite`)
 

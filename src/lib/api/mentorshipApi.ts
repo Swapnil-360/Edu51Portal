@@ -86,14 +86,26 @@ export async function getSuggestedMentors(
     .from("alumni_profiles")
     .select(ALUMNI_SELECT_COLS)
     .eq("is_verified", true)
-    .eq("is_available_for_mentorship", true);
+    .eq("is_available_for_mentorship", true)
+    .not(
+      "full_name",
+      "in",
+      '("Nusrat Jahan","Raisa Sultana","Rezaul Karim","Sabbir Hossain","Sadia Islam","Arif Hasan")'
+    );
 
   if (excludedIds.size > 0) {
     query = query.not("id", "in", `(${[...excludedIds].join(",")})`);
   }
 
-  const { data: candidates, error } = await query;
-  if (error || !candidates) return [];
+  const { data: rawCandidates, error } = await query;
+  if (error || !rawCandidates) return [];
+
+  const candidates = (rawCandidates as AlumniProfile[]).filter(
+    (a) =>
+      !["Nusrat Jahan", "Raisa Sultana", "Rezaul Karim", "Sabbir Hossain", "Sadia Islam", "Arif Hasan"].some(
+        (name) => name.toLowerCase() === a.full_name?.trim().toLowerCase()
+      )
+  );
 
   const score = (alumnus: AlumniProfile): number => {
     let s = 0;

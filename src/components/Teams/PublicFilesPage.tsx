@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
-import { FileText, FileSpreadsheet, ImageIcon, Download, Globe, Search, Users, Eye, ArrowUpDown, Check, GraduationCap } from 'lucide-react';
+import { FileText, FileSpreadsheet, ImageIcon, Download, Globe, Search, Users, Eye, ArrowUpDown, Check, GraduationCap, MessageSquare } from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { TeamFile } from '../../types/social';
 import { listPublicFiles, formatFileSize, fileTypeLabel, PublicFilesSort } from '../../lib/api/filesApi';
@@ -12,6 +12,7 @@ interface Props {
   isDarkMode: boolean;
   onViewTeam: (teamId: string) => void;
   onViewPreview: (fileUrl: string, fileName: string) => void;
+  onViewPost?: (postId?: string) => void;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -72,9 +73,11 @@ const SORT_OPTIONS: { key: PublicFilesSort; label: string }[] = [
 
 interface EnrichedFile extends TeamFile {
   shared_by_name?: string;
+  post_id?: string;
+  is_alumni_post?: boolean;
 }
 
-export default function PublicFilesPage({ isDarkMode, onViewTeam, onViewPreview }: Props) {
+export default function PublicFilesPage({ isDarkMode, onViewTeam, onViewPreview, onViewPost }: Props) {
   const [files, setFiles] = useState<EnrichedFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [offset, setOffset] = useState(0);
@@ -115,12 +118,91 @@ export default function PublicFilesPage({ isDarkMode, onViewTeam, onViewPreview 
       }
     }
 
-    const enriched: EnrichedFile[] = data.map(f => ({
+    let enriched: EnrichedFile[] = data.map(f => ({
       ...f,
       shared_by_name: !f.team_id 
         ? (alumniNamesMap[f.uploader_id] || f.uploader?.name || 'Unknown Alumni') 
-        : (f.uploader?.name || 'Unknown')
+        : (f.uploader?.name || 'Unknown'),
+      is_alumni_post: !f.team_id,
     }));
+
+    // On initial load (start === 0), also include files attached to public alumni posts
+    if (start === 0) {
+      try {
+        let q = supabase
+          .from('alumni_resources')
+          .select('id, alumni_id, title, description, file_url, file_name, created_at, visibility')
+          .eq('visibility', 'public')
+          .not('file_url', 'is', null);
+
+        if (search) {
+          q = q.or(`file_name.ilike.%${search}%,title.ilike.%${search}%`);
+        }
+
+        const { data: arData } = await q.order('created_at', { ascending: false });
+
+        if (arData && arData.length > 0) {
+          // Filter to only actual files (exclude external web links)
+          const actualFiles = arData.filter(
+            r => r.file_url && (!r.file_name || !r.file_name.startsWith('link:'))
+          );
+
+          const arUploaderIds = Array.from(new Set(actualFiles.map(r => r.alumni_id)));
+          let arProfilesMap: Record<string, { full_name: string; avatar_url?: string | null }> = {};
+          if (arUploaderIds.length > 0) {
+            const { data: arProfiles } = await supabase
+              .from('alumni_profiles')
+              .select('id, full_name, avatar_url')
+              .in('id', arUploaderIds);
+            if (arProfiles) {
+              arProfiles.forEach(p => {
+                arProfilesMap[p.id] = { full_name: p.full_name, avatar_url: p.avatar_url };
+              });
+            }
+          }
+
+          const guessMime = (url: string, name: string) => {
+            const ext = (name || url).split('.').pop()?.toLowerCase();
+            if (ext === 'pdf') return 'application/pdf';
+            if (['doc', 'docx'].includes(ext || '')) return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+            if (['xls', 'xlsx'].includes(ext || '')) return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+            if (['png', 'jpg', 'jpeg', 'webp', 'gif'].includes(ext || '')) return `image/${ext}`;
+            return 'application/octet-stream';
+          };
+
+          const mappedAlumniFiles: EnrichedFile[] = actualFiles.map(r => {
+            const prof = arProfilesMap[r.alumni_id];
+            return {
+              id: `ar-${r.id}`,
+              post_id: r.id,
+              name: r.file_name || r.title || 'Alumni Resource File',
+              file_url: r.file_url,
+              file_type: guessMime(r.file_url, r.file_name || ''),
+              file_size: 1.2 * 1024 * 1024,
+              created_at: r.created_at,
+              team_id: null,
+              uploader_id: r.alumni_id,
+              visibility: 'public',
+              shared_by_name: prof?.full_name || 'BUBT Alumni',
+              uploader: {
+                id: r.alumni_id,
+                name: prof?.full_name || 'BUBT Alumni',
+                avatar_url: prof?.avatar_url || null,
+                profile_pic: prof?.avatar_url || null,
+              },
+              is_alumni_post: true,
+            };
+          });
+
+          // Prepend unique alumni files
+          const existingUrls = new Set(enriched.map(f => f.file_url));
+          const newAlumniFiles = mappedAlumniFiles.filter(f => !existingUrls.has(f.file_url));
+          enriched = [...newAlumniFiles, ...enriched];
+        }
+      } catch (err) {
+        console.error('Error loading alumni post files:', err);
+      }
+    }
 
     if (reset) {
       setFiles(enriched);
@@ -335,10 +417,10 @@ export default function PublicFilesPage({ isDarkMode, onViewTeam, onViewPreview 
                     </div>
 
                     {/* Action buttons row */}
-                    <div className="flex items-center gap-2 mt-1.5">
+                    <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
                       <button
                         onClick={() => onViewPreview(file.file_url, file.name)}
-                        className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold border transition-colors ${
+                        className={`flex-1 min-w-[70px] flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold border transition-colors ${
                           isDarkMode
                             ? 'bg-[#16181c] hover:bg-[#2f3336] text-[#8b98a5] hover:text-[#e7e9ea] border-[#2f3336]'
                             : 'bg-slate-100 hover:bg-slate-200 text-slate-650 hover:text-slate-900 border-slate-200'
@@ -349,7 +431,7 @@ export default function PublicFilesPage({ isDarkMode, onViewTeam, onViewPreview 
                       </button>
                       <button
                         onClick={() => downloadFile(file.file_url, file.name)}
-                        className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold border transition-colors ${
+                        className={`flex-1 min-w-[75px] flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold border transition-colors ${
                           isDarkMode
                             ? 'bg-[#1e9df1] hover:bg-[#1677cc] text-white border-[#1e9df1] shadow-md shadow-[#1e9df1]/15'
                             : 'bg-[#1e9df1] hover:bg-[#1677cc] text-white border-[#1e9df1] shadow-sm shadow-[#1e9df1]/20'
@@ -358,6 +440,22 @@ export default function PublicFilesPage({ isDarkMode, onViewTeam, onViewPreview 
                       >
                         <Download size={13} /> Download
                       </button>
+
+                      {/* See Post button for Alumni shared files */}
+                      {(file.is_alumni_post || file.post_id || !file.team_id) && onViewPost && (
+                        <button
+                          onClick={() => onViewPost(file.post_id)}
+                          className={`flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all cursor-pointer whitespace-nowrap active:scale-95 ${
+                            isDarkMode
+                              ? 'bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 border-purple-500/30'
+                              : 'bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200'
+                          }`}
+                          title="View the original post and discussion in Alumni Feed"
+                        >
+                          <MessageSquare size={13} />
+                          <span>See Post</span>
+                        </button>
+                      )}
                     </div>
                   </motion.div>
                 ))}

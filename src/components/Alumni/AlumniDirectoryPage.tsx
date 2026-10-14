@@ -1,13 +1,15 @@
-import { useState, useEffect } from "react";
-import { ArrowLeft, GraduationCap, ShieldCheck, SearchX, Inbox, Calendar, MessageSquare, BookOpen, Globe, Lock, Download, FileText, Loader2, Sparkles, Eye, EyeOff, Search as SearchIcon } from "lucide-react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { ArrowLeft, GraduationCap, ShieldCheck, SearchX, Inbox, Calendar, MessageSquare, BookOpen, Globe, Lock, Download, FileText, Loader2, Sparkles, Eye, EyeOff, Search as SearchIcon, ChevronLeft, ChevronRight, Users, CheckCircle2, XCircle, Trash2, ArrowUpRight, Briefcase, Rss } from "lucide-react";
 import { useAlumni } from "../../hooks/useAlumni";
 import AlumniFilter from "./AlumniFilter";
 import AlumniCard from "./AlumniCard";
+import SuggestedMentorCard from "./SuggestedMentorCard";
 import { supabase } from "../../lib/supabase";
 import MentorChat from "./MentorChat";
 import { getSuggestedMentors } from "../../lib/api/mentorshipApi";
 import { AlumniProfile } from "../../types/social";
 import Loader from "../ui/Loader";
+import AlumniResourcesPage from "./pages/AlumniResourcesPage";
 
 interface Props {
   isDarkMode: boolean;
@@ -17,6 +19,9 @@ interface Props {
   onClose: () => void;
   authSession: any;
   unreadMsgCount?: number;
+  userProfile?: any;
+  initialTab?: string;
+  onRequireLogin?: () => void;
 }
 
 export default function AlumniDirectoryPage({
@@ -27,6 +32,9 @@ export default function AlumniDirectoryPage({
   onClose,
   authSession,
   unreadMsgCount = 0,
+  userProfile,
+  initialTab = "feed",
+  onRequireLogin,
 }: Props) {
   const [search, setSearch] = useState("");
   const [major, setMajor] = useState("All");
@@ -40,13 +48,51 @@ export default function AlumniDirectoryPage({
   const filtersAtDefault =
     search === "" && major === "All" && !mentorshipOnly && !graduationYear && company === "" && selectedSkills.length === 0;
 
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+
+  const checkScroll = useCallback(() => {
+    if (!carouselRef.current) return;
+    const { scrollLeft, scrollWidth, clientWidth } = carouselRef.current;
+    setCanScrollLeft(scrollLeft > 10);
+    setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
+  }, []);
+
+  useEffect(() => {
+    checkScroll();
+    const el = carouselRef.current;
+    if (!el) return;
+    el.addEventListener("scroll", checkScroll, { passive: true });
+    window.addEventListener("resize", checkScroll);
+    return () => {
+      el.removeEventListener("scroll", checkScroll);
+      window.removeEventListener("resize", checkScroll);
+    };
+  }, [suggestedMentors, showSuggested, checkScroll]);
+
+  const scrollCarousel = (direction: "left" | "right") => {
+    if (!carouselRef.current) return;
+    const amount = 310;
+    carouselRef.current.scrollBy({
+      left: direction === "left" ? -amount : amount,
+      behavior: "smooth",
+    });
+  };
+
   useEffect(() => {
     if (isLoggedIn && authSession?.user?.id) {
       getSuggestedMentors(authSession.user.id).then(setSuggestedMentors);
     }
   }, [isLoggedIn, authSession?.user?.id]);
 
-  const [activeTab, setActiveTab] = useState("directory");
+  const [activeTab, setActiveTab] = useState(initialTab || "directory");
+
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab]);
 
   // Resources States
   const [resourcesList, setResourcesList] = useState<any[]>([]);
@@ -128,6 +174,48 @@ export default function AlumniDirectoryPage({
   };
   const [myRequests, setMyRequests] = useState<any[]>([]);
   const [myRequestsLoading, setMyRequestsLoading] = useState(false);
+  const [requestFilter, setRequestFilter] = useState<"all" | "pending" | "accepted" | "declined">("all");
+
+  const getInitials = (name?: string) => {
+    if (!name) return "AL";
+    const clean = name.replace(/^(Prof\.|Dr\.|Mr\.|Ms\.|Mrs\.|Md\.|Engr\.)\s+/i, "").trim();
+    const parts = clean.split(/\s+/);
+    if (parts.length >= 2) {
+      return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+    }
+    return clean.substring(0, 2).toUpperCase() || "AL";
+  };
+
+  const getAvatarGradient = (name: string) => {
+    const gradients = [
+      "from-blue-600 via-indigo-600 to-sky-600",
+      "from-indigo-600 via-purple-600 to-violet-600",
+      "from-teal-600 via-emerald-600 to-cyan-600",
+      "from-sky-600 via-blue-600 to-indigo-700",
+      "from-violet-600 via-fuchsia-600 to-pink-600",
+    ];
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+      hash = (hash << 5) - hash + name.charCodeAt(i);
+    }
+    return gradients[Math.abs(hash) % gradients.length];
+  };
+
+  const handleWithdrawRequest = async (requestId: string) => {
+    if (!confirm("Are you sure you want to withdraw this mentorship request?")) return;
+    try {
+      const { error } = await supabase
+        .from("mentorship_requests")
+        .delete()
+        .eq("id", requestId)
+        .eq("student_id", authSession.user.id);
+      if (error) throw error;
+      setMyRequests((prev) => prev.filter((r) => r.id !== requestId));
+    } catch (err: any) {
+      console.error("Error withdrawing request:", err);
+      alert(err?.message || "Failed to withdraw request.");
+    }
+  };
 
   const fetchMyRequests = async () => {
     if (!authSession?.user?.id) return;
@@ -144,15 +232,24 @@ export default function AlumniDirectoryPage({
           const alumniIds = Array.from(new Set(data.map((r: any) => r.alumni_id)));
           const { data: alumniProfiles } = await supabase
             .from("alumni_profiles")
-            .select("id, full_name")
+            .select("id, full_name, avatar_url, job_title, company_name, major, graduation_year")
             .in("id", alumniIds);
 
-          const alumniMap = new Map(alumniProfiles?.map((ap: any) => [ap.id, ap.full_name]) || []);
+          const alumniMap = new Map(alumniProfiles?.map((ap: any) => [ap.id, ap]) || []);
 
-          const enriched = data.map((r: any) => ({
-            ...r,
-            alumni_name: alumniMap.get(r.alumni_id) || "Alumni Member"
-          }));
+          const enriched = data.map((r: any) => {
+            const ap = alumniMap.get(r.alumni_id);
+            return {
+              ...r,
+              alumnus: ap || null,
+              alumni_name: ap?.full_name || "Alumni Member",
+              job_title: ap?.job_title,
+              company_name: ap?.company_name,
+              major: ap?.major,
+              graduation_year: ap?.graduation_year,
+              avatar_url: ap?.avatar_url,
+            };
+          });
 
           setMyRequests(enriched);
         } else {
@@ -272,107 +369,214 @@ export default function AlumniDirectoryPage({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
             <h1 className={`text-xl font-bold flex items-center gap-2 ${textColor}`} style={{ fontFamily: "'Exo 2', sans-serif" }}>
-              <GraduationCap className="h-6 w-6 text-red-500" />
+              <GraduationCap className="h-6 w-6 text-[#1e9df1]" />
               Alumni Hub
             </h1>
             <p className={`text-xs ${subColor}`}>Connect with BUBT alumni and discover mentorship</p>
           </div>
           <button
             onClick={onRegisterClick}
-            className="self-start sm:self-auto flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-red-600 via-rose-600 to-red-500 hover:from-red-500 hover:to-rose-500 text-white text-xs font-bold transition-all shadow-md shadow-red-600/25 active:scale-95"
+            className="self-start sm:self-auto flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#1e9df1] hover:bg-[#1a8cd8] text-white text-xs font-bold transition-all shadow-md shadow-[#1e9df1]/25 active:scale-95 cursor-pointer"
             style={{ fontFamily: "'Exo 2', sans-serif" }}
           >
             <ShieldCheck className="w-4 h-4" />
-            Register as Alumni
+            <span>Register as Alumni</span>
           </button>
         </div>
 
-        {/* Tab Switcher */}
-        {isLoggedIn && (
-          <div className="flex border-b border-[#2f3336]/10 mb-6 gap-6 text-sm">
-            <button
-              onClick={() => setActiveTab("directory")}
-              className={`pb-3 font-semibold border-b-2 transition-all cursor-pointer ${
-                activeTab === "directory"
-                  ? "border-red-500 text-red-500 font-bold"
-                  : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
-              }`}
-            >
-              Alumni Directory
-            </button>
-            <button
-              onClick={() => setActiveTab("requests")}
-              className={`pb-3 font-semibold border-b-2 transition-all cursor-pointer ${
-                activeTab === "requests"
-                  ? "border-red-500 text-red-500 font-bold"
-                  : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
-              }`}
-            >
-              My Mentorship Requests
-            </button>
-            <button
-              onClick={() => setActiveTab("messages")}
-              className={`pb-3 font-semibold border-b-2 transition-all cursor-pointer flex items-center gap-1.5 ${
-                activeTab === "messages"
-                  ? "border-red-500 text-red-500 font-bold"
-                  : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
-              }`}
-            >
-              <span>Messages</span>
-              {unreadMsgCount > 0 && (
-                <span className="px-1.5 py-0.5 rounded-full text-[9px] font-extrabold bg-red-500 text-white">
-                  {unreadMsgCount}
-                </span>
-              )}
-            </button>
-            <button
-              onClick={() => setActiveTab("resources")}
-              className={`pb-3 font-semibold border-b-2 transition-all cursor-pointer ${
-                activeTab === "resources"
-                  ? "border-red-500 text-red-500 font-bold"
-                  : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
-              }`}
-            >
-              Resources
-            </button>
-          </div>
-        )}
+        {/* Tab Switcher — pill capsule matching Network and Navbar style */}
+        <div
+          className={`inline-flex items-center rounded-full p-1.5 gap-1 border mb-6 overflow-x-auto max-w-full scrollbar-none ${
+            isDarkMode
+              ? "bg-[#16181c] border-[#2f3336] shadow-lg shadow-black/20"
+              : "bg-white border-slate-300 shadow-md shadow-black/8"
+          }`}
+        >
+          <button
+            onClick={() => setActiveTab("feed")}
+            className={`relative px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm transition-all duration-150 flex items-center gap-2 cursor-pointer whitespace-nowrap ${
+              activeTab === "feed" || activeTab === "resources"
+                ? "bg-[#1e9df1] text-white font-bold shadow-md shadow-[#1e9df1]/25"
+                : isDarkMode
+                ? "font-medium text-[#71767b] hover:text-[#e7e9ea]"
+                : "font-medium text-slate-500 hover:text-slate-800"
+            }`}
+          >
+            <Rss className="w-3.5 h-3.5" />
+            <span>Feed</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("directory")}
+            className={`relative px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm transition-all duration-150 flex items-center gap-2 cursor-pointer whitespace-nowrap ${
+              activeTab === "directory"
+                ? "bg-[#1e9df1] text-white font-bold shadow-md shadow-[#1e9df1]/25"
+                : isDarkMode
+                ? "font-medium text-[#71767b] hover:text-[#e7e9ea]"
+                : "font-medium text-slate-500 hover:text-slate-800"
+            }`}
+          >
+            <Users className="w-3.5 h-3.5" />
+            <span>Alumni Directory</span>
+          </button>
+
+          <button
+            onClick={() => {
+              if (!isLoggedIn) {
+                onRequireLogin?.();
+                return;
+              }
+              setActiveTab("requests");
+            }}
+            className={`relative px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm transition-all duration-150 flex items-center gap-2 cursor-pointer whitespace-nowrap ${
+              activeTab === "requests"
+                ? "bg-[#1e9df1] text-white font-bold shadow-md shadow-[#1e9df1]/25"
+                : isDarkMode
+                ? "font-medium text-[#71767b] hover:text-[#e7e9ea]"
+                : "font-medium text-slate-500 hover:text-slate-800"
+            }`}
+          >
+            <Inbox className="w-3.5 h-3.5" />
+            <span>Mentorship Requests</span>
+            {isLoggedIn && myRequests.length > 0 && (
+              <span
+                className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                  activeTab === "requests" ? "bg-white/20 text-white" : "bg-[#1e9df1] text-white"
+                }`}
+              >
+                {myRequests.length}
+              </span>
+            )}
+          </button>
+
+          <button
+            onClick={() => {
+              if (!isLoggedIn) {
+                onRequireLogin?.();
+                return;
+              }
+              setActiveTab("messages");
+            }}
+            className={`relative px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm transition-all duration-150 flex items-center gap-2 cursor-pointer whitespace-nowrap ${
+              activeTab === "messages"
+                ? "bg-[#1e9df1] text-white font-bold shadow-md shadow-[#1e9df1]/25"
+                : isDarkMode
+                ? "font-medium text-[#71767b] hover:text-[#e7e9ea]"
+                : "font-medium text-slate-500 hover:text-slate-800"
+            }`}
+          >
+            <MessageSquare className="w-3.5 h-3.5" />
+            <span>Messages</span>
+            {isLoggedIn && unreadMsgCount > 0 && (
+              <span
+                className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                  activeTab === "messages" ? "bg-white/20 text-white" : "bg-[#1e9df1] text-white"
+                }`}
+              >
+                {unreadMsgCount}
+              </span>
+            )}
+          </button>
+        </div>
 
         {activeTab === "directory" && (
           <>
             {/* Suggested Mentors */}
             {isLoggedIn && filtersAtDefault && suggestedMentors.length > 0 && (
               <div
-                className={`mb-6 rounded-xl border p-4 sm:p-5 ${
-                  isDarkMode ? "bg-[#17181c] border-[#2f3336]/50" : "bg-white border-slate-200 shadow-sm"
+                className={`mb-6 rounded-2xl border p-4 sm:p-5 transition-all ${
+                  isDarkMode
+                    ? "bg-gradient-to-b from-[#131722]/95 to-[#0c0f16]/95 border-[#202738] shadow-lg shadow-black/25"
+                    : "bg-gradient-to-b from-white to-slate-50/70 border-slate-200 shadow-sm"
                 }`}
               >
-                <div className="flex items-center justify-between gap-2 mb-1">
-                  <div className="flex items-center gap-1.5">
-                    <Sparkles className="w-4 h-4 text-[#1e9df1]" />
-                    <h3 className={`text-sm font-bold ${textColor}`}>Suggested Mentors</h3>
-                  </div>
-                  <button
-                    onClick={() => setShowSuggested((v) => !v)}
-                    className={`flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-lg transition-colors ${
-                      isDarkMode ? "text-[#71767b] hover:text-[#e7e9ea] hover:bg-[#202327]" : "text-slate-500 hover:text-slate-800 hover:bg-slate-100"
-                    }`}
-                  >
-                    {showSuggested ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                    {showSuggested ? "Hide" : "Show"}
-                  </button>
-                </div>
-                {showSuggested && (
-                  <>
-                    <p className={`text-xs mb-4 ${subColor}`}>Based on your major and skills</p>
-                    <div className="flex gap-3 sm:gap-4 overflow-x-auto custom-scrollbar snap-x snap-mandatory -mx-1 px-1 pb-2">
-                      {suggestedMentors.map((a) => (
-                        <div key={a.id} className="w-[280px] sm:w-72 flex-shrink-0 snap-start flex">
-                          <AlumniCard alumni={a} isDarkMode={isDarkMode} onViewProfile={onViewProfile} />
-                        </div>
-                      ))}
+                {/* Section Header */}
+                <div className="flex items-center justify-between gap-3 mb-3">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#1e9df1]/20 to-indigo-500/10 border border-[#1e9df1]/30 flex items-center justify-center text-[#1e9df1] flex-shrink-0 shadow-sm shadow-[#1e9df1]/10">
+                      <Sparkles className="w-4 h-4" />
                     </div>
-                  </>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className={`text-sm sm:text-base font-bold truncate ${textColor}`}>
+                          Suggested Mentors
+                        </h3>
+                        <span className="hidden sm:inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#1e9df1]/10 text-[#1e9df1] border border-[#1e9df1]/20">
+                          Recommended for you
+                        </span>
+                      </div>
+                      <p className={`text-xs truncate ${subColor}`}>
+                        Alumni graduates matching your department and skill interests
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                    {showSuggested && suggestedMentors.length > 2 && (
+                      <div className="flex items-center gap-1 mr-1">
+                        <button
+                          type="button"
+                          onClick={() => scrollCarousel("left")}
+                          disabled={!canScrollLeft}
+                          aria-label="Previous mentors"
+                          className={`w-7 h-7 rounded-lg border flex items-center justify-center transition-all cursor-pointer ${
+                            canScrollLeft
+                              ? isDarkMode
+                                ? "bg-[#181d29] border-[#293247] text-white hover:bg-[#202737] hover:border-[#1e9df1]/50"
+                                : "bg-white border-slate-200 text-slate-700 hover:bg-slate-100 hover:border-slate-300"
+                              : "opacity-30 cursor-not-allowed border-transparent text-slate-500"
+                          }`}
+                        >
+                          <ChevronLeft className="w-4 h-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => scrollCarousel("right")}
+                          disabled={!canScrollRight}
+                          aria-label="Next mentors"
+                          className={`w-7 h-7 rounded-lg border flex items-center justify-center transition-all cursor-pointer ${
+                            canScrollRight
+                              ? isDarkMode
+                                ? "bg-[#181d29] border-[#293247] text-white hover:bg-[#202737] hover:border-[#1e9df1]/50"
+                                : "bg-white border-slate-200 text-slate-700 hover:bg-slate-100 hover:border-slate-300"
+                              : "opacity-30 cursor-not-allowed border-transparent text-slate-500"
+                          }`}
+                        >
+                          <ChevronRight className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => setShowSuggested((v) => !v)}
+                      className={`flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-lg border transition-colors cursor-pointer ${
+                        isDarkMode
+                          ? "bg-[#141822] border-[#222a3d] text-slate-300 hover:text-white hover:bg-[#1a202e]"
+                          : "bg-white border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                      }`}
+                    >
+                      {showSuggested ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      <span>{showSuggested ? "Hide" : "Show"}</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Carousel List */}
+                {showSuggested && (
+                  <div
+                    ref={carouselRef}
+                    className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-none snap-x snap-mandatory scroll-smooth -mx-1 px-1 py-1"
+                  >
+                    {suggestedMentors.map((a) => (
+                      <SuggestedMentorCard
+                        key={a.id}
+                        alumni={a}
+                        isDarkMode={isDarkMode}
+                        onViewProfile={onViewProfile}
+                      />
+                    ))}
+                  </div>
                 )}
               </div>
             )}
@@ -393,6 +597,14 @@ export default function AlumniDirectoryPage({
                 selectedSkills={selectedSkills}
                 setSelectedSkills={setSelectedSkills}
                 isDarkMode={isDarkMode}
+                onReset={() => {
+                  setSearch("");
+                  setMajor("All");
+                  setMentorshipOnly(false);
+                  setGraduationYear(null);
+                  setCompany("");
+                  setSelectedSkills([]);
+                }}
               />
             </div>
 
@@ -438,76 +650,275 @@ export default function AlumniDirectoryPage({
         )}
 
         {activeTab === "requests" && (
-          myRequestsLoading ? (
-            <div className="flex flex-col items-center justify-center py-20 gap-3">
-              <Loader />
-              <span className={`text-xs ${subColor}`}>Loading requests...</span>
-            </div>
-          ) : myRequests.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-center gap-4">
-              <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${isDarkMode ? "bg-[#16181c]" : "bg-slate-100"}`}>
-                <Inbox size={28} className={isDarkMode ? "text-slate-500" : "text-[#8b98a5]"} />
-              </div>
+          <div className="space-y-5 animate-in fade-in duration-200">
+            {/* Header with Subtitle & Filter Pills */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <h3 className={`text-base font-semibold ${textColor}`}>No mentorship requests</h3>
-                <p className={`text-xs max-w-xs mt-1 ${subColor}`}>
-                  You haven't submitted any mentorship requests yet. Browse the directory to connect with alumni!
+                <h2 className={`text-base sm:text-lg font-bold flex items-center gap-2 ${textColor}`}>
+                  <Inbox className="w-5 h-5 text-[#1e9df1]" />
+                  Mentorship Requests
+                </h2>
+                <p className={`text-xs mt-0.5 ${subColor}`}>
+                  Track and manage your guidance requests sent to alumni mentors
                 </p>
               </div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {myRequests.map((req) => (
+
+              {/* Status filter pills */}
+              {myRequests.length > 0 && (
                 <div
-                  key={req.id}
-                  className={`p-5 rounded-xl border flex flex-col gap-3 justify-between ${
-                    isDarkMode ? "bg-[#17181c] border-[#2f3336]/60" : "bg-white border-slate-200 shadow-sm"
+                  className={`inline-flex items-center p-1 rounded-xl border text-xs gap-1 self-start sm:self-auto ${
+                    isDarkMode ? "bg-[#141822] border-[#222a3d]" : "bg-white border-slate-200 shadow-xs"
                   }`}
                 >
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <p className={`font-bold text-sm ${textColor}`}>To: {req.alumni_name}</p>
-                      
-                      {/* Status Badge */}
-                      {req.status === "pending" && (
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                          Pending
-                        </span>
-                      )}
-                      {req.status === "accepted" && (
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                          Accepted
-                        </span>
-                      )}
-                      {req.status === "declined" && (
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-red-500/10 text-red-400 border border-red-500/20">
-                          Declined
-                        </span>
-                      )}
-                    </div>
+                  {(["all", "pending", "accepted", "declined"] as const).map((st) => {
+                    const count =
+                      st === "all" ? myRequests.length : myRequests.filter((r) => r.status === st).length;
+                    const label = st.charAt(0).toUpperCase() + st.slice(1);
+                    const isActive = requestFilter === st;
 
-                    <div className="flex items-center gap-1.5 text-xs text-purple-400 font-semibold bg-purple-500/10 px-2 py-0.5 rounded-md w-fit">
-                      <MessageSquare className="w-3.5 h-3.5" />
-                      Topic: {req.topic}
-                    </div>
-
-                    {req.message && (
-                      <p className={`text-xs leading-relaxed italic ${subColor}`}>
-                        "{req.message}"
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="flex items-center justify-between border-t border-[#2f3336]/10 pt-3 mt-2 text-[10px] text-slate-400">
-                    <span className="flex items-center gap-1">
-                      <Calendar className="w-3.5 h-3.5" />
-                      Sent: {new Date(req.created_at).toLocaleDateString()}
-                    </span>
-                  </div>
+                    return (
+                      <button
+                        key={st}
+                        onClick={() => setRequestFilter(st)}
+                        className={`px-3 py-1 rounded-lg font-medium transition-all cursor-pointer ${
+                          isActive
+                            ? "bg-[#1e9df1] text-white font-bold shadow-xs"
+                            : isDarkMode
+                            ? "text-slate-400 hover:text-white"
+                            : "text-slate-600 hover:text-slate-900"
+                        }`}
+                      >
+                        {label} {count > 0 && <span className="opacity-80">({count})</span>}
+                      </button>
+                    );
+                  })}
                 </div>
-              ))}
+              )}
             </div>
-          )
+
+            {myRequestsLoading ? (
+              <div className="flex flex-col items-center justify-center py-20 gap-3">
+                <Loader />
+                <span className={`text-xs ${subColor}`}>Loading requests...</span>
+              </div>
+            ) : myRequests.length === 0 ? (
+              /* Empty State */
+              <div
+                className={`flex flex-col items-center justify-center py-20 text-center gap-4 rounded-2xl border p-8 ${
+                  isDarkMode ? "bg-[#12161f]/50 border-[#202738]" : "bg-white border-slate-200"
+                }`}
+              >
+                <div
+                  className={`w-16 h-16 rounded-2xl flex items-center justify-center ${
+                    isDarkMode ? "bg-[#16181c]" : "bg-slate-100"
+                  }`}
+                >
+                  <Inbox size={28} className={isDarkMode ? "text-slate-500" : "text-[#8b98a5]"} />
+                </div>
+                <div>
+                  <h3 className={`text-base font-semibold ${textColor}`}>No mentorship requests</h3>
+                  <p className={`text-xs max-w-sm mt-1.5 leading-relaxed ${subColor}`}>
+                    You haven't submitted any mentorship requests yet. Browse the alumni directory to discover verified mentors and seek career guidance!
+                  </p>
+                </div>
+                <button
+                  onClick={() => setActiveTab("directory")}
+                  className="mt-2 px-4 py-2 rounded-xl text-xs font-semibold bg-[#1e9df1] hover:bg-[#1a8cd8] text-white transition-all shadow-md shadow-[#1e9df1]/25 cursor-pointer"
+                >
+                  Browse Alumni Directory
+                </button>
+              </div>
+            ) : (
+              /* Request Cards Grid */
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {myRequests
+                  .filter((r) => requestFilter === "all" || r.status === requestFilter)
+                  .map((req) => {
+                    const initials = getInitials(req.alumni_name);
+                    const avatarGrad = getAvatarGradient(req.alumni_name || "Alumni");
+
+                    return (
+                      <div
+                        key={req.id}
+                        className={`rounded-2xl border p-5 flex flex-col justify-between transition-all duration-200 group ${
+                          isDarkMode
+                            ? "bg-gradient-to-b from-[#131722] to-[#0e1119] border-[#222a3d] hover:border-[#1e9df1]/40 shadow-lg shadow-black/20"
+                            : "bg-white border-slate-200 hover:border-blue-400 shadow-sm shadow-slate-100"
+                        }`}
+                      >
+                        <div>
+                          {/* Top Row: Mentor Info & Status Badge */}
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-start gap-3 min-w-0">
+                              {/* Avatar */}
+                              <div
+                                onClick={() => onViewProfile(req.alumni_id)}
+                                className={`w-12 h-12 rounded-xl overflow-hidden flex items-center justify-center font-bold text-white text-xs shadow-md bg-gradient-to-br flex-shrink-0 cursor-pointer ${avatarGrad}`}
+                                style={{ fontFamily: "'Exo 2', sans-serif" }}
+                              >
+                                {req.avatar_url ? (
+                                  <img
+                                    src={req.avatar_url}
+                                    alt={req.alumni_name}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <span className="tracking-wider">{initials}</span>
+                                )}
+                              </div>
+
+                              {/* Details */}
+                              <div className="min-w-0">
+                                <h4
+                                  onClick={() => onViewProfile(req.alumni_id)}
+                                  className={`text-sm font-bold truncate cursor-pointer hover:text-[#1e9df1] transition-colors ${textColor}`}
+                                >
+                                  {req.alumni_name}
+                                </h4>
+
+                                {req.job_title ? (
+                                  <p
+                                    className={`text-xs truncate font-medium flex items-center gap-1 mt-0.5 ${
+                                      isDarkMode ? "text-sky-400" : "text-blue-600"
+                                    }`}
+                                  >
+                                    <Briefcase className="w-3 h-3 flex-shrink-0 opacity-70" />
+                                    <span className="truncate">
+                                      {req.job_title}
+                                      {req.company_name ? ` · ${req.company_name}` : ""}
+                                    </span>
+                                  </p>
+                                ) : (
+                                  <p className={`text-xs truncate italic mt-0.5 ${subColor}`}>
+                                    BUBT Graduate
+                                  </p>
+                                )}
+
+                                {req.graduation_year && req.major && (
+                                  <p className="text-[11px] font-medium text-slate-400 flex items-center gap-1 mt-0.5">
+                                    <GraduationCap className="w-3 h-3 text-[#1e9df1] flex-shrink-0" />
+                                    <span>
+                                      Class of {req.graduation_year} ·{" "}
+                                      <span className="uppercase font-semibold text-slate-300">
+                                        {req.major}
+                                      </span>
+                                    </span>
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Status Badge */}
+                            <div className="flex-shrink-0">
+                              {req.status === "pending" && (
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/25">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+                                  Pending Review
+                                </span>
+                              )}
+                              {req.status === "accepted" && (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/25">
+                                  <CheckCircle2 className="w-3.5 h-3.5" />
+                                  Accepted
+                                </span>
+                              )}
+                              {req.status === "declined" && (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/25">
+                                  <XCircle className="w-3.5 h-3.5" />
+                                  Declined
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Topic Pill */}
+                          <div className="mt-3.5 flex items-center gap-2 flex-wrap">
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-[#1e9df1]/10 text-[#1e9df1] border border-[#1e9df1]/20">
+                              <MessageSquare className="w-3 h-3" />
+                              Topic: {req.topic}
+                            </span>
+                          </div>
+
+                          {/* Message Quote Box */}
+                          {req.message && (
+                            <div
+                              className={`mt-2.5 p-3 rounded-xl border text-xs leading-relaxed italic ${
+                                isDarkMode
+                                  ? "bg-[#0b0e14]/70 border-[#1f2638] text-slate-300"
+                                  : "bg-slate-50 border-slate-200 text-slate-700"
+                              }`}
+                            >
+                              "{req.message}"
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Card Footer: Date & Actions */}
+                        <div
+                          className={`mt-4 pt-3 border-t flex flex-wrap items-center justify-between gap-2 ${
+                            isDarkMode ? "border-[#202738]" : "border-slate-100"
+                          }`}
+                        >
+                          <span className="flex items-center gap-1.5 text-[11px] text-slate-400">
+                            <Calendar className="w-3.5 h-3.5 opacity-70" />
+                            Sent {new Date(req.created_at).toLocaleDateString(undefined, {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            })}
+                          </span>
+
+                          <div className="flex items-center gap-1.5 ml-auto">
+                            {req.status === "pending" && (
+                              <button
+                                onClick={() => handleWithdrawRequest(req.id)}
+                                className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                                  isDarkMode
+                                    ? "text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20"
+                                    : "text-slate-500 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200"
+                                }`}
+                                title="Cancel this mentorship request"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                                <span>Withdraw</span>
+                              </button>
+                            )}
+
+                            {req.status === "accepted" && (
+                              <button
+                                onClick={() => {
+                                  if (req.alumnus) {
+                                    setChatTarget(req.alumnus);
+                                  } else {
+                                    setActiveTab("messages");
+                                  }
+                                }}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#1e9df1] hover:bg-[#1a8cd8] text-white transition-all shadow-sm shadow-[#1e9df1]/25 active:scale-95 cursor-pointer"
+                              >
+                                <MessageSquare className="w-3.5 h-3.5" />
+                                <span>Message Mentor</span>
+                              </button>
+                            )}
+
+                            <button
+                              onClick={() => onViewProfile(req.alumni_id)}
+                              className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                                isDarkMode
+                                  ? "bg-[#181d29] border border-[#293247] text-slate-200 hover:text-white hover:border-[#1e9df1]/50"
+                                  : "bg-slate-100 border border-slate-200 text-slate-700 hover:bg-slate-200"
+                              }`}
+                            >
+                              <span>View Profile</span>
+                              <ArrowUpRight className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            )}
+          </div>
         )}
 
         {activeTab === "messages" && (
@@ -587,170 +998,18 @@ export default function AlumniDirectoryPage({
           )
         )}
 
-        {activeTab === "resources" && (
-          resourcesLoading ? (
-            <div className="flex flex-col items-center gap-1 text-xs text-slate-500 py-10 justify-center">
-              <Loader />
-              Loading resources...
-            </div>
-          ) : (
-            <div className="space-y-8">
-              {/* Filters Panel */}
-              <div className="flex flex-col gap-3">
-                <div className="relative">
-                  <SearchIcon className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 ${isDarkMode ? "text-[#71767b]" : "text-slate-400"}`} />
-                  <input
-                    type="text"
-                    value={resourceSearch}
-                    onChange={(e) => setResourceSearch(e.target.value)}
-                    placeholder="Search resources by title or description..."
-                    className={`w-full pl-9 pr-3 py-2.5 rounded-lg text-sm border outline-none transition-all ${
-                      isDarkMode
-                        ? "bg-[#16181c] border-[#2f3336] text-white placeholder-[#71767b] focus:border-[#1e9df1]"
-                        : "bg-white border-slate-300 text-slate-900 placeholder-slate-400 focus:border-[#1e9df1]"
-                    }`}
-                  />
-                </div>
-
-                <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
-                  <span className={`text-xs font-semibold ${textColor}`}>
-                    Filter Shared Resources:
-                  </span>
-                  <div className="flex gap-2 w-full sm:w-auto">
-                    <select
-                      value={resourceTypeFilter}
-                      onChange={(e) => setResourceTypeFilter(e.target.value)}
-                      className={`px-3 py-2 rounded-lg text-xs font-semibold border outline-none cursor-pointer transition-all flex-1 sm:flex-none ${
-                        isDarkMode
-                          ? "bg-[#16181c] border-[#2f3336] text-white focus:border-[#1e9df1]"
-                          : "bg-white border-slate-300 text-slate-800 focus:border-[#1e9df1]"
-                      }`}
-                    >
-                      <option value="All">All Types</option>
-                      <option value="Career Tips">Career Tips</option>
-                      <option value="Job Guide">Job Guide</option>
-                      <option value="Study Material">Study Material</option>
-                      <option value="Industry Insight">Industry Insight</option>
-                    </select>
-
-                    <select
-                      value={resourceDeptFilter}
-                      onChange={(e) => setResourceDeptFilter(e.target.value)}
-                      className={`px-3 py-2 rounded-lg text-xs font-semibold border outline-none cursor-pointer transition-all flex-1 sm:flex-none ${
-                        isDarkMode
-                          ? "bg-[#16181c] border-[#2f3336] text-white focus:border-[#1e9df1]"
-                          : "bg-white border-slate-300 text-slate-800 focus:border-[#1e9df1]"
-                      }`}
-                    >
-                      <option value="All">All Departments</option>
-                      <option value="CSE">CSE</option>
-                      <option value="EEE">EEE</option>
-                      <option value="BBA">BBA</option>
-                      <option value="Civil">Civil</option>
-                      <option value="Textile">Textile</option>
-                      <option value="Other">Other</option>
-                    </select>
-
-                    <select
-                      value={resourceYearFilter}
-                      onChange={(e) => setResourceYearFilter(e.target.value)}
-                      className={`px-3 py-2 rounded-lg text-xs font-semibold border outline-none cursor-pointer transition-all flex-1 sm:flex-none ${
-                        isDarkMode
-                          ? "bg-[#16181c] border-[#2f3336] text-white focus:border-[#1e9df1]"
-                          : "bg-white border-slate-300 text-slate-800 focus:border-[#1e9df1]"
-                      }`}
-                    >
-                      <option value="All">All Years</option>
-                      {resourceYears.map((y) => (
-                        <option key={y} value={y}>
-                          {y}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              {/* Private Resources from connected Mentors */}
-              <div className="space-y-3">
-                <h3 className={`text-sm font-extrabold flex items-center gap-2 ${textColor}`}>
-                  <Lock className="w-4 h-4 text-amber-400" />
-                  Shared by My Mentors
-                </h3>
-                
-                {resourcesList.filter(r => r.visibility === "private" && studentMentorIds.includes(r.alumni_id) && resourceMatchesFilters(r)).length === 0 ? (
-                  <div className={`p-6 text-center rounded-xl border border-dashed ${isDarkMode ? "border-[#2f3336]/60 bg-[#16181c]/30 text-slate-500" : "border-slate-200 bg-slate-50/50 text-slate-400"}`}>
-                    <p className="text-xs">No private resources shared by your connected mentors yet.</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {resourcesList
-                      .filter((res) => {
-                        const isPrivate = res.visibility === "private";
-                        const isMentor = studentMentorIds.includes(res.alumni_id);
-                        return isPrivate && isMentor && resourceMatchesFilters(res);
-                      })
-                      .map((res) => (
-                        <div
-                          key={res.id}
-                          className={`p-5 rounded-xl border flex flex-col justify-between gap-4 ${cardBorder}`}
-                        >
-                          <div className="space-y-3">
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="space-y-1 min-w-0">
-                                <h4 className={`font-bold text-sm leading-snug break-words ${textColor}`}>
-                                  {res.title}
-                                </h4>
-                                <p className="text-[10px] text-purple-400 font-semibold uppercase tracking-wider">
-                                  {res.type} · Dept: {res.department}
-                                </p>
-                              </div>
-                              <span className="px-2.5 py-0.5 rounded-full text-[9px] font-extrabold bg-amber-500/10 text-amber-400 border border-amber-500/25 flex items-center gap-1">
-                                <Lock className="w-2.5 h-2.5" />
-                                Mentor Shared
-                              </span>
-                            </div>
-
-                            {res.description && (
-                              <p className={`text-xs leading-relaxed italic ${subColor}`}>
-                                "{res.description}"
-                              </p>
-                            )}
-
-                            <div className="flex items-center gap-2 text-xs text-amber-400 bg-amber-500/5 px-3 py-1.5 rounded-lg w-fit max-w-full">
-                              <FileText className="w-4 h-4 flex-shrink-0" />
-                              <span className="truncate text-[11px]">{res.file_name}</span>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center justify-between pt-3 border-t border-[#2f3336]/10 mt-1">
-                            <div className="min-w-0">
-                              <p className={`text-[10px] font-semibold truncate ${textColor}`}>
-                                Mentor: {alumniNames[res.alumni_id] || "Verified Alumni"}
-                              </p>
-                              <span className={`text-[9px] flex items-center gap-1 ${subColor} mt-0.5`}>
-                                <Calendar className="w-3 h-3" />
-                                {new Date(res.created_at).toLocaleDateString()}
-                              </span>
-                            </div>
-
-                            <button
-                              onClick={() => window.open(res.file_url, "_blank")}
-                              className="px-3 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/25 transition-all text-xs font-bold flex items-center gap-1 cursor-pointer"
-                            >
-                              <Download className="w-3.5 h-3.5" />
-                              Get File
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                  </div>
-                )}
-              </div>
-
-
-            </div>
-          )
+        {(activeTab === "feed" || activeTab === "resources") && (
+          <div className="pt-1">
+            <AlumniResourcesPage
+              isDarkMode={isDarkMode}
+              authSession={authSession}
+              userProfile={userProfile}
+              onViewAlumniProfile={onViewProfile}
+              onRequireLogin={onRequireLogin}
+              onBrowseDirectory={() => setActiveTab("directory")}
+              suggestedMentors={suggestedMentors}
+            />
+          </div>
         )}
       </div>
 

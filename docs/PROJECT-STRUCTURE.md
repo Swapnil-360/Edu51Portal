@@ -187,22 +187,28 @@ Per-team file sharing with public/private visibility. Members upload; owner/admi
 
 ## Alumni Hub & Mentorship
 
-Student-facing directory (`src/components/Alumni/AlumniDirectoryPage.tsx`, tabs: Directory/My Mentorship Requests/Messages/Resources) → `AlumniCard.tsx` → `AlumniProfilePage.tsx` (public view, request mentorship) → `MentorChat.tsx`. A separately-routed verified-alumni dashboard (`AlumniDashboard.tsx` → `pages/*.tsx`) is where an alumnus edits their own profile (`pages/AlumniProfilePage.tsx`).
+Student-facing hub (`src/components/Alumni/AlumniDirectoryPage.tsx`, tabs: Feed [default] / Alumni Directory / Mentorship Requests / Messages) → `AlumniCard.tsx` / `SuggestedMentorCard.tsx` → `AlumniProfilePage.tsx` (public view, request mentorship) → `MentorChat.tsx`. A separately-routed verified-alumni dashboard (`AlumniDashboard.tsx` → `pages/*.tsx`) is where an alumnus edits their own profile (`pages/AlumniProfilePage.tsx`).
 
 | What | File |
 |------|------|
+| Community Feed (full-width feed stream, real reacts & comments count, attachment preview, guest auth guards) | `src/components/Alumni/pages/AlumniResourcesPage.tsx` |
 | Directory search/filter (name/role/company, major, mentorship-only, grad year, company, skill tags) | `src/components/Alumni/AlumniFilter.tsx` |
 | Directory data hook (`useAlumni`/`useAlumniById`) | `src/hooks/useAlumni.ts` |
+| Suggested mentor carousel card component | `src/components/Alumni/SuggestedMentorCard.tsx` |
 | Mentorship connection/request/suggestion helpers | `src/lib/api/mentorshipApi.ts` |
 | Alumni self-edit screen (skills, achievements, portfolio, marital status, social links, contact mode, work experience) | `src/components/Alumni/pages/AlumniProfilePage.tsx` |
 | `AlumniProfile` type | `src/types/social.ts` |
-| **SQL:** `alumni_profiles` (+ `mentorship_requests`, `mentor_connections`, `mentor_messages`, `alumni_resources`; live-DB only, not in tracked migrations except ALTERs) | migration `20260705150000_alumni_signup_fields`, `20260718000000_alumni_profile_expansion` |
+| **SQL:** `alumni_profiles` (+ `mentorship_requests`, `mentor_connections`, `mentor_messages`, `alumni_resources`; live-DB only, not in tracked migrations except ALTERs) | migration `20260705150000_alumni_signup_fields`, `20260718000000_alumni_profile_expansion`, `20261014220000_remove_dummy_alumni` |
+
+**Guest Mode & Feed Access:** Info Hub and Alumni Hub are fully accessible to unauthenticated guests. Alumni Hub defaults to the **Feed** tab. Guests can browse feed posts, view comments, and download resources; attempting to react (hearts) or post comments immediately prompts sign-in via `onRequireLogin`. Private tabs (Mentorship Requests, Messages) enforce sign-in checks.
+
+**Feed Architecture:** The Feed tab toolbar uses the same visual styling and container width (`max-w-5xl`) as `AlumniFilter`, with live keyword search, department filtering dropdown, post count / `All Posts` vs `My Posts` toggles, and `+ Create Post` for verified alumni. Feed post cards span the full container width (`w-full`) for visual consistency across tabs.
 
 **Skills & filtering:** `alumni_profiles.skills text[]` (GIN-indexed), edited via the shared `SkillsEditor`/`BadgeList` components (`src/components/Profile/SkillsEditor.tsx`, same ones used for student profiles). Directory filters on major, mentorship availability, graduation year, company (`ilike`, sanitized via `sanitizeIlikeTerm`), and skill overlap (`.overlaps()`).
 
 **Work experience:** alumni reuse the student `experiences` table/API/`ExperienceSection.tsx` component as-is (keyed by `auth.uid()`, same FK to `profiles`) — no alumni-specific schema needed.
 
-**Suggested Mentors:** `mentorshipApi.getSuggestedMentors(studentId)` scores available, unconnected alumni by major match + skills/interests overlap (capped, tie-broken by recency); shown as a horizontal row atop the Directory tab, only while no filters are active.
+**Suggested Mentors:** `mentorshipApi.getSuggestedMentors(studentId)` scores available, unconnected alumni by major match + skills/interests overlap (capped, tie-broken by recency); shown as a smooth scrollable carousel (`SuggestedMentorCard.tsx`) atop the Directory tab when no filters are active.
 
 **Contact mode (`alumni_profiles.contact_mode`: `website`/`social`/`both`):** alumni choose how students reach them. `website` (default) shows the existing in-app Request Mentorship → accept → `MentorChat` flow; `social` hides that flow and instead shows a "Connect via" row of clickable icons built from `social_links jsonb` (whatsapp/facebook/telegram/x/instagram) + the existing `linkedin_url`; `both` shows everything.
 
