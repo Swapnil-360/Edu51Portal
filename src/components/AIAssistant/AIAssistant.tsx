@@ -1,8 +1,15 @@
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Send, Sparkles, BrainCircuit } from "lucide-react";
-import { AstronautIcon } from "../ui/animated-cosmic-icons";
+import {
+  Send,
+  Sparkles,
+  X,
+  RotateCcw,
+  Mic,
+  ChevronDown,
+} from "lucide-react";
+import { GlassAiPillButton, LiquidGlassOrb } from "../ui/glass-ai-lens";
 import { sendChatMessage, getRemainingMessagesToday, type ChatTurn } from "../../lib/api/aiChatApi";
 
 function getPortalRoot(): HTMLElement {
@@ -33,35 +40,98 @@ interface Message {
   text: string;
 }
 
-function cls(...a: (string | false | null | undefined)[]) {
-  return a.filter(Boolean).join(" ");
-}
-
-const STORAGE_PREFIX = "edu51five_ai_chat_";
+const STORAGE_PREFIX = "edu51five_eva51_chat_";
+const LEGACY_STORAGE_PREFIX = "edu51five_ai_chat_";
 const MAX_HISTORY_TURNS = 10;
+const AGENT_CODE = "EVA51";
+const AGENT_NAME = "EVA";
+const AGENT_TITLE = "Edu Virtual Assistant 51";
+const VOICE_PROMPT = "Hey EVA";
 
 const WELCOME: Message = {
   role: "model",
-  text: "Hey! Ask me anything about the platform or your coursework — I'll keep it brief.",
+  text: `Hello! I'm ${AGENT_NAME} (${AGENT_CODE}), your ${AGENT_TITLE}. Ask me anything about BUBT faculty contacts, course question archives, intake routines, or the Alumni Hub — or say "${VOICE_PROMPT}"!`,
 };
 
-const RED = "#ef4444";
-const RED_DARK = "#dc2626";
+function getTodayString(): string {
+  return new Date().toISOString().slice(0, 10);
+}
 
+function getDailyStorageKey(uid: string): string {
+  return `${STORAGE_PREFIX}${uid}_${getTodayString()}`;
+}
+
+/**
+ * Lightweight inline markdown renderer for model messages
+ */
+function FormattedMessage({ text, dk }: { text: string; dk: boolean }) {
+  const lines = text.split("\n");
+
+  const renderInline = (str: string) => {
+    const parts = str.split(/(\*\*[^*]+\*\*)/g);
+    return parts.map((part, i) => {
+      if (part.startsWith("**") && part.endsWith("**")) {
+        return (
+          <strong key={i} className={dk ? "text-white font-semibold" : "text-slate-900 font-semibold"}>
+            {part.slice(2, -2)}
+          </strong>
+        );
+      }
+      return part;
+    });
+  };
+
+  return (
+    <div className="space-y-1.5 leading-relaxed">
+      {lines.map((line, idx) => {
+        const trimmed = line.trim();
+        if (!trimmed) return <div key={idx} className="h-1" />;
+
+        // Bullet item
+        if (trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
+          const content = trimmed.slice(2);
+          return (
+            <div key={idx} className="flex items-start gap-2 pl-0.5 my-0.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-red-400 mt-2 flex-shrink-0" />
+              <span className="flex-1">{renderInline(content)}</span>
+            </div>
+          );
+        }
+
+        return <p key={idx}>{renderInline(line)}</p>;
+      })}
+    </div>
+  );
+}
+
+/**
+ * Pulsing Red Dots for EVA51 Bubble Indicator
+ */
 const TypingIndicator = ({ dk }: { dk: boolean }) => (
-  <div className={cls(
-    "flex items-center gap-1.5 px-4 py-3 rounded-2xl rounded-bl-sm w-fit border",
-    dk ? "bg-[#16181c] border-[#2f3336]" : "bg-slate-100 border-slate-200"
-  )}>
-    {[0, 1, 2].map((d) => (
+  <div
+    className={`flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl rounded-tl-sm w-fit border backdrop-blur-md shadow-sm ${
+      dk
+        ? "bg-white/[0.06] border-white/[0.1] text-slate-300"
+        : "bg-white/80 border-slate-200/80 text-slate-600"
+    }`}
+  >
+    <div className="flex items-center gap-1.5 px-1 py-0.5">
       <motion.span
-        key={d}
-        className="w-1.5 h-1.5 rounded-full"
-        style={{ backgroundColor: RED }}
-        animate={{ scale: [1, 1.4, 1], opacity: [0.4, 1, 0.4] }}
-        transition={{ duration: 0.85, repeat: Infinity, delay: d * 0.17 }}
+        className="w-1.5 h-1.5 rounded-full bg-[#ff4d4d]"
+        animate={{ scale: [1, 1.45, 1], opacity: [0.4, 1, 0.4] }}
+        transition={{ duration: 0.85, repeat: Infinity, delay: 0 }}
       />
-    ))}
+      <motion.span
+        className="w-1.5 h-1.5 rounded-full bg-[#ffffff]"
+        animate={{ scale: [1, 1.45, 1], opacity: [0.4, 1, 0.4] }}
+        transition={{ duration: 0.85, repeat: Infinity, delay: 0.17 }}
+      />
+      <motion.span
+        className="w-1.5 h-1.5 rounded-full bg-[#ef4444]"
+        animate={{ scale: [1, 1.45, 1], opacity: [0.4, 1, 0.4] }}
+        transition={{ duration: 0.85, repeat: Infinity, delay: 0.34 }}
+      />
+    </div>
   </div>
 );
 
@@ -72,27 +142,93 @@ export function AIAssistant({ isDarkMode: dk, userId }: Props) {
   const [loading, setLoading] = useState(false);
   const [remaining, setRemaining] = useState<number | null>(null);
   const [dailyLimit, setDailyLimit] = useState(20);
+  const [showScrollBottom, setShowScrollBottom] = useState(false);
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth < 640 : false
+  );
+
   const listRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const storageKey = `${STORAGE_PREFIX}${userId}`;
-
+  // Monitor window resize for mobile responsiveness
   useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 640);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // Daily Reset & Storage Logic
+  useEffect(() => {
+    if (!userId) return;
+    const today = getTodayString();
+    const currentKey = getDailyStorageKey(userId);
+
+    // 1. Purge older days' chat storage to enforce daily reset
     try {
-      const saved = sessionStorage.getItem(storageKey);
+      for (let i = sessionStorage.length - 1; i >= 0; i--) {
+        const k = sessionStorage.key(i);
+        if (
+          k &&
+          (k.startsWith(STORAGE_PREFIX) || k.startsWith(LEGACY_STORAGE_PREFIX)) &&
+          !k.endsWith(today)
+        ) {
+          sessionStorage.removeItem(k);
+        }
+      }
+      for (let i = localStorage.length - 1; i >= 0; i--) {
+        const k = localStorage.key(i);
+        if (
+          k &&
+          (k.startsWith(STORAGE_PREFIX) || k.startsWith(LEGACY_STORAGE_PREFIX)) &&
+          !k.endsWith(today)
+        ) {
+          localStorage.removeItem(k);
+        }
+      }
+    } catch {
+      /* ignore storage access errors */
+    }
+
+    // 2. Load today's chat if existing
+    try {
+      const saved = sessionStorage.getItem(currentKey);
       if (saved) {
         const parsed: Message[] = JSON.parse(saved);
-        if (parsed[0]?.role === "model") parsed[0] = WELCOME;
-        setMessages(parsed);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          // Always ensure the first message uses current EVA51 branding
+          if (parsed[0]?.role === "model") parsed[0] = WELCOME;
+          setMessages(parsed);
+          return;
+        }
       }
-    } catch { /* ignore */ }
-  }, [storageKey]);
+    } catch {
+      /* ignore */
+    }
 
+    // Default to clean fresh state for today
+    setMessages([WELCOME]);
+  }, [userId]);
+
+  // Persist current day's messages
   useEffect(() => {
+    if (!userId) return;
+    const currentKey = getDailyStorageKey(userId);
     try {
-      sessionStorage.setItem(storageKey, JSON.stringify(messages));
-    } catch { /* storage full */ }
-  }, [messages, storageKey]);
+      sessionStorage.setItem(currentKey, JSON.stringify(messages));
+    } catch {
+      /* storage full */
+    }
+  }, [messages, userId]);
+
+  // Track scroll position to show 'jump to bottom' button
+  const handleScroll = () => {
+    const el = listRef.current;
+    if (!el) return;
+    const distanceToBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    setShowScrollBottom(distanceToBottom > 120);
+  };
 
   const scrollToBottom = (behavior: ScrollBehavior = "smooth") => {
     const el = listRef.current;
@@ -100,7 +236,9 @@ export function AIAssistant({ isDarkMode: dk, userId }: Props) {
   };
 
   useEffect(() => {
-    if (open) setTimeout(() => scrollToBottom("instant"), 50);
+    if (open) {
+      setTimeout(() => scrollToBottom("instant"), 50);
+    }
   }, [open]);
 
   useEffect(() => {
@@ -108,8 +246,18 @@ export function AIAssistant({ isDarkMode: dk, userId }: Props) {
     getRemainingMessagesToday(userId).then(setRemaining).catch(() => {});
   }, [userId]);
 
-  const handleSend = async () => {
-    const text = input.trim();
+  const handleResetChat = () => {
+    setMessages([WELCOME]);
+    if (!userId) return;
+    try {
+      sessionStorage.removeItem(getDailyStorageKey(userId));
+    } catch {
+      /* ignore */
+    }
+  };
+
+  const handleSend = async (overrideText?: string) => {
+    const text = (overrideText ?? input).trim();
     if (!text || loading) return;
 
     const history: ChatTurn[] = messages
@@ -121,11 +269,19 @@ export function AIAssistant({ isDarkMode: dk, userId }: Props) {
     setInput("");
     if (textareaRef.current) textareaRef.current.style.height = "auto";
     setLoading(true);
-    setTimeout(() => scrollToBottom(), 30);
+    setTimeout(() => scrollToBottom("smooth"), 30);
 
     try {
       const res = await sendChatMessage(text, history);
-      setMessages((prev) => [...prev, { role: "model", text: res.reply }]);
+
+      // Sanitize output to guarantee EVA51 identity even if edge function was cached
+      const sanitizedReply = res.reply
+        .replace(/\bEdu51\s*Assistant\b/gi, "EVA (EVA51)")
+        .replace(/\bedu51\s*assistant\b/gi, "EVA")
+        .replace(/\bEdu51Portal\s*Assistant\b/gi, "EVA51")
+        .replace(/\bEdu51Portal\b/gi, "Edu51");
+
+      setMessages((prev) => [...prev, { role: "model", text: sanitizedReply }]);
       setRemaining(res.remaining);
       setDailyLimit(res.limit);
     } catch (err) {
@@ -142,7 +298,7 @@ export function AIAssistant({ isDarkMode: dk, userId }: Props) {
       ]);
     } finally {
       setLoading(false);
-      setTimeout(() => scrollToBottom(), 50);
+      setTimeout(() => scrollToBottom("smooth"), 50);
     }
   };
 
@@ -153,329 +309,352 @@ export function AIAssistant({ isDarkMode: dk, userId }: Props) {
     }
   };
 
-  const BTN_SIZE = 52;
-  const BTN_RIGHT = 24;
-  const BTN_BOTTOM = 24;
-  const PANEL_RIGHT = 24;
-  const PANEL_BOTTOM = BTN_BOTTOM + BTN_SIZE + 14;
+  // Responsive Dimensions
+  const BTN_SIZE = 44;
+  const BTN_RIGHT = isMobile ? 14 : 24;
+  const BTN_BOTTOM = isMobile ? 14 : 24;
+
+  const modalStyle: React.CSSProperties = isMobile
+    ? {
+        position: "fixed",
+        bottom: BTN_BOTTOM + BTN_SIZE + 10,
+        left: 10,
+        right: 10,
+        width: "calc(100vw - 20px)",
+        maxWidth: "calc(100vw - 20px)",
+        height: "min(530px, calc(100dvh - 86px))",
+        maxHeight: "calc(100dvh - 86px)",
+        pointerEvents: "auto",
+        zIndex: 9999,
+      }
+    : {
+        position: "fixed",
+        bottom: BTN_BOTTOM + BTN_SIZE + 12,
+        right: BTN_RIGHT,
+        width: 384,
+        maxWidth: "calc(100vw - 48px)",
+        height: 540,
+        maxHeight: "calc(100vh - 120px)",
+        pointerEvents: "auto",
+        zIndex: 9999,
+      };
 
   return createPortal(
     <>
-      {/* ── Chat Panel ── */}
+      {/* ── Frosted Liquid Glass Chat Modal ── */}
       <AnimatePresence>
         {open && (
           <motion.div
             initial={{ opacity: 0, scale: 0.94, y: 16 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.94, y: 12 }}
-            transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
-            style={{
-              position: "absolute",
-              bottom: PANEL_BOTTOM,
-              right: PANEL_RIGHT,
-              width: 340,
-              maxWidth: "calc(100vw - 48px)",
-              height: 480,
-              maxHeight: "calc(100vh - 140px)",
-              pointerEvents: "auto",
-            }}
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+            style={modalStyle}
           >
-            {/* Subtle glow — barely visible, just enough depth */}
-            <div style={{
-              position: "absolute",
-              inset: -10,
-              borderRadius: 26,
-              background: `radial-gradient(ellipse at bottom right, ${RED}22, transparent 70%)`,
-              pointerEvents: "none",
-            }} />
-
-            {/* Panel */}
+            {/* Ambient Pulsing Red Optical Aura Behind Modal */}
             <div
+              className="absolute -inset-3 rounded-[32px] pointer-events-none opacity-45"
               style={{
-                position: "relative",
-                width: "100%",
-                height: "100%",
-                borderRadius: 20,
-                display: "flex",
-                flexDirection: "column",
-                overflow: "hidden",
-                backgroundColor: dk ? "#17181c" : "#ffffff",
-                border: `1px solid ${dk ? "#2f3336" : "#e2e8f0"}`,
+                background: dk
+                  ? "radial-gradient(circle at 85% 90%, rgba(239, 68, 68, 0.32) 0%, rgba(220, 38, 38, 0.16) 45%, transparent 75%)"
+                  : "radial-gradient(circle at 85% 90%, rgba(239, 68, 68, 0.2) 0%, rgba(220, 38, 38, 0.1) 45%, transparent 75%)",
+                filter: "blur(22px)",
+              }}
+            />
+
+            {/* Top Razor-Sharp Optical Red & Chrome Crown Line */}
+            <div
+              className="absolute top-0 inset-x-8 h-[1px] pointer-events-none z-20"
+              style={{
+                background:
+                  "linear-gradient(90deg, transparent, rgba(239, 68, 68, 0.85), rgba(255, 255, 255, 0.95), rgba(220, 38, 38, 0.85), transparent)",
+                boxShadow: "0 0 10px rgba(239, 68, 68, 0.6)",
+              }}
+            />
+
+            {/* Liquid Frosted Glass Body */}
+            <div
+              className="relative w-full h-full rounded-[24px] sm:rounded-[24px] flex flex-col overflow-hidden select-text"
+              style={{
+                background: dk
+                  ? "linear-gradient(165deg, rgba(22, 25, 33, 0.94) 0%, rgba(13, 15, 20, 0.97) 50%, rgba(8, 9, 13, 0.99) 100%)"
+                  : "linear-gradient(165deg, rgba(255, 255, 255, 0.96) 0%, rgba(246, 248, 252, 0.92) 50%, rgba(238, 242, 248, 0.97) 100%)",
+                backdropFilter: "blur(32px) saturate(210%)",
+                WebkitBackdropFilter: "blur(32px) saturate(210%)",
+                border: dk
+                  ? "1px solid rgba(255, 255, 255, 0.12)"
+                  : "1px solid rgba(0, 0, 0, 0.08)",
                 boxShadow: dk
-                  ? "0 24px 48px rgba(0,0,0,0.5), 0 0 0 1px #2f3336"
-                  : "0 24px 48px rgba(0,0,0,0.12), 0 0 0 1px #e2e8f0",
+                  ? "0 24px 64px -12px rgba(0, 0, 0, 0.75), 0 8px 24px -4px rgba(0, 0, 0, 0.4), inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.28), inset 0 -1px 1px 0 rgba(0, 0, 0, 0.6)"
+                  : "0 24px 60px -12px rgba(15, 23, 42, 0.16), 0 8px 20px -4px rgba(15, 23, 42, 0.08), inset 0 1px 1px 0 rgba(255, 255, 255, 0.95), inset 0 -1px 1px 0 rgba(0, 0, 0, 0.05)",
               }}
             >
-              {/* Header */}
-              <div style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: "12px 16px",
-                borderBottom: `1px solid ${dk ? "#2f3336" : "#f1f5f9"}`,
-                backgroundColor: dk ? "#16181c" : "#f8fafc",
-                flexShrink: 0,
-              }}>
+              {/* ── Modal Header ── */}
+              <div
+                className="flex items-center justify-between px-3.5 sm:px-4 py-2.5 sm:py-3 border-b flex-shrink-0 select-none"
+                style={{
+                  borderColor: dk ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.06)",
+                  background: dk ? "rgba(255, 255, 255, 0.02)" : "rgba(255, 255, 255, 0.4)",
+                }}
+              >
+                {/* Agent Identity */}
                 <div className="flex items-center gap-2.5">
-                  <div className="relative">
-                    <div
-                      className="w-8 h-8 rounded-xl flex items-center justify-center"
-                      style={{ background: `linear-gradient(135deg,${RED},${RED_DARK})` }}
-                    >
-                      <BrainCircuit className="w-4 h-4 text-white" />
-                    </div>
+                  <div className="relative flex-shrink-0">
+                    <LiquidGlassOrb size={isMobile ? 32 : 34} colorScheme="crimson" />
                     <span
-                      className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400 rounded-full border-2"
-                      style={{ borderColor: dk ? "#16181c" : "#f8fafc" }}
+                      className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2"
+                      style={{ borderColor: dk ? "#12141a" : "#ffffff" }}
+                      title={`${AGENT_CODE} is online`}
                     />
                   </div>
                   <div>
-                    <p style={{ fontSize: 13, fontWeight: 600, color: dk ? "#e7e9ea" : "#0f172a", lineHeight: 1.2 }}>
-                      Edu51Portal Assistant
-                    </p>
-                    <p style={{ fontSize: 10.5, color: dk ? "#71767b" : "#94a3b8" }}>
-                      Powered by Gemini
+                    <div className="flex items-center gap-1.5">
+                      <span className={`text-[13.5px] font-bold tracking-tight ${dk ? "text-white" : "text-slate-900"}`}>
+                        {AGENT_NAME}
+                      </span>
+                      <span
+                        className={`text-[9.5px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full border ${
+                          dk
+                            ? "bg-red-500/15 text-red-400 border-red-500/25"
+                            : "bg-red-50 text-red-600 border-red-200"
+                        }`}
+                      >
+                        {AGENT_CODE}
+                      </span>
+                    </div>
+                    <p className={`text-[10px] sm:text-[10.5px] tracking-normal ${dk ? "text-slate-400" : "text-slate-500"}`}>
+                      {AGENT_TITLE}
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+
+                {/* Controls (Quota, Reset, Close) */}
+                <div className="flex items-center gap-1 sm:gap-1.5">
                   {remaining !== null && (
                     <span
                       title={`${remaining} of ${dailyLimit} daily messages left`}
-                      style={{
-                        fontSize: 10.5,
-                        fontWeight: 600,
-                        padding: "3px 7px",
-                        borderRadius: 999,
-                        color: remaining <= 5 ? "#ef4444" : dk ? "#71767b" : "#64748b",
-                        backgroundColor: remaining <= 5 ? (dk ? "#ef444422" : "#fef2f2") : dk ? "#2f333644" : "#f1f5f9",
-                      }}
+                      className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border transition-colors ${
+                        remaining <= 5
+                          ? dk
+                            ? "text-red-400 bg-red-500/15 border-red-500/30"
+                            : "text-red-600 bg-red-50 border-red-200"
+                          : dk
+                          ? "text-slate-400 bg-white/5 border-white/10"
+                          : "text-slate-600 bg-slate-100 border-slate-200"
+                      }`}
                     >
                       {remaining}/{dailyLimit} left
                     </span>
                   )}
-                <button
-                  onClick={() => setOpen(false)}
-                  className="flex items-center justify-center w-7 h-7 rounded-lg transition-colors"
-                  style={{ color: dk ? "#71767b" : "#94a3b8" }}
-                  onMouseEnter={e => {
-                    (e.currentTarget as HTMLButtonElement).style.backgroundColor = dk ? "#2f3336" : "#f1f5f9";
-                    (e.currentTarget as HTMLButtonElement).style.color = dk ? "#e7e9ea" : "#334155";
-                  }}
-                  onMouseLeave={e => {
-                    (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent";
-                    (e.currentTarget as HTMLButtonElement).style.color = dk ? "#71767b" : "#94a3b8";
-                  }}
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
+
+                  {messages.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={handleResetChat}
+                      title="New conversation"
+                      aria-label="Reset conversation"
+                      className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors cursor-pointer ${
+                        dk
+                          ? "text-slate-400 hover:text-white hover:bg-white/10"
+                          : "text-slate-500 hover:text-slate-900 hover:bg-slate-100"
+                      }`}
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => setOpen(false)}
+                    title="Close"
+                    aria-label="Close assistant"
+                    className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors cursor-pointer ${
+                      dk
+                        ? "text-slate-400 hover:text-white hover:bg-white/10"
+                        : "text-slate-500 hover:text-slate-900 hover:bg-slate-100"
+                    }`}
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
                 </div>
               </div>
 
-              {/* Messages */}
-              <div ref={listRef} className="flex-1 overflow-y-auto min-h-0" style={{ padding: "14px 14px", display: "flex", flexDirection: "column", gap: 10 }}>
-                {messages.length === 1 && messages[0] === WELCOME && (
-                  <div className="flex flex-col items-center justify-center py-6 text-center">
-                    <div
-                      className="w-12 h-12 rounded-2xl flex items-center justify-center mb-3"
-                      style={{ background: `linear-gradient(135deg,${BLUE},${BLUE_DARK})` }}
-                    >
-                      <Sparkles className="w-6 h-6 text-white" />
-                    </div>
-                    <p style={{ fontSize: 12, fontWeight: 500, color: dk ? "#e7e9ea" : "#334155", marginBottom: 4 }}>
-                      Ask me anything
-                    </p>
-                    <p style={{ fontSize: 11, color: dk ? "#71767b" : "#94a3b8", maxWidth: 180, lineHeight: 1.5 }}>
-                      Platform navigation or coursework — I've got you.
-                    </p>
-                    <span
-                      style={{
-                        marginTop: 10,
-                        fontSize: 10,
-                        fontWeight: 600,
-                        padding: "3px 8px",
-                        borderRadius: 999,
-                        color: dk ? "#71767b" : "#64748b",
-                        backgroundColor: dk ? "#2f333644" : "#f1f5f9",
-                      }}
-                    >
-                      {remaining !== null ? `${remaining}/${dailyLimit} messages left today` : `${dailyLimit} messages/day limit`}
-                    </span>
-                  </div>
-                )}
-
+              {/* ── Scrollable Chat Messages Area (Fully scrollable to view all past chats) ── */}
+              <div
+                ref={listRef}
+                onScroll={handleScroll}
+                className="flex-1 overflow-y-auto min-h-0 px-3.5 py-3.5 space-y-3.5 overscroll-contain relative"
+                style={{
+                  WebkitOverflowScrolling: "touch",
+                  scrollbarWidth: "thin",
+                  scrollbarColor: dk ? "rgba(255, 255, 255, 0.22) transparent" : "rgba(0, 0, 0, 0.22) transparent",
+                }}
+              >
+                {/* Chat Turns in natural chronological order */}
                 {messages.map((m, i) => (
                   <motion.div
                     key={i}
-                    initial={{ opacity: 0, y: 6 }}
+                    initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.16 }}
-                    style={{ display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start" }}
+                    transition={{ duration: 0.18 }}
+                    className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
                   >
-                    <div
-                      style={{
-                        maxWidth: "82%",
-                        padding: "9px 13px",
-                        borderRadius: m.role === "user" ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
-                        fontSize: 14,
-                        lineHeight: 1.55,
-                        whiteSpace: "pre-wrap",
-                        wordBreak: "break-word",
-                        ...(m.role === "user"
-                          ? { background: `linear-gradient(135deg,${BLUE},${BLUE_DARK})`, color: "#ffffff" }
-                          : dk
-                          ? { background: "#16181c", color: "#e7e9ea", border: "1px solid #2f3336" }
-                          : { background: "#f1f5f9", color: "#1e293b", border: "1px solid #e2e8f0" }),
-                      }}
-                    >
-                      {m.text}
-                    </div>
+                    {m.role === "user" ? (
+                      <div
+                        className="max-w-[85%] px-3.5 py-2.5 rounded-[18px] rounded-br-[4px] text-[13px] leading-relaxed font-normal text-white shadow-sm"
+                        style={{
+                          background: "linear-gradient(135deg, #ff4d4d 0%, #ef4444 60%, #dc2626 100%)",
+                          boxShadow: "0 4px 14px rgba(239, 68, 68, 0.28)",
+                        }}
+                      >
+                        {m.text}
+                      </div>
+                    ) : (
+                      <div className="flex items-start gap-2 max-w-[92%] sm:max-w-[90%]">
+                        <div className="mt-1 flex-shrink-0">
+                          <LiquidGlassOrb size={22} colorScheme="crimson" />
+                        </div>
+                        <div
+                          className={`flex-1 px-3.5 py-2.5 rounded-[18px] rounded-tl-[4px] text-[12.5px] leading-relaxed border ${
+                            dk
+                              ? "bg-white/[0.05] border-white/[0.09] text-slate-200 shadow-[0_2px_10px_rgba(0,0,0,0.3)]"
+                              : "bg-white/90 border-slate-200/90 text-slate-800 shadow-[0_2px_8px_rgba(0,0,0,0.04)]"
+                          }`}
+                        >
+                          <FormattedMessage text={m.text} dk={dk} />
+                        </div>
+                      </div>
+                    )}
                   </motion.div>
                 ))}
 
                 {loading && (
-                  <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}>
+                  <motion.div
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex items-start gap-2"
+                  >
+                    <div className="mt-1 flex-shrink-0">
+                      <LiquidGlassOrb size={22} colorScheme="crimson" />
+                    </div>
                     <TypingIndicator dk={dk} />
                   </motion.div>
                 )}
               </div>
 
-              {/* Input */}
-              <div style={{
-                display: "flex",
-                alignItems: "flex-end",
-                gap: 8,
-                padding: "10px 12px",
-                borderTop: `1px solid ${dk ? "#2f3336" : "#f1f5f9"}`,
-                backgroundColor: dk ? "#17181c" : "#ffffff",
-                flexShrink: 0,
-              }}>
-                <textarea
-                  ref={textareaRef}
-                  value={input}
-                  onChange={(e) => {
-                    setInput(e.target.value);
-                    e.target.style.height = "auto";
-                    e.target.style.height = `${Math.min(e.target.scrollHeight, 96)}px`;
-                  }}
-                  onKeyDown={handleKeyDown}
-                  placeholder="Ask a question…"
-                  rows={1}
-                  className="flex-1 resize-none rounded-xl outline-none transition-colors"
-                  style={{
-                    maxHeight: 96,
-                    padding: "9px 13px",
-                    fontSize: 12.5,
-                    backgroundColor: dk ? "#16181c" : "#f8fafc",
-                    border: `1px solid ${dk ? "#2f3336" : "#e2e8f0"}`,
-                    color: dk ? "#e7e9ea" : "#0f172a",
-                  }}
-                  onFocus={e => { e.target.style.borderColor = RED; }}
-                  onBlur={e => { e.target.style.borderColor = dk ? "#2f3336" : "#e2e8f0"; }}
-                />
-                <button
-                  onClick={handleSend}
-                  disabled={!input.trim() || loading}
-                  className="flex-shrink-0 flex items-center justify-center w-9 h-9 rounded-xl text-white transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed shadow-sm"
-                  style={{ background: `linear-gradient(135deg,${RED},${RED_DARK})` }}
+              {/* Floating 'Scroll to Bottom' helper if scrolled up */}
+              <AnimatePresence>
+                {showScrollBottom && (
+                  <motion.button
+                    initial={{ opacity: 0, y: 8, scale: 0.9 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 6, scale: 0.9 }}
+                    type="button"
+                    onClick={() => scrollToBottom("smooth")}
+                    className={`absolute bottom-16 right-4 z-30 flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium border shadow-lg cursor-pointer ${
+                      dk
+                        ? "bg-[#181b22]/90 border-white/15 text-slate-200 hover:text-white"
+                        : "bg-white/95 border-slate-200 text-slate-700 hover:text-slate-900"
+                    }`}
+                  >
+                    <span>Latest</span>
+                    <ChevronDown className="w-3.5 h-3.5" />
+                  </motion.button>
+                )}
+              </AnimatePresence>
+
+              {/* ── Frosted Input Dock ── */}
+              <div
+                className="p-2.5 sm:p-3 border-t flex-shrink-0"
+                style={{
+                  borderColor: dk ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.06)",
+                  background: dk ? "rgba(255, 255, 255, 0.015)" : "rgba(255, 255, 255, 0.5)",
+                }}
+              >
+                <div
+                  className={`relative flex items-end gap-2 p-1.5 pl-3 rounded-2xl border transition-all duration-200 ${
+                    dk
+                      ? "bg-black/35 border-white/10 focus-within:border-red-500/50 focus-within:shadow-[0_0_0_1px_rgba(239,68,68,0.4),0_0_16px_rgba(239,68,68,0.15)]"
+                      : "bg-white/90 border-slate-200 focus-within:border-red-400 focus-within:shadow-[0_0_0_1px_rgba(239,68,68,0.3),0_0_12px_rgba(239,68,68,0.1)]"
+                  }`}
                 >
-                  <Send className="w-3.5 h-3.5" />
-                </button>
+                  <textarea
+                    ref={textareaRef}
+                    value={input}
+                    onChange={(e) => {
+                      setInput(e.target.value);
+                      e.target.style.height = "auto";
+                      e.target.style.height = `${Math.min(e.target.scrollHeight, 84)}px`;
+                    }}
+                    onKeyDown={handleKeyDown}
+                    placeholder={`Ask ${AGENT_NAME} anything or say "${VOICE_PROMPT}"…`}
+                    rows={1}
+                    className={`flex-1 resize-none bg-transparent border-0 outline-none ring-0 shadow-none focus:outline-none focus:ring-0 focus:border-0 focus:shadow-none focus-visible:outline-none focus-visible:ring-0 focus-visible:shadow-none text-[13px] sm:text-[12.5px] leading-relaxed py-1 max-h-20 ${
+                      dk ? "text-white placeholder-slate-500" : "text-slate-900 placeholder-slate-400"
+                    }`}
+                    style={{
+                      WebkitTextSizeAdjust: "100%",
+                      outline: "none",
+                      boxShadow: "none",
+                      border: "none",
+                      WebkitAppearance: "none",
+                      MozAppearance: "none",
+                    }}
+                    onFocus={(e) => {
+                      e.currentTarget.style.outline = "none";
+                      e.currentTarget.style.boxShadow = "none";
+                    }}
+                  />
+                  <motion.button
+                    type="button"
+                    onClick={() => handleSend()}
+                    disabled={!input.trim() || loading}
+                    whileHover={{ scale: 1.06 }}
+                    whileTap={{ scale: 0.94 }}
+                    aria-label="Send message"
+                    className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-xl text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:transform-none shadow-sm cursor-pointer"
+                    style={{
+                      background: "linear-gradient(135deg, #ff4d4d 0%, #ef4444 55%, #dc2626 100%)",
+                      boxShadow: "0 2px 8px rgba(239, 68, 68, 0.35)",
+                    }}
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                  </motion.button>
+                </div>
+                <div className="flex items-center justify-center gap-1.5 mt-1.5 select-none">
+                  <Sparkles className="w-2.5 h-2.5 text-red-400 opacity-60" />
+                  <p className="text-[10px] text-center text-slate-500/70">
+                    {AGENT_CODE} • {AGENT_TITLE} • Resets daily
+                  </p>
+                </div>
               </div>
-
-
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* ── Toggle Button ── */}
-      <motion.div
-        whileHover={{ scale: 1.06 }}
-        whileTap={{ scale: 0.94 }}
+      {/* ── Toggle Button: Ask EVA (Mobile Responsive Position) ── */}
+      <div
         style={{
-          position: "absolute",
+          position: "fixed",
           bottom: BTN_BOTTOM,
           right: BTN_RIGHT,
-          width: BTN_SIZE,
-          height: BTN_SIZE,
           pointerEvents: "auto",
+          zIndex: 9999,
         }}
-        className="group z-50 select-none"
+        className="select-none"
       >
-        {/* Soft Ambient Red Breath Glow (subtle, modern, not overwhelming) */}
-        {!open && (
-          <motion.div
-            className="absolute -inset-1.5 rounded-full pointer-events-none"
-            style={{
-              background: "radial-gradient(circle, rgba(239,68,68,0.45) 0%, rgba(220,38,38,0.2) 50%, transparent 72%)",
-              filter: "blur(6px)",
-            }}
-            animate={{ opacity: [0.35, 0.75, 0.35], scale: [0.98, 1.05, 0.98] }}
-            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-          />
-        )}
-
-        {/* Clean Modern Tooltip on Hover */}
-        <div
-          className={`absolute right-full mr-3 top-1/2 -translate-y-1/2 hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold shadow-xl backdrop-blur-md whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-all duration-200 translate-x-1 group-hover:translate-x-0 ${
-            dk
-              ? "bg-[#16181c]/95 text-white border border-red-500/30 shadow-black/50"
-              : "bg-white/95 text-slate-800 border border-red-500/25 shadow-red-500/10"
-          }`}
-        >
-          <Sparkles className="w-3.5 h-3.5 text-red-500" />
-          <span>AI Assistant</span>
-        </div>
-
-        <button
+        <GlassAiPillButton
+          isOpen={open}
           onClick={() => setOpen((v) => !v)}
-          title="Edu51Portal AI Assistant"
-          className="relative w-full h-full rounded-full flex items-center justify-center overflow-hidden cursor-pointer shadow-lg transition-shadow"
-          style={{
-            background: "linear-gradient(135deg, #f87171 0%, #ef4444 50%, #dc2626 100%)",
-            border: "1px solid rgba(255, 255, 255, 0.35)",
-            boxShadow: dk
-              ? "0 4px 18px rgba(239,68,68,0.4), 0 2px 6px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.4)"
-              : "0 4px 18px rgba(239,68,68,0.35), 0 2px 6px rgba(0,0,0,0.1), inset 0 1px 1px rgba(255,255,255,0.5)",
-          }}
-        >
-          {/* Subtle Top Glass Reflection */}
-          <div
-            className="absolute inset-x-0 top-0 h-1/2 rounded-t-full pointer-events-none"
-            style={{
-              background: "linear-gradient(180deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0) 100%)",
-            }}
-          />
-
-          <AnimatePresence mode="wait" initial={false}>
-            {open ? (
-              <motion.span
-                key="x"
-                initial={{ rotate: -90, opacity: 0 }}
-                animate={{ rotate: 0, opacity: 1 }}
-                exit={{ rotate: 90, opacity: 0 }}
-                transition={{ duration: 0.15 }}
-                className="relative z-10"
-              >
-                <X className="w-5 h-5 text-white stroke-[2.2]" />
-              </motion.span>
-            ) : (
-              <motion.span
-                key="msg"
-                initial={{ rotate: 90, opacity: 0 }}
-                animate={{ rotate: 0, opacity: 1 }}
-                exit={{ rotate: -90, opacity: 0 }}
-                transition={{ duration: 0.15 }}
-                className="relative z-10 flex items-center justify-center drop-shadow-[0_1px_2px_rgba(0,0,0,0.25)]"
-              >
-                <AstronautIcon size={26} strokeColor="#ffffff" />
-              </motion.span>
-            )}
-          </AnimatePresence>
-        </button>
-      </motion.div>
+          isDarkMode={dk}
+          colorScheme="crimson"
+          label={`Ask ${AGENT_NAME}`}
+        />
+      </div>
     </>,
     getPortalRoot()
   );
 }
+
+export default AIAssistant;

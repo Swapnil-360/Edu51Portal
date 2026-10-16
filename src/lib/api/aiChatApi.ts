@@ -22,9 +22,19 @@ export async function getRemainingMessagesToday(userId: string): Promise<number>
   return Math.max(0, AI_CHAT_DAILY_LIMIT - used);
 }
 
-export async function sendChatMessage(message: string, history: ChatTurn[]): Promise<ChatReply> {
+export async function sendChatMessage(
+  message: string,
+  history: ChatTurn[],
+  systemPrompt?: string
+): Promise<ChatReply> {
+  const defaultPrompt = `You are EVA (full name: EVA51 / Edu Virtual Assistant 51) — an intelligent, friendly, and highly knowledgeable academic copilot for BUBT (Bangladesh University of Business and Technology) students across all departments (CSE, EEE, Textile, Civil, Data Science, BBA, English, Economics, Law/LL.B., Mathematics). Students may address you as "EVA", "EVA51", or say "Hey EVA". Never refer to yourself as "Edu51 Assistant" or "edu51 assistant"; always introduce yourself as EVA or EVA51 (Edu Virtual Assistant 51).`;
+
   const { data, error } = await supabase.functions.invoke("ai-chat", {
-    body: { message, history },
+    body: {
+      message,
+      history,
+      systemPrompt: systemPrompt || defaultPrompt,
+    },
   });
 
   if (error) {
