@@ -45,8 +45,8 @@ const WELCOME: Message = {
   text: "Hey! Ask me anything about the platform or your coursework — I'll keep it brief.",
 };
 
-const BLUE = "#1e9df1";
-const BLUE_DARK = "#1677cc";
+const RED = "#ef4444";
+const RED_DARK = "#dc2626";
 
 const TypingIndicator = ({ dk }: { dk: boolean }) => (
   <div className={cls(
@@ -57,7 +57,7 @@ const TypingIndicator = ({ dk }: { dk: boolean }) => (
       <motion.span
         key={d}
         className="w-1.5 h-1.5 rounded-full"
-        style={{ backgroundColor: BLUE }}
+        style={{ backgroundColor: RED }}
         animate={{ scale: [1, 1.4, 1], opacity: [0.4, 1, 0.4] }}
         transition={{ duration: 0.85, repeat: Infinity, delay: d * 0.17 }}
       />
@@ -153,7 +153,7 @@ export function AIAssistant({ isDarkMode: dk, userId }: Props) {
     }
   };
 
-  const BTN_SIZE = 58;
+  const BTN_SIZE = 52;
   const BTN_RIGHT = 24;
   const BTN_BOTTOM = 24;
   const PANEL_RIGHT = 24;
@@ -185,7 +185,7 @@ export function AIAssistant({ isDarkMode: dk, userId }: Props) {
               position: "absolute",
               inset: -10,
               borderRadius: 26,
-              background: `radial-gradient(ellipse at bottom right, ${BLUE}22, transparent 70%)`,
+              background: `radial-gradient(ellipse at bottom right, ${RED}22, transparent 70%)`,
               pointerEvents: "none",
             }} />
 
@@ -220,7 +220,7 @@ export function AIAssistant({ isDarkMode: dk, userId }: Props) {
                   <div className="relative">
                     <div
                       className="w-8 h-8 rounded-xl flex items-center justify-center"
-                      style={{ background: `linear-gradient(135deg,${BLUE},${BLUE_DARK})` }}
+                      style={{ background: `linear-gradient(135deg,${RED},${RED_DARK})` }}
                     >
                       <BrainCircuit className="w-4 h-4 text-white" />
                     </div>
@@ -370,14 +370,14 @@ export function AIAssistant({ isDarkMode: dk, userId }: Props) {
                     border: `1px solid ${dk ? "#2f3336" : "#e2e8f0"}`,
                     color: dk ? "#e7e9ea" : "#0f172a",
                   }}
-                  onFocus={e => { e.target.style.borderColor = BLUE; }}
+                  onFocus={e => { e.target.style.borderColor = RED; }}
                   onBlur={e => { e.target.style.borderColor = dk ? "#2f3336" : "#e2e8f0"; }}
                 />
                 <button
                   onClick={handleSend}
                   disabled={!input.trim() || loading}
-                  className="flex-shrink-0 flex items-center justify-center w-9 h-9 rounded-xl text-white transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed"
-                  style={{ background: `linear-gradient(135deg,${BLUE},${BLUE_DARK})` }}
+                  className="flex-shrink-0 flex items-center justify-center w-9 h-9 rounded-xl text-white transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed shadow-sm"
+                  style={{ background: `linear-gradient(135deg,${RED},${RED_DARK})` }}
                 >
                   <Send className="w-3.5 h-3.5" />
                 </button>
@@ -391,8 +391,8 @@ export function AIAssistant({ isDarkMode: dk, userId }: Props) {
 
       {/* ── Toggle Button ── */}
       <motion.div
-        animate={{ y: [0, -5, 0] }}
-        transition={{ duration: 3.6, repeat: Infinity, ease: "easeInOut" }}
+        whileHover={{ scale: 1.06 }}
+        whileTap={{ scale: 0.94 }}
         style={{
           position: "absolute",
           bottom: BTN_BOTTOM,
@@ -403,70 +403,48 @@ export function AIAssistant({ isDarkMode: dk, userId }: Props) {
         }}
         className="group z-50 select-none"
       >
-        {/* Pulsing Sonar / Radar Waves (active when closed to draw the eye) */}
+        {/* Soft Ambient Red Breath Glow (subtle, modern, not overwhelming) */}
         {!open && (
-          <>
-            <motion.div
-              className="absolute inset-0 rounded-full pointer-events-none"
-              style={{
-                border: "2px solid #1e9df1",
-              }}
-              animate={{ scale: [1, 1.45, 1.9], opacity: [0.75, 0.35, 0] }}
-              transition={{ duration: 2.6, repeat: Infinity, ease: "easeOut" }}
-            />
-            <motion.div
-              className="absolute inset-0 rounded-full pointer-events-none"
-              style={{
-                border: "2px solid #38bdf8",
-              }}
-              animate={{ scale: [1, 1.45, 1.9], opacity: [0.75, 0.35, 0] }}
-              transition={{ duration: 2.6, repeat: Infinity, ease: "easeOut", delay: 1.3 }}
-            />
-          </>
+          <motion.div
+            className="absolute -inset-1.5 rounded-full pointer-events-none"
+            style={{
+              background: "radial-gradient(circle, rgba(239,68,68,0.45) 0%, rgba(220,38,38,0.2) 50%, transparent 72%)",
+              filter: "blur(6px)",
+            }}
+            animate={{ opacity: [0.35, 0.75, 0.35], scale: [0.98, 1.05, 0.98] }}
+            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+          />
         )}
 
-        {/* Ambient Radial Aura Glow */}
-        <motion.div
-          className="absolute -inset-3 rounded-full pointer-events-none"
-          style={{
-            background: "radial-gradient(circle, rgba(30,157,241,0.65) 0%, rgba(56,189,248,0.3) 40%, transparent 72%)",
-            filter: "blur(10px)",
-          }}
-          animate={{ scale: [1, 1.18, 1], opacity: [0.7, 1, 0.7] }}
-          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-        />
-
-        {/* Floating Tooltip Pill on Hover */}
+        {/* Clean Modern Tooltip on Hover */}
         <div
-          className={`absolute right-full mr-3.5 top-1/2 -translate-y-1/2 hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold shadow-2xl backdrop-blur-md whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-all duration-200 translate-x-1 group-hover:translate-x-0 ${
+          className={`absolute right-full mr-3 top-1/2 -translate-y-1/2 hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold shadow-xl backdrop-blur-md whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-all duration-200 translate-x-1 group-hover:translate-x-0 ${
             dk
-              ? "bg-[#16181c]/95 text-white border border-[#1e9df1]/40 shadow-black/60"
-              : "bg-white/95 text-slate-800 border border-[#1e9df1]/30 shadow-[#1e9df1]/15"
+              ? "bg-[#16181c]/95 text-white border border-red-500/30 shadow-black/50"
+              : "bg-white/95 text-slate-800 border border-red-500/25 shadow-red-500/10"
           }`}
         >
-          <Sparkles className="w-3.5 h-3.5 text-[#1e9df1] animate-pulse" />
-          <span>Ask AI Assistant</span>
+          <Sparkles className="w-3.5 h-3.5 text-red-500" />
+          <span>AI Assistant</span>
         </div>
 
-        <motion.button
-          whileHover={{ scale: 1.08 }}
-          whileTap={{ scale: 0.92 }}
+        <button
           onClick={() => setOpen((v) => !v)}
           title="Edu51Portal AI Assistant"
-          className="relative w-full h-full rounded-full flex items-center justify-center overflow-hidden cursor-pointer"
+          className="relative w-full h-full rounded-full flex items-center justify-center overflow-hidden cursor-pointer shadow-lg transition-shadow"
           style={{
-            background: "linear-gradient(135deg, #38bdf8 0%, #1e9df1 45%, #0284c7 100%)",
-            border: "1.5px solid rgba(255, 255, 255, 0.5)",
+            background: "linear-gradient(135deg, #f87171 0%, #ef4444 50%, #dc2626 100%)",
+            border: "1px solid rgba(255, 255, 255, 0.35)",
             boxShadow: dk
-              ? "0 8px 25px rgba(30,157,241,0.55), 0 2px 8px rgba(0,0,0,0.6), inset 0 1px 2px rgba(255,255,255,0.6)"
-              : "0 8px 25px rgba(30,157,241,0.45), 0 2px 8px rgba(30,157,241,0.2), inset 0 1px 2px rgba(255,255,255,0.7)",
+              ? "0 4px 18px rgba(239,68,68,0.4), 0 2px 6px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.4)"
+              : "0 4px 18px rgba(239,68,68,0.35), 0 2px 6px rgba(0,0,0,0.1), inset 0 1px 1px rgba(255,255,255,0.5)",
           }}
         >
-          {/* Glass Specular Reflection Highlight */}
+          {/* Subtle Top Glass Reflection */}
           <div
             className="absolute inset-x-0 top-0 h-1/2 rounded-t-full pointer-events-none"
             style={{
-              background: "linear-gradient(180deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0) 100%)",
+              background: "linear-gradient(180deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0) 100%)",
             }}
           />
 
@@ -474,41 +452,28 @@ export function AIAssistant({ isDarkMode: dk, userId }: Props) {
             {open ? (
               <motion.span
                 key="x"
-                initial={{ rotate: -90, opacity: 0, scale: 0.8 }}
-                animate={{ rotate: 0, opacity: 1, scale: 1 }}
-                exit={{ rotate: 90, opacity: 0, scale: 0.8 }}
-                transition={{ duration: 0.16 }}
+                initial={{ rotate: -90, opacity: 0 }}
+                animate={{ rotate: 0, opacity: 1 }}
+                exit={{ rotate: 90, opacity: 0 }}
+                transition={{ duration: 0.15 }}
                 className="relative z-10"
               >
-                <X className="w-6 h-6 text-white stroke-[2.5]" />
+                <X className="w-5 h-5 text-white stroke-[2.2]" />
               </motion.span>
             ) : (
               <motion.span
                 key="msg"
-                initial={{ rotate: 90, opacity: 0, scale: 0.8 }}
-                animate={{ rotate: 0, opacity: 1, scale: 1 }}
-                exit={{ rotate: -90, opacity: 0, scale: 0.8 }}
-                transition={{ duration: 0.16 }}
-                className="relative z-10 flex items-center justify-center drop-shadow-[0_2px_4px_rgba(0,0,0,0.25)]"
+                initial={{ rotate: 90, opacity: 0 }}
+                animate={{ rotate: 0, opacity: 1 }}
+                exit={{ rotate: -90, opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                className="relative z-10 flex items-center justify-center drop-shadow-[0_1px_2px_rgba(0,0,0,0.25)]"
               >
-                <AstronautIcon size={30} strokeColor="#ffffff" />
+                <AstronautIcon size={26} strokeColor="#ffffff" />
               </motion.span>
             )}
           </AnimatePresence>
-        </motion.button>
-
-        {/* Animated AI Badge in Corner (active when closed) */}
-        {!open && (
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: [1, 1.08, 1] }}
-            transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute -top-1 -right-1 z-30 px-1.5 py-0.5 rounded-full bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 text-slate-950 font-black text-[9px] tracking-wider uppercase shadow-lg flex items-center gap-0.5 border border-white pointer-events-none"
-          >
-            <Sparkles className="w-2.5 h-2.5 text-slate-900 fill-slate-900 animate-pulse" />
-            <span>AI</span>
-          </motion.div>
-        )}
+        </button>
       </motion.div>
     </>,
     getPortalRoot()
