@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Send, Sparkles, BrainCircuit } from "lucide-react";
@@ -153,7 +153,7 @@ export function AIAssistant({ isDarkMode: dk, userId }: Props) {
     }
   };
 
-  const BTN_SIZE = 56;
+  const BTN_SIZE = 58;
   const BTN_RIGHT = 24;
   const BTN_BOTTOM = 24;
   const PANEL_RIGHT = 24;
@@ -391,8 +391,8 @@ export function AIAssistant({ isDarkMode: dk, userId }: Props) {
 
       {/* ── Toggle Button ── */}
       <motion.div
-        whileHover={{ scale: 1.07 }}
-        whileTap={{ scale: 0.92 }}
+        animate={{ y: [0, -5, 0] }}
+        transition={{ duration: 3.6, repeat: Infinity, ease: "easeInOut" }}
         style={{
           position: "absolute",
           bottom: BTN_BOTTOM,
@@ -401,47 +401,114 @@ export function AIAssistant({ isDarkMode: dk, userId }: Props) {
           height: BTN_SIZE,
           pointerEvents: "auto",
         }}
+        className="group z-50 select-none"
       >
-        {/* Glow */}
-        <div style={{
-          position: "absolute",
-          inset: -10,
-          borderRadius: "50%",
-          background: `radial-gradient(circle, ${BLUE}55, transparent 70%)`,
-          filter: "blur(10px)",
-          pointerEvents: "none",
-        }} />
+        {/* Pulsing Sonar / Radar Waves (active when closed to draw the eye) */}
+        {!open && (
+          <>
+            <motion.div
+              className="absolute inset-0 rounded-full pointer-events-none"
+              style={{
+                border: "2px solid #1e9df1",
+              }}
+              animate={{ scale: [1, 1.45, 1.9], opacity: [0.75, 0.35, 0] }}
+              transition={{ duration: 2.6, repeat: Infinity, ease: "easeOut" }}
+            />
+            <motion.div
+              className="absolute inset-0 rounded-full pointer-events-none"
+              style={{
+                border: "2px solid #38bdf8",
+              }}
+              animate={{ scale: [1, 1.45, 1.9], opacity: [0.75, 0.35, 0] }}
+              transition={{ duration: 2.6, repeat: Infinity, ease: "easeOut", delay: 1.3 }}
+            />
+          </>
+        )}
 
-        <button
-          onClick={() => setOpen((v) => !v)}
-          title="Edu51Portal Assistant"
-          className="relative w-full h-full rounded-full flex items-center justify-center shadow-lg transition-opacity hover:opacity-90"
+        {/* Ambient Radial Aura Glow */}
+        <motion.div
+          className="absolute -inset-3 rounded-full pointer-events-none"
           style={{
-            background: dk
-              ? `linear-gradient(145deg,#17181c,#16181c)`
-              : "#ffffff",
-            border: `2px solid ${dk ? "#2f3336" : "#1e9df1"}`,
-            boxShadow: `0 4px 20px rgba(30,157,241,0.25)`,
+            background: "radial-gradient(circle, rgba(30,157,241,0.65) 0%, rgba(56,189,248,0.3) 40%, transparent 72%)",
+            filter: "blur(10px)",
+          }}
+          animate={{ scale: [1, 1.18, 1], opacity: [0.7, 1, 0.7] }}
+          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+        />
+
+        {/* Floating Tooltip Pill on Hover */}
+        <div
+          className={`absolute right-full mr-3.5 top-1/2 -translate-y-1/2 hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold shadow-2xl backdrop-blur-md whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-all duration-200 translate-x-1 group-hover:translate-x-0 ${
+            dk
+              ? "bg-[#16181c]/95 text-white border border-[#1e9df1]/40 shadow-black/60"
+              : "bg-white/95 text-slate-800 border border-[#1e9df1]/30 shadow-[#1e9df1]/15"
+          }`}
+        >
+          <Sparkles className="w-3.5 h-3.5 text-[#1e9df1] animate-pulse" />
+          <span>Ask AI Assistant</span>
+        </div>
+
+        <motion.button
+          whileHover={{ scale: 1.08 }}
+          whileTap={{ scale: 0.92 }}
+          onClick={() => setOpen((v) => !v)}
+          title="Edu51Portal AI Assistant"
+          className="relative w-full h-full rounded-full flex items-center justify-center overflow-hidden cursor-pointer"
+          style={{
+            background: "linear-gradient(135deg, #38bdf8 0%, #1e9df1 45%, #0284c7 100%)",
+            border: "1.5px solid rgba(255, 255, 255, 0.5)",
+            boxShadow: dk
+              ? "0 8px 25px rgba(30,157,241,0.55), 0 2px 8px rgba(0,0,0,0.6), inset 0 1px 2px rgba(255,255,255,0.6)"
+              : "0 8px 25px rgba(30,157,241,0.45), 0 2px 8px rgba(30,157,241,0.2), inset 0 1px 2px rgba(255,255,255,0.7)",
           }}
         >
+          {/* Glass Specular Reflection Highlight */}
+          <div
+            className="absolute inset-x-0 top-0 h-1/2 rounded-t-full pointer-events-none"
+            style={{
+              background: "linear-gradient(180deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0) 100%)",
+            }}
+          />
+
           <AnimatePresence mode="wait" initial={false}>
             {open ? (
-              <motion.span key="x"
-                initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }}
-                exit={{ rotate: 90, opacity: 0 }} transition={{ duration: 0.16 }}
+              <motion.span
+                key="x"
+                initial={{ rotate: -90, opacity: 0, scale: 0.8 }}
+                animate={{ rotate: 0, opacity: 1, scale: 1 }}
+                exit={{ rotate: 90, opacity: 0, scale: 0.8 }}
+                transition={{ duration: 0.16 }}
+                className="relative z-10"
               >
-                <X className={cls("w-5 h-5", dk ? "text-[#e7e9ea]" : "text-slate-600")} />
+                <X className="w-6 h-6 text-white stroke-[2.5]" />
               </motion.span>
             ) : (
-              <motion.span key="msg"
-                initial={{ rotate: 90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }}
-                exit={{ rotate: -90, opacity: 0 }} transition={{ duration: 0.16 }}
+              <motion.span
+                key="msg"
+                initial={{ rotate: 90, opacity: 0, scale: 0.8 }}
+                animate={{ rotate: 0, opacity: 1, scale: 1 }}
+                exit={{ rotate: -90, opacity: 0, scale: 0.8 }}
+                transition={{ duration: 0.16 }}
+                className="relative z-10 flex items-center justify-center drop-shadow-[0_2px_4px_rgba(0,0,0,0.25)]"
               >
-                <AstronautIcon size={26} strokeColor={dk ? "#94A3B8" : "#334155"} />
+                <AstronautIcon size={30} strokeColor="#ffffff" />
               </motion.span>
             )}
           </AnimatePresence>
-        </button>
+        </motion.button>
+
+        {/* Animated AI Badge in Corner (active when closed) */}
+        {!open && (
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: [1, 1.08, 1] }}
+            transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute -top-1 -right-1 z-30 px-1.5 py-0.5 rounded-full bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 text-slate-950 font-black text-[9px] tracking-wider uppercase shadow-lg flex items-center gap-0.5 border border-white pointer-events-none"
+          >
+            <Sparkles className="w-2.5 h-2.5 text-slate-900 fill-slate-900 animate-pulse" />
+            <span>AI</span>
+          </motion.div>
+        )}
       </motion.div>
     </>,
     getPortalRoot()

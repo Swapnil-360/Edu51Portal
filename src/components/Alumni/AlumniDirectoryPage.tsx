@@ -86,7 +86,7 @@ export default function AlumniDirectoryPage({
     }
   }, [isLoggedIn, authSession?.user?.id]);
 
-  const [activeTab, setActiveTab] = useState(initialTab || "directory");
+  const [activeTab, setActiveTab] = useState(initialTab || "feed");
 
   useEffect(() => {
     if (initialTab) {

@@ -238,7 +238,7 @@ function App() {
   });
 
   const [alumniSubView, setAlumniSubView] = useState<"directory" | "profile" | "register">("directory");
-  const [alumniInitialTab, setAlumniInitialTab] = useState<string>("directory");
+  const [alumniInitialTab, setAlumniInitialTab] = useState<string>("feed");
   const [selectedAlumniId, setSelectedAlumniId] = useState<string | null>(null);
   const [adminExitConfirm, setAdminExitConfirm] = useState<{ view: any; extra: string | null } | null>(null);
 
@@ -302,9 +302,7 @@ function App() {
         path = "/alumni";
         setAlumniSubView("directory");
         setSelectedAlumniId(null);
-        if (extra) {
-          setAlumniInitialTab(extra);
-        }
+        setAlumniInitialTab(extra || "feed");
       }
       else if (view === "shared-resources") path = "/shared-resources";
       else if (view === "meet-team") path = "/meet-team";
