@@ -17,15 +17,7 @@ function getPortalRoot(): HTMLElement {
   if (!el) {
     el = document.createElement("div");
     el.id = "ai-assistant-portal";
-    el.style.cssText = [
-      "position:fixed",
-      "top:0", "left:0", "right:0", "bottom:0",
-      "width:100%", "height:100%",
-      "z-index:9999",
-      "pointer-events:none",
-      "overflow:hidden",
-    ].join(";");
-    document.documentElement.appendChild(el);
+    (document.body || document.documentElement).appendChild(el);
   }
   return el;
 }
@@ -310,33 +302,30 @@ export function AIAssistant({ isDarkMode: dk, userId }: Props) {
   };
 
   // Responsive Dimensions
-  const BTN_SIZE = 44;
-  const BTN_RIGHT = isMobile ? 14 : 24;
-  const BTN_BOTTOM = isMobile ? 14 : 24;
-
+  // Responsive Dimensions & Mobile Viewport
   const modalStyle: React.CSSProperties = isMobile
     ? {
         position: "fixed",
-        bottom: BTN_BOTTOM + BTN_SIZE + 10,
+        bottom: "calc(66px + env(safe-area-inset-bottom, 0px))",
         left: 10,
         right: 10,
         width: "calc(100vw - 20px)",
         maxWidth: "calc(100vw - 20px)",
-        height: "min(530px, calc(100dvh - 86px))",
-        maxHeight: "calc(100dvh - 86px)",
+        height: "min(520px, calc(100dvh - 84px))",
+        maxHeight: "calc(100dvh - 84px)",
         pointerEvents: "auto",
-        zIndex: 9999,
+        zIndex: 99999,
       }
     : {
         position: "fixed",
-        bottom: BTN_BOTTOM + BTN_SIZE + 12,
-        right: BTN_RIGHT,
+        bottom: 80,
+        right: 24,
         width: 384,
         maxWidth: "calc(100vw - 48px)",
         height: 540,
         maxHeight: "calc(100vh - 120px)",
         pointerEvents: "auto",
-        zIndex: 9999,
+        zIndex: 99999,
       };
 
   return createPortal(
@@ -633,14 +622,14 @@ export function AIAssistant({ isDarkMode: dk, userId }: Props) {
         )}
       </AnimatePresence>
 
-      {/* ── Toggle Button: Ask EVA (Mobile Responsive Position) ── */}
+      {/* ── Toggle Button: Ask EVA (Mobile Responsive Position & Sizing) ── */}
       <div
         style={{
           position: "fixed",
-          bottom: BTN_BOTTOM,
-          right: BTN_RIGHT,
+          bottom: isMobile ? "calc(18px + env(safe-area-inset-bottom, 0px))" : "24px",
+          right: isMobile ? "14px" : "24px",
           pointerEvents: "auto",
-          zIndex: 9999,
+          zIndex: 99999,
         }}
         className="select-none"
       >
@@ -650,6 +639,7 @@ export function AIAssistant({ isDarkMode: dk, userId }: Props) {
           isDarkMode={dk}
           colorScheme="crimson"
           label={`Ask ${AGENT_NAME}`}
+          isMobile={isMobile}
         />
       </div>
     </>,

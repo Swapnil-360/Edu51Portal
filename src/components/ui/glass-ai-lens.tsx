@@ -221,6 +221,7 @@ export function GlassAiPillButton({
   isDarkMode = true,
   colorScheme = "crimson",
   label = "Ask EVA",
+  isMobile = false,
   className = "",
 }: {
   isOpen?: boolean;
@@ -228,6 +229,7 @@ export function GlassAiPillButton({
   isDarkMode?: boolean;
   colorScheme?: "chromatic" | "crimson";
   label?: string;
+  isMobile?: boolean;
   className?: string;
 }) {
   return (
@@ -308,7 +310,9 @@ export function GlassAiPillButton({
         transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
         aria-label="Ask AI Assistant"
         className={[
-          "relative z-10 flex items-center gap-2 pl-1 pr-3.5 rounded-full cursor-pointer outline-none transition-shadow",
+          "relative z-10 flex items-center cursor-pointer outline-none transition-shadow",
+          isMobile ? "gap-1.5 pl-0.5 pr-2.5" : "gap-2 pl-1 pr-3.5",
+          "rounded-full",
           isDarkMode
             ? "text-white shadow-[0_12px_28px_rgba(0,0,0,0.65)]"
             : "text-slate-800 shadow-[0_12px_24px_rgba(0,0,0,0.1)]",
@@ -317,7 +321,7 @@ export function GlassAiPillButton({
           .filter(Boolean)
           .join(" ")}
         style={{
-          height: 44,
+          height: isMobile ? 38 : 44,
           background: isDarkMode
             ? "linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.04) 100%)"
             : "linear-gradient(135deg, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0.72) 100%)",
@@ -340,18 +344,22 @@ export function GlassAiPillButton({
           }}
         />
 
-        {/* The Liquid Glass Orb (36px fitted inside 44px pill with 4px padding) */}
-        <LiquidGlassOrb size={36} isOpen={isOpen} colorScheme={colorScheme} />
+        {/* The Liquid Glass Orb (32px on mobile, 36px on desktop) */}
+        <LiquidGlassOrb size={isMobile ? 32 : 36} isOpen={isOpen} colorScheme={colorScheme} />
 
         {/* Typography & Dynamic Chevron */}
         <div className="flex items-center gap-1.5 font-medium tracking-tight pr-0.5">
-          <span className="font-semibold text-[13px] tracking-[-0.015em] select-none">
+          <span
+            className={`font-semibold tracking-[-0.015em] select-none ${
+              isMobile ? "text-[12px]" : "text-[13px]"
+            }`}
+          >
             {isOpen ? "Close" : label}
           </span>
           <ChevronDown
-            className={`w-3.5 h-3.5 transition-transform duration-200 stroke-[2.2] ${
-              isOpen ? "rotate-180 opacity-90" : "opacity-75 group-hover:translate-y-0.5"
-            }`}
+            className={`transition-transform duration-200 stroke-[2.2] ${
+              isMobile ? "w-3 h-3" : "w-3.5 h-3.5"
+            } ${isOpen ? "rotate-180 opacity-90" : "opacity-75 group-hover:translate-y-0.5"}`}
           />
         </div>
       </motion.button>
