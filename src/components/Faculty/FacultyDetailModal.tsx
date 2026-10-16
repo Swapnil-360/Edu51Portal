@@ -74,7 +74,8 @@ export const FacultyDetailModal: React.FC<FacultyDetailModalProps> = ({
   };
 
   const getInitials = (name: string) => {
-    const parts = name.replace(/^(Prof\.|Dr\.|Mr\.|Ms\.|Mrs\.|Md\.|Engr\.)\s+/i, "").split(" ");
+    const clean = name.replace(/\b(Prof\.|Dr\.|Mr\.|Ms\.|Mrs\.|Md\.|Engr\.|PhD)\b/gi, "").trim();
+    const parts = clean.split(/\s+/).filter(Boolean);
     if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
     return parts[0]?.substring(0, 2).toUpperCase() || "FC";
   };

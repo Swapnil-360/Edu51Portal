@@ -10,6 +10,7 @@ const https = require('https');
 
 const ROOT_DIR = path.resolve(__dirname, '..');
 const FACULTY_PATH = path.join(ROOT_DIR, 'src', 'data', 'universityFaculty.json');
+const FACULTY_IMG_DIR = path.join(ROOT_DIR, 'public', 'faculty-images');
 const NOTICES_PATH = path.join(ROOT_DIR, 'src', 'data', 'recentNotices.json');
 const LEADERSHIP_PATH = path.join(ROOT_DIR, 'src', 'data', 'leadershipData.json');
 const VC_IMG_PATH = path.join(ROOT_DIR, 'public', 'images', 'vc-shawkat-ali.jpg');
@@ -47,6 +48,53 @@ function fetchUrl(url) {
     }).on('timeout', () => {
       console.warn(`[WARN] Timeout for ${url}`);
       resolve('');
+    });
+  });
+}
+
+function downloadImage(url, destPath) {
+  return new Promise((resolve) => {
+    const file = fs.createWriteStream(destPath);
+    const req = https.get(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+      },
+      timeout: 15000
+    }, (res) => {
+      if (res.statusCode !== 200) {
+        file.close(() => {
+          try { fs.unlinkSync(destPath); } catch (e) {}
+          resolve(false);
+        });
+        return;
+      }
+      res.pipe(file);
+      file.on('finish', () => {
+        file.close(() => {
+          const stats = fs.statSync(destPath);
+          if (stats.size < 500) {
+            try { fs.unlinkSync(destPath); } catch (e) {}
+            resolve(false);
+          } else {
+            resolve(true);
+          }
+        });
+      });
+    });
+
+    req.on('error', () => {
+      file.close(() => {
+        try { fs.unlinkSync(destPath); } catch (e) {}
+        resolve(false);
+      });
+    });
+
+    req.on('timeout', () => {
+      req.destroy();
+      file.close(() => {
+        try { fs.unlinkSync(destPath); } catch (e) {}
+        resolve(false);
+      });
     });
   });
 }
@@ -156,6 +204,34 @@ async function syncFaculty() {
   });
 
   if (deduped.length > 300) {
+    // Ensure faculty images directory exists
+    fs.mkdirSync(FACULTY_IMG_DIR, { recursive: true });
+    console.log('Syncing faculty images to local public/faculty-images/ folder...');
+    let downloaded = 0;
+
+    for (const member of deduped) {
+      const localFilePath = path.join(FACULTY_IMG_DIR, `${member.id}.jpg`);
+      const localRelPath = `/faculty-images/${member.id}.jpg`;
+
+      if (member.img && member.img.startsWith('http')) {
+        const liveUrl = member.img;
+        const ok = await downloadImage(liveUrl, localFilePath);
+        if (ok) {
+          member.img = localRelPath;
+          downloaded++;
+        } else if (fs.existsSync(localFilePath)) {
+          member.img = localRelPath;
+        } else {
+          member.img = null;
+        }
+      } else if (fs.existsSync(localFilePath)) {
+        member.img = localRelPath;
+      } else {
+        member.img = null;
+      }
+    }
+    console.log(`[SUCCESS] Downloaded/updated ${downloaded} faculty images locally.`);
+
     fs.writeFileSync(FACULTY_PATH, JSON.stringify(deduped, null, 2));
     console.log(`[SUCCESS] Saved ${deduped.length} faculty members to universityFaculty.json`);
   } else {
