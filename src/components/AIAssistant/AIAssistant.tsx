@@ -24,7 +24,9 @@ function getPortalRoot(): HTMLElement {
 
 interface Props {
   isDarkMode: boolean;
-  userId: string;
+  userId?: string;
+  isLoggedIn?: boolean;
+  onRequireLogin?: () => void;
 }
 
 interface Message {
@@ -127,7 +129,13 @@ const TypingIndicator = ({ dk }: { dk: boolean }) => (
   </div>
 );
 
-export function AIAssistant({ isDarkMode: dk, userId }: Props) {
+export function AIAssistant({
+  isDarkMode: dk,
+  userId = "student",
+  isLoggedIn = false,
+  onRequireLogin,
+}: Props) {
+  const [mounted, setMounted] = useState(false);
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([WELCOME]);
   const [input, setInput] = useState("");
@@ -141,6 +149,10 @@ export function AIAssistant({ isDarkMode: dk, userId }: Props) {
 
   const listRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Monitor window resize for mobile responsiveness
   useEffect(() => {
@@ -252,6 +264,22 @@ export function AIAssistant({ isDarkMode: dk, userId }: Props) {
     const text = (overrideText ?? input).trim();
     if (!text || loading) return;
 
+    if (!isLoggedIn) {
+      setMessages((prev) => [
+        ...prev,
+        { role: "user", text },
+        {
+          role: "model",
+          text: `👋 Please sign in with your BUBT student account to chat with ${AGENT_NAME}. Each student gets ${dailyLimit} free questions every day!`,
+        },
+      ]);
+      setInput("");
+      if (textareaRef.current) textareaRef.current.style.height = "auto";
+      setTimeout(() => scrollToBottom("smooth"), 30);
+      onRequireLogin?.();
+      return;
+    }
+
     const history: ChatTurn[] = messages
       .filter((m) => m !== WELCOME)
       .slice(-MAX_HISTORY_TURNS)
@@ -306,13 +334,13 @@ export function AIAssistant({ isDarkMode: dk, userId }: Props) {
   const modalStyle: React.CSSProperties = isMobile
     ? {
         position: "fixed",
-        bottom: "calc(66px + env(safe-area-inset-bottom, 0px))",
+        bottom: "calc(68px + env(safe-area-inset-bottom, 0px))",
         left: 10,
         right: 10,
         width: "calc(100vw - 20px)",
         maxWidth: "calc(100vw - 20px)",
-        height: "min(520px, calc(100dvh - 84px))",
-        maxHeight: "calc(100dvh - 84px)",
+        height: "min(520px, calc(100dvh - 86px))",
+        maxHeight: "calc(100dvh - 86px)",
         pointerEvents: "auto",
         zIndex: 99999,
       }
@@ -327,6 +355,8 @@ export function AIAssistant({ isDarkMode: dk, userId }: Props) {
         pointerEvents: "auto",
         zIndex: 99999,
       };
+
+  if (!mounted) return null;
 
   return createPortal(
     <>
@@ -419,21 +449,31 @@ export function AIAssistant({ isDarkMode: dk, userId }: Props) {
 
                 {/* Controls (Quota, Reset, Close) */}
                 <div className="flex items-center gap-1 sm:gap-1.5">
-                  {remaining !== null && (
-                    <span
-                      title={`${remaining} of ${dailyLimit} daily messages left`}
-                      className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border transition-colors ${
-                        remaining <= 5
-                          ? dk
-                            ? "text-red-400 bg-red-500/15 border-red-500/30"
-                            : "text-red-600 bg-red-50 border-red-200"
-                          : dk
-                          ? "text-slate-400 bg-white/5 border-white/10"
-                          : "text-slate-600 bg-slate-100 border-slate-200"
-                      }`}
+                  {!isLoggedIn ? (
+                    <button
+                      type="button"
+                      onClick={onRequireLogin}
+                      className="text-[10.5px] font-semibold px-2.5 py-0.5 rounded-full border border-red-500/40 text-red-500 hover:bg-red-500/10 active:scale-95 transition-all cursor-pointer"
                     >
-                      {remaining}/{dailyLimit} left
-                    </span>
+                      Sign In
+                    </button>
+                  ) : (
+                    remaining !== null && (
+                      <span
+                        title={`${remaining} of ${dailyLimit} daily messages left`}
+                        className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border transition-colors ${
+                          remaining <= 5
+                            ? dk
+                              ? "text-red-400 bg-red-500/15 border-red-500/30"
+                              : "text-red-600 bg-red-50 border-red-200"
+                            : dk
+                            ? "text-slate-400 bg-white/5 border-white/10"
+                            : "text-slate-600 bg-slate-100 border-slate-200"
+                        }`}
+                      >
+                        {remaining}/{dailyLimit} left
+                      </span>
+                    )
                   )}
 
                   {messages.length > 1 && (
@@ -560,6 +600,30 @@ export function AIAssistant({ isDarkMode: dk, userId }: Props) {
                   background: dk ? "rgba(255, 255, 255, 0.015)" : "rgba(255, 255, 255, 0.5)",
                 }}
               >
+                {!isLoggedIn && (
+                  <div
+                    className={`mb-2 px-3 py-1.5 rounded-xl border flex items-center justify-between gap-2 select-none ${
+                      dk
+                        ? "bg-red-500/10 border-red-500/20 text-white"
+                        : "bg-red-50/80 border-red-200 text-slate-800"
+                    }`}
+                  >
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <Sparkles className="w-3.5 h-3.5 text-red-500 flex-shrink-0 animate-pulse" />
+                      <span className="text-[11px] truncate">
+                        Sign in with BUBT ID for 20 daily AI queries
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={onRequireLogin}
+                      className="px-2.5 py-0.5 text-[10.5px] font-semibold rounded-md bg-red-600 hover:bg-red-700 text-white shadow-sm flex-shrink-0 transition-transform active:scale-95 cursor-pointer"
+                    >
+                      Sign In
+                    </button>
+                  </div>
+                )}
+
                 <div
                   className={`relative flex items-end gap-2 p-1.5 pl-3 rounded-2xl border transition-all duration-200 ${
                     dk
@@ -576,7 +640,11 @@ export function AIAssistant({ isDarkMode: dk, userId }: Props) {
                       e.target.style.height = `${Math.min(e.target.scrollHeight, 84)}px`;
                     }}
                     onKeyDown={handleKeyDown}
-                    placeholder={`Ask ${AGENT_NAME} anything or say "${VOICE_PROMPT}"…`}
+                    placeholder={
+                      isLoggedIn
+                        ? `Ask ${AGENT_NAME} anything or say "${VOICE_PROMPT}"…`
+                        : `Sign in with BUBT ID to ask ${AGENT_NAME}…`
+                    }
                     rows={1}
                     className={`flex-1 resize-none bg-transparent border-0 outline-none ring-0 shadow-none focus:outline-none focus:ring-0 focus:border-0 focus:shadow-none focus-visible:outline-none focus-visible:ring-0 focus-visible:shadow-none text-[13px] sm:text-[12.5px] leading-relaxed py-1 max-h-20 ${
                       dk ? "text-white placeholder-slate-500" : "text-slate-900 placeholder-slate-400"
@@ -626,7 +694,7 @@ export function AIAssistant({ isDarkMode: dk, userId }: Props) {
       <div
         style={{
           position: "fixed",
-          bottom: isMobile ? "calc(18px + env(safe-area-inset-bottom, 0px))" : "24px",
+          bottom: isMobile ? "calc(20px + env(safe-area-inset-bottom, 0px))" : "24px",
           right: isMobile ? "14px" : "24px",
           pointerEvents: "auto",
           zIndex: 99999,

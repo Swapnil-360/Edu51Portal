@@ -9044,11 +9044,14 @@ For any queries, contact your course instructors or the department.`,
         }}
       />
 
-      {isLoggedIn && authSession?.user?.id && (
-        <Suspense fallback={null}>
-          <AIAssistant isDarkMode={isDarkMode} userId={authSession.user.id} />
-        </Suspense>
-      )}
+      <Suspense fallback={null}>
+        <AIAssistant
+          isDarkMode={isDarkMode}
+          userId={authSession?.user?.id || userProfile?.id || userProfile?.bubtEmail || "student"}
+          isLoggedIn={isLoggedIn || !!authSession?.user?.id}
+          onRequireLogin={() => setShowSignInModal(true)}
+        />
+      </Suspense>
 
       {/* Admin Exit Confirmation Modal */}
       {adminExitConfirm && createPortal(
