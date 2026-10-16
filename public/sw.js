@@ -2,7 +2,7 @@
 // File: public/sw.js
 
 // Bump cache name on deploy to invalidate older cached index.html/assets
-const CACHE_NAME = 'edu51five-v6';
+const CACHE_NAME = 'edu51five-v7';
 // Only cache true static assets — never JS/CSS/HTML (Vite handles dynamic hashes)
 const urlsToCache = [
   '/Edu51Portal.png',

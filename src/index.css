@@ -889,8 +889,6 @@ html {
 @media (max-width: 768px) {
   body {
     -webkit-overflow-scrolling: touch;
-    -webkit-transform: translate3d(0, 0, 0);
-    transform: translate3d(0, 0, 0);
   }
 
   /* Prevent iOS Safari zoom issues */
@@ -1121,4 +1119,15 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
     inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.22),
     inset 0 -1px 1px 0 rgba(0, 0, 0, 0.4) !important;
 }
+
+/* AI Assistant Portal Root: strictly viewport-fixed, full-screen transparent pass-through */
+#ai-assistant-portal {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100dvh !important;
+  pointer-events: none !important;
+  z-index: 99999 !important;
+}
+
 

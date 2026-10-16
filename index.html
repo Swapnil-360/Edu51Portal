@@ -67,11 +67,7 @@
         .skeleton-spinner{width:18px;height:18px;border-radius:50%;border:3px solid rgba(0,0,0,0.08);border-top-color:rgba(30,64,175,0.9);animation:spin 1s linear infinite}
         @keyframes spin{to{transform:rotate(360deg)}}
 
-      /* Dark theme adjustments - using .dark class for manual toggle */
-      @media (prefers-color-scheme: dark){
-        .skeleton-title{color:#e6eef8}
-        .skeleton-sub{color:#94a3b8}
-      }
+      #ai-assistant-portal{position:fixed!important;inset:0!important;pointer-events:none!important;z-index:99999!important}
     </style>
     <script>
       // Ensure footer is hidden while the initial loading skeleton is active.

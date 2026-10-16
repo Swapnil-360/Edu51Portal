@@ -13,11 +13,16 @@ import { GlassAiPillButton, LiquidGlassOrb } from "../ui/glass-ai-lens";
 import { sendChatMessage, getRemainingMessagesToday, type ChatTurn } from "../../lib/api/aiChatApi";
 
 function getPortalRoot(): HTMLElement {
+  if (typeof document === "undefined") return null as unknown as HTMLElement;
   let el = document.getElementById("ai-assistant-portal");
   if (!el) {
     el = document.createElement("div");
     el.id = "ai-assistant-portal";
-    (document.body || document.documentElement).appendChild(el);
+    (document.documentElement || document.body).appendChild(el);
+  } else if (el.parentElement !== document.documentElement && document.documentElement) {
+    // Relocate to <html> so that any transforms, flexbox, or overflow on <body>
+    // cannot trap or scroll the fixed portal container.
+    document.documentElement.appendChild(el);
   }
   return el;
 }
