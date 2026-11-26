@@ -164,19 +164,8 @@ export function SignInModal({
       // Try Supabase auth first if configured and email provided
       if (supabaseConfigured && trimmedIdentifier.includes('@') && (supabase as any).auth?.signInWithPassword) {
         try {
-          // Pre-fetch verification status by email BEFORE calling signInWithPassword
-          // to ensure localStorage is populated when onAuthStateChange fires.
-          let preFetchedVerified = false;
           if (role === 'alumni') {
-            const { data: alumniProfile } = await supabase
-              .from('alumni_profiles')
-              .select('is_verified')
-              .eq('email', normalizedIdentifier)
-              .maybeSingle();
-            
-            preFetchedVerified = alumniProfile?.is_verified || false;
             localStorage.setItem('userProfileIsAlumni', 'true');
-            localStorage.setItem('userProfileIsVerified', preFetchedVerified ? 'true' : 'false');
           } else {
             localStorage.setItem('userProfileIsAlumni', 'false');
             localStorage.setItem('userProfileIsVerified', 'true');
@@ -191,57 +180,6 @@ export function SignInModal({
 
           if (error) {
             console.error('Supabase auth error:', error);
-            
-            // Check if this is a seeded/mock alumni profile in the database
-            if (error.message.includes('Invalid login credentials') && role === 'alumni') {
-              try {
-                const { data: mockAlumni, error: mockErr } = await supabase
-                  .from('alumni_profiles')
-                  .select('*')
-                  .eq('email', normalizedIdentifier)
-                  .maybeSingle();
-
-                if (!mockErr && mockAlumni && mockAlumni.is_verified) {
-                  // Allow login with default test password 'password123'
-                  if (password === 'password123') {
-                    const profile: any = {
-                      id: mockAlumni.id,
-                      name: mockAlumni.full_name,
-                      section: 'Alumni',
-                      major: mockAlumni.major || 'CSE',
-                      bubt_email: mockAlumni.email,
-                      notification_email: mockAlumni.email,
-                      phone: mockAlumni.phone || '',
-                      profile_pic: mockAlumni.avatar_url || '',
-                      isAlumni: true,
-                      isVerified: true,
-                    };
-
-                    localStorage.setItem('userProfileName', profile.name);
-                    localStorage.setItem('userProfileSection', profile.section);
-                    localStorage.setItem('userProfileMajor', profile.major);
-                    localStorage.setItem('userProfileBubtEmail', profile.bubt_email);
-                    localStorage.setItem('userProfileNotificationEmail', profile.notification_email);
-                    localStorage.setItem('userProfilePhone', profile.phone);
-                    localStorage.setItem('userProfileIsAlumni', 'true');
-                    localStorage.setItem('userProfileIsVerified', 'true');
-                    if (profile.profile_pic) {
-                      localStorage.setItem('userProfilePic', profile.profile_pic);
-                      localStorage.setItem('userProfileAvatarUrl', profile.profile_pic);
-                    }
-
-                    handleSuccessfulAttempt();
-                    setIsSubmitting(false);
-                    onClose();
-                    onSignIn(identifier, password, profile);
-                    console.log('✅ Seeded alumni sign in successful (bypass Auth)');
-                    return;
-                  }
-                }
-              } catch (mockBypassErr) {
-                console.error('Mock alumni check failed:', mockBypassErr);
-              }
-            }
 
             if (error.message.includes('Invalid login credentials')) {
               handleFailedAttempt();
@@ -253,11 +191,23 @@ export function SignInModal({
             return;
           }
 
-          if (role === 'alumni' && !preFetchedVerified) {
-            await supabase.auth.signOut();
-            setError('Your profile is pending admin approval. You can log in once approved.');
-            setIsSubmitting(false);
-            return;
+          let isVerifiedVal = role !== 'alumni';
+          if (role === 'alumni') {
+            const { data: alumniProfile } = await supabase
+              .from('alumni_profiles')
+              .select('is_verified')
+              .eq('id', data.user.id)
+              .maybeSingle();
+
+            isVerifiedVal = alumniProfile?.is_verified || false;
+            localStorage.setItem('userProfileIsVerified', isVerifiedVal ? 'true' : 'false');
+
+            if (!isVerifiedVal) {
+              await supabase.auth.signOut();
+              setError('Your profile is pending admin approval. You can log in once approved.');
+              setIsSubmitting(false);
+              return;
+            }
           }
 
           // Validate role against profile
@@ -281,17 +231,6 @@ export function SignInModal({
               setIsSubmitting(false);
               return;
             }
-          }
-
-          let isVerifiedVal = false;
-          if (role === 'alumni') {
-            const { data: alumniProfile } = await supabase
-              .from('alumni_profiles')
-              .select('is_verified')
-              .eq('id', data.user.id)
-              .maybeSingle();
-            
-            isVerifiedVal = alumniProfile?.is_verified || false;
           }
 
           // ── Close modal immediately using user_metadata + localStorage cache ──

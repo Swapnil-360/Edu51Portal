@@ -616,7 +616,27 @@ export default function AlumniDirectoryPage({
             )}
 
             {/* Main Grid / Loading / Empty State */}
-            {loading ? (
+            {!isLoggedIn ? (
+              <div className="flex flex-col items-center justify-center py-20 text-center gap-4">
+                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${isDarkMode ? "bg-[#16181c]" : "bg-slate-100"}`}>
+                  <Lock size={28} className="text-[#1e9df1]" />
+                </div>
+                <div>
+                  <h3 className={`text-base font-semibold ${textColor}`}>Sign in to view the Alumni Directory</h3>
+                  <p className={`text-xs max-w-xs mt-1 ${subColor}`}>
+                    Alumni profiles and mentorship connections are available to verified BUBT students and alumni.
+                  </p>
+                </div>
+                {onRequireLogin && (
+                  <button
+                    onClick={onRequireLogin}
+                    className="px-5 py-2.5 rounded-xl bg-[#1e9df1] hover:bg-[#1a8cd8] text-white text-xs font-bold shadow-md shadow-[#1e9df1]/25 cursor-pointer"
+                  >
+                    Sign In
+                  </button>
+                )}
+              </div>
+            ) : loading ? (
               <div className="flex justify-center py-20">
                 <Loader />
               </div>

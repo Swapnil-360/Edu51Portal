@@ -1429,35 +1429,25 @@ function App() {
     return sessionIdRef.current;
   };
 
-  // Track user presence on student/admin page
+  // Track user presence on student/admin page via RPC (active_users table is admin-only)
   const trackUserPresence = async (page: string) => {
     try {
       const sessionId = getSessionId();
-      const now = new Date().toISOString();
-      console.log(
-        `📝 Inserting presence: session=${sessionId}, page=${page}, time=${now}`,
-      );
-
-      const { error, data } = await supabase.from("active_users").upsert(
-        {
-          session_id: sessionId,
-          page_name: page,
-          last_seen: now,
-          updated_at: now,
-          user_agent: navigator.userAgent,
-        },
-        { onConflict: "session_id" },
-      );
+      const { error } = await supabase.rpc("track_active_user", {
+        p_session_id: sessionId,
+        p_page_name: page,
+        p_user_agent: navigator.userAgent,
+      });
 
       if (error) {
-        console.error("❌ Upsert error:", error.message, error.code);
+        console.error("❌ Presence RPC error:", error.message, error.code);
       } else {
         console.log(
           `✅ Presence tracked: ${page} (${sessionId.slice(0, 12)}...)`,
         );
       }
     } catch (err) {
-      // Silently fail if table doesn't exist yet
+      // Silently fail if RPC doesn't exist yet
       console.error("❌ Presence tracking exception:", err);
     }
   };
@@ -1466,7 +1456,7 @@ function App() {
   const removeUserSession = async () => {
     try {
       const sessionId = getSessionId();
-      await supabase.from("active_users").delete().eq("session_id", sessionId);
+      await supabase.rpc("remove_active_user", { p_session_id: sessionId });
     } catch (err) {
       // Silently fail
     }

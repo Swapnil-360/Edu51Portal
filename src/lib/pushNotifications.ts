@@ -115,21 +115,15 @@ export async function subscribeToPushNotifications(): Promise<PushSubscriptionJS
 }
 
 /**
- * Save push subscription to database
+ * Save push subscription to database via RPC (push_subscriptions table is protected by RLS)
  */
-export async function savePushSubscription(subscription: PushSubscriptionJSON, sessionId: string, userId?: string): Promise<boolean> {
+export async function savePushSubscription(subscription: PushSubscriptionJSON, sessionId: string, _userId?: string): Promise<boolean> {
   try {
-    const { error } = await supabase
-      .from('push_subscriptions')
-      .upsert({
-        session_id: sessionId,
-        subscription: subscription,
-        endpoint: subscription.endpoint,
-        updated_at: new Date().toISOString(),
-        ...(userId ? { user_id: userId } : {}),
-      }, {
-        onConflict: 'session_id'
-      });
+    const { error } = await supabase.rpc('upsert_push_subscription', {
+      p_session_id: sessionId,
+      p_subscription: subscription,
+      p_endpoint: subscription.endpoint || '',
+    });
 
     if (error) {
       console.error('Error saving push subscription:', error);
@@ -157,11 +151,10 @@ export async function unsubscribeFromPushNotifications(sessionId: string): Promi
       console.log('Unsubscribed from push notifications');
     }
 
-    // Remove from database
-    const { error } = await supabase
-      .from('push_subscriptions')
-      .delete()
-      .eq('session_id', sessionId);
+    // Remove from database via RPC
+    const { error } = await supabase.rpc('delete_push_subscription', {
+      p_session_id: sessionId,
+    });
 
     if (error) {
       console.error('Error removing push subscription:', error);
@@ -274,11 +267,10 @@ export async function validateCurrentSubscription(sessionId: string): Promise<bo
       console.warn('⚠️ Subscription missing encryption keys');
       console.log('Unsubscribing and requesting fresh subscription...');
 
-      // Remove from database
-      await supabase
-        .from('push_subscriptions')
-        .delete()
-        .eq('session_id', sessionId);
+      // Remove from database via RPC
+      await supabase.rpc('delete_push_subscription', {
+        p_session_id: sessionId,
+      });
 
       // Unsubscribe from browser
       await subscription.unsubscribe();

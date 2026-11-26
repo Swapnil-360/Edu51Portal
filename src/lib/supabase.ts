@@ -78,6 +78,7 @@ function createSupabaseMock() {
   // Count queries: .select('*', { count: 'exact', head: true })
   return {
     from: (_table: string) => queryStub(),
+    rpc: async () => ({ data: null, error: null }),
     storage,
     auth,
   } as any;
